@@ -5,7 +5,7 @@ import fsp from 'fs-promise';
 import { exec } from 'child-process-promise';
 import task from './task';
 
-const REMOTIFY_SERVER_VERSION = '^0.1.8';
+const REMOTIFY_SERVER_VERSION = '^0.1.10';
 
 export async function buildServer({ inputDir, outputDir }) {
   const pkg = require(join(inputDir, 'package.json'));

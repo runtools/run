@@ -5,7 +5,7 @@ import fsp from 'fs-promise';
 import { exec } from 'child-process-promise';
 import task from './task';
 
-const REMOTIFY_CLIENT_VERSION = '^0.1.4';
+const REMOTIFY_CLIENT_VERSION = '^0.1.6';
 
 export async function buildClient({ inputDir, outputDir, apiURL }) {
   const pkg = require(join(inputDir, 'package.json'));
