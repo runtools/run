@@ -33,7 +33,7 @@
   "scripts": {
     "transpile": "babel src --out-dir dist",
     "prepublish": "npm run transpile",
-    "lint": "eslint ."
+    "lint": "eslint src"
   },
   "babel": {
     "presets": [

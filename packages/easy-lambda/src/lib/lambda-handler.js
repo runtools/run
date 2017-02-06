@@ -1,12 +1,13 @@
 'use strict';
 
 import Lambda from 'aws-sdk/clients/lambda';
-import task from './task';
+import { task, format } from './console';
 
-export async function createOrUpdateLambdaFunction({ name, role, code, awsConfig }) {
+export async function createOrUpdateLambdaFunction({ name, stage, role, code, awsConfig }) {
   const lambda = new Lambda(awsConfig);
 
-  const lambdaFunction = await task(`${name}: Checking lambda function`, async () => {
+  const msg = format({ name, stage, message: 'Checking lambda function' });
+  const lambdaFunction = await task(msg, async () => {
     try {
       return await lambda.getFunctionConfiguration({
         FunctionName: name
@@ -24,7 +25,8 @@ export async function createOrUpdateLambdaFunction({ name, role, code, awsConfig
   }
 
   async function createLambdaFunction() {
-    return await task(`${name}: Creating lambda function`, async () => {
+    const msg = format({ name, stage, message: 'Creating lambda function' });
+    return await task(msg, async () => {
       const lambdaFunction = await lambda.createFunction({
         FunctionName: name,
         Handler: 'handler.handler',
@@ -38,7 +40,8 @@ export async function createOrUpdateLambdaFunction({ name, role, code, awsConfig
   }
 
   async function updateLambdaFunction({ existingLambdaFunction }) {
-    return await task(`${name}: Updating lambda function`, async () => {
+    const msg = format({ name, stage, message: 'Updating lambda function' });
+    return await task(msg, async () => {
       if (role !== existingLambdaFunction.Role) {
         await lambda.updateFunctionConfiguration({
           FunctionName: name,

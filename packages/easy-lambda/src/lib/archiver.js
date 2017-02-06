@@ -3,7 +3,7 @@
 import archiver from 'archiver';
 import streamBuffers from 'stream-buffers';
 
-export function zip({ name, data }) {
+export function zip({ filename, data }) {
   return new Promise((resolve, reject) => {
     const output = new streamBuffers.WritableStreamBuffer();
     output.on('finish', function() {
@@ -15,7 +15,7 @@ export function zip({ name, data }) {
       reject(err);
     });
     archive.pipe(output);
-    archive.append(data, { name });
+    archive.append(data, { name: filename });
     archive.finalize();
   });
 }

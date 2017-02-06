@@ -3,22 +3,24 @@
 import { join } from 'path';
 import fsp from 'fs-promise';
 import { exec } from 'child-process-promise';
-import task from './task';
+import { task, format } from './console';
 
 const REMOTIFY_CLIENT_VERSION = '^0.1.6';
 
-export async function buildClient({ inputDir, outputDir, apiURL }) {
-  const pkg = require(join(inputDir, 'package.json'));
-  const clientName = pkg.name + '-client';
+export async function buildClient({ inputDir, outputDir, name, version, stage, apiURL }) {
+  let msg;
+
+  const clientName = name + '-client';
   const clientDir = join(outputDir, clientName);
 
-  await task(`${clientName}: Generating files`, async () => {
+  msg = format({ name: clientName, stage, message: 'Generating files' });
+  await task(msg, async () => {
     // package.json
     const clientPkgFile = join(clientDir, 'package.json');
     const clientPkg = {
       name: clientName,
-      serviceName: pkg.name,
-      version: pkg.version,
+      serviceName: name,
+      version,
       files: ['index.js'],
       dependencies: {
         'remotify-client': REMOTIFY_CLIENT_VERSION
@@ -55,7 +57,8 @@ var client = require("remotify-client")({
     await fsp.outputFile(clientGitIgnoreFile, gitIgnore);
   });
 
-  await task(`${clientName}: Installing dependencies`, async () => {
+  msg = format({ name: clientName, stage, message: 'Installing dependencies' });
+  await task(msg, async () => {
     await exec('npm install', { cwd: clientDir });
   });
 }

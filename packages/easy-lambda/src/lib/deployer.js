@@ -2,25 +2,26 @@
 
 import { bundle } from './bundler';
 import { zip } from './archiver';
-import task from './task';
+import { task, format } from './console';
 import { ensureDefaultRole } from './iam-handler';
 import { createOrUpdateLambdaFunction } from './lambda-handler';
 import { createOrUpdateAPIGateway } from './api-gateway-handler';
 
-export async function deploy({ name, entryFile, role, awsConfig }) {
-  if (!role) role = await ensureDefaultRole({ name, awsConfig });
+export async function deploy({ entryFile, name, stage, role, awsConfig }) {
+  if (!role) role = await ensureDefaultRole({ name, stage, awsConfig });
 
   let code;
-  await task(`${name}: Packaging service code`, async () => {
+  const msg = format({ name, stage, message: 'Packaging service code' });
+  await task(msg, async () => {
     code = await bundle({ entryFile });
-    code = await zip({ data: code, name: 'handler.js' });
+    code = await zip({ data: code, filename: 'handler.js' });
   });
 
   const lambdaFunctionARN = await createOrUpdateLambdaFunction({
-    name, role, code, awsConfig
+    name, stage, role, code, awsConfig
   });
 
-  const apiURL = await createOrUpdateAPIGateway({ name, lambdaFunctionARN, awsConfig });
+  const apiURL = await createOrUpdateAPIGateway({ name, stage, lambdaFunctionARN, awsConfig });
 
   return apiURL;
 }

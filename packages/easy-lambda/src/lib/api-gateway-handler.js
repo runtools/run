@@ -1,14 +1,15 @@
 'use strict';
 
 import APIGateway from 'aws-sdk/clients/apigateway';
-import task from './task';
+import { task, format } from './console';
 import { createUserError } from './error';
 import { addPermissionToLambdaFunction } from './lambda-handler';
 
-export async function createOrUpdateAPIGateway({ name, lambdaFunctionARN, awsConfig }) {
+export async function createOrUpdateAPIGateway({ name, stage, lambdaFunctionARN, awsConfig }) {
   const apiGateway = new APIGateway(awsConfig);
 
-  let api = await task(`${name}: Checking API gateway`, async () => {
+  const msg = format({ name, stage, message: 'Checking API gateway' });
+  let api = await task(msg, async () => {
     const limit = 500;
     const result = await apiGateway.getRestApis({ limit }).promise();
     if (result.items.length === limit) {
@@ -28,7 +29,8 @@ export async function createOrUpdateAPIGateway({ name, lambdaFunctionARN, awsCon
   return `https://${api.id}.execute-api.${awsConfig.region}.amazonaws.com/${stageName}`;
 
   async function createAPIGateway() {
-    return await task(`${name}: Creating API Gateway`, async () => {
+    const msg = format({ name, stage, message: 'Creating API Gateway' });
+    return await task(msg, async () => {
       const api = await apiGateway.createRestApi({ name }).promise();
 
       const restApiId = api.id;
@@ -134,7 +136,8 @@ export async function createOrUpdateAPIGateway({ name, lambdaFunctionARN, awsCon
   }
 
   async function updateAPIGateway({ restApiId }) {
-    return await task(`${name}: Updating API Gateway`, async () => {
+    const msg = format({ name, stage, message: 'Updating API Gateway' });
+    return await task(msg, async () => {
       // TODO
     });
   }

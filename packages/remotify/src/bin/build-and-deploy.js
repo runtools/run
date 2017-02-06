@@ -4,14 +4,16 @@
 
 import { join, resolve } from 'path';
 import minimist from 'minimist';
-import chalk from 'chalk';
 import { getAWSConfig } from 'easy-lambda';
 import { buildAndDeploy } from '../lib/builder-and-deployer';
+import { format } from '../lib/console';
 import { showErrorAndExit } from '../lib/error';
 
 const argv = minimist(process.argv.slice(2), {
   string: [
     'input-dir',
+    'output-dir',
+    'stage',
     'role',
     'aws-access-key-id',
     'aws-secret-access-key',
@@ -25,13 +27,17 @@ if (!inputDir) {
 }
 inputDir = resolve(process.cwd(), inputDir);
 
-const outputDir = join(inputDir, '.remotify');
+const { name, version } = require(join(inputDir, 'package.json'));
+
+const outputDir = argv['output-dir'] || join(inputDir, '.remotify');
+
+const stage = argv.stage || 'development';
 
 const role = argv.role;
 
 const awsConfig = getAWSConfig(argv);
 
 (async function() {
-  const name = await buildAndDeploy({ inputDir, outputDir, role, awsConfig });
-  console.log(`${chalk.green('✔')} ${name}: Build and deployment completed`);
+  await buildAndDeploy({ inputDir, outputDir, name, version, stage, role, awsConfig });
+  console.log(format({ status: 'success', name, stage, message: 'Build and deployment completed' }));
 })().catch(showErrorAndExit);

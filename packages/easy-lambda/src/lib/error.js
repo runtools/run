@@ -1,6 +1,6 @@
 'use strict';
 
-import chalk from 'chalk';
+import { format } from './console';
 
 export function createUserError(message) {
   const err = new Error(message);
@@ -13,7 +13,7 @@ export function showError(error) {
     error = createUserError(error);
   }
   if (error.userError) {
-    console.error(`${chalk.red('✘ Error!')} ${error.message}`);
+    console.error(format({ status: 'error', message: error.message }));
   } else {
     console.error(error);
   }
