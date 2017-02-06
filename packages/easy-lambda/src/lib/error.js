@@ -13,7 +13,7 @@ export function showError(error) {
     error = createUserError(error);
   }
   if (error.userError) {
-    console.error(`${chalk.red('▶ Error!')} ${error.message}`);
+    console.error(`${chalk.red('✘ Error!')} ${error.message}`);
   } else {
     console.error(error);
   }
