@@ -1,6 +1,6 @@
 {
   "name": "easy-lambda",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Easily deploy your lambda functions",
   "keywords": [
     "serverless",

@@ -1,6 +1,6 @@
 {
   "name": "remotify",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "The easiest way to deploy a microservice to AWS Lambda",
   "keywords": [
     "remote",
@@ -56,7 +56,7 @@
   },
   "dependencies": {
     "child-process-promise": "^2.2.0",
-    "easy-lambda": "^0.1.1",
+    "easy-lambda": "^0.1.2",
     "fs-promise": "^1.0.0",
     "minimist": "^1.2.0",
     "node-fetch": "^1.6.3",
