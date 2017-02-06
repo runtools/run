@@ -1,6 +1,6 @@
 {
   "name": "remotify",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "The easiest way to deploy a microservice to AWS Lambda",
   "keywords": [
     "remote",
@@ -61,7 +61,7 @@
     "minimist": "^1.2.0",
     "node-fetch": "^1.6.3",
     "node-version": "^1.0.0",
-    "remotify-common": "^0.1.1",
+    "remotify-common": "^0.1.2",
     "sleep-promise": "^2.0.0",
     "update-notifier": "^1.0.3"
   },
