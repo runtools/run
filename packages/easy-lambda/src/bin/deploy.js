@@ -2,7 +2,7 @@
 
 'use strict';
 
-import { resolve } from 'path';
+import { resolve, join } from 'path';
 import minimist from 'minimist';
 import { getAWSConfig } from '../lib/aws';
 import { deploy } from '../lib/deployer';
@@ -11,8 +11,7 @@ import { showErrorAndExit } from '../lib/error';
 
 const argv = minimist(process.argv.slice(2), {
   string: [
-    'entry-file',
-    'name',
+    'input-dir',
     'stage',
     'role',
     'aws-access-key-id',
@@ -21,16 +20,15 @@ const argv = minimist(process.argv.slice(2), {
   ]
 });
 
-let entryFile = argv['entry-file'] || argv._[0];
-if (!entryFile) {
-  showErrorAndExit('\'entry-file\' parameter is missing');
+let inputDir = argv['input-dir'] || argv._[0];
+if (!inputDir) {
+  showErrorAndExit('\'input-dir\' parameter is missing');
 }
-entryFile = resolve(process.cwd(), entryFile);
+inputDir = resolve(process.cwd(), inputDir);
 
-const name = argv.name;
-if (!name) {
-  showErrorAndExit('\'name\' parameter is missing');
-}
+const pkg = require(join(inputDir, 'package.json'));
+const { name, version } = pkg;
+const entryFile = join(inputDir, pkg.main || 'index.js');
 
 const stage = argv.stage || 'development';
 
@@ -39,6 +37,6 @@ const role = argv.role;
 const awsConfig = getAWSConfig(argv);
 
 (async function() {
-  const apiURL = await deploy({ entryFile, name, stage, role, awsConfig });
+  const apiURL = await deploy({ name, version, stage, entryFile, role, awsConfig });
   console.log(format({ status: 'success', name, stage, message: 'Deployment completed', info: apiURL }));
 })().catch(showErrorAndExit);

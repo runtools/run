@@ -3,7 +3,7 @@
 'use strict';
 
 var example = require('remotify-example-client')({
-  url: 'https://ygp7xwwt7k.execute-api.us-east-1.amazonaws.com/remotify_example'
+  url: 'https://jmr7rf718a.execute-api.us-east-1.amazonaws.com/remotify_example'
 });
 
 example.random()

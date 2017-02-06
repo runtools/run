@@ -14,7 +14,7 @@ export async function buildAndDeploy({ inputDir, outputDir, name, version, stage
   });
 
   const apiURL = await deploy({
-    entryFile: serverIndexFile, name, stage, role, awsConfig
+    name, version, stage, entryFile: serverIndexFile, role, awsConfig
   });
 
   return apiURL;

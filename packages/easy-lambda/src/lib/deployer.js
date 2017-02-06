@@ -7,7 +7,7 @@ import { ensureDefaultRole } from './iam-handler';
 import { createOrUpdateLambdaFunction } from './lambda-handler';
 import { createOrUpdateAPIGateway } from './api-gateway-handler';
 
-export async function deploy({ entryFile, name, stage, role, awsConfig }) {
+export async function deploy({ name, version, stage, entryFile, role, awsConfig }) {
   if (!role) role = await ensureDefaultRole({ name, stage, awsConfig });
 
   let code;
@@ -18,10 +18,12 @@ export async function deploy({ entryFile, name, stage, role, awsConfig }) {
   });
 
   const lambdaFunctionARN = await createOrUpdateLambdaFunction({
-    name, stage, role, code, awsConfig
+    name, version, stage, role, code, awsConfig
   });
 
-  const apiURL = await createOrUpdateAPIGateway({ name, stage, lambdaFunctionARN, awsConfig });
+  const apiURL = await createOrUpdateAPIGateway({
+    name, version, stage, lambdaFunctionARN, awsConfig
+  });
 
   return apiURL;
 }

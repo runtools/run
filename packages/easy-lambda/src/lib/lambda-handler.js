@@ -2,15 +2,20 @@
 
 import Lambda from 'aws-sdk/clients/lambda';
 import { task, format } from './console';
+import { generateDeploymentName } from './tools';
 
-export async function createOrUpdateLambdaFunction({ name, stage, role, code, awsConfig }) {
+export async function createOrUpdateLambdaFunction({ name, version, stage, role, code, awsConfig }) {
   const lambda = new Lambda(awsConfig);
 
-  const msg = format({ name, stage, message: 'Checking lambda function' });
+  const lambdaFunctionName = generateDeploymentName({ name, version, stage });
+
+  const msg = format({
+    name, stage, message: 'Checking lambda function', info: lambdaFunctionName
+  });
   const lambdaFunction = await task(msg, async () => {
     try {
       return await lambda.getFunctionConfiguration({
-        FunctionName: name
+        FunctionName: lambdaFunctionName
       }).promise();
     } catch (err) {
       if (err.code === 'ResourceNotFoundException') return undefined;
@@ -25,10 +30,12 @@ export async function createOrUpdateLambdaFunction({ name, stage, role, code, aw
   }
 
   async function createLambdaFunction() {
-    const msg = format({ name, stage, message: 'Creating lambda function' });
+    const msg = format({
+      name, stage, message: 'Creating lambda function', info: lambdaFunctionName
+    });
     return await task(msg, async () => {
       const lambdaFunction = await lambda.createFunction({
-        FunctionName: name,
+        FunctionName: lambdaFunctionName,
         Handler: 'handler.handler',
         Role: role,
         Runtime: 'nodejs4.3',
@@ -40,17 +47,19 @@ export async function createOrUpdateLambdaFunction({ name, stage, role, code, aw
   }
 
   async function updateLambdaFunction({ existingLambdaFunction }) {
-    const msg = format({ name, stage, message: 'Updating lambda function' });
+    const msg = format({
+      name, stage, message: 'Updating lambda function', info: lambdaFunctionName
+    });
     return await task(msg, async () => {
       if (role !== existingLambdaFunction.Role) {
         await lambda.updateFunctionConfiguration({
-          FunctionName: name,
+          FunctionName: lambdaFunctionName,
           Role: role
         }).promise();
       }
 
       const lambdaFunction = await lambda.updateFunctionCode({
-        FunctionName: name,
+        FunctionName: lambdaFunctionName,
         ZipFile: code
       }).promise();
 
