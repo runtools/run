@@ -11,6 +11,9 @@
     "type": "git",
     "url": "git://github.com/mvila/remotify"
   },
+  "scripts": {
+    "remotify": "remotify ."
+  },
   "devDependencies": {
     "remotify": "^0.1.2"
   }

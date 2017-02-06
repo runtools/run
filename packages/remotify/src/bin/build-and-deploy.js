@@ -19,7 +19,10 @@ const argv = minimist(process.argv.slice(2), {
   ]
 });
 
-let inputDir = argv['input-dir'] || argv._[0] || process.cwd();
+let inputDir = argv['input-dir'] || argv._[0];
+if (!inputDir) {
+  showErrorAndExit('\'input-dir\' parameter is missing');
+}
 inputDir = resolve(process.cwd(), inputDir);
 
 const outputDir = join(inputDir, '.remotify');
