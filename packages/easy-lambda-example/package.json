@@ -1,0 +1,20 @@
+{
+  "name": "easy-lambda-example",
+  "version": "0.1.0",
+  "description": "easy-lambda example",
+  "author": "Manuel Vila <mvila@3base.com>",
+  "license": "MIT",
+  "files": [
+    "index.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mvila/remotify"
+  },
+  "scripts": {
+    "deploy": "easy-lambda index.js --name=easy-lambda-example"
+  },
+  "devDependencies": {
+    "easy-lambda": "^0.1.3"
+  }
+}
