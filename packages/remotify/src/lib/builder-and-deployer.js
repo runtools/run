@@ -11,7 +11,7 @@ export async function buildAndDeploy({ inputDir, outputDir, role, awsConfig }) {
 
   const { serverIndexFile } = await buildServer({ inputDir, outputDir });
 
-  const apiURL = await deploy({ name, inputFile: serverIndexFile, role, awsConfig });
+  const apiURL = await deploy({ name, entryFile: serverIndexFile, role, awsConfig });
 
   await buildClient({ inputDir, outputDir, apiURL });
 

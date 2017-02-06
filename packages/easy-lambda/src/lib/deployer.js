@@ -7,12 +7,12 @@ import { ensureDefaultRole } from './iam-handler';
 import { createOrUpdateLambdaFunction } from './lambda-handler';
 import { createOrUpdateAPIGateway } from './api-gateway-handler';
 
-export async function deploy({ name, inputFile, role, awsConfig }) {
+export async function deploy({ name, entryFile, role, awsConfig }) {
   if (!role) role = await ensureDefaultRole({ name, awsConfig });
 
   let code;
   await task(`${name}: Packaging service code`, async () => {
-    code = await bundle({ inputFile });
+    code = await bundle({ entryFile });
     code = await zip({ data: code, name: 'handler.js' });
   });
 

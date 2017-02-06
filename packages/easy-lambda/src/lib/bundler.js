@@ -2,9 +2,9 @@
 
 import browserify from 'browserify';
 
-export function bundle({ inputFile }) {
+export function bundle({ entryFile }) {
   const bundler = browserify({
-    entries: [inputFile],
+    entries: [entryFile],
     standalone: 'bundle',
     browserField: false,
     builtins: false,

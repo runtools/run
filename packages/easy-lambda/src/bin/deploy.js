@@ -12,7 +12,7 @@ import { showErrorAndExit } from '../lib/error';
 const argv = minimist(process.argv.slice(2), {
   string: [
     'name',
-    'input-file',
+    'entry-file',
     'role',
     'aws-access-key-id',
     'aws-secret-access-key',
@@ -20,11 +20,11 @@ const argv = minimist(process.argv.slice(2), {
   ]
 });
 
-let inputFile = argv['input-file'] || argv._[0];
-if (!inputFile) {
-  showErrorAndExit('\'input-file\' parameter is missing');
+let entryFile = argv['entry-file'] || argv._[0];
+if (!entryFile) {
+  showErrorAndExit('\'entry-file\' parameter is missing');
 }
-inputFile = resolve(process.cwd(), inputFile);
+entryFile = resolve(process.cwd(), entryFile);
 
 const name = argv.name;
 if (!name) {
@@ -36,6 +36,6 @@ const role = argv.role;
 const awsConfig = getAWSConfig(argv);
 
 (async function() {
-  const apiURL = await deploy({ name, inputFile, role, awsConfig });
+  const apiURL = await deploy({ name, entryFile, role, awsConfig });
   console.log(`${chalk.green('✔')} ${name}: Deployment completed ${chalk.gray(`(${apiURL})`)}`);
 })().catch(showErrorAndExit);
