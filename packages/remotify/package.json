@@ -1,7 +1,7 @@
 {
   "name": "remotify",
   "version": "0.1.1",
-  "description": "The easiest way to deploy microservices to AWS Lambda",
+  "description": "The easiest way to deploy a microservice to AWS Lambda",
   "keywords": [
     "remote",
     "serverless",
