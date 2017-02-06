@@ -2,7 +2,7 @@
 
 import Lambda from 'aws-sdk/clients/lambda';
 import isEqual from 'lodash.isequal';
-import { task, format } from './console';
+import { task, formatMessage } from 'remotify-common';
 import { generateDeploymentName } from './tools';
 
 export async function createOrUpdateLambdaFunction({ name, version, stage, role, environment, code, awsConfig }) {
@@ -10,7 +10,7 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
 
   const lambdaFunctionName = generateDeploymentName({ name, version, stage });
 
-  const msg = format({
+  const msg = formatMessage({
     name, stage, message: 'Checking lambda function', info: lambdaFunctionName
   });
   const lambdaFunction = await task(msg, async () => {
@@ -31,7 +31,7 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
   }
 
   async function createLambdaFunction() {
-    const msg = format({
+    const msg = formatMessage({
       name, stage, message: 'Creating lambda function', info: lambdaFunctionName
     });
     return await task(msg, async () => {
@@ -49,7 +49,7 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
   }
 
   async function updateLambdaFunction({ existingLambdaFunction }) {
-    const msg = format({
+    const msg = formatMessage({
       name, stage, message: 'Updating lambda function', info: lambdaFunctionName
     });
     return await task(msg, async () => {

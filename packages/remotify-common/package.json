@@ -1,31 +1,13 @@
 {
-  "name": "remotify",
-  "version": "0.1.4",
-  "description": "The easiest way to deploy a microservice to AWS Lambda",
-  "keywords": [
-    "remote",
-    "serverless",
-    "module",
-    "function",
-    "api",
-    "microservice",
-    "remotely",
-    "call",
-    "lambda",
-    "aws",
-    "node",
-    "javascript",
-    "deploy"
-  ],
+  "name": "remotify-common",
+  "version": "0.1.0",
+  "description": "Common functions used by Remotify",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
   "files": [
     "dist"
   ],
   "main": "dist/index.js",
-  "bin": {
-    "remotify": "dist/bin/index.js"
-  },
   "repository": {
     "type": "git",
     "url": "git://github.com/mvila/remotify"
@@ -55,15 +37,8 @@
     "extends": "eslint-config-next"
   },
   "dependencies": {
-    "child-process-promise": "^2.2.0",
-    "easy-lambda": "^0.1.3",
-    "fs-promise": "^1.0.0",
-    "minimist": "^1.2.0",
-    "node-fetch": "^1.6.3",
-    "node-version": "^1.0.0",
-    "remotify-common": "^0.1.0",
-    "sleep-promise": "^2.0.0",
-    "update-notifier": "^1.0.3"
+    "chalk": "^1.1.3",
+    "ora": "^1.1.0"
   },
   "devDependencies": {
     "babel-cli": "^6.22.2",

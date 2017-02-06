@@ -4,10 +4,8 @@
 
 import { join, resolve } from 'path';
 import minimist from 'minimist';
-import { getAWSConfig } from 'easy-lambda';
 import { buildAndDeploy } from '../lib/builder-and-deployer';
-import { format } from '../lib/console';
-import { showErrorAndExit } from '../lib/error';
+import { formatMessage, showErrorAndExit, parseEnvironmentParameter, getAWSConfig } from 'remotify-common';
 
 const argv = minimist(process.argv.slice(2), {
   string: [
@@ -15,6 +13,8 @@ const argv = minimist(process.argv.slice(2), {
     'output-dir',
     'stage',
     'role',
+    'environment',
+    'env',
     'aws-access-key-id',
     'aws-secret-access-key',
     'aws-region'
@@ -35,9 +35,11 @@ const stage = argv.stage || 'development';
 
 const role = argv.role;
 
+const environment = parseEnvironmentParameter(argv.environment || argv.env);
+
 const awsConfig = getAWSConfig(argv);
 
 (async function() {
-  const apiURL = await buildAndDeploy({ inputDir, outputDir, name, version, stage, role, awsConfig });
-  console.log(format({ status: 'success', name, stage, message: 'Build and deployment completed', info: apiURL }));
+  const apiURL = await buildAndDeploy({ inputDir, outputDir, name, version, stage, role, environment, awsConfig });
+  console.log(formatMessage({ status: 'success', name, stage, message: 'Build and deployment completed', info: apiURL }));
 })().catch(showErrorAndExit);

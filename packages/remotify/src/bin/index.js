@@ -5,7 +5,7 @@
 import { join } from 'path';
 import nodeVersion from 'node-version';
 import updateNotifier from 'update-notifier';
-import { showErrorAndExit } from '../lib/error';
+import { showErrorAndExit } from 'remotify-common';
 const pkg = require('../../package');
 
 // The following code is largely stolen from Now CLI

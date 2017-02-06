@@ -1,8 +1,7 @@
 'use strict';
 
 import APIGateway from 'aws-sdk/clients/apigateway';
-import { task, format } from './console';
-import { createUserError } from './error';
+import { task, formatMessage, createUserError } from 'remotify-common';
 import { generateDeploymentName } from './tools';
 import { addPermissionToLambdaFunction } from './lambda-handler';
 
@@ -11,7 +10,7 @@ export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFun
 
   const apiName = generateDeploymentName({ name, version, stage });
 
-  const msg = format({ name, stage, message: 'Checking API gateway', info: apiName });
+  const msg = formatMessage({ name, stage, message: 'Checking API gateway', info: apiName });
   let api = await task(msg, async () => {
     const limit = 500;
     const result = await apiGateway.getRestApis({ limit }).promise();
@@ -32,7 +31,7 @@ export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFun
   return `https://${api.id}.execute-api.${awsConfig.region}.amazonaws.com/${stageName}`;
 
   async function createAPIGateway() {
-    const msg = format({ name, stage, message: 'Creating API Gateway', info: apiName });
+    const msg = formatMessage({ name, stage, message: 'Creating API Gateway', info: apiName });
     return await task(msg, async () => {
       const api = await apiGateway.createRestApi({ name: apiName }).promise();
 
@@ -139,7 +138,7 @@ export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFun
   }
 
   async function updateAPIGateway({ restApiId }) { // eslint-disable-line no-unused-vars
-    const msg = format({ name, stage, message: 'Updating API Gateway', info: apiName });
+    const msg = formatMessage({ name, stage, message: 'Updating API Gateway', info: apiName });
     return await task(msg, async () => {
       // TODO
     });

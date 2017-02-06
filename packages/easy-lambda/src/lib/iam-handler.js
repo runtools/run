@@ -1,7 +1,7 @@
 'use strict';
 
 import IAM from 'aws-sdk/clients/iam';
-import { task, format } from './console';
+import { task, formatMessage } from 'remotify-common';
 
 const IAM_ROLE_NAME = 'easy-lambda-default-role-v1';
 const IAM_POLICY_NAME = 'basic-lambda-policy';
@@ -35,7 +35,7 @@ const IAM_POLICY_DOCUMENT = {
 export async function ensureDefaultRole({ name, stage, awsConfig }) {
   const iam = new IAM(awsConfig);
 
-  const msg = format({ name, stage, message: 'Ensuring IAM default role exists' });
+  const msg = formatMessage({ name, stage, message: 'Ensuring IAM default role exists' });
   return await task(msg, async () => {
     try {
       const result = await iam.getRole({ RoleName: IAM_ROLE_NAME }).promise();

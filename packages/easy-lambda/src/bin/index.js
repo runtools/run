@@ -4,7 +4,7 @@
 
 import { join } from 'path';
 import nodeVersion from 'node-version';
-import { showErrorAndExit } from '../lib/error';
+import { showErrorAndExit } from 'remotify-common';
 
 // The following code is largely stolen from Now CLI
 // https://github.com/zeit/now-cli

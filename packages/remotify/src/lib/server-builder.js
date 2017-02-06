@@ -3,7 +3,7 @@
 import { join, relative } from 'path';
 import fsp from 'fs-promise';
 import { exec } from 'child-process-promise';
-import { task, format } from './console';
+import { task, formatMessage } from 'remotify-common';
 
 const REMOTIFY_SERVER_VERSION = '^0.1.10';
 
@@ -14,7 +14,7 @@ export async function buildServer({ inputDir, outputDir, name, version, stage })
   const serverDir = join(outputDir, serverName);
   const serverIndexFile = join(serverDir, 'index.js');
 
-  msg = format({ name: serverName, stage, message: 'Generating files' });
+  msg = formatMessage({ name: serverName, stage, message: 'Generating files' });
   await task(msg, async () => {
     // package.json
     const serverPkgFile = join(serverDir, 'package.json');
@@ -46,7 +46,7 @@ exports.handler = server.createHandler(service);\n`;
     await fsp.outputFile(serverGitIgnoreFile, gitIgnore);
   });
 
-  msg = format({ name: serverName, stage, message: 'Installing dependencies' });
+  msg = formatMessage({ name: serverName, stage, message: 'Installing dependencies' });
   await task(msg, async () => {
     await exec('npm install', { cwd: serverDir });
   });

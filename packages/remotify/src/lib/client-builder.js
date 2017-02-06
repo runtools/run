@@ -3,7 +3,7 @@
 import { join } from 'path';
 import fsp from 'fs-promise';
 import { exec } from 'child-process-promise';
-import { task, format } from './console';
+import { task, formatMessage } from 'remotify-common';
 
 const REMOTIFY_CLIENT_VERSION = '^0.1.7';
 
@@ -13,7 +13,7 @@ export async function buildClient({ inputDir, outputDir, name, version, stage })
   const clientName = name + '-client';
   const clientDir = join(outputDir, clientName);
 
-  msg = format({ name: clientName, stage, message: 'Generating files' });
+  msg = formatMessage({ name: clientName, stage, message: 'Generating files' });
   await task(msg, async () => {
     // package.json
     const clientPkgFile = join(clientDir, 'package.json');
@@ -63,7 +63,7 @@ module.exports = function(options) {
     await fsp.outputFile(clientGitIgnoreFile, gitIgnore);
   });
 
-  msg = format({ name: clientName, stage, message: 'Installing dependencies' });
+  msg = formatMessage({ name: clientName, stage, message: 'Installing dependencies' });
   await task(msg, async () => {
     await exec('npm install', { cwd: clientDir });
   });
