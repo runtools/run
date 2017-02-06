@@ -5,7 +5,7 @@ import fsp from 'fs-promise';
 import { exec } from 'child-process-promise';
 import { task, format } from './console';
 
-const REMOTIFY_CLIENT_VERSION = '^0.1.6';
+const REMOTIFY_CLIENT_VERSION = '^0.1.7';
 
 export async function buildClient({ inputDir, outputDir, name, version, stage }) {
   let msg;
