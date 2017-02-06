@@ -4,8 +4,13 @@
 
 import { resolve, join } from 'path';
 import minimist from 'minimist';
-import { getAWSConfig, formatMessage, showErrorAndExit, parseEnvironmentParameter } from 'remotify-common';
+import { formatMessage, showErrorAndExit, getEnvironmentConfig, getAWSConfig } from 'remotify-common';
 import { deploy } from '../lib/deployer';
+
+const DEFAULT_REGION = 'us-east-1';
+const DEFAULT_STAGE = 'development';
+const DEFAULT_MEMORY_SIZE = 128;
+const DEFAULT_TIMEOUT = 3;
 
 const argv = minimist(process.argv.slice(2), {
   string: [
@@ -21,11 +26,6 @@ const argv = minimist(process.argv.slice(2), {
     'memory-size',
     'timeout'
   ],
-  default: {
-    'stage': 'development',
-    'memory-size': 128,
-    'timeout': 3
-  },
   alias: {
     'environment': ['env']
   }
@@ -41,16 +41,18 @@ const pkg = require(join(inputDir, 'package.json'));
 const { name, version } = pkg;
 const entryFile = join(inputDir, pkg.main || 'index.js');
 
-const stage = argv.stage;
+const config = pkg.easyLambda || {};
 
-const role = argv.role;
+const stage = argv.stage || config.stage || DEFAULT_STAGE;
 
-const memorySize = argv['memory-size'];
-const timeout = argv['timeout'];
+const role = argv.role || config.role;
 
-const environment = parseEnvironmentParameter(argv.environment);
+const memorySize = argv['memory-size'] || config.memorySize || DEFAULT_MEMORY_SIZE;
+const timeout = argv['timeout'] || config.timeout || DEFAULT_TIMEOUT;
 
-const awsConfig = getAWSConfig(argv);
+const environment = getEnvironmentConfig(config.environment, argv.environment);
+
+const awsConfig = getAWSConfig({ region: DEFAULT_REGION }, process.env, config, argv);
 
 (async function() {
   const apiURL = await deploy({

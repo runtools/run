@@ -5,7 +5,12 @@
 import { join, resolve } from 'path';
 import minimist from 'minimist';
 import { buildAndDeploy } from '../lib/builder-and-deployer';
-import { formatMessage, showErrorAndExit, parseEnvironmentParameter, getAWSConfig } from 'remotify-common';
+import { formatMessage, showErrorAndExit, getEnvironmentConfig, getAWSConfig } from 'remotify-common';
+
+const DEFAULT_REGION = 'us-east-1';
+const DEFAULT_STAGE = 'development';
+const DEFAULT_MEMORY_SIZE = 128;
+const DEFAULT_TIMEOUT = 3;
 
 const argv = minimist(process.argv.slice(2), {
   string: [
@@ -22,11 +27,6 @@ const argv = minimist(process.argv.slice(2), {
     'memory-size',
     'timeout'
   ],
-  default: {
-    'stage': 'development',
-    'memory-size': 128,
-    'timeout': 3
-  },
   alias: {
     'environment': ['env']
   }
@@ -38,20 +38,24 @@ if (!inputDir) {
 }
 inputDir = resolve(process.cwd(), inputDir);
 
-const { name, version } = require(join(inputDir, 'package.json'));
+const pkg = require(join(inputDir, 'package.json'));
 
-const outputDir = argv['output-dir'] || join(inputDir, '.remotify');
+const { name, version } = pkg;
 
-const stage = argv.stage;
+const config = pkg.remotify || {};
 
-const role = argv.role;
+const outputDir = argv['output-dir'] || config.outputDir || join(inputDir, '.remotify');
 
-const memorySize = argv['memory-size'];
-const timeout = argv['timeout'];
+const stage = argv.stage || config.stage || DEFAULT_STAGE;
 
-const environment = parseEnvironmentParameter(argv.environment);
+const role = argv.role || config.role;
 
-const awsConfig = getAWSConfig(argv);
+const memorySize = argv['memory-size'] || config.memorySize || DEFAULT_MEMORY_SIZE;
+const timeout = argv['timeout'] || config.timeout || DEFAULT_TIMEOUT;
+
+const environment = getEnvironmentConfig(config.environment, argv.environment);
+
+const awsConfig = getAWSConfig({ region: DEFAULT_REGION }, process.env, config, argv);
 
 (async function() {
   const apiURL = await buildAndDeploy({ inputDir, outputDir, name, version, stage, role, memorySize, timeout, environment, awsConfig });

@@ -68,35 +68,39 @@ export function showErrorAndExit(error, code = 1) {
   process.exit(code);
 }
 
-export function getAWSConfig(argv) {
-  const accessKeyId = argv['aws-access-key-id'] || process.env.AWS_ACCESS_KEY_ID;
+export function getAWSConfig(defaults, env, config, argv) {
+  const accessKeyId = argv['aws-access-key-id'] || config.accessKeyId || env.AWS_ACCESS_KEY_ID;
   if (!accessKeyId) {
     showErrorAndExit('\'aws-access-key-id\' parameter or \'AWS_ACCESS_KEY_ID\' environment variable is missing');
   }
 
-  const secretAccessKey = argv['aws-secret-access-key'] || process.env.AWS_SECRET_ACCESS_KEY;
+  const secretAccessKey = argv['aws-secret-access-key'] || config.secretAccessKey || env.AWS_SECRET_ACCESS_KEY;
   if (!secretAccessKey) {
     showErrorAndExit('\'aws-secret-access-key\' parameter or \'AWS_SECRET_ACCESS_KEY\' environment variable is missing');
   }
 
-  const region = argv['aws-region'] || process.env.AWS_REGION || 'us-east-1';
+  const region = argv['aws-region'] || config.region || env.AWS_REGION || defaults.region;
 
   return { accessKeyId, secretAccessKey, region };
 }
 
-export function parseEnvironmentParameter(env) {
-  if (env == null) {
-    env = [];
-  } else if (typeof env === 'string') {
-    env = [env];
-  }
+export function getEnvironmentConfig(configEnvironment, argvEnvironment) {
   const environment = {};
-  for (const item of env) {
+
+  Object.assign(environment, configEnvironment);
+
+  if (argvEnvironment == null) {
+    argvEnvironment = [];
+  } else if (typeof argvEnvironment === 'string') {
+    argvEnvironment = [argvEnvironment];
+  }
+  for (const item of argvEnvironment) {
     const [key, value, ...rest] = item.split('=');
     if (!key || !value || rest.length) {
       showErrorAndExit(`'environment' parameter is invalid (${item})`);
     }
     environment[key] = value;
   }
+
   return environment;
 }

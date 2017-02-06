@@ -14,6 +14,14 @@
   "scripts": {
     "remotify": "remotify ."
   },
+  "remotify": {
+    "memorySize": 256,
+    "timeout": 30,
+    "environment": {
+      "ID": "Houdini",
+      "SECRET": "Abracadabra"
+    }
+  },
   "devDependencies": {
     "remotify": "^0.1.5"
   }
