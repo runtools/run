@@ -1,6 +1,6 @@
 {
   "name": "remotify-example",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Remotify example",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
@@ -15,6 +15,6 @@
     "remotify": "remotify ."
   },
   "devDependencies": {
-    "remotify": "^0.1.2"
+    "remotify": "^0.1.3"
   }
 }
