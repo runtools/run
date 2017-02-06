@@ -5,7 +5,7 @@ import isEqual from 'lodash.isequal';
 import { task, formatMessage } from 'remotify-common';
 import { generateDeploymentName } from './tools';
 
-export async function createOrUpdateLambdaFunction({ name, version, stage, role, environment, code, awsConfig }) {
+export async function createOrUpdateLambdaFunction({ name, version, stage, role, memorySize, timeout, environment, code, awsConfig }) {
   const lambda = new Lambda(awsConfig);
 
   const lambdaFunctionName = generateDeploymentName({ name, version, stage });
@@ -38,8 +38,10 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
       const lambdaFunction = await lambda.createFunction({
         FunctionName: lambdaFunctionName,
         Handler: 'handler.handler',
-        Role: role,
         Runtime: 'nodejs4.3',
+        Role: role,
+        MemorySize: memorySize,
+        Timeout: timeout,
         Environment: { Variables: environment },
         Code: { ZipFile: code }
       }).promise();
@@ -58,7 +60,12 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
       if (!changed) {
         changed = role !== existingLambdaFunction.Role;
       }
-
+      if (!changed) {
+        changed = memorySize !== existingLambdaFunction.MemorySize;
+      }
+      if (!changed) {
+        changed = timeout !== existingLambdaFunction.Timeout;
+      }
       if (!changed) {
         let existingEnvironment = existingLambdaFunction.Environment;
         existingEnvironment = existingEnvironment && existingEnvironment.Variables;
@@ -69,6 +76,8 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
         await lambda.updateFunctionConfiguration({
           FunctionName: lambdaFunctionName,
           Role: role,
+          MemorySize: memorySize,
+          Timeout: timeout,
           Environment: { Variables: environment }
         }).promise();
       }
