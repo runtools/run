@@ -38,6 +38,6 @@ const role = argv.role;
 const awsConfig = getAWSConfig(argv);
 
 (async function() {
-  await buildAndDeploy({ inputDir, outputDir, name, version, stage, role, awsConfig });
-  console.log(format({ status: 'success', name, stage, message: 'Build and deployment completed' }));
+  const apiURL = await buildAndDeploy({ inputDir, outputDir, name, version, stage, role, awsConfig });
+  console.log(format({ status: 'success', name, stage, message: 'Build and deployment completed', info: apiURL }));
 })().catch(showErrorAndExit);

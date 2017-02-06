@@ -4,7 +4,9 @@ var fetch = require('isomorphic-fetch');
 var rpc = require('easy-json-rpc').default;
 
 module.exports = function(options) {
+  if (!options) options = {};
   var url = options.url;
+  if (!url) throw new Error('\'url\' parameter is missing in Remotify client');
 
   return {
     createFunction: function(name) {

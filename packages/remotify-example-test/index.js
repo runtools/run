@@ -1,7 +1,15 @@
 'use strict';
 
-var example = require('remotify-example-client');
+var example = require('remotify-example-client')({
+  url: 'https://ygp7xwwt7k.execute-api.us-east-1.amazonaws.com/remotify_example'
+});
 
 example.random()
-  .then(function(result) { document.write('<h1>' + result + '</h1>'); })
-  .catch(function(err) { document.write(err.message); });
+  .then(function(result) {
+    console.log(result);
+    process.browser && document.write('<h1>' + result + '</h1>');
+  })
+  .catch(function(err) {
+    console.error(err);
+    process.browser && document.write(err.message);
+  });

@@ -7,7 +7,7 @@ import { task, format } from './console';
 
 const REMOTIFY_CLIENT_VERSION = '^0.1.6';
 
-export async function buildClient({ inputDir, outputDir, name, version, stage, apiURL }) {
+export async function buildClient({ inputDir, outputDir, name, version, stage }) {
   let msg;
 
   const clientName = name + '-client';
@@ -32,9 +32,12 @@ export async function buildClient({ inputDir, outputDir, name, version, stage, a
     const clientIndexFile = join(clientDir, 'index.js');
     let code = `"use strict";
 
-var client = require("remotify-client")({
-  url: ${JSON.stringify(apiURL)}
-});\n\n`;
+module.exports = function(options) {
+  var url = options && options.url;
+
+  var client = require("remotify-client")({ url: url });
+
+  return {\n`;
 
     const service = require(inputDir);
     for (let key of Object.keys(service)) {
@@ -46,8 +49,11 @@ var client = require("remotify-client")({
       } else {
         value = JSON.stringify(value);
       }
-      code += `exports[${key}] = ${value};\n`;
+      code += `    ${key}: ${value},\n`;
     }
+    if (code.slice(-2) === ',\n') code = code.slice(0, -2) + '\n';
+
+    code += '  };\n};\n';
 
     await fsp.outputFile(clientIndexFile, code);
 

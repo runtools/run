@@ -15,7 +15,7 @@
     "bundle": "browserify --entry index.js --outfile dist/index.js"
   },
   "dependencies": {
-    "remotify-example-client": "^0.1.4"
+    "remotify-example-client": "^0.1.7"
   },
   "devDependencies": {
     "browserify": "^14.0.0"
