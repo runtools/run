@@ -1,10 +1,11 @@
 'use strict';
 
 import Lambda from 'aws-sdk/clients/lambda';
+import isEqual from 'lodash.isequal';
 import { task, format } from './console';
 import { generateDeploymentName } from './tools';
 
-export async function createOrUpdateLambdaFunction({ name, version, stage, role, code, awsConfig }) {
+export async function createOrUpdateLambdaFunction({ name, version, stage, role, environment, code, awsConfig }) {
   const lambda = new Lambda(awsConfig);
 
   const lambdaFunctionName = generateDeploymentName({ name, version, stage });
@@ -39,6 +40,7 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
         Handler: 'handler.handler',
         Role: role,
         Runtime: 'nodejs4.3',
+        Environment: { Variables: environment },
         Code: { ZipFile: code }
       }).promise();
 
@@ -51,10 +53,23 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
       name, stage, message: 'Updating lambda function', info: lambdaFunctionName
     });
     return await task(msg, async () => {
-      if (role !== existingLambdaFunction.Role) {
+      let changed = false;
+
+      if (!changed) {
+        changed = role !== existingLambdaFunction.Role;
+      }
+
+      if (!changed) {
+        let existingEnvironment = existingLambdaFunction.Environment;
+        existingEnvironment = existingEnvironment && existingEnvironment.Variables;
+        changed = !isEqual(environment, existingEnvironment);
+      }
+
+      if (changed) {
         await lambda.updateFunctionConfiguration({
           FunctionName: lambdaFunctionName,
-          Role: role
+          Role: role,
+          Environment: { Variables: environment }
         }).promise();
       }
 

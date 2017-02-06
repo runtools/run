@@ -14,6 +14,8 @@ const argv = minimist(process.argv.slice(2), {
     'input-dir',
     'stage',
     'role',
+    'environment',
+    'env',
     'aws-access-key-id',
     'aws-secret-access-key',
     'aws-region'
@@ -34,9 +36,26 @@ const stage = argv.stage || 'development';
 
 const role = argv.role;
 
+let env = argv.environment || argv.env;
+if (env == null) {
+  env = [];
+} else if (typeof env === 'string') {
+  env = [env];
+}
+const environment = {};
+for (const item of env) {
+  const [key, value, ...rest] = item.split('=');
+  if (!key || !value || rest.length) {
+    showErrorAndExit(`'environment' parameter is invalid (${item})`);
+  }
+  environment[key] = value;
+}
+
 const awsConfig = getAWSConfig(argv);
 
 (async function() {
-  const apiURL = await deploy({ name, version, stage, entryFile, role, awsConfig });
+  const apiURL = await deploy({
+    name, version, stage, entryFile, role, environment, awsConfig
+  });
   console.log(format({ status: 'success', name, stage, message: 'Deployment completed', info: apiURL }));
 })().catch(showErrorAndExit);
