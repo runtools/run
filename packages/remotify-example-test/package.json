@@ -1,0 +1,23 @@
+{
+  "name": "remotify-example-test",
+  "version": "0.1.1",
+  "description": "Remotify example test",
+  "author": "Manuel Vila <mvila@3base.com>",
+  "license": "MIT",
+  "files": [
+    "index.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mvila/remotify"
+  },
+  "scripts": {
+    "bundle": "browserify --entry index.js --outfile dist/index.js"
+  },
+  "dependencies": {
+    "remotify-example-client": "^0.1.4"
+  },
+  "devDependencies": {
+    "browserify": "^14.0.0"
+  }
+}

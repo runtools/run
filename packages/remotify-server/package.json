@@ -1,0 +1,17 @@
+{
+  "name": "remotify-server",
+  "version": "0.1.9",
+  "description": "Remotify server",
+  "author": "Manuel Vila <mvila@3base.com>",
+  "license": "MIT",
+  "files": [
+    "index.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mvila/remotify"
+  },
+  "dependencies": {
+    "easy-json-rpc": "^2.0.1"
+  }
+}

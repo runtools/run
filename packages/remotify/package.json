@@ -1,0 +1,75 @@
+{
+  "name": "remotify",
+  "version": "0.1.1",
+  "description": "The easiest way to deploy microservices to AWS Lambda",
+  "keywords": [
+    "remote",
+    "serverless",
+    "module",
+    "function",
+    "api",
+    "microservice",
+    "remotely",
+    "call",
+    "lambda",
+    "aws",
+    "node",
+    "javascript",
+    "deploy"
+  ],
+  "author": "Manuel Vila <mvila@3base.com>",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.js",
+  "bin": {
+    "remotify": "dist/bin/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mvila/remotify"
+  },
+  "scripts": {
+    "transpile": "babel src --out-dir dist",
+    "prepublish": "npm run transpile",
+    "lint": "eslint ."
+  },
+  "babel": {
+    "presets": [
+      [
+        "env",
+        {
+          "targets": {
+            "node": 4
+          },
+          "loose": true,
+          "exclude": [
+            "transform-regenerator"
+          ]
+        }
+      ]
+    ]
+  },
+  "eslintConfig": {
+    "extends": "eslint-config-next"
+  },
+  "dependencies": {
+    "child-process-promise": "^2.2.0",
+    "easy-lambda": "^0.1.1",
+    "fs-promise": "^1.0.0",
+    "minimist": "^1.2.0",
+    "node-fetch": "^1.6.3",
+    "node-version": "^1.0.0",
+    "ora": "^1.1.0",
+    "sleep-promise": "^2.0.0",
+    "update-notifier": "^1.0.3"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.22.2",
+    "babel-eslint": "^7.1.1",
+    "babel-preset-env": "^1.1.8",
+    "eslint": "^3.14.1",
+    "eslint-config-next": "^0.1.15"
+  }
+}

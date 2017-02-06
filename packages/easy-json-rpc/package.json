@@ -1,0 +1,68 @@
+{
+  "name": "easy-json-rpc",
+  "version": "2.0.1",
+  "description": "Easily build and handle JSON-RPC 2.0 requests, notifications and responses",
+  "keywords": [
+    "json-rpc",
+    "2.0",
+    "create",
+    "build",
+    "handle",
+    "wrap",
+    "unwrap",
+    "format",
+    "parse"
+  ],
+  "author": "Manuel Vila <mvila@3base.com>",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mvila/remotify"
+  },
+  "scripts": {
+    "transpile": "babel src --out-dir dist",
+    "prepublish": "npm run transpile",
+    "lint": "eslint src",
+    "test": "ava"
+  },
+  "babel": {
+    "presets": [
+      [
+        "env",
+        {
+          "targets": {
+            "ie": 10,
+            "node": 4
+          },
+          "loose": true,
+          "exclude": [
+            "transform-regenerator"
+          ]
+        }
+      ]
+    ]
+  },
+  "ava": {
+    "require": [
+      "babel-register"
+    ]
+  },
+  "eslintConfig": {
+    "extends": "eslint-config-next"
+  },
+  "dependencies": {
+    "is-promise": "^2.1.0"
+  },
+  "devDependencies": {
+    "ava": "^0.18.0",
+    "babel-cli": "^6.22.2",
+    "babel-eslint": "^7.1.1",
+    "babel-preset-env": "^1.1.8",
+    "eslint": "^3.14.1",
+    "eslint-config-next": "^0.1.15"
+  }
+}
