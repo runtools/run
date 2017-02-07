@@ -2,8 +2,7 @@
 
 import Lambda from 'aws-sdk/clients/lambda';
 import isEqual from 'lodash.isequal';
-import { task, formatMessage } from 'voila-common';
-import { generateDeploymentName } from './tools';
+import { generateDeploymentName, task, formatMessage } from 'voila-common';
 
 export async function createOrUpdateLambdaFunction({ name, version, stage, role, memorySize, timeout, environment, code, awsConfig }) {
   const lambda = new Lambda(awsConfig);

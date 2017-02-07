@@ -12,7 +12,10 @@
     "url": "git://github.com/voilajs/voila"
   },
   "scripts": {
-    "bundle": "browserify --entry index.js --outfile dist/index.js"
+    "build-dist": "mkdir -p dist && cp index.html dist && browserify --entry index.js --outfile dist/index.js"
+  },
+  "dependencies": {
+    "voila-service-example-client": "^0.1.11"
   },
   "devDependencies": {
     "browserify": "^14.0.0"

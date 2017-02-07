@@ -1,8 +1,8 @@
 'use strict';
 
-import { deploy } from 'easy-lambda';
 import { buildClient } from './client-builder';
 import { buildServer } from './server-builder';
+import { deploy } from './deployer';
 
 export async function buildAndDeploy({ inputDir, outputDir, name, version, stage, role, memorySize, timeout, environment, awsConfig }) {
   await buildClient({

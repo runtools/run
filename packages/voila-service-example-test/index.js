@@ -1,7 +1,7 @@
 'use strict';
 
 var example = require('voila-service-example-client')({
-  url: 'https://jmr7rf718a.execute-api.us-east-1.amazonaws.com/voila_service_example'
+  url: 'https://6kstmszq5k.execute-api.us-east-1.amazonaws.com/voila_service_example'
 });
 
 example.random()

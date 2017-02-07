@@ -1,7 +1,23 @@
 'use strict';
 
+import semver from 'semver';
 import chalk from 'chalk';
 import ora from 'ora';
+
+export function generateDeploymentName({ name, version, stage }) {
+  version = createCompatibleVersionRange(version).replace(/\./g, '-');
+  return `${name}-${version}-${stage}`;
+}
+
+function createCompatibleVersionRange(version) {
+  const major = semver.major(version);
+  if (major >= 1) {
+    return `${major}.x.x`;
+  } else {
+    const minor = semver.minor(version);
+    return `${major}.${minor}.x`;
+  }
+}
 
 export async function task(message, fn) {
   const spinner = ora(message).start();

@@ -1,8 +1,7 @@
 'use strict';
 
 import APIGateway from 'aws-sdk/clients/apigateway';
-import { task, formatMessage, createUserError } from 'voila-common';
-import { generateDeploymentName } from './tools';
+import { generateDeploymentName, task, formatMessage, createUserError } from 'voila-common';
 import { addPermissionToLambdaFunction } from './lambda-handler';
 
 export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFunctionARN, awsConfig }) {
