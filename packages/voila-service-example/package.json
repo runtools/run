@@ -1,7 +1,7 @@
 {
-  "name": "remotify-example",
+  "name": "voila-service-example",
   "version": "0.1.10",
-  "description": "Remotify example",
+  "description": "Voila Service example",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
   "files": [
@@ -9,12 +9,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/mvila/remotify"
+    "url": "git://github.com/voilajs/voila"
   },
   "scripts": {
-    "remotify": "remotify ."
+    "voila": "voila ."
   },
-  "remotify": {
+  "voila": {
     "memorySize": 256,
     "timeout": 30,
     "environment": {
@@ -23,6 +23,6 @@
     }
   },
   "devDependencies": {
-    "remotify": "^0.1.6"
+    "voila": "^0.1.6"
   }
 }

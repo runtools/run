@@ -2,7 +2,7 @@
 
 import { bundle } from './bundler';
 import { zip } from './archiver';
-import { task, formatMessage } from 'remotify-common';
+import { task, formatMessage } from 'voila-common';
 import { ensureDefaultRole } from './iam-handler';
 import { createOrUpdateLambdaFunction } from './lambda-handler';
 import { createOrUpdateAPIGateway } from './api-gateway-handler';

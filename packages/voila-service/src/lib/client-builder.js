@@ -3,9 +3,9 @@
 import { join } from 'path';
 import fsp from 'fs-promise';
 import { exec } from 'child-process-promise';
-import { task, formatMessage } from 'remotify-common';
+import { task, formatMessage } from 'voila-common';
 
-const REMOTIFY_CLIENT_VERSION = '^0.1.7';
+const VOILA_SERVICE_CLIENT_VERSION = '^0.1.7';
 
 export async function buildClient({ inputDir, outputDir, name, version, stage }) {
   let msg;
@@ -23,7 +23,7 @@ export async function buildClient({ inputDir, outputDir, name, version, stage })
       version,
       files: ['index.js'],
       dependencies: {
-        'remotify-client': REMOTIFY_CLIENT_VERSION
+        'voila-service-client': VOILA_SERVICE_CLIENT_VERSION
       }
     };
     await fsp.outputFile(clientPkgFile, JSON.stringify(clientPkg, undefined, 2));
@@ -35,7 +35,7 @@ export async function buildClient({ inputDir, outputDir, name, version, stage })
 module.exports = function(options) {
   var url = options && options.url;
 
-  var client = require("remotify-client")({ url: url });
+  var client = require("voila-service-client")({ url: url });
 
   return {\n`;
 

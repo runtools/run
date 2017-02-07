@@ -1,7 +1,7 @@
 'use strict';
 
 import APIGateway from 'aws-sdk/clients/apigateway';
-import { task, formatMessage, createUserError } from 'remotify-common';
+import { task, formatMessage, createUserError } from 'voila-common';
 import { generateDeploymentName } from './tools';
 import { addPermissionToLambdaFunction } from './lambda-handler';
 

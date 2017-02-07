@@ -3,9 +3,9 @@
 import { join, relative } from 'path';
 import fsp from 'fs-promise';
 import { exec } from 'child-process-promise';
-import { task, formatMessage } from 'remotify-common';
+import { task, formatMessage } from 'voila-common';
 
-const REMOTIFY_SERVER_VERSION = '^0.1.10';
+const VOILA_SERVICE_SERVER_VERSION = '^0.1.10';
 
 export async function buildServer({ inputDir, outputDir, name, version, stage }) {
   let msg;
@@ -25,7 +25,7 @@ export async function buildServer({ inputDir, outputDir, name, version, stage })
       private: true,
       files: ['index.js'],
       dependencies: {
-        'remotify-server': REMOTIFY_SERVER_VERSION
+        'voila-service-server': VOILA_SERVICE_SERVER_VERSION
       }
     };
     await fsp.outputFile(serverPkgFile, JSON.stringify(serverPkg, undefined, 2));
@@ -33,7 +33,7 @@ export async function buildServer({ inputDir, outputDir, name, version, stage })
     // index.js
     const code = `"use strict";
 
-var server = require("remotify-server");
+var server = require("voila-service-server");
 var service = require(${JSON.stringify(relative(serverDir, inputDir))});
 
 exports.handler = server.createHandler(service);\n`;

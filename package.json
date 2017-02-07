@@ -1,9 +1,9 @@
 {
-  "name": "remotify-packages",
+  "name": "voila-monorepo",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git://github.com/mvila/remotify"
+    "url": "git://github.com/mvila/voila"
   },
   "devDependencies": {
     "lerna": "^2.0.0-beta.36"

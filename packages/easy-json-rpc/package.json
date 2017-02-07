@@ -21,7 +21,7 @@
   "main": "dist/index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/mvila/remotify"
+    "url": "git://github.com/voilajs/voila"
   },
   "scripts": {
     "transpile": "babel src --out-dir dist",

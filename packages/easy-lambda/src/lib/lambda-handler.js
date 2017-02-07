@@ -2,7 +2,7 @@
 
 import Lambda from 'aws-sdk/clients/lambda';
 import isEqual from 'lodash.isequal';
-import { task, formatMessage } from 'remotify-common';
+import { task, formatMessage } from 'voila-common';
 import { generateDeploymentName } from './tools';
 
 export async function createOrUpdateLambdaFunction({ name, version, stage, role, memorySize, timeout, environment, code, awsConfig }) {

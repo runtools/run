@@ -23,7 +23,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/mvila/remotify"
+    "url": "git://github.com/voilajs/voila"
   },
   "scripts": {
     "transpile": "babel src --out-dir dist",
@@ -58,7 +58,7 @@
     "minimist": "^1.2.0",
     "node-fetch": "^1.6.3",
     "node-version": "^1.0.0",
-    "remotify-common": "^0.1.2",
+    "voila-common": "^0.1.2",
     "semver": "^5.3.0",
     "sleep-promise": "^2.0.0",
     "stream-buffers": "^3.0.1"

@@ -1,4 +1,4 @@
-# remotify-common
+# Voila Service client
 
 ```javascript
 // TODO: documentation!

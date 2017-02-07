@@ -1,4 +1,4 @@
-# remotify-client
+# voila-common
 
 ```javascript
 // TODO: documentation!

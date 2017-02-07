@@ -5,7 +5,7 @@
 import { join, resolve } from 'path';
 import minimist from 'minimist';
 import { buildAndDeploy } from '../lib/builder-and-deployer';
-import { formatMessage, showErrorAndExit, getEnvironmentConfig, getAWSConfig } from 'remotify-common';
+import { formatMessage, showErrorAndExit, getEnvironmentConfig, getAWSConfig } from 'voila-common';
 
 const DEFAULT_REGION = 'us-east-1';
 const DEFAULT_STAGE = 'development';
@@ -42,9 +42,9 @@ const pkg = require(join(inputDir, 'package.json'));
 
 const { name, version } = pkg;
 
-const config = pkg.remotify || {};
+const config = pkg.voila || {};
 
-const outputDir = argv['output-dir'] || config.outputDir || join(inputDir, '.remotify');
+const outputDir = argv['output-dir'] || config.outputDir || join(inputDir, '.voila');
 
 const stage = argv.stage || config.stage || DEFAULT_STAGE;
 

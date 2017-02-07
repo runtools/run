@@ -1,7 +1,7 @@
 {
-  "name": "remotify-example-test",
+  "name": "voila-service-example-test",
   "version": "0.1.3",
-  "description": "Remotify example test",
+  "description": "Voila Service example test",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
   "files": [
@@ -9,13 +9,13 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/mvila/remotify"
+    "url": "git://github.com/voilajs/voila"
   },
   "scripts": {
     "bundle": "browserify --entry index.js --outfile dist/index.js"
   },
   "dependencies": {
-    "remotify-example-client": "^0.1.7"
+    "voila-service-example-client": "^0.1.7"
   },
   "devDependencies": {
     "browserify": "^14.0.0"

@@ -6,7 +6,7 @@ var rpc = require('easy-json-rpc').default;
 module.exports = function(options) {
   if (!options) options = {};
   var url = options.url;
-  if (!url) throw new Error('\'url\' parameter is missing in Remotify client');
+  if (!url) throw new Error('\'url\' parameter is missing in Voila Service client');
 
   return {
     createFunction: function(name) {
@@ -30,7 +30,7 @@ module.exports = function(options) {
           return response.json();
         })
         .then(function(response) {
-          if (response.jsonrpc) { // Remotify server response
+          if (response.jsonrpc) { // Voila Service server response
             return rpc.handleResponse(response);
           } else if (response.errorMessage) { // Lambda error
             throw new Error(response.errorMessage);

@@ -1,4 +1,4 @@
-# remotify-example
+# voila-service-example
 
 ```javascript
 // TODO: documentation!

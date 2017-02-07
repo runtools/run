@@ -5,14 +5,14 @@
 import { join } from 'path';
 import nodeVersion from 'node-version';
 import updateNotifier from 'update-notifier';
-import { showErrorAndExit } from 'remotify-common';
+import { showErrorAndExit } from 'voila-common';
 const pkg = require('../../package');
 
 // The following code is largely stolen from Now CLI
 // https://github.com/zeit/now-cli
 
 if (nodeVersion.major < 4) {
-  showErrorAndExit('Remotify requires at least version 4 of Node.');
+  showErrorAndExit('Voila Service requires at least version 4 of Node.');
 }
 
 updateNotifier({ pkg }).notify();

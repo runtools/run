@@ -1,7 +1,7 @@
 'use strict';
 
 import IAM from 'aws-sdk/clients/iam';
-import { task, formatMessage } from 'remotify-common';
+import { task, formatMessage } from 'voila-common';
 
 const IAM_ROLE_NAME = 'easy-lambda-default-role-v1';
 const IAM_POLICY_NAME = 'basic-lambda-policy';

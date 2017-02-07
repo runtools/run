@@ -4,7 +4,7 @@
 
 import { resolve, join } from 'path';
 import minimist from 'minimist';
-import { formatMessage, showErrorAndExit, getEnvironmentConfig, getAWSConfig } from 'remotify-common';
+import { formatMessage, showErrorAndExit, getEnvironmentConfig, getAWSConfig } from 'voila-common';
 import { deploy } from '../lib/deployer';
 
 const DEFAULT_REGION = 'us-east-1';

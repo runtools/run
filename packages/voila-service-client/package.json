@@ -1,7 +1,7 @@
 {
-  "name": "remotify-client",
+  "name": "voila-service-client",
   "version": "0.1.7",
-  "description": "Remotify client",
+  "description": "Voila Service client",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
   "files": [
@@ -9,7 +9,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/mvila/remotify"
+    "url": "git://github.com/voilajs/voila"
   },
   "dependencies": {
     "easy-json-rpc": "^2.0.2",

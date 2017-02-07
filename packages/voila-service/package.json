@@ -1,16 +1,34 @@
 {
-  "name": "remotify-common",
-  "version": "0.1.2",
-  "description": "Common functions used by Remotify",
+  "name": "voila-service",
+  "version": "0.1.6",
+  "description": "The easiest way to deploy to AWS",
+  "keywords": [
+    "aws",
+    "serverless",
+    "microservice",
+    "api",
+    "lambda",
+    "s3",
+    "static",
+    "website",
+    "hosting",
+    "javascript",
+    "cloud",
+    "deployment",
+    "deploy"
+  ],
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
   "files": [
     "dist"
   ],
   "main": "dist/index.js",
+  "bin": {
+    "voila": "dist/bin/index.js"
+  },
   "repository": {
     "type": "git",
-    "url": "git://github.com/mvila/remotify"
+    "url": "git://github.com/mvila/voila"
   },
   "scripts": {
     "transpile": "babel src --out-dir dist",
@@ -37,8 +55,15 @@
     "extends": "eslint-config-next"
   },
   "dependencies": {
-    "chalk": "^1.1.3",
-    "ora": "^1.1.0"
+    "child-process-promise": "^2.2.0",
+    "easy-lambda": "^0.1.3",
+    "fs-promise": "^1.0.0",
+    "minimist": "^1.2.0",
+    "node-fetch": "^1.6.3",
+    "node-version": "^1.0.0",
+    "voila-common": "^0.1.2",
+    "sleep-promise": "^2.0.0",
+    "update-notifier": "^1.0.3"
   },
   "devDependencies": {
     "babel-cli": "^6.22.2",
