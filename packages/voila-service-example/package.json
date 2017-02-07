@@ -1,6 +1,6 @@
 {
   "name": "voila-service-example",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Voila Service example",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
@@ -23,7 +23,7 @@
     }
   },
   "devDependencies": {
-    "voila-cli": "^0.1.1",
-    "voila-service": "^0.1.7"
+    "voila-cli": "^0.1.2",
+    "voila-service": "^0.1.8"
   }
 }
