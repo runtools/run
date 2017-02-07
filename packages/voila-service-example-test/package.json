@@ -1,6 +1,6 @@
 {
   "name": "voila-service-example-test",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Voila Service example test",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
@@ -13,9 +13,6 @@
   },
   "scripts": {
     "bundle": "browserify --entry index.js --outfile dist/index.js"
-  },
-  "dependencies": {
-    "voila-service-example-client": "^0.1.7"
   },
   "devDependencies": {
     "browserify": "^14.0.0"

@@ -1,6 +1,6 @@
 {
   "name": "easy-json-rpc",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Easily build and handle JSON-RPC 2.0 requests, notifications and responses",
   "keywords": [
     "json-rpc",
