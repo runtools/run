@@ -8,7 +8,7 @@ import updateNotifier from 'update-notifier';
 import { showErrorAndExit } from 'voila-common';
 const pkg = require('../../package');
 
-// The following code is largely stolen from Now CLI
+// The following code is unashamedly stolen from Now CLI
 // https://github.com/zeit/now-cli
 
 if (nodeVersion.major < 4) {

@@ -1,6 +1,6 @@
 {
-  "name": "voila-service",
-  "version": "0.1.6",
+  "name": "voila-cli",
+  "version": "0.1.0",
   "description": "The easiest way to deploy to AWS",
   "keywords": [
     "aws",
@@ -24,7 +24,7 @@
   ],
   "main": "dist/index.js",
   "bin": {
-    "voila-service": "dist/bin/index.js"
+    "voila": "dist/bin/index.js"
   },
   "repository": {
     "type": "git",
@@ -56,14 +56,11 @@
   },
   "dependencies": {
     "child-process-promise": "^2.2.0",
-    "easy-lambda": "^0.1.3",
     "fs-promise": "^1.0.0",
     "minimist": "^1.2.0",
-    "node-fetch": "^1.6.3",
     "node-version": "^1.0.0",
-    "voila-common": "^0.1.2",
-    "sleep-promise": "^2.0.0",
-    "update-notifier": "^1.0.3"
+    "update-notifier": "^1.0.3",
+    "voila-common": "^0.1.2"
   },
   "devDependencies": {
     "babel-cli": "^6.22.2",

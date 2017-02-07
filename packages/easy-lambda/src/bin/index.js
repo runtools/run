@@ -6,7 +6,7 @@ import { join } from 'path';
 import nodeVersion from 'node-version';
 import { showErrorAndExit } from 'voila-common';
 
-// The following code is largely stolen from Now CLI
+// The following code is unashamedly stolen from Now CLI
 // https://github.com/zeit/now-cli
 
 if (nodeVersion.major < 4) {
