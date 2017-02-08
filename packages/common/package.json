@@ -1,6 +1,6 @@
 {
   "name": "@voila/common",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Common functions used by Voila",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
