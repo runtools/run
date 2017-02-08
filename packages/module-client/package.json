@@ -1,0 +1,18 @@
+{
+  "name": "@voila/module-client",
+  "version": "0.1.8",
+  "description": "Voila Module client",
+  "author": "Manuel Vila <mvila@3base.com>",
+  "license": "MIT",
+  "files": [
+    "index.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/voilajs/voila"
+  },
+  "dependencies": {
+    "easy-json-rpc": "^2.0.3",
+    "isomorphic-fetch": "^2.2.1"
+  }
+}

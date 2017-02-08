@@ -1,0 +1,26 @@
+{
+  "name": "@voila/module-example",
+  "version": "0.1.12",
+  "description": "Voila Module example",
+  "author": "Manuel Vila <mvila@3base.com>",
+  "license": "MIT",
+  "files": [
+    "index.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/voilajs/voila"
+  },
+  "voila": {
+    "type": "@voila/module",
+    "memorySize": 256,
+    "timeout": 30,
+    "environment": {
+      "ID": "Houdini",
+      "SECRET": "Abracadabra"
+    }
+  },
+  "devDependencies": {
+    "@voila/module": "^0.1.8"
+  }
+}

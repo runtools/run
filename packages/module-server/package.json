@@ -1,0 +1,17 @@
+{
+  "name": "@voila/module-server",
+  "version": "0.1.11",
+  "description": "Voila Module server",
+  "author": "Manuel Vila <mvila@3base.com>",
+  "license": "MIT",
+  "files": [
+    "index.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/voilajs/voila"
+  },
+  "dependencies": {
+    "easy-json-rpc": "^2.0.3"
+  }
+}

@@ -1,5 +1,0 @@
-# Voila
-
-```javascript
-// TODO: documentation!
-```

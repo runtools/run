@@ -1,0 +1,23 @@
+{
+  "name": "@voila/module-example-test",
+  "version": "0.1.5",
+  "description": "Voila Module example test",
+  "author": "Manuel Vila <mvila@3base.com>",
+  "license": "MIT",
+  "files": [
+    "index.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/voilajs/voila"
+  },
+  "scripts": {
+    "build-dist": "mkdir -p dist && cp index.html dist && browserify --entry index.js --outfile dist/index.js"
+  },
+  "dependencies": {
+    "@voila/module-example-client": "^0.1.11"
+  },
+  "devDependencies": {
+    "browserify": "^14.0.0"
+  }
+}

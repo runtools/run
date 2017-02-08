@@ -1,6 +1,6 @@
 .DS_Store
 .npmrc
-.envrc
 node_modules
 npm-debug.log
-lerna-debug.log
+.envrc
+.voila
