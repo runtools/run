@@ -45,7 +45,7 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
         Code: { ZipFile: code }
       }).promise();
 
-      return lambdaFunction.FunctionArn;
+      return { lambdaFunctionARN: lambdaFunction.FunctionArn };
     });
   }
 
@@ -86,7 +86,7 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
         ZipFile: code
       }).promise();
 
-      return lambdaFunction.FunctionArn;
+      return { lambdaFunctionARN: lambdaFunction.FunctionArn };
     });
   }
 }

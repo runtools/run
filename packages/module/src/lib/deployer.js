@@ -17,13 +17,13 @@ export async function deploy({ name, version, stage, entryFile, role, memorySize
     code = await zip({ data: code, filename: 'handler.js' });
   });
 
-  const lambdaFunctionARN = await createOrUpdateLambdaFunction({
+  const { lambdaFunctionARN } = await createOrUpdateLambdaFunction({
     name, version, stage, role, memorySize, timeout, environment, code, awsConfig
   });
 
-  const apiURL = await createOrUpdateAPIGateway({
+  const { apiURL } = await createOrUpdateAPIGateway({
     name, version, stage, lambdaFunctionARN, awsConfig
   });
 
-  return apiURL;
+  return { apiURL };
 }

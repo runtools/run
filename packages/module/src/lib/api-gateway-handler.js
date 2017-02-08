@@ -30,7 +30,9 @@ export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFun
     await updateAPIGateway({ restApiId: api.id });
   }
 
-  return `https://${api.id}.execute-api.${awsConfig.region}.amazonaws.com/${stageName}`;
+  const apiURL = `https://${api.id}.execute-api.${awsConfig.region}.amazonaws.com/${stageName}`;
+
+  return { apiURL };
 
   async function createAPIGateway() {
     const msg = formatMessage({ name, stage, message: 'Creating API Gateway', info: apiName });

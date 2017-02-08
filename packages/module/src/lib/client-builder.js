@@ -8,10 +8,8 @@ import { task, formatMessage } from '@voila/common';
 
 const VOILA_MODULE_CLIENT_VERSION = '^0.1.7';
 
-export async function buildClient({ inputDir, clientDir, name, version, isPrivate, stage }) {
+export async function buildClient({ inputDir, clientDir, name, clientName, version, isPrivate, stage }) {
   let msg;
-
-  const clientName = name + '-client';
 
   msg = formatMessage({ name: clientName, stage, message: 'Generating files' });
   await task(msg, async () => {
