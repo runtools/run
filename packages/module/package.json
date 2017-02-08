@@ -1,6 +1,6 @@
 {
   "name": "@voila/module",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "The easiest way to deploy to AWS",
   "keywords": [
     "aws",
@@ -65,7 +65,7 @@
     "node-version": "^1.0.0",
     "stream-buffers": "^3.0.1",
     "update-notifier": "^1.0.3",
-    "@voila/common": "^0.1.5"
+    "@voila/common": "^0.1.6"
   },
   "devDependencies": {
     "babel-cli": "^6.22.2",
