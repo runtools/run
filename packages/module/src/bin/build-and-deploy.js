@@ -15,7 +15,8 @@ const DEFAULT_TIMEOUT = 3;
 const argv = minimist(process.argv.slice(2), {
   string: [
     'input-dir',
-    'output-dir',
+    'client-dir',
+    'server-dir',
     'stage',
     'role',
     'environment',
@@ -40,11 +41,18 @@ inputDir = resolve(process.cwd(), inputDir);
 
 const pkg = require(join(inputDir, 'package.json'));
 
-const { name, version } = pkg;
+const { name, version, private: isPrivate } = pkg;
 
 const config = pkg.voila || {};
 
-const outputDir = argv['output-dir'] || config.outputDir || join(inputDir, '.voila');
+let clientDir = argv['client-dir'] || argv._[1] || config.clientDir;
+if (!clientDir) {
+  showErrorAndExit('\'client-dir\' parameter is missing');
+}
+clientDir = resolve(process.cwd(), clientDir);
+
+let serverDir = argv['server-dir'] || argv._[2] || config.serverDir;
+if (serverDir) serverDir = resolve(process.cwd(), serverDir);
 
 const stage = argv.stage || config.stage || DEFAULT_STAGE;
 
@@ -58,6 +66,6 @@ const environment = getEnvironmentConfig(config.environment, argv.environment);
 const awsConfig = getAWSConfig({ region: DEFAULT_REGION }, process.env, config, argv);
 
 (async function() {
-  const apiURL = await buildAndDeploy({ inputDir, outputDir, name, version, stage, role, memorySize, timeout, environment, awsConfig });
+  const apiURL = await buildAndDeploy({ inputDir, clientDir, serverDir, name, version, isPrivate, stage, role, memorySize, timeout, environment, awsConfig });
   console.log(formatMessage({ status: 'success', name, stage, message: 'Build and deployment completed', info: apiURL }));
 })().catch(showErrorAndExit);

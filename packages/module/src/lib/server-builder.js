@@ -7,11 +7,16 @@ import { task, formatMessage } from '@voila/common';
 
 const VOILA_MODULE_SERVER_VERSION = '^0.1.10';
 
-export async function buildServer({ inputDir, outputDir, name, version, stage }) {
+export async function buildServer({ inputDir, serverDir, name, version, stage }) {
   let msg;
 
   const serverName = name + '-server';
-  const serverDir = join(outputDir, serverName);
+
+  let temporaryServerDir;
+  if (!serverDir) {
+    temporaryServerDir = join(inputDir, '.voila-tmp');
+    serverDir = temporaryServerDir;
+  }
   const serverIndexFile = join(serverDir, 'index.js');
 
   msg = formatMessage({ name: serverName, stage, message: 'Generating files' });
@@ -51,5 +56,5 @@ exports.handler = server.createHandler(target);\n`;
     await exec('npm install', { cwd: serverDir });
   });
 
-  return { serverDir, serverIndexFile };
+  return { serverIndexFile, temporaryServerDir };
 }

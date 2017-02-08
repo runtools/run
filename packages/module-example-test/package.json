@@ -15,7 +15,7 @@
     "build-dist": "mkdir -p dist && cp index.html dist && browserify --entry index.js --outfile dist/index.js"
   },
   "dependencies": {
-    "@voila/module-example-client": "^0.1.11"
+    "@voila/module-example-client": "^0.1.14"
   },
   "devDependencies": {
     "browserify": "^14.0.0"

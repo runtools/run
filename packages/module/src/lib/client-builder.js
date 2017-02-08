@@ -1,5 +1,6 @@
 'use strict';
 
+import fs from 'fs';
 import { join } from 'path';
 import fsp from 'fs-promise';
 import { exec } from 'child-process-promise';
@@ -7,11 +8,10 @@ import { task, formatMessage } from '@voila/common';
 
 const VOILA_MODULE_CLIENT_VERSION = '^0.1.7';
 
-export async function buildClient({ inputDir, outputDir, name, version, stage }) {
+export async function buildClient({ inputDir, clientDir, name, version, isPrivate, stage }) {
   let msg;
 
   const clientName = name + '-client';
-  const clientDir = join(outputDir, clientName);
 
   msg = formatMessage({ name: clientName, stage, message: 'Generating files' });
   await task(msg, async () => {
@@ -26,6 +26,7 @@ export async function buildClient({ inputDir, outputDir, name, version, stage })
         '@voila/module-client': VOILA_MODULE_CLIENT_VERSION
       }
     };
+    if (isPrivate != null) clientPkg.private = isPrivate;
     await fsp.outputFile(clientPkgFile, JSON.stringify(clientPkg, undefined, 2));
 
     // index.js
@@ -57,9 +58,18 @@ module.exports = function(options) {
 
     await fsp.outputFile(clientIndexFile, code);
 
+    // .npmrc
+    const npmConfigFile = join(inputDir, '.npmrc');
+    const clientNPMConfigFile = join(clientDir, '.npmrc');
+    if (fs.existsSync(npmConfigFile)) {
+      await fsp.copy(npmConfigFile, clientNPMConfigFile);
+    } else {
+      await fsp.remove(clientNPMConfigFile);
+    }
+
     // .gitignore
     const clientGitIgnoreFile = join(clientDir, '.gitignore');
-    const gitIgnore = '.DS_Store\nnode_modules\nnpm-debug.log\n';
+    const gitIgnore = '.DS_Store\n.npmrc\nnode_modules\nnpm-debug.log\n';
     await fsp.outputFile(clientGitIgnoreFile, gitIgnore);
   });
 
