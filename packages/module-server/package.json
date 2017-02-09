@@ -1,6 +1,6 @@
 {
   "name": "@voila/module-server",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Voila Module server",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",

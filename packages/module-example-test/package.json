@@ -1,6 +1,6 @@
 {
   "name": "@voila/module-example-test",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Voila Module example test",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
@@ -36,7 +36,7 @@
     "extends": "eslint-config-next"
   },
   "dependencies": {
-    "@voila/module-client": "^0.2.0"
+    "@voila/module-client": "^0.2.1"
   },
   "devDependencies": {
     "babel-cli": "^6.22.2",
