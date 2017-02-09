@@ -4,7 +4,6 @@
 
 import { join, resolve } from 'path';
 import minimist from 'minimist';
-import parsePackageName from 'parse-packagejson-name';
 import { formatMessage, showErrorAndExit, getEnvironmentConfig, getAWSConfig } from '@voila/common';
 import { buildAndDeploy } from '../lib/builder-and-deployer';
 
@@ -16,11 +15,6 @@ const DEFAULT_TIMEOUT = 3;
 const argv = minimist(process.argv.slice(2), {
   string: [
     'input-dir',
-    'output-dir',
-    'client-dir',
-    'server-dir',
-    'client-name',
-    'server-name',
     'stage',
     'role',
     'environment',
@@ -45,35 +39,9 @@ inputDir = resolve(process.cwd(), inputDir);
 
 const pkg = require(join(inputDir, 'package.json'));
 
-const { name, version, private: isPrivate } = pkg;
+const { name, version } = pkg;
 
 const config = pkg.voila || {};
-
-let outputDir = argv['output-dir'] || argv._[1] || config.outputDir;
-if (outputDir) outputDir = resolve(process.cwd(), outputDir);
-
-const clientName = argv['client-name'] || config.clientName || name + '-client';
-const serverName = argv['server-name'] || config.serverName || name + '-server';
-
-let clientDir = argv['client-dir'] || config.clientDir;
-if (!clientDir && outputDir) {
-  const { fullName: unscopedName } = parsePackageName(clientName);
-  clientDir = join(outputDir, unscopedName);
-}
-if (!clientDir) {
-  showErrorAndExit('\'output-dir\' or \'client-dir\' parameter is missing');
-}
-clientDir = resolve(process.cwd(), clientDir);
-
-let serverDir = argv['server-dir'] || config.serverDir;
-if (!serverDir && outputDir) {
-  const { fullName: unscopedName } = parsePackageName(serverName);
-  serverDir = join(outputDir, unscopedName);
-}
-if (!serverDir) {
-  showErrorAndExit('\'output-dir\' or \'server-dir\' parameter is missing');
-}
-serverDir = resolve(process.cwd(), serverDir);
 
 const stage = argv.stage || config.stage || DEFAULT_STAGE;
 
@@ -87,6 +55,6 @@ const environment = getEnvironmentConfig(config.environment, argv.environment);
 const awsConfig = getAWSConfig({ region: DEFAULT_REGION }, process.env, config, argv);
 
 (async function() {
-  const { apiURL } = await buildAndDeploy({ inputDir, clientDir, serverDir, name, version, isPrivate, clientName, serverName, stage, role, memorySize, timeout, environment, awsConfig });
+  const { apiURL } = await buildAndDeploy({ inputDir, name, version, stage, role, memorySize, timeout, environment, awsConfig });
   console.log(formatMessage({ status: 'success', name, stage, message: 'Build and deployment completed', info: apiURL }));
 })().catch(showErrorAndExit);

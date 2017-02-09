@@ -1,18 +1,48 @@
 {
   "name": "@voila/module-client",
-  "version": "0.1.10",
+  "version": "0.2.0",
   "description": "Voila Module client",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
   "files": [
-    "index.js"
+    "dist"
   ],
+  "main": "dist/index.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/voilajs/voila"
   },
+  "scripts": {
+    "transpile": "babel src --out-dir dist",
+    "prepublish": "npm run transpile",
+    "lint": "eslint src"
+  },
+  "babel": {
+    "presets": [
+      [
+        "env",
+        {
+          "targets": {
+            "ie": 10,
+            "node": 4
+          },
+          "loose": true
+        }
+      ]
+    ]
+  },
+  "eslintConfig": {
+    "extends": "eslint-config-next"
+  },
   "dependencies": {
     "easy-json-rpc": "^2.0.3",
     "isomorphic-fetch": "^2.2.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.22.2",
+    "babel-eslint": "^7.1.1",
+    "babel-preset-env": "^1.1.8",
+    "eslint": "^3.14.1",
+    "eslint-config-next": "^0.1.15"
   }
 }

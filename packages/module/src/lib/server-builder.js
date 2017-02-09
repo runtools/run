@@ -5,14 +5,16 @@ import fsp from 'fs-promise';
 import { exec } from 'child-process-promise';
 import { task, formatMessage } from '@voila/common';
 
-const VOILA_MODULE_SERVER_VERSION = '^0.1.10';
+const VOILA_MODULE_SERVER_VERSION = '^0.2.0';
 
-export async function buildServer({ inputDir, serverDir, name, serverName, version, stage }) {
+export async function buildServer({ inputDir, outputDir, name, version, stage }) {
   let msg;
 
+  const serverName = name + '-server';
+  const serverDir = join(outputDir, serverName);
   const serverIndexFile = join(serverDir, 'index.js');
 
-  msg = formatMessage({ name: serverName, stage, message: 'Generating files' });
+  msg = formatMessage({ name, stage, message: 'Generating server files' });
   await task(msg, async () => {
     // package.json
     const serverPkgFile = join(serverDir, 'package.json');
@@ -44,7 +46,7 @@ exports.handler = server.createHandler(target);\n`;
     await fsp.outputFile(serverGitIgnoreFile, gitIgnore);
   });
 
-  msg = formatMessage({ name: serverName, stage, message: 'Installing dependencies' });
+  msg = formatMessage({ name, stage, message: 'Installing server dependencies' });
   await task(msg, async () => {
     await exec('npm install', { cwd: serverDir });
   });
