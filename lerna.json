@@ -3,13 +3,5 @@
   "packages": [
     "packages/*"
   ],
-  "commands": {
-    "publish": {
-      "ignore": [
-        "module-example-client",
-        "module-example-server"
-      ]
-    }
-  },
   "version": "independent"
 }
