@@ -1,24 +1,39 @@
 'use strict';
 
+import { join } from 'path';
+import fsp from 'fs-promise';
+import { buildServer } from './server-builder';
 import { bundle } from './bundler';
-import { zip } from './archiver';
-import { task, formatMessage } from '@voila/common';
 import { ensureDefaultRole } from './iam-handler';
 import { createOrUpdateLambdaFunction } from './lambda-handler';
 import { createOrUpdateAPIGateway } from './api-gateway-handler';
 
-export async function deploy({ name, version, stage, entryFile, role, memorySize, timeout, environment, awsConfig }) {
-  if (!role) role = await ensureDefaultRole({ name, stage, awsConfig });
+export async function deploy({ inputDir, name, version, stage, role, memorySize, timeout, environment, awsConfig }) {
+  let roleHasJustBeenCreated;
+
+  if (!role) {
+    const result = await ensureDefaultRole({ name, stage, awsConfig });
+    role = result.role;
+    roleHasJustBeenCreated = result.hasBeenCreated;
+  }
 
   let code;
-  const msg = formatMessage({ name, stage, message: 'Packaging module code' });
-  await task(msg, async () => {
-    code = await bundle({ entryFile });
-    code = await zip({ data: code, filename: 'handler.js' });
-  });
+
+  const outputDir = join(inputDir, '.voila-temporary');
+
+  try {
+    const { serverIndexFile } = await buildServer({
+      inputDir, outputDir, name, version, stage
+    });
+
+    code = await bundle({ name, stage, serverIndexFile });
+  } finally {
+    await fsp.remove(outputDir);
+  }
 
   const { lambdaFunctionARN } = await createOrUpdateLambdaFunction({
-    name, version, stage, role, memorySize, timeout, environment, code, awsConfig
+    name, version, stage, role, roleHasJustBeenCreated,
+    memorySize, timeout, environment, code, awsConfig
   });
 
   const { apiURL } = await createOrUpdateAPIGateway({

@@ -5,7 +5,7 @@
 import { join, resolve } from 'path';
 import minimist from 'minimist';
 import { formatMessage, showErrorAndExit, getEnvironmentConfig, getAWSConfig } from '@voila/common';
-import { buildAndDeploy } from '../lib/builder-and-deployer';
+import { deploy } from '../lib/deployer';
 
 const DEFAULT_REGION = 'us-east-1';
 const DEFAULT_STAGE = 'development';
@@ -48,6 +48,7 @@ const stage = argv.stage || config.stage || DEFAULT_STAGE;
 const role = argv.role || config.role;
 
 const memorySize = argv['memory-size'] || config.memorySize || DEFAULT_MEMORY_SIZE;
+
 const timeout = argv['timeout'] || config.timeout || DEFAULT_TIMEOUT;
 
 const environment = getEnvironmentConfig(config.environment, argv.environment);
@@ -55,6 +56,6 @@ const environment = getEnvironmentConfig(config.environment, argv.environment);
 const awsConfig = getAWSConfig({ region: DEFAULT_REGION }, process.env, config, argv);
 
 (async function() {
-  const { apiURL } = await buildAndDeploy({ inputDir, name, version, stage, role, memorySize, timeout, environment, awsConfig });
+  const { apiURL } = await deploy({ inputDir, name, version, stage, role, memorySize, timeout, environment, awsConfig });
   console.log(formatMessage({ status: 'success', name, stage, message: 'Build and deployment completed', info: apiURL }));
 })().catch(showErrorAndExit);

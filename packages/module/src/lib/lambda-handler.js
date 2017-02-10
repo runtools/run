@@ -3,8 +3,9 @@
 import Lambda from 'aws-sdk/clients/lambda';
 import isEqual from 'lodash.isequal';
 import { generateDeploymentName, task, formatMessage } from '@voila/common';
+import sleep from 'sleep-promise';
 
-export async function createOrUpdateLambdaFunction({ name, version, stage, role, memorySize, timeout, environment, code, awsConfig }) {
+export async function createOrUpdateLambdaFunction({ name, version, stage, role, roleHasJustBeenCreated, memorySize, timeout, environment, code, awsConfig }) {
   const lambda = new Lambda(awsConfig);
 
   const lambdaFunctionName = generateDeploymentName({ name, version, stage });
@@ -34,18 +35,26 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
       name, stage, message: 'Creating lambda function', info: lambdaFunctionName
     });
     return await task(msg, async () => {
-      const lambdaFunction = await lambda.createFunction({
-        FunctionName: lambdaFunctionName,
-        Handler: 'handler.handler',
-        Runtime: 'nodejs4.3',
-        Role: role,
-        MemorySize: memorySize,
-        Timeout: timeout,
-        Environment: { Variables: environment },
-        Code: { ZipFile: code }
-      }).promise();
+      while (true) {
+        try {
+          const lambdaFunction = await lambda.createFunction({
+            FunctionName: lambdaFunctionName,
+            Handler: 'handler.handler',
+            Runtime: 'nodejs4.3',
+            Role: role,
+            MemorySize: memorySize,
+            Timeout: timeout,
+            Environment: { Variables: environment },
+            Code: { ZipFile: code }
+          }).promise();
 
-      return { lambdaFunctionARN: lambdaFunction.FunctionArn };
+          return { lambdaFunctionARN: lambdaFunction.FunctionArn };
+        } catch (err) {
+          const roleMayNotBeReady = err.code === 'InvalidParameterValueException' && roleHasJustBeenCreated;
+          if (!roleMayNotBeReady) throw err;
+          await sleep(3000);
+        }
+      }
     });
   }
 
@@ -72,13 +81,23 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
       }
 
       if (changed) {
-        await lambda.updateFunctionConfiguration({
-          FunctionName: lambdaFunctionName,
-          Role: role,
-          MemorySize: memorySize,
-          Timeout: timeout,
-          Environment: { Variables: environment }
-        }).promise();
+        let updated = false;
+        while (!updated) {
+          try {
+            await lambda.updateFunctionConfiguration({
+              FunctionName: lambdaFunctionName,
+              Role: role,
+              MemorySize: memorySize,
+              Timeout: timeout,
+              Environment: { Variables: environment }
+            }).promise();
+            updated = true;
+          } catch (err) {
+            const roleMayNotBeReady = err.code === 'InvalidParameterValueException' && roleHasJustBeenCreated;
+            if (!roleMayNotBeReady) throw err;
+            await sleep(3000);
+          }
+        }
       }
 
       const lambdaFunction = await lambda.updateFunctionCode({

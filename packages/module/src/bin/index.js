@@ -17,7 +17,7 @@ if (nodeVersion.major < 4) {
 
 updateNotifier({ pkg }).notify();
 
-const defaultCommand = 'build-and-deploy';
+const defaultCommand = 'deploy';
 
 const commands = new Set([
   defaultCommand,

@@ -9,7 +9,7 @@ export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFun
 
   const apiName = generateDeploymentName({ name, version, stage });
 
-  const msg = formatMessage({ name, stage, message: 'Checking API gateway', info: apiName });
+  const msg = formatMessage({ name, stage, message: 'Checking API Gateway', info: apiName });
   let api = await task(msg, async () => {
     const limit = 500;
     const result = await apiGateway.getRestApis({ limit }).promise();

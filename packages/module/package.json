@@ -1,6 +1,6 @@
 {
   "name": "@voila/module",
-  "version": "0.1.12",
+  "version": "0.2.0",
   "description": "The easiest way to deploy to AWS",
   "keywords": [
     "aws",
@@ -64,6 +64,7 @@
     "lodash.isequal": "^4.5.0",
     "minimist": "^1.2.0",
     "node-version": "^1.0.0",
+    "sleep-promise": "^2.0.0",
     "stream-buffers": "^3.0.1",
     "update-notifier": "^1.0.3"
   },

@@ -2,8 +2,9 @@
 
 import IAM from 'aws-sdk/clients/iam';
 import { task, formatMessage } from '@voila/common';
+import sleep from 'sleep-promise';
 
-const IAM_ROLE_NAME = 'easy-lambda-default-role-v1';
+const IAM_ROLE_NAME = 'voila-module-default-role-v1';
 const IAM_POLICY_NAME = 'basic-lambda-policy';
 
 const IAM_ASSUME_ROLE_POLICY_DOCUMENT = {
@@ -35,32 +36,46 @@ const IAM_POLICY_DOCUMENT = {
 export async function ensureDefaultRole({ name, stage, awsConfig }) {
   const iam = new IAM(awsConfig);
 
-  const msg = formatMessage({ name, stage, message: 'Ensuring IAM default role exists' });
-  return await task(msg, async () => {
+  let role, hasBeenCreated;
+
+  const msg = formatMessage({ name, stage, message: 'Checking IAM default role' });
+  role = await task(msg, async () => {
     try {
       const result = await iam.getRole({ RoleName: IAM_ROLE_NAME }).promise();
       return result.Role.Arn;
     } catch (err) {
       if (err.code !== 'NoSuchEntity') throw err;
+      return undefined;
     }
-
-    const assumeRolePolicyDocument = JSON.stringify(
-      IAM_ASSUME_ROLE_POLICY_DOCUMENT,
-      undefined,
-      2
-    );
-    const result = await iam.createRole({
-      RoleName: IAM_ROLE_NAME,
-      AssumeRolePolicyDocument: assumeRolePolicyDocument
-    }).promise();
-
-    const policyDocument = JSON.stringify(IAM_POLICY_DOCUMENT, undefined, 2);
-    await iam.putRolePolicy({
-      RoleName: IAM_ROLE_NAME,
-      PolicyName: IAM_POLICY_NAME,
-      PolicyDocument: policyDocument
-    }).promise();
-
-    return result.Role.Arn;
   });
+
+  if (!role) {
+    const msg = formatMessage({ name, stage, message: 'Creating IAM default role' });
+    role = await task(msg, async () => {
+      const assumeRolePolicyDocument = JSON.stringify(
+        IAM_ASSUME_ROLE_POLICY_DOCUMENT,
+        undefined,
+        2
+      );
+      const result = await iam.createRole({
+        RoleName: IAM_ROLE_NAME,
+        AssumeRolePolicyDocument: assumeRolePolicyDocument
+      }).promise();
+
+      const policyDocument = JSON.stringify(IAM_POLICY_DOCUMENT, undefined, 2);
+      await iam.putRolePolicy({
+        RoleName: IAM_ROLE_NAME,
+        PolicyName: IAM_POLICY_NAME,
+        PolicyDocument: policyDocument
+      }).promise();
+
+      await sleep(3000); // Wait 3 secs so AWS can replicate the role in all regions
+
+      return result.Role.Arn;
+    });
+
+    hasBeenCreated = true;
+  }
+
+  return { role, hasBeenCreated };
 }

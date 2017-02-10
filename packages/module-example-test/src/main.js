@@ -3,7 +3,7 @@
 import ModuleClient from '@voila/module-client';
 
 async function main() {
-  const { random } = await ModuleClient.import('https://8j9lqqqag8.execute-api.ap-northeast-1.amazonaws.com/voila_module_example');
+  const { random } = await ModuleClient.import('https://g8el6ndaz6.execute-api.ap-northeast-1.amazonaws.com/voila_module_example');
 
   const result = await random();
 
