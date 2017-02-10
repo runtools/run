@@ -35,6 +35,7 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
       name, stage, message: 'Creating lambda function', info: lambdaFunctionName
     });
     return await task(msg, async () => {
+      let errors = 0;
       while (true) {
         try {
           const lambdaFunction = await lambda.createFunction({
@@ -50,7 +51,8 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
 
           return { lambdaFunctionARN: lambdaFunction.FunctionArn };
         } catch (err) {
-          const roleMayNotBeReady = err.code === 'InvalidParameterValueException' && roleHasJustBeenCreated;
+          errors++;
+          const roleMayNotBeReady = err.code === 'InvalidParameterValueException' && roleHasJustBeenCreated && errors <= 10;
           if (!roleMayNotBeReady) throw err;
           await sleep(3000);
         }
@@ -82,6 +84,7 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
 
       if (changed) {
         let updated = false;
+        let errors = 0;
         while (!updated) {
           try {
             await lambda.updateFunctionConfiguration({
@@ -93,7 +96,8 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
             }).promise();
             updated = true;
           } catch (err) {
-            const roleMayNotBeReady = err.code === 'InvalidParameterValueException' && roleHasJustBeenCreated;
+            errors++;
+            const roleMayNotBeReady = err.code === 'InvalidParameterValueException' && roleHasJustBeenCreated && errors <= 10;
             if (!roleMayNotBeReady) throw err;
             await sleep(3000);
           }
