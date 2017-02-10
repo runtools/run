@@ -13,7 +13,7 @@
     "url": "git://github.com/voilajs/voila"
   },
   "scripts": {
-    "build": "npm run transpile && mkdir -p dist && cp src/index.html dist && browserify --entry es5/index.js --outfile dist/index.js",
+    "build": "npm run transpile && mkdir -p dist && cp src/index.html dist && rollup --config",
     "transpile": "babel src --out-dir es5",
     "prepublish": "npm run build",
     "lint": "eslint src"
@@ -43,8 +43,12 @@
     "babel-eslint": "^7.1.1",
     "babel-polyfill": "^6.22.0",
     "babel-preset-env": "^1.1.8",
-    "browserify": "^14.0.0",
     "eslint": "^3.14.1",
-    "eslint-config-next": "^0.1.15"
+    "eslint-config-next": "^0.1.15",
+    "rollup": "^0.41.4",
+    "rollup-plugin-commonjs": "^7.0.0",
+    "rollup-plugin-json": "^2.1.0",
+    "rollup-plugin-node-globals": "^1.1.0",
+    "rollup-plugin-node-resolve": "^2.0.0"
   }
 }

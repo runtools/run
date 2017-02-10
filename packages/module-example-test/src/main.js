@@ -15,3 +15,5 @@ main().catch(err => {
   console.error(err);
   if (process.browser) document.write(err.message);
 });
+
+export default main;
