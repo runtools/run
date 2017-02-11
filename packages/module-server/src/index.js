@@ -2,7 +2,7 @@
 
 import rpc from 'easy-json-rpc';
 
-export function createHandler(module) {
+function createHandler(module) {
   const properties = getModuleProperties(module);
 
   module.__getModuleProperties__ = function() {
@@ -30,3 +30,5 @@ function getModuleProperties(module) {
 
   return properties;
 }
+
+export default createHandler;
