@@ -5,7 +5,7 @@ import isEqual from 'lodash.isequal';
 import { generateDeploymentName, task, formatMessage } from '@voila/common';
 import sleep from 'sleep-promise';
 
-export async function createOrUpdateLambdaFunction({ name, version, stage, role, roleHasJustBeenCreated, memorySize, timeout, environment, code, awsConfig }) {
+export async function createOrUpdateLambdaFunction({ name, version, stage, role, roleHasJustBeenCreated, memorySize, timeout, environment, archive, awsConfig }) {
   const lambda = new Lambda(awsConfig);
 
   const lambdaFunctionName = generateDeploymentName({ name, version, stage });
@@ -46,7 +46,7 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
             MemorySize: memorySize,
             Timeout: timeout,
             Environment: { Variables: environment },
-            Code: { ZipFile: code }
+            Code: { ZipFile: archive }
           }).promise();
 
           return { lambdaFunctionARN: lambdaFunction.FunctionArn };
@@ -106,7 +106,7 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
 
       const lambdaFunction = await lambda.updateFunctionCode({
         FunctionName: lambdaFunctionName,
-        ZipFile: code
+        ZipFile: archive
       }).promise();
 
       return { lambdaFunctionARN: lambdaFunction.FunctionArn };

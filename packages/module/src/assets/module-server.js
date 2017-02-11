@@ -305,7 +305,7 @@ function getModuleProperties(module) {
   return properties;
 }
 
-exports.default = createHandler;
+exports.default = { createHandler };
 });
 
 var index$1 = unwrapExports(index);

@@ -31,4 +31,4 @@ function getModuleProperties(module) {
   return properties;
 }
 
-export default createHandler;
+export default { createHandler };

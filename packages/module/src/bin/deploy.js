@@ -15,6 +15,7 @@ const DEFAULT_TIMEOUT = 3;
 const argv = minimist(process.argv.slice(2), {
   string: [
     'input-dir',
+    'entry-file',
     'stage',
     'role',
     'environment',
@@ -43,6 +44,9 @@ const { name, version } = pkg;
 
 const config = pkg.voila || {};
 
+let entryFile = argv['entry-file'] || config.entryFile || pkg.module || pkg.main || 'index.js';
+entryFile = resolve(process.cwd(), entryFile);
+
 const stage = argv.stage || config.stage || DEFAULT_STAGE;
 
 const role = argv.role || config.role;
@@ -56,6 +60,6 @@ const environment = getEnvironmentConfig(config.environment, argv.environment);
 const awsConfig = getAWSConfig({ region: DEFAULT_REGION }, process.env, config, argv);
 
 (async function() {
-  const { apiURL } = await deploy({ inputDir, name, version, stage, role, memorySize, timeout, environment, awsConfig });
+  const { apiURL } = await deploy({ entryFile, name, version, stage, role, memorySize, timeout, environment, awsConfig });
   console.log(formatMessage({ status: 'success', name, stage, message: 'Build and deployment completed', info: apiURL }));
 })().catch(showErrorAndExit);
