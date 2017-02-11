@@ -5,7 +5,7 @@ import { ensureDefaultRole } from './iam-handler';
 import { createOrUpdateLambdaFunction } from './lambda-handler';
 import { createOrUpdateAPIGateway } from './api-gateway-handler';
 
-export async function deploy({ entryFile, name, version, stage, role, memorySize, timeout, environment, awsConfig }) {
+export async function deploy({ entryFile, name, version, stage, role, memorySize, timeout, environment, awsConfig, bundle, transpile }) {
   let roleHasJustBeenCreated;
 
   if (!role) {
@@ -14,7 +14,7 @@ export async function deploy({ entryFile, name, version, stage, role, memorySize
     roleHasJustBeenCreated = result.hasBeenCreated;
   }
 
-  const { archive } = await buildServer({ entryFile, name, version, stage });
+  const { archive } = await buildServer({ entryFile, name, version, stage, bundle, transpile });
 
   const { lambdaFunctionARN } = await createOrUpdateLambdaFunction({
     name, version, stage, role, roleHasJustBeenCreated,

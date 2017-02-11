@@ -29,10 +29,17 @@ const argv = minimist(process.argv.slice(2), {
     'timeout'
   ],
   boolean: [
+    'bundle',
+    'transpile',
     'usage-instructions'
   ],
   alias: {
     'environment': ['env']
+  },
+  default: {
+    'bundle': null,
+    'transpile': null,
+    'usage-instructions': null
   }
 });
 
@@ -63,6 +70,14 @@ const environment = getEnvironmentConfig(config.environment, argv.environment);
 
 const awsConfig = getAWSConfig({ region: DEFAULT_REGION }, process.env, config, argv);
 
+let bundle = argv['bundle'];
+if (bundle == null) bundle = config.bundle;
+if (bundle == null) bundle = true;
+
+let transpile = argv['transpile'];
+if (transpile == null) transpile = config.transpile;
+if (transpile == null) transpile = true;
+
 let usageInstructions = argv['usage-instructions'];
 if (usageInstructions == null) usageInstructions = config.usageInstructions;
 if (usageInstructions == null) usageInstructions = true;
@@ -71,7 +86,7 @@ if (usageInstructions == null) usageInstructions = true;
   const voilaModulePkg = require('../../package.json');
   console.log(`\n${green(voilaModulePkg.displayName)} ${gray(`v${voilaModulePkg.version}`)}\n`);
 
-  const { apiURL } = await deploy({ entryFile, name, version, stage, role, memorySize, timeout, environment, awsConfig });
+  const { apiURL } = await deploy({ entryFile, name, version, stage, role, memorySize, timeout, environment, awsConfig, bundle, transpile });
 
   console.log(`\nVoilà! Your module is deployed here:\n\n${yellow(apiURL)}\n`);
 

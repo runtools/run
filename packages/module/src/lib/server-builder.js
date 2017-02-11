@@ -11,18 +11,28 @@ import json from 'rollup-plugin-json';
 import bytes from 'bytes';
 import { zipFiles } from './archiver';
 
-export async function buildServer({ entryFile, name, stage }) {
+export async function buildServer({ entryFile, name, stage, bundle, transpile }) {
   const message = formatMessage({ name, stage, message: 'Generating server bundle...' });
   return await task(message, async (currentTask) => {
     // *** bundle ***
 
     const rollupWarnings = [];
-    const envPreset = require.resolve('babel-preset-env');
 
-    const bundle = await rollup({
-      entry: entryFile,
-      plugins: [
-        babel({
+    let bundleCode;
+    if (bundle) {
+      const config = {
+        entry: entryFile,
+        plugins: [
+          nodeResolve(),
+          commonjs(),
+          json()
+        ],
+        onwarn(warning) { rollupWarnings.push(warning); }
+      };
+
+      if (transpile) {
+        const envPreset = require.resolve('babel-preset-env');
+        config.plugins.push(babel({
           exclude: 'node_modules/**',
           presets: [
             [
@@ -35,19 +45,18 @@ export async function buildServer({ entryFile, name, stage }) {
               }
             ]
           ]
-        }),
-        nodeResolve(),
-        commonjs(),
-        json()
-      ],
-      onwarn(warning) { rollupWarnings.push(warning); }
-    });
+        }));
+      }
 
-    const result = bundle.generate({
-      format: 'cjs',
-      exports: 'named'
-    });
-    const bundleCode = result.code;
+      const result = (await rollup(config)).generate({
+        format: 'cjs',
+        exports: 'named'
+      });
+
+      bundleCode = result.code;
+    } else {
+      bundleCode = await fsp.readFile(entryFile);
+    }
 
     // *** module-server ***
 
