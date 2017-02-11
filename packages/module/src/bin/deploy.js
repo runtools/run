@@ -84,7 +84,7 @@ Import your module with:
 
   ${cyan(`const awesomeModule = await ModuleClient.import('${apiURL}');`)}
 
-Then calling a function is as simple as:
+Then invoking a function remotely is as simple as:
 
   ${cyan('const result = await awesomeModule.crazyFunction(\'foo\', \'bar\');')}\n`);
   }
