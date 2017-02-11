@@ -8,33 +8,34 @@ import sleep from 'sleep-promise';
 export async function createOrUpdateLambdaFunction({ name, version, stage, role, roleHasJustBeenCreated, memorySize, timeout, environment, archive, awsConfig }) {
   const lambda = new Lambda(awsConfig);
 
-  const lambdaFunctionName = generateDeploymentName({ name, version, stage });
-
-  const msg = formatMessage({
-    name, stage, message: 'Checking lambda function', info: lambdaFunctionName
+  const message = formatMessage({
+    name, stage, message: 'Checking lambda function...'
   });
-  const lambdaFunction = await task(msg, async () => {
+  return await task(message, async (currentTask) => {
+    const lambdaFunctionName = generateDeploymentName({ name, version, stage });
+
+    let lambdaFunction;
     try {
-      return await lambda.getFunctionConfiguration({
+      lambdaFunction = await lambda.getFunctionConfiguration({
         FunctionName: lambdaFunctionName
       }).promise();
     } catch (err) {
-      if (err.code === 'ResourceNotFoundException') return undefined;
-      throw err;
+      if (err.code !== 'ResourceNotFoundException') throw err;
     }
-  });
 
-  if (!lambdaFunction) {
-    return await createLambdaFunction();
-  } else {
-    return await updateLambdaFunction({ existingLambdaFunction: lambdaFunction });
-  }
+    if (!lambdaFunction) {
+      return await createLambdaFunction();
+    } else {
+      return await updateLambdaFunction({ existingLambdaFunction: lambdaFunction });
+    }
 
-  async function createLambdaFunction() {
-    const msg = formatMessage({
-      name, stage, message: 'Creating lambda function', info: lambdaFunctionName
-    });
-    return await task(msg, async () => {
+    async function createLambdaFunction() {
+      currentTask.setMessage(formatMessage({
+        name, stage, message: 'Creating lambda function...'
+      }));
+      currentTask.setSuccessMessage(formatMessage({
+        name, stage, message: 'Lambda function created'
+      }));
       let errors = 0;
       while (true) {
         try {
@@ -57,14 +58,16 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
           await sleep(3000);
         }
       }
-    });
-  }
+    }
 
-  async function updateLambdaFunction({ existingLambdaFunction }) {
-    const msg = formatMessage({
-      name, stage, message: 'Updating lambda function', info: lambdaFunctionName
-    });
-    return await task(msg, async () => {
+    async function updateLambdaFunction({ existingLambdaFunction }) {
+      currentTask.setMessage(formatMessage({
+        name, stage, message: 'Updating lambda function...'
+      }));
+      currentTask.setSuccessMessage(formatMessage({
+        name, stage, message: 'Lambda function updated'
+      }));
+
       let changed = false;
 
       if (!changed) {
@@ -110,8 +113,8 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
       }).promise();
 
       return { lambdaFunctionARN: lambdaFunction.FunctionArn };
-    });
-  }
+    }
+  });
 }
 
 export async function addPermissionToLambdaFunction({ lambdaFunctionARN, restApiId, awsConfig }) {

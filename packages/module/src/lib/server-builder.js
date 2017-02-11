@@ -8,11 +8,12 @@ import babel from 'rollup-plugin-babel';
 import nodeResolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import json from 'rollup-plugin-json';
+import bytes from 'bytes';
 import { zipFiles } from './archiver';
 
 export async function buildServer({ entryFile, name, stage }) {
-  const msg = formatMessage({ name, stage, message: 'Building server bundle' });
-  const { archive, rollupWarnings } = await task(msg, async () => {
+  const message = formatMessage({ name, stage, message: 'Generating server bundle...' });
+  return await task(message, async (currentTask) => {
     // *** bundle ***
 
     const rollupWarnings = [];
@@ -68,8 +69,11 @@ exports.handler = moduleServer.createHandler(target);\n`;
       { name: 'handler.js', data: handlerCode }
     ]);
 
+    const info = bytes(archive.length);
+    currentTask.setSuccessMessage(formatMessage({
+      name, stage, message: 'Server bundle generated', info
+    }));
+
     return { archive, rollupWarnings };
   });
-
-  return { archive, rollupWarnings };
 }

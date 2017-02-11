@@ -38,20 +38,23 @@ export async function ensureDefaultRole({ name, stage, awsConfig }) {
 
   let role, hasBeenCreated;
 
-  const msg = formatMessage({ name, stage, message: 'Checking IAM default role' });
-  role = await task(msg, async () => {
+  const message = formatMessage({ name, stage, message: 'Checking IAM default role...' });
+  role = await task(message, async (currentTask) => {
     try {
       const result = await iam.getRole({ RoleName: IAM_ROLE_NAME }).promise();
+      currentTask.setSuccessMessage(formatMessage({ name, stage, message: 'IAM default role found' }));
       return result.Role.Arn;
     } catch (err) {
       if (err.code !== 'NoSuchEntity') throw err;
+      currentTask.setSuccessMessage(formatMessage({ name, stage, message: 'IAM default role not found' }));
       return undefined;
     }
   });
 
   if (!role) {
-    const msg = formatMessage({ name, stage, message: 'Creating IAM default role' });
-    role = await task(msg, async () => {
+    const message = formatMessage({ name, stage, message: 'Creating IAM default role...' });
+    const successMessage = formatMessage({ name, stage, message: 'IAM default role created' });
+    role = await task(message, successMessage, async () => {
       const assumeRolePolicyDocument = JSON.stringify(
         IAM_ASSUME_ROLE_POLICY_DOCUMENT,
         undefined,

@@ -4,7 +4,8 @@
 
 import { join, resolve } from 'path';
 import minimist from 'minimist';
-import { formatMessage, showErrorAndExit, getEnvironmentConfig, getAWSConfig } from '@voila/common';
+import { showErrorAndExit, getEnvironmentConfig, getAWSConfig } from '@voila/common';
+import { green, yellow, gray, cyan } from 'chalk';
 import { deploy } from '../lib/deployer';
 
 const DEFAULT_REGION = 'us-east-1';
@@ -26,6 +27,9 @@ const argv = minimist(process.argv.slice(2), {
   number: [
     'memory-size',
     'timeout'
+  ],
+  boolean: [
+    'usage-instructions'
   ],
   alias: {
     'environment': ['env']
@@ -59,7 +63,29 @@ const environment = getEnvironmentConfig(config.environment, argv.environment);
 
 const awsConfig = getAWSConfig({ region: DEFAULT_REGION }, process.env, config, argv);
 
+let usageInstructions = argv['usage-instructions'];
+if (usageInstructions == null) usageInstructions = config.usageInstructions;
+if (usageInstructions == null) usageInstructions = true;
+
 (async function() {
+  const voilaModulePkg = require('../../package.json');
+  console.log(`\n${green(voilaModulePkg.displayName)} ${gray(`v${voilaModulePkg.version}`)}\n`);
+
   const { apiURL } = await deploy({ entryFile, name, version, stage, role, memorySize, timeout, environment, awsConfig });
-  console.log(formatMessage({ status: 'success', name, stage, message: 'Build and deployment completed', info: apiURL }));
+
+  console.log(`\nVoilà! Your module is deployed here:\n\n${yellow(apiURL)}\n`);
+
+  if (usageInstructions) {
+    console.log(`To use it, install and import @voila/module-client:
+
+  ${cyan('import ModuleClient from \'@voila/module-client\';')}
+
+Import your module with:
+
+  ${cyan(`const awesomeModule = await ModuleClient.import('${apiURL}');`)}
+
+Then calling a function is as simple as:
+
+  ${cyan('const result = await awesomeModule.crazyFunction(\'foo\', \'bar\');')}\n`);
+  }
 })().catch(showErrorAndExit);

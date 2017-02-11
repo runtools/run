@@ -7,36 +7,40 @@ import { addPermissionToLambdaFunction } from './lambda-handler';
 export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFunctionARN, awsConfig }) {
   const apiGateway = new APIGateway(awsConfig);
 
-  const apiName = generateDeploymentName({ name, version, stage });
+  const message = formatMessage({ name, stage, message: 'Checking API Gateway...' });
+  return await task(message, async (currentTask) => {
+    const apiName = generateDeploymentName({ name, version, stage });
 
-  const msg = formatMessage({ name, stage, message: 'Checking API Gateway', info: apiName });
-  let api = await task(msg, async () => {
+    let stageName = name.replace(/[^a-zA-Z0-9_]/g, '_');
+    if (stageName.slice(0, 1) === '_') { // Handle scoped name case
+      stageName = stageName.slice(1);
+    }
+
     const limit = 500;
     const result = await apiGateway.getRestApis({ limit }).promise();
     if (result.items.length === limit) {
       throw createUserError(`Wow, you have a lot of APIs in API Gateway (greater than or equal to ${limit})`);
     }
-    return result.items.find((item) => item.name === apiName);
-  });
+    let api = result.items.find((item) => item.name === apiName);
 
-  let stageName = name.replace(/[^a-zA-Z0-9_]/g, '_');
-  if (stageName.slice(0, 1) === '_') { // Handle scoped name case
-    stageName = stageName.slice(1);
-  }
+    if (!api) {
+      api = await createAPIGateway();
+    } else {
+      await updateAPIGateway({ restApiId: api.id });
+    }
 
-  if (!api) {
-    api = await createAPIGateway();
-  } else {
-    await updateAPIGateway({ restApiId: api.id });
-  }
+    const apiURL = `https://${api.id}.execute-api.${awsConfig.region}.amazonaws.com/${stageName}`;
 
-  const apiURL = `https://${api.id}.execute-api.${awsConfig.region}.amazonaws.com/${stageName}`;
+    return { apiURL };
 
-  return { apiURL };
+    async function createAPIGateway() {
+      currentTask.setMessage(formatMessage({
+        name, stage, message: 'Creating API Gateway...'
+      }));
+      currentTask.setSuccessMessage(formatMessage({
+        name, stage, message: 'API Gateway created'
+      }));
 
-  async function createAPIGateway() {
-    const msg = formatMessage({ name, stage, message: 'Creating API Gateway', info: apiName });
-    return await task(msg, async () => {
       const api = await apiGateway.createRestApi({ name: apiName }).promise();
 
       const restApiId = api.id;
@@ -138,13 +142,15 @@ export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFun
       }).promise();
 
       return api;
-    });
-  }
+    }
 
-  async function updateAPIGateway({ restApiId }) { // eslint-disable-line no-unused-vars
-    const msg = formatMessage({ name, stage, message: 'Updating API Gateway', info: apiName });
-    return await task(msg, async () => {
-      // TODO
-    });
-  }
+    async function updateAPIGateway({ restApiId }) { // eslint-disable-line no-unused-vars
+      currentTask.setMessage(formatMessage({
+        name, stage, message: 'Updating API Gateway...'
+      }));
+      currentTask.setSuccessMessage(formatMessage({
+        name, stage, message: 'API Gateway updated'
+      }));
+    }
+  });
 }

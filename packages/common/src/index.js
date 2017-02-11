@@ -27,11 +27,19 @@ function createCompatibleVersionRange(version) {
   }
 }
 
-export async function task(message, fn) {
+export async function task(message, successMessage, fn) {
+  if (typeof successMessage === 'function') {
+    fn = successMessage;
+    successMessage = undefined;
+  }
   const spinner = ora(message).start();
+  const currentTask = {
+    setMessage(message) { spinner.text = message; },
+    setSuccessMessage(message) { successMessage = message; }
+  };
   try {
-    const result = await fn(spinner);
-    spinner.succeed();
+    const result = await fn(currentTask);
+    spinner.succeed(successMessage);
     return result;
   } catch (err) {
     spinner.fail();
