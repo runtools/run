@@ -22,10 +22,11 @@ const argv = minimist(process.argv.slice(2), {
 });
 
 let inputDir = argv['input-dir'] || argv._[0];
-if (!inputDir) {
-  showErrorAndExit('\'input-dir\' parameter is missing');
+if (inputDir) {
+  inputDir = resolve(process.cwd(), inputDir);
+} else {
+  inputDir = process.cwd();
 }
-inputDir = resolve(process.cwd(), inputDir);
 
 const pkg = require(join(inputDir, 'package.json'));
 
