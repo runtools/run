@@ -88,7 +88,7 @@ if (usageInstructions == null) usageInstructions = true;
 
   const { apiURL } = await deploy({ entryFile, name, version, stage, role, memorySize, timeout, environment, awsConfig, bundle, transpile });
 
-  console.log(`\nVoilà! Your module is deployed here:\n\n${yellow(apiURL)}\n`);
+  console.log(`\nVoilà! Your module has been deployed here:\n\n${yellow(apiURL)}\n`);
 
   if (usageInstructions) {
     console.log(`To use it, install and import @voila/module-client:

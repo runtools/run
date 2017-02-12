@@ -16,20 +16,15 @@ export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFun
       stageName = stageName.slice(1);
     }
 
-    const limit = 500;
-    const result = await apiGateway.getRestApis({ limit }).promise();
-    if (result.items.length === limit) {
-      throw createUserError(`Wow, you have a lot of APIs in API Gateway (greater than or equal to ${limit})`);
-    }
-    let api = result.items.find((item) => item.name === apiName);
+    let restApiId = await findAPIGateway({ name, version, stage, awsConfig });
 
-    if (!api) {
-      api = await createAPIGateway();
+    if (!restApiId) {
+      restApiId = await createAPIGateway();
     } else {
-      await updateAPIGateway({ restApiId: api.id });
+      await updateAPIGateway({ restApiId });
     }
 
-    const apiURL = `https://${api.id}.execute-api.${awsConfig.region}.amazonaws.com/${stageName}`;
+    const apiURL = `https://${restApiId}.execute-api.${awsConfig.region}.amazonaws.com/${stageName}`;
 
     return { apiURL };
 
@@ -141,16 +136,45 @@ export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFun
         stageName
       }).promise();
 
-      return api;
+      return restApiId;
     }
 
     async function updateAPIGateway({ restApiId }) { // eslint-disable-line no-unused-vars
-      currentTask.setMessage(formatMessage({
-        name, stage, message: 'Updating API Gateway...'
-      }));
       currentTask.setSuccessMessage(formatMessage({
-        name, stage, message: 'API Gateway updated'
+        name, stage, message: 'API Gateway checked'
       }));
     }
   });
+}
+
+export async function deleteAPIGateway({ name, version, stage, awsConfig }) {
+  const apiGateway = new APIGateway(awsConfig);
+
+  const message = formatMessage({ name, stage, message: 'Deleting API Gateway...' });
+  const successMessage = formatMessage({ name, stage, message: 'API Gateway deleted' });
+  return await task(message, successMessage, async (currentTask) => {
+    const restApiId = await findAPIGateway({ name, version, stage, awsConfig });
+
+    if (restApiId) {
+      await apiGateway.deleteRestApi({ restApiId }).promise();
+    } else {
+      currentTask.setSuccessMessage(formatMessage({ name, stage, message: 'API Gateway not found' }));
+    }
+  });
+}
+
+async function findAPIGateway({ name, version, stage, awsConfig }) {
+  const apiGateway = new APIGateway(awsConfig);
+
+  const apiName = generateDeploymentName({ name, version, stage });
+
+  const limit = 500;
+  const result = await apiGateway.getRestApis({ limit }).promise();
+  if (result.items.length === limit) {
+    throw createUserError(`Wow, you have a lot of APIs in API Gateway (greater than or equal to ${limit})`);
+  }
+
+  const api = result.items.find((item) => item.name === apiName);
+
+  return api && api.id;
 }

@@ -132,3 +132,26 @@ export async function addPermissionToLambdaFunction({ lambdaFunctionARN, restApi
     SourceArn: `arn:aws:execute-api:${awsConfig.region}:${accountId}:${restApiId}/*/*`
   }).promise();
 }
+
+export async function deleteLambdaFunction({ name, version, stage, awsConfig }) {
+  const lambda = new Lambda(awsConfig);
+
+  const message = formatMessage({
+    name, stage, message: 'Deleting lambda function...'
+  });
+  const successMessage = formatMessage({
+    name, stage, message: 'Lambda function deleted'
+  });
+  return await task(message, successMessage, async (currentTask) => {
+    const lambdaFunctionName = generateDeploymentName({ name, version, stage });
+
+    try {
+      await lambda.deleteFunction({ FunctionName: lambdaFunctionName }).promise();
+    } catch (err) {
+      if (err.code !== 'ResourceNotFoundException') throw err;
+      currentTask.setSuccessMessage(formatMessage({
+        name, stage, message: 'Lambda function not found'
+      }));
+    }
+  });
+}

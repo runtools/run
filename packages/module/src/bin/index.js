@@ -8,9 +8,6 @@ import updateNotifier from 'update-notifier';
 import { showErrorAndExit } from '@voila/common';
 const pkg = require('../../package');
 
-// The following code is unashamedly stolen from Now CLI
-// https://github.com/zeit/now-cli
-
 if (nodeVersion.major < 4) {
   showErrorAndExit('Voila Module requires at least version 4 of Node.');
 }
@@ -21,6 +18,7 @@ const defaultCommand = 'deploy';
 
 const commands = new Set([
   defaultCommand,
+  'undeploy',
   'help'
 ]);
 
