@@ -1,7 +1,7 @@
 {
   "name": "@voila/module",
   "displayName": "Voila Module",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "The easiest way to deploy to AWS",
   "keywords": [
     "aws",
