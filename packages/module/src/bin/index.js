@@ -18,7 +18,7 @@ const defaultCommand = 'deploy';
 
 const commands = new Set([
   defaultCommand,
-  'undeploy',
+  'remove',
   'help'
 ]);
 

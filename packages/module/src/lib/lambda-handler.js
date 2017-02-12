@@ -133,14 +133,14 @@ export async function addPermissionToLambdaFunction({ lambdaFunctionARN, restApi
   }).promise();
 }
 
-export async function deleteLambdaFunction({ name, version, stage, awsConfig }) {
+export async function removeLambdaFunction({ name, version, stage, awsConfig }) {
   const lambda = new Lambda(awsConfig);
 
   const message = formatMessage({
     name, stage, message: 'Deleting lambda function...'
   });
   const successMessage = formatMessage({
-    name, stage, message: 'Lambda function deleted'
+    name, stage, message: 'Lambda function removed'
   });
   return await task(message, successMessage, async (currentTask) => {
     const lambdaFunctionName = generateDeploymentName({ name, version, stage });

@@ -147,11 +147,11 @@ export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFun
   });
 }
 
-export async function deleteAPIGateway({ name, version, stage, awsConfig }) {
+export async function removeAPIGateway({ name, version, stage, awsConfig }) {
   const apiGateway = new APIGateway(awsConfig);
 
-  const message = formatMessage({ name, stage, message: 'Deleting API Gateway...' });
-  const successMessage = formatMessage({ name, stage, message: 'API Gateway deleted' });
+  const message = formatMessage({ name, stage, message: 'Removing API Gateway...' });
+  const successMessage = formatMessage({ name, stage, message: 'API Gateway removed' });
   return await task(message, successMessage, async (currentTask) => {
     const restApiId = await findAPIGateway({ name, version, stage, awsConfig });
 

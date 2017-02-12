@@ -6,7 +6,7 @@ import { join, resolve } from 'path';
 import minimist from 'minimist';
 import { showErrorAndExit, getAWSConfig } from '@voila/common';
 import { green, gray } from 'chalk';
-import { undeploy } from '../lib/undeployer';
+import { remove } from '../lib/remover';
 
 const DEFAULT_REGION = 'us-east-1';
 const DEFAULT_STAGE = 'development';
@@ -41,7 +41,7 @@ const awsConfig = getAWSConfig({ region: DEFAULT_REGION }, process.env, config, 
   const voilaModulePkg = require('../../package.json');
   console.log(`\n${green(voilaModulePkg.displayName)} ${gray(`v${voilaModulePkg.version}`)}\n`);
 
-  await undeploy({ name, version, stage, awsConfig });
+  await remove({ name, version, stage, awsConfig });
 
-  console.log('\nVoilà! Your module has been undeployed.\n');
+  console.log('\nVoilà! Your module has been removed.\n');
 })().catch(showErrorAndExit);
