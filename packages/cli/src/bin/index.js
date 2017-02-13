@@ -14,13 +14,12 @@ if (nodeVersion.major < 4) {
 
 updateNotifier({ pkg }).notify();
 
-const defaultCommand = 'initialize-and-run';
+const defaultCommand = 'forward';
 
 const commands = new Set([
   defaultCommand,
   'init',
   'initialize',
-  'run',
   'help'
 ]);
 

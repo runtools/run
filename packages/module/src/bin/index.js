@@ -18,11 +18,14 @@ const defaultCommand = 'deploy';
 
 const commands = new Set([
   defaultCommand,
+  'init',
+  'initialize',
   'remove',
   'help'
 ]);
 
 const aliases = new Map([
+  ['init', 'initialize']
 ]);
 
 let cmd = defaultCommand;

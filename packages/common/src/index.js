@@ -1,13 +1,25 @@
 'use strict';
 
 import { join } from 'path';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import semver from 'semver';
-import chalk from 'chalk';
+import { green, red, gray } from 'chalk';
 import ora from 'ora';
 
-export function getPackage(inputDir) {
-  return require(join(inputDir, 'package.json'));
+export function getPackage(dir) {
+  const packageFile = join(dir, 'package.json');
+  if (!existsSync(packageFile)) {
+    throw createUserError(`${red('No npm package found at')} ${dir}`);
+  }
+  const json = readFileSync(packageFile, 'utf8');
+  const pkg = JSON.parse(json);
+  return pkg;
+}
+
+export function putPackage(dir, pkg) {
+  const packageFile = join(dir, 'package.json');
+  const json = JSON.stringify(pkg, undefined, 2);
+  writeFileSync(packageFile, json);
 }
 
 export function isYarnPreferred({ inputDir, yarn }) {
@@ -21,8 +33,14 @@ export function isYarnPreferred({ inputDir, yarn }) {
   return false;
 }
 
+export function packageTypeToExecutableName(type) {
+  let name = type;
+  if (name.slice(0, 1) === '@') name = name.slice(1);
+  name = name.replace(/\//g, '-');
+  return name;
+}
+
 export function generateDeploymentName({ name, version, stage }) {
-  // Handle scoped name case
   if (name.slice(0, 1) === '@') name = name.slice(1);
   name = name.replace(/\//g, '-');
 
@@ -66,9 +84,9 @@ export async function task(message, successMessage, fn) {
 
 export function formatMessage({ status, name, stage, message, info }) {
   if (status === 'success') {
-    status = `${chalk.green('✔')} `;
+    status = `${green('✔')} `;
   } else if (status === 'error') {
-    status = `${chalk.red('✘')} `;
+    status = `${red('✘')} `;
   } else if (status === undefined) {
     status = '';
   } else {
@@ -80,14 +98,14 @@ export function formatMessage({ status, name, stage, message, info }) {
     nameAndStage = name;
     if (stage) nameAndStage += ` (${stage})`;
     nameAndStage += ':';
-    nameAndStage = chalk.gray(nameAndStage);
+    nameAndStage = gray(nameAndStage);
     nameAndStage += ' ';
   } else {
     nameAndStage = '';
   }
 
   if (info) {
-    info = ` ${chalk.gray(`(${info})`)}`;
+    info = ` ${gray(`(${info})`)}`;
   } else {
     info = '';
   }
@@ -106,7 +124,11 @@ export function showError(error) {
     error = createUserError(error);
   }
   if (error.userError) {
-    console.error(formatMessage({ status: 'error', message: error.message }));
+    const message = formatMessage({
+      status: 'error',
+      message: error.message + '\n'
+    });
+    console.error(message);
   } else {
     console.error(error);
   }
