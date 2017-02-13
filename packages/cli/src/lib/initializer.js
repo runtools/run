@@ -9,24 +9,13 @@ export async function initialize({ inputDir, stage, type, yarn }) {
 
   const config = pkg.voila || {};
 
-  if (!type) type = config.type;
-
-  if (!type) {
-    if ((pkg.main || '').endsWith('.html')) {
-      type = '@voila/website';
-    } else {
-      type = '@voila/module';
-    }
-    // confirm auto-detect
-  }
-
-  if (config.type !== type) {
+  if (type !== config.type) {
     await remove({ inputDir, stage, type: config.type, yarn });
   }
 
   await install({ inputDir, stage, type, yarn });
 
-  if (config.type !== type) {
+  if (type !== config.type) {
     pkg = getPackage(inputDir);
     config.type = type;
     pkg.voila = config;
