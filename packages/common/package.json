@@ -13,9 +13,9 @@
     "url": "git://github.com/voilajs/voila"
   },
   "scripts": {
-    "transpile": "babel src --out-dir dist",
+    "lint": "eslint src",
     "prepublish": "npm run transpile",
-    "lint": "eslint src"
+    "transpile": "babel src --out-dir dist"
   },
   "babel": {
     "presets": [

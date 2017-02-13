@@ -1,8 +1,25 @@
 'use strict';
 
+import { join } from 'path';
+import { existsSync } from 'fs';
 import semver from 'semver';
 import chalk from 'chalk';
 import ora from 'ora';
+
+export function getPackage(inputDir) {
+  return require(join(inputDir, 'package.json'));
+}
+
+export function isYarnPreferred({ inputDir, yarn }) {
+  if (yarn != null) return !!yarn;
+
+  const execPath = process.env.npm_execpath;
+  if (execPath && execPath.endsWith('yarn.js')) return true;
+
+  if (existsSync(join(inputDir, 'yarn.lock'))) return true;
+
+  return false;
+}
 
 export function generateDeploymentName({ name, version, stage }) {
   // Handle scoped name case
