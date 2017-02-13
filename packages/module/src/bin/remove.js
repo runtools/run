@@ -14,7 +14,7 @@ const DEFAULT_STAGE = 'development';
 (async function() {
   const argv = minimist(process.argv.slice(2), {
     string: [
-      'input-dir',
+      'package-dir',
       'stage',
       'aws-access-key-id',
       'aws-secret-access-key',
@@ -22,7 +22,7 @@ const DEFAULT_STAGE = 'development';
     ]
   });
 
-  let inputDir = argv['input-dir'] || argv._[0];
+  let inputDir = argv['package-dir'] || argv._[0];
   if (inputDir) {
     inputDir = resolve(process.cwd(), inputDir);
   } else {

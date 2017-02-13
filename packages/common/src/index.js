@@ -22,13 +22,13 @@ export function putPackage(dir, pkg) {
   writeFileSync(packageFile, json);
 }
 
-export function isYarnPreferred({ inputDir, yarn }) {
+export function isYarnPreferred({ pkgDir, yarn }) {
   if (yarn != null) return !!yarn;
 
   const execPath = process.env.npm_execpath;
   if (execPath && execPath.endsWith('yarn.js')) return true;
 
-  if (existsSync(join(inputDir, 'yarn.lock'))) return true;
+  if (existsSync(join(pkgDir, 'yarn.lock'))) return true;
 
   return false;
 }

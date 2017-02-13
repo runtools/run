@@ -16,7 +16,7 @@ const DEFAULT_TIMEOUT = 3;
 (async function() {
   const argv = minimist(process.argv.slice(2), {
     string: [
-      'input-dir',
+      'package-dir',
       'entry-file',
       'stage',
       'role',
@@ -44,7 +44,7 @@ const DEFAULT_TIMEOUT = 3;
     }
   });
 
-  let inputDir = argv['input-dir'] || argv._[0];
+  let inputDir = argv['package-dir'] || argv._[0];
   if (inputDir) {
     inputDir = resolve(process.cwd(), inputDir);
   } else {
@@ -89,7 +89,7 @@ const DEFAULT_TIMEOUT = 3;
 
   const { apiURL } = await deploy({ entryFile, name, version, stage, role, memorySize, timeout, environment, awsConfig, bundle, transpile });
 
-  console.log(`\nVoilà! Your module is deployed here:\n\n${yellow(apiURL)}\n`);
+  console.log(`\nVoilà! Your module is deployed here:\n\n  ${yellow(apiURL)}\n`);
 
   if (usageInstructions) {
     console.log(`To use it, install and import @voila/module-client:

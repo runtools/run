@@ -4,38 +4,38 @@ import { exec } from 'child-process-promise';
 import { getPackage, putPackage, isYarnPreferred, task, formatMessage } from '@voila/common';
 import { run } from './runner';
 
-export async function initialize({ inputDir, stage, type, yarn }) {
-  let pkg = getPackage(inputDir);
+export async function initialize({ pkgDir, stage, type, yarn }) {
+  let pkg = getPackage(pkgDir);
 
   const config = pkg.voila || {};
 
   if (type !== config.type) {
-    await remove({ inputDir, stage, type: config.type, yarn });
+    await remove({ pkgDir, stage, type: config.type, yarn });
   }
 
-  await install({ inputDir, stage, type, yarn });
+  await install({ pkgDir, stage, type, yarn });
 
   if (type !== config.type) {
-    pkg = getPackage(inputDir);
+    pkg = getPackage(pkgDir);
     config.type = type;
     pkg.voila = config;
-    putPackage(inputDir, pkg);
+    putPackage(pkgDir, pkg);
   }
 
   const args = [
     'initialize',
-    `--input-dir=${inputDir}`,
+    `--package-dir=${pkgDir}`,
     `--stage=${stage}`
   ];
   if (yarn != null) args.push(`--yarn=${yarn}`);
-  await run({ inputDir, type, args });
+  await run({ pkgDir, type, args });
 }
 
-async function install({ inputDir, stage, type, yarn }) {
-  const pkg = getPackage(inputDir);
+async function install({ pkgDir, stage, type, yarn }) {
+  const pkg = getPackage(pkgDir);
   const name = pkg.name;
 
-  const yarnPreferred = isYarnPreferred({ inputDir, yarn });
+  const yarnPreferred = isYarnPreferred({ pkgDir, yarn });
 
   const message = formatMessage({ name, stage, message: `Installing ${type} using ${yarnPreferred ? 'yarn' : 'npm'}...` });
   const successMessage = formatMessage({ name, stage, message: `${type} installed` });
@@ -46,17 +46,17 @@ async function install({ inputDir, stage, type, yarn }) {
     } else {
       cmd = `npm install ${type} --save-dev`;
     }
-    await exec(cmd, { cwd: inputDir });
+    await exec(cmd, { cwd: pkgDir });
   });
 }
 
-async function remove({ inputDir, stage, type, yarn }) {
-  const pkg = getPackage(inputDir);
+async function remove({ pkgDir, stage, type, yarn }) {
+  const pkg = getPackage(pkgDir);
   const name = pkg.name;
 
   if (!(pkg.devDependencies && pkg.devDependencies.hasOwnProperty(type))) return;
 
-  const yarnPreferred = isYarnPreferred({ inputDir, yarn });
+  const yarnPreferred = isYarnPreferred({ pkgDir, yarn });
 
   const message = formatMessage({ name, stage, message: `Removing ${type} using ${yarnPreferred ? 'yarn' : 'npm'}...` });
   const successMessage = formatMessage({ name, stage, message: `${type} removed` });
@@ -67,6 +67,6 @@ async function remove({ inputDir, stage, type, yarn }) {
     } else {
       cmd = `npm rm ${type} --save-dev`;
     }
-    await exec(cmd, { cwd: inputDir });
+    await exec(cmd, { cwd: pkgDir });
   });
 }

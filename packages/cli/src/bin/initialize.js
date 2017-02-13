@@ -17,7 +17,7 @@ const DEFAULT_STAGE = 'development';
   const argv = minimist(process.argv.slice(2), {
     string: [
       'type',
-      'input-dir',
+      'package-dir',
       'stage'
     ],
     boolean: [
@@ -33,18 +33,18 @@ const DEFAULT_STAGE = 'development';
     throw createUserError(`${red('\'type\' option is missing.')} Please specify the type of your package. Example: ${cyan('`voila init @voila/module`')}.`);
   }
 
-  let inputDir = argv['input-dir'];
-  if (inputDir) {
-    inputDir = resolve(process.cwd(), inputDir);
+  let pkgDir = argv['package-dir'];
+  if (pkgDir) {
+    pkgDir = resolve(process.cwd(), pkgDir);
   } else {
-    inputDir = process.cwd();
+    pkgDir = process.cwd();
   }
 
   const stage = argv['stage'] || DEFAULT_STAGE;
 
   const yarn = argv['yarn'];
 
-  await initialize({ inputDir, stage, type, yarn });
+  await initialize({ pkgDir, stage, type, yarn });
 
   console.log('\nVoilà! Your package is initialized.\n');
 })().catch(showErrorAndExit);
