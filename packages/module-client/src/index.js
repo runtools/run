@@ -1,7 +1,8 @@
 'use strict';
 
-const fetch = require('isomorphic-fetch');
-const rpc = require('easy-json-rpc').default;
+import fetch from 'isomorphic-fetch';
+import rpc from 'easy-json-rpc';
+import getGlobal from 'system.global';
 
 export class ModuleClient {
   static import(url) {
@@ -9,9 +10,25 @@ export class ModuleClient {
       throw new Error('\'url\' attribute is required to instantiate a ModuleClient');
     }
 
-    return invokeAt(url, '__getModuleProperties__').then(properties => {
+    const global = getGlobal();
+    let namespace = global.__VoilaModuleClient__;
+    if (!namespace) {
+      global.__VoilaModuleClient__ = namespace = {};
+    }
+    let importedModules = namespace.importedModules;
+    if (!importedModules) {
+      namespace.importedModules = importedModules = {};
+    }
+
+    if (importedModules.hasOwnProperty(url)) return importedModules[url];
+
+    const promise = invokeAt(url, '__getModuleProperties__').then(properties => {
       return new (this)({ url, properties });
     });
+
+    importedModules[url] = promise;
+
+    return promise;
   }
 
   constructor({ url, properties}) {
