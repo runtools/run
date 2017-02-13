@@ -22,14 +22,14 @@ const DEFAULT_STAGE = 'development';
     ]
   });
 
-  let inputDir = argv['package-dir'] || argv._[0];
-  if (inputDir) {
-    inputDir = resolve(process.cwd(), inputDir);
+  let pkgDir = argv['package-dir'];
+  if (pkgDir) {
+    pkgDir = resolve(process.cwd(), pkgDir);
   } else {
-    inputDir = process.cwd();
+    pkgDir = process.cwd();
   }
 
-  const pkg = getPackage(inputDir);
+  const pkg = getPackage(pkgDir);
 
   const { name, version } = pkg;
 
