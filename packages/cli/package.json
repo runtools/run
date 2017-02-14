@@ -1,7 +1,7 @@
 {
   "name": "@voila/cli",
   "displayName": "Voila CLI",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "The easiest way to deploy to AWS",
   "keywords": [
     "aws",
