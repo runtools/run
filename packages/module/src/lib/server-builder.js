@@ -60,7 +60,7 @@ export async function buildServer({ entryFile, name, stage, bundle, transpile })
 
     // *** module-server ***
 
-    const moduleServerFile = join(__dirname, '..', 'assets', 'module-server.js');
+    const moduleServerFile = join(__dirname, '..', 'vendor', 'module-server.js');
     const moduleServerCode = await fsp.readFile(moduleServerFile, 'utf8');
 
     // *** handler ***

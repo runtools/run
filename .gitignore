@@ -2,6 +2,7 @@
 .npmrc
 .envrc
 node_modules
+dist
 npm-debug.log
 lerna-debug.log
-draft.js
+_*_.js

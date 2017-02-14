@@ -3,7 +3,7 @@ import commonjs from 'rollup-plugin-commonjs';
 
 export default {
   entry: 'dist/index.js',
-  dest: '../module/src/assets/module-server.js',
+  dest: '../module/src/vendor/module-server.js',
   format: 'cjs',
   plugins: [
     nodeResolve(),
