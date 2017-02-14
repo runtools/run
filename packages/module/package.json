@@ -32,7 +32,6 @@
     "url": "git://github.com/voilajs/voila"
   },
   "scripts": {
-    "lint": "eslint src",
     "prepublish": "npm run transpile",
     "transpile": "babel src --out-dir dist"
   },
@@ -51,9 +50,6 @@
         }
       ]
     ]
-  },
-  "eslintConfig": {
-    "extends": "eslint-config-next"
   },
   "dependencies": {
     "@voila/common": "^0.3.0",
@@ -75,9 +71,6 @@
     "update-notifier": "^1.0.3"
   },
   "devDependencies": {
-    "babel-cli": "^6.22.2",
-    "babel-eslint": "^7.1.1",
-    "eslint": "^3.14.1",
-    "eslint-config-next": "^0.1.15"
+    "babel-cli": "^6.22.2"
   }
 }

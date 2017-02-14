@@ -14,7 +14,6 @@
   },
   "scripts": {
     "bundle": "npm run transpile && rollup --config",
-    "lint": "eslint src",
     "prepublish": "npm run transpile",
     "transpile": "babel src --out-dir dist"
   },
@@ -34,18 +33,12 @@
       ]
     ]
   },
-  "eslintConfig": {
-    "extends": "eslint-config-next"
-  },
   "dependencies": {
     "easy-json-rpc": "^2.0.3"
   },
   "devDependencies": {
     "babel-cli": "^6.22.2",
-    "babel-eslint": "^7.1.1",
     "babel-preset-env": "^1.1.8",
-    "eslint": "^3.14.1",
-    "eslint-config-next": "^0.1.15",
     "rollup": "^0.41.4",
     "rollup-plugin-commonjs": "^7.0.0",
     "rollup-plugin-node-resolve": "^2.0.0"

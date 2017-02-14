@@ -33,8 +33,7 @@
   },
   "scripts": {
     "transpile": "babel src --out-dir dist",
-    "prepublish": "npm run transpile",
-    "lint": "eslint src"
+    "prepublish": "npm run transpile"
   },
   "babel": {
     "presets": [
@@ -52,9 +51,6 @@
       ]
     ]
   },
-  "eslintConfig": {
-    "extends": "eslint-config-next"
-  },
   "dependencies": {
     "@voila/common": "^0.3.0",
     "child-process-promise": "^2.2.0",
@@ -65,9 +61,6 @@
   },
   "devDependencies": {
     "babel-cli": "^6.22.2",
-    "babel-eslint": "^7.1.1",
-    "babel-preset-env": "^1.1.8",
-    "eslint": "^3.14.1",
-    "eslint-config-next": "^0.1.15"
+    "babel-preset-env": "^1.1.8"
   }
 }
