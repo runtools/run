@@ -1,6 +1,6 @@
 {
   "name": "@voila/module-example-test",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Voila Module example test",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
@@ -17,7 +17,7 @@
     "prepublish": "npm run build"
   },
   "dependencies": {
-    "@voila/module-client": "^0.2.3"
+    "@voila/module-client": "^0.2.4"
   },
   "devDependencies": {
     "babel-polyfill": "^6.22.0",
