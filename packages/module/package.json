@@ -1,7 +1,7 @@
 {
   "name": "@voila/module",
   "displayName": "Voila Module",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "The easiest way to deploy to AWS",
   "keywords": [
     "aws",
@@ -52,7 +52,7 @@
     ]
   },
   "dependencies": {
-    "@voila/common": "^0.3.0",
+    "@voila/common": "^0.3.1",
     "archiver": "^1.3.0",
     "aws-sdk": "^2.12.0",
     "babel-preset-env": "^1.1.8",
