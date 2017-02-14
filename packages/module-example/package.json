@@ -12,13 +12,13 @@
     "url": "git://github.com/voilajs/voila"
   },
   "voila": {
-    "memorySize": 256,
-    "timeout": 30,
+    "type": "@voila/module",
+    "memorySize": 128,
+    "timeout": 3,
     "environment": {
       "ID": "Houdini",
       "SECRET": "Abracadabra"
-    },
-    "type": "@voila/module"
+    }
   },
   "devDependencies": {
     "@voila/module": "^0.3.1"

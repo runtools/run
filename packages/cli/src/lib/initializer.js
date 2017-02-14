@@ -7,7 +7,14 @@ import { run } from './runner';
 export async function initialize({ pkgDir, stage, type, yarn }) {
   let pkg = getPackage(pkgDir);
 
-  const config = pkg.voila || {};
+  let config = pkg.voila;
+  if (!config) {
+    config = {};
+    // Add the 'voila' field now so it has more chance
+    // to be placed before the 'devDependencies' field
+    pkg.voila = config;
+    putPackage(pkgDir, pkg);
+  }
 
   if (type !== config.type) {
     await remove({ pkgDir, stage, type: config.type, yarn });
