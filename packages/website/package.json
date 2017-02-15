@@ -1,0 +1,65 @@
+{
+  "name": "@voila/website",
+  "displayName": "Voilà Website",
+  "version": "0.1.0",
+  "description": "The easiest way to deploy your website to AWS",
+  "keywords": [
+    "aws",
+    "s3",
+    "static",
+    "website",
+    "hosting",
+    "cloud",
+    "deployment",
+    "deploy"
+  ],
+  "author": "Manuel Vila <mvila@3base.com>",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.js",
+  "bin": {
+    "voila-website": "dist/bin/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/voilajs/voila"
+  },
+  "scripts": {
+    "prepublish": "npm run transpile",
+    "transpile": "babel src --out-dir dist"
+  },
+  "babel": {
+    "presets": [
+      [
+        "env",
+        {
+          "targets": {
+            "node": 4
+          },
+          "loose": true,
+          "exclude": [
+            "transform-regenerator"
+          ]
+        }
+      ]
+    ]
+  },
+  "dependencies": {
+    "@voila/common": "^0.3.3",
+    "aws-sdk": "^2.12.0",
+    "babel-preset-env": "^1.1.8",
+    "bytes": "^2.4.0",
+    "fs-promise": "^1.0.0",
+    "minimist": "^1.2.0",
+    "rollup": "^0.41.4",
+    "rollup-plugin-babel": "^2.7.1",
+    "rollup-plugin-commonjs": "^7.0.0",
+    "rollup-plugin-json": "^2.1.0",
+    "rollup-plugin-node-resolve": "^2.0.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.22.2"
+  }
+}
