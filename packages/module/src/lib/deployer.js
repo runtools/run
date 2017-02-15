@@ -21,9 +21,9 @@ export async function deploy({ entryFile, name, version, stage, role, memorySize
     memorySize, timeout, environment, archive, awsConfig
   });
 
-  const { apiURL } = await createOrUpdateAPIGateway({
+  const { deploymentURL } = await createOrUpdateAPIGateway({
     name, version, stage, lambdaFunctionARN, awsConfig
   });
 
-  return { apiURL };
+  return { deploymentURL };
 }

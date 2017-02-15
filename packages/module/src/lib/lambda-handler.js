@@ -14,15 +14,9 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
   return await task(message, async (currentTask) => {
     const lambdaFunctionName = generateDeploymentName({ name, version, stage });
 
-    let lambdaFunction;
-    try {
-      lambdaFunction = await lambda.getFunctionConfiguration({
-        FunctionName: lambdaFunctionName
-      }).promise();
-    } catch (err) {
-      if (err.code !== 'ResourceNotFoundException') throw err;
-    }
-
+    const lambdaFunction = await getLambdaFunctionConfiguration({
+      name, version, stage, awsConfig
+    });
     if (!lambdaFunction) {
       return await createLambdaFunction();
     } else {
@@ -114,6 +108,45 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
 
       return { lambdaFunctionARN: lambdaFunction.FunctionArn };
     }
+  });
+}
+
+async function getLambdaFunctionConfiguration({ name, version, stage, awsConfig }) {
+  const lambda = new Lambda(awsConfig);
+
+  const lambdaFunctionName = generateDeploymentName({ name, version, stage });
+
+  try {
+    return await lambda.getFunctionConfiguration({
+      FunctionName: lambdaFunctionName
+    }).promise();
+  } catch (err) {
+    if (err.code !== 'ResourceNotFoundException') throw err;
+    return undefined;
+  }
+}
+
+export async function getLambdaFunctionInfo({ name, version, stage, awsConfig }) {
+  const message = formatMessage({
+    name, stage, message: 'Fetching lambda function information...'
+  });
+  const successMessage = formatMessage({
+    name, stage, message: 'Lambda function information fetched'
+  });
+  return await task(message, successMessage, async () => {
+    const result = await getLambdaFunctionConfiguration({
+      name, version, stage, awsConfig
+    });
+    if (!result) return undefined;
+    return {
+      name: result.FunctionName,
+      codeSize: result.CodeSize,
+      memorySize: result.MemorySize * 1024 * 1024,
+      timeout: result.Timeout,
+      runtime: result.Runtime,
+      role: result.Role,
+      updatedOn: new Date(result.LastModified)
+    };
   });
 }
 

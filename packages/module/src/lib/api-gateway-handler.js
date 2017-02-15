@@ -11,12 +11,9 @@ export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFun
   return await task(message, async (currentTask) => {
     const apiName = generateDeploymentName({ name, version, stage });
 
-    let stageName = name.replace(/[^a-zA-Z0-9_]/g, '_');
-    if (stageName.slice(0, 1) === '_') { // Handle scoped name case
-      stageName = stageName.slice(1);
-    }
+    const stageName = generateStageName(name);
 
-    let restApiId = await findAPIGateway({ name, version, stage, awsConfig });
+    let restApiId = await getAPIGatewayId({ name, version, stage, awsConfig });
 
     if (!restApiId) {
       restApiId = await createAPIGateway();
@@ -24,9 +21,9 @@ export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFun
       await updateAPIGateway({ restApiId });
     }
 
-    const apiURL = `https://${restApiId}.execute-api.${awsConfig.region}.amazonaws.com/${stageName}`;
+    const deploymentURL = formatDeploymentURL({ restApiId, region: awsConfig.region, stageName });
 
-    return { apiURL };
+    return { deploymentURL };
 
     async function createAPIGateway() {
       currentTask.setMessage(formatMessage({
@@ -153,7 +150,7 @@ export async function removeAPIGateway({ name, version, stage, awsConfig }) {
   const message = formatMessage({ name, stage, message: 'Removing API Gateway...' });
   const successMessage = formatMessage({ name, stage, message: 'API Gateway removed' });
   return await task(message, successMessage, async (currentTask) => {
-    const restApiId = await findAPIGateway({ name, version, stage, awsConfig });
+    const restApiId = await getAPIGatewayId({ name, version, stage, awsConfig });
 
     if (restApiId) {
       await apiGateway.deleteRestApi({ restApiId }).promise();
@@ -163,7 +160,7 @@ export async function removeAPIGateway({ name, version, stage, awsConfig }) {
   });
 }
 
-async function findAPIGateway({ name, version, stage, awsConfig }) {
+async function getAPIGatewayId({ name, version, stage, awsConfig }) {
   const apiGateway = new APIGateway(awsConfig);
 
   const apiName = generateDeploymentName({ name, version, stage });
@@ -177,4 +174,51 @@ async function findAPIGateway({ name, version, stage, awsConfig }) {
   const api = result.items.find((item) => item.name === apiName);
 
   return api && api.id;
+}
+
+export async function getAPIGatewayInfo({ name, version, stage, awsConfig }) {
+  const message = formatMessage({
+    name, stage, message: 'Fetching API Gateway information...'
+  });
+  const successMessage = formatMessage({
+    name, stage, message: 'API Gateway information fetched'
+  });
+  return await task(message, successMessage, async () => {
+    const restApiId = await getAPIGatewayId({ name, version, stage, awsConfig });
+    if (!restApiId) return undefined;
+
+    const apiGateway = new APIGateway(awsConfig);
+
+    let result;
+
+    result = await apiGateway.getDeployments({ restApiId }).promise();
+    const deploymentId = result.items[0].id;
+
+    result = await apiGateway.getStages({ restApiId, deploymentId }).promise();
+    const { stageName, lastUpdatedDate: updatedOn } = result.item[0];
+    const deploymentURL = formatDeploymentURL({
+      restApiId, region: awsConfig.region, stageName
+    });
+
+    result = await apiGateway.getRestApi({ restApiId }).promise();
+
+    return {
+      id: result.id,
+      name: result.name,
+      deploymentURL,
+      updatedOn
+    };
+  });
+}
+
+function generateStageName(name) {
+  let stageName = name.replace(/[^a-zA-Z0-9_]/g, '_');
+  if (stageName.slice(0, 1) === '_') { // Handle scoped name case
+    stageName = stageName.slice(1);
+  }
+  return stageName;
+}
+
+function formatDeploymentURL({ restApiId, region, stageName }) {
+  return `https://${restApiId}.execute-api.${region}.amazonaws.com/${stageName}`;
 }

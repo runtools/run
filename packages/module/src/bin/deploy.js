@@ -80,8 +80,8 @@ const DEFAULT_TIMEOUT = 3;
   if (transpile == null) transpile = config.transpile;
   if (transpile == null) transpile = true;
 
-  const { apiURL } = await deploy({ entryFile, name, version, stage, role, memorySize, timeout, environment, awsConfig, bundle, transpile });
+  const { deploymentURL } = await deploy({ entryFile, name, version, stage, role, memorySize, timeout, environment, awsConfig, bundle, transpile });
 
-  showOutro('Your module is deployed.');
-  console.log(`Deployment URL: ${cyan.underline(apiURL)}\n${gray('Find out how to use it from the client side with `voila usage`.')}`);
+  showOutro('Your module has been deployed.');
+  console.log(`Deployment URL: ${cyan.underline(deploymentURL)}\n${gray('Find out how to use it from the client side with `voila usage`.')}`);
 })().catch(showErrorAndExit);
