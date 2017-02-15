@@ -5,7 +5,7 @@
 import { resolve } from 'path';
 import minimist from 'minimist';
 import { showIntro, showOutro, getPackage, showErrorAndExit, getEnvironmentConfig, getAWSConfig } from '@voila/common';
-import { green, cyan, gray } from 'chalk';
+import { cyan, gray } from 'chalk';
 import { deploy } from '../lib/deployer';
 
 const DEFAULT_REGION = 'us-east-1';
