@@ -83,5 +83,5 @@ const DEFAULT_TIMEOUT = 3;
   const { apiURL } = await deploy({ entryFile, name, version, stage, role, memorySize, timeout, environment, awsConfig, bundle, transpile });
 
   showOutro('Your module is deployed.');
-  console.log(`Deployment URL: ${cyan.underline(apiURL)}\n${gray('Find out how to use it from the client side with `voila instructions`.')}`);
+  console.log(`Deployment URL: ${cyan.underline(apiURL)}\n${gray('Find out how to use it from the client side with `voila usage`.')}`);
 })().catch(showErrorAndExit);

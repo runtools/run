@@ -23,7 +23,7 @@ const commands = new Set([
   'info',
   'information',
   'remove',
-  'instructions',
+  'usage',
   'help'
 ]);
 
