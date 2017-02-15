@@ -4,15 +4,14 @@
 
 import { resolve } from 'path';
 import minimist from 'minimist';
-import { red, green, gray, cyan } from 'chalk';
-import { createUserError, showErrorAndExit } from '@voila/common';
+import { red, cyan } from 'chalk';
+import { showIntro, showOutro, createUserError, showErrorAndExit } from '@voila/common';
 import { initialize } from '../lib/initializer';
 
 const DEFAULT_STAGE = 'development';
 
 (async function() {
-  const voilaCLIPkg = require('../../package.json');
-  console.log(`\n${green(voilaCLIPkg.displayName)} ${gray(`v${voilaCLIPkg.version}`)}\n`);
+  showIntro(require('../../package.json'));
 
   const argv = minimist(process.argv.slice(2), {
     string: [
@@ -46,5 +45,5 @@ const DEFAULT_STAGE = 'development';
 
   await initialize({ pkgDir, stage, type, yarn });
 
-  console.log('\nVoilà! Your package is initialized.\n');
+  showOutro('Your package is initialized.');
 })().catch(showErrorAndExit);
