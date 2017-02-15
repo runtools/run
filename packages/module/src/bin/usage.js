@@ -2,7 +2,7 @@
 
 'use strict';
 
-import { showIntro, showErrorAndExit } from '@voila/common';
+import { showIntro, showOutro, showErrorAndExit } from '@voila/common';
 import { yellow, cyan, gray } from 'chalk';
 
 (async function() {
@@ -23,4 +23,5 @@ Then invoking a function remotely is as simple as:
   ${cyan('const result = await awesomeModule.crazyFunction(\'foo\', \'bar\');')}`);
 
   console.log();
+  showOutro('Happy coding! :)');
 })().catch(showErrorAndExit);
