@@ -11,7 +11,7 @@ export async function run({ pkgDir, type, args }) {
     pkgDir, 'node_modules', '.bin', packageTypeToExecutableName(type)
   );
   if (!existsSync(executable)) {
-    throw createUserError(`${red('Package handler not found!')} Are you sure that ${yellow(type)} is a Voila type?`);
+    throw createUserError(`${red('Package handler not found!')} Are you sure that ${yellow(type)} is a Voilà type?`);
   }
   await spawn(`${executable}`, args, { cwd: pkgDir, stdio: 'inherit' });
 }

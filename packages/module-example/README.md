@@ -1,4 +1,4 @@
-# Voila Module example
+# Voilà Module example
 
 ```javascript
 // TODO: documentation!

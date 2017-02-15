@@ -1,4 +1,4 @@
-# Voila Module client
+# Voilà Module client
 
 ```javascript
 // TODO: documentation!

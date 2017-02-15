@@ -3,7 +3,7 @@
 import { join } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import semver from 'semver';
-import { green, red, gray } from 'chalk';
+import { green, red, gray, bold } from 'chalk';
 import ora from 'ora';
 
 export function getPackage(dir) {
@@ -60,6 +60,14 @@ function createCompatibleVersionRange(version) {
     const minor = semver.minor(version);
     return `${major}.${minor}.x`;
   }
+}
+
+export function showIntro(pkg) {
+  console.log(`${bold(pkg.displayName || pkg.name)} ${gray(`v${pkg.version}`)}`);
+}
+
+export function showOutro(message = '') {
+  console.log(bold(green('Voilà!') + ' ' + message));
 }
 
 export async function task(message, successMessage, fn) {
@@ -124,10 +132,7 @@ export function showError(error) {
     error = createUserError(error);
   }
   if (error.userError) {
-    const message = formatMessage({
-      status: 'error',
-      message: error.message + '\n'
-    });
+    const message = formatMessage({ status: 'error', message: error.message });
     console.error(message);
   } else {
     console.error(error);

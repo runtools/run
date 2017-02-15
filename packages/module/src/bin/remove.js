@@ -4,14 +4,15 @@
 
 import { resolve } from 'path';
 import minimist from 'minimist';
-import { getPackage, showErrorAndExit, getAWSConfig } from '@voila/common';
-import { green, gray } from 'chalk';
+import { showIntro, showOutro, getPackage, showErrorAndExit, getAWSConfig } from '@voila/common';
 import { remove } from '../lib/remover';
 
 const DEFAULT_REGION = 'us-east-1';
 const DEFAULT_STAGE = 'development';
 
 (async function() {
+  showIntro(require('../../package.json'));
+
   const argv = minimist(process.argv.slice(2), {
     string: [
       'package-dir',
@@ -39,10 +40,7 @@ const DEFAULT_STAGE = 'development';
 
   const awsConfig = getAWSConfig({ region: DEFAULT_REGION }, process.env, config, argv);
 
-  const voilaModulePkg = require('../../package.json');
-  console.log(`\n${green(voilaModulePkg.displayName)} ${gray(`v${voilaModulePkg.version}`)}\n`);
-
   await remove({ name, version, stage, awsConfig });
 
-  console.log('\nVoilà! Your module has been removed.\n');
+  showOutro('Your module has been removed.');
 })().catch(showErrorAndExit);

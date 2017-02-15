@@ -4,8 +4,8 @@
 
 import { resolve } from 'path';
 import minimist from 'minimist';
-import { getPackage, showErrorAndExit, getEnvironmentConfig, getAWSConfig } from '@voila/common';
-import { green, yellow, gray, cyan } from 'chalk';
+import { showIntro, showOutro, getPackage, showErrorAndExit, getEnvironmentConfig, getAWSConfig } from '@voila/common';
+import { green, cyan, gray } from 'chalk';
 import { deploy } from '../lib/deployer';
 
 const DEFAULT_REGION = 'us-east-1';
@@ -14,6 +14,8 @@ const DEFAULT_MEMORY_SIZE = 128;
 const DEFAULT_TIMEOUT = 3;
 
 (async function() {
+  showIntro(require('../../package.json'));
+
   const argv = minimist(process.argv.slice(2), {
     string: [
       'package-dir',
@@ -31,16 +33,14 @@ const DEFAULT_TIMEOUT = 3;
     ],
     boolean: [
       'bundle',
-      'transpile',
-      'usage-instructions'
+      'transpile'
     ],
     alias: {
       'environment': ['env']
     },
     default: {
       'bundle': null,
-      'transpile': null,
-      'usage-instructions': null
+      'transpile': null
     }
   });
 
@@ -80,28 +80,8 @@ const DEFAULT_TIMEOUT = 3;
   if (transpile == null) transpile = config.transpile;
   if (transpile == null) transpile = true;
 
-  let usageInstructions = argv['usage-instructions'];
-  if (usageInstructions == null) usageInstructions = config.usageInstructions;
-  if (usageInstructions == null) usageInstructions = true;
-
-  const voilaModulePkg = require('../../package.json');
-  console.log(`\n${green(voilaModulePkg.displayName)} ${gray(`v${voilaModulePkg.version}`)}\n`);
-
   const { apiURL } = await deploy({ entryFile, name, version, stage, role, memorySize, timeout, environment, awsConfig, bundle, transpile });
 
-  console.log(`\nVoilà! Your module is deployed here:\n\n  ${yellow(apiURL)}\n`);
-
-  if (usageInstructions) {
-    console.log(`To use it, install and import @voila/module-client:
-
-  ${cyan('import ModuleClient from \'@voila/module-client\';')}
-
-Import your module with:
-
-  ${cyan(`const awesomeModule = await ModuleClient.import('${apiURL}');`)}
-
-Then invoking a function remotely is as simple as:
-
-  ${cyan('const result = await awesomeModule.crazyFunction(\'foo\', \'bar\');')}\n`);
-  }
+  showOutro('Your module is deployed.');
+  console.log(`Deployment URL: ${cyan.underline(apiURL)}\n${gray('Find out how to use it from the client side with `voila instructions`.')}`);
 })().catch(showErrorAndExit);

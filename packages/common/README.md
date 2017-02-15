@@ -1,4 +1,4 @@
-# Voila Common
+# Voilà Common
 
 ```javascript
 // TODO: documentation!

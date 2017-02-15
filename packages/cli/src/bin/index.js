@@ -9,7 +9,7 @@ import { showErrorAndExit } from '@voila/common';
 const pkg = require('../../package');
 
 if (nodeVersion.major < 4) {
-  showErrorAndExit('Voila Module requires at least version 4 of Node.');
+  showErrorAndExit('Voilà Module requires at least version 4 of Node.');
 }
 
 updateNotifier({ pkg }).notify();

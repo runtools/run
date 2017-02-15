@@ -1,4 +1,4 @@
-# Voila Module server
+# Voilà Module server
 
 ```javascript
 // TODO: documentation!

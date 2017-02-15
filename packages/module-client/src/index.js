@@ -69,7 +69,7 @@ function invokeAt(url, functionName, ...args) {
     }
     return response.json();
   }).then(function(response) {
-    if (response.jsonrpc) { // Voila Module response
+    if (response.jsonrpc) { // Voilà Module response
       return rpc.handleResponse(response);
     } else if (response.errorMessage) { // Lambda error
       throw new Error(response.errorMessage);

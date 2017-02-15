@@ -1,6 +1,6 @@
 {
   "name": "@voila/module",
-  "displayName": "Voila Module",
+  "displayName": "Voilà Module",
   "version": "0.3.3",
   "description": "The easiest way to deploy to AWS",
   "keywords": [

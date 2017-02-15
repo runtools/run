@@ -1,4 +1,4 @@
-# Voila
+# Voilà
 
 ```javascript
 // TODO: documentation!
