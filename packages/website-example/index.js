@@ -1,3 +1,5 @@
 'use strict';
 
-document.write('<h1>Hello</h1>');
+import { run } from './app';
+
+run();

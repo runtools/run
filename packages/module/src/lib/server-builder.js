@@ -33,7 +33,7 @@ export async function buildServer({ entryFile, name, stage, bundle, transpile })
       if (transpile) {
         const envPreset = require.resolve('babel-preset-env');
         config.plugins.push(babel({
-          exclude: 'node_modules/**',
+          exclude: '**/node_modules/**',
           presets: [
             [
               envPreset,

@@ -22,7 +22,15 @@ const DEFAULT_STAGE = 'development';
       'aws-access-key-id',
       'aws-secret-access-key',
       'aws-region'
-    ]
+    ],
+    boolean: [
+      'bundle',
+      'transpile'
+    ],
+    default: {
+      'bundle': null,
+      'transpile': null
+    }
   });
 
   let pkgDir = argv['package-dir'];
@@ -45,8 +53,16 @@ const DEFAULT_STAGE = 'development';
 
   const awsConfig = getAWSConfig({ region: DEFAULT_REGION }, process.env, config, argv);
 
+  let bundle = argv['bundle'];
+  if (bundle == null) bundle = config.bundle;
+  if (bundle == null) bundle = true;
+
+  let transpile = argv['transpile'];
+  if (transpile == null) transpile = config.transpile;
+  if (transpile == null) transpile = true;
+
   const { deploymentURL } = await deploy({
-    entryFile, name, version, stage, awsConfig
+    entryFile, name, version, stage, awsConfig, bundle, transpile
   });
 
   showOutro('Your website has been deployed.');
