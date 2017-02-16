@@ -40,13 +40,35 @@ export function packageTypeToExecutableName(type) {
   return name;
 }
 
-export function generateDeploymentName({ name, version, stage }) {
+export function generateDeploymentName({ name, version, stage, hash, maxLength }) {
   if (name.slice(0, 1) === '@') name = name.slice(1);
   name = name.replace(/\//g, '-');
 
   version = createCompatibleVersionRange(version);
 
+  if (maxLength) {
+    maxLength -= '-'.length;
+    maxLength -= version.length;
+    maxLength -= '-'.length;
+    maxLength -= stage.length;
+    if (hash) {
+      maxLength -= '-'.length;
+      maxLength -= hash.length;
+    }
+    if (name.length > maxLength) {
+      let maxLeft = Math.floor(maxLength / 2);
+      let maxRight = Math.floor(maxLength / 2);
+      const rest = maxLength - maxLeft - maxRight;
+      if (rest) maxRight += rest;
+      maxLeft -= '-'.length;
+      name = name.substr(0, maxLeft) + '-' + name.substr(-maxRight);
+    }
+  }
+
   let deploymentName = `${name}-${version}-${stage}`;
+
+  if (hash) deploymentName += '-' + hash;
+
   deploymentName = deploymentName.replace(/\./g, '-');
 
   return deploymentName;
