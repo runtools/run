@@ -5,7 +5,7 @@ import { generateDeploymentName, task, formatMessage, createUserError } from '@v
 import { addPermissionToLambdaFunction } from './lambda-handler';
 
 export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFunctionARN, awsConfig }) {
-  const apiGateway = new APIGateway(awsConfig);
+  const apiGateway = new APIGateway({ ...awsConfig, apiVersion: '2015-07-09' });
 
   const message = formatMessage({ name, stage, message: 'Checking API Gateway...' });
   return await task(message, async (currentTask) => {
@@ -145,7 +145,7 @@ export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFun
 }
 
 export async function removeAPIGateway({ name, version, stage, awsConfig }) {
-  const apiGateway = new APIGateway(awsConfig);
+  const apiGateway = new APIGateway({ ...awsConfig, apiVersion: '2015-07-09' });
 
   const message = formatMessage({ name, stage, message: 'Removing API Gateway...' });
   const successMessage = formatMessage({ name, stage, message: 'API Gateway removed' });
@@ -161,7 +161,7 @@ export async function removeAPIGateway({ name, version, stage, awsConfig }) {
 }
 
 async function getAPIGatewayId({ name, version, stage, awsConfig }) {
-  const apiGateway = new APIGateway(awsConfig);
+  const apiGateway = new APIGateway({ ...awsConfig, apiVersion: '2015-07-09' });
 
   const apiName = generateDeploymentName({ name, version, stage });
 
@@ -187,7 +187,7 @@ export async function getAPIGatewayInfo({ name, version, stage, awsConfig }) {
     const restApiId = await getAPIGatewayId({ name, version, stage, awsConfig });
     if (!restApiId) return undefined;
 
-    const apiGateway = new APIGateway(awsConfig);
+    const apiGateway = new APIGateway({ ...awsConfig, apiVersion: '2015-07-09' });
 
     let result;
 

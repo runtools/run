@@ -6,7 +6,7 @@ import { generateDeploymentName, task, formatMessage } from '@voila/common';
 import sleep from 'sleep-promise';
 
 export async function createOrUpdateLambdaFunction({ name, version, stage, role, roleHasJustBeenCreated, memorySize, timeout, environment, archive, awsConfig }) {
-  const lambda = new Lambda(awsConfig);
+  const lambda = new Lambda({ ...awsConfig, apiVersion: '2015-03-31' });
 
   const message = formatMessage({
     name, stage, message: 'Checking lambda function...'
@@ -112,7 +112,7 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
 }
 
 async function getLambdaFunctionConfiguration({ name, version, stage, awsConfig }) {
-  const lambda = new Lambda(awsConfig);
+  const lambda = new Lambda({ ...awsConfig, apiVersion: '2015-03-31' });
 
   const lambdaFunctionName = generateDeploymentName({ name, version, stage });
 
@@ -151,7 +151,7 @@ export async function getLambdaFunctionInfo({ name, version, stage, awsConfig })
 }
 
 export async function addPermissionToLambdaFunction({ lambdaFunctionARN, restApiId, awsConfig }) {
-  const lambda = new Lambda(awsConfig);
+  const lambda = new Lambda({ ...awsConfig, apiVersion: '2015-03-31' });
 
   const matches = /arn:aws:.+:.+:(\d+):/.exec(lambdaFunctionARN);
   const accountId = matches && matches[1];
@@ -167,7 +167,7 @@ export async function addPermissionToLambdaFunction({ lambdaFunctionARN, restApi
 }
 
 export async function removeLambdaFunction({ name, version, stage, awsConfig }) {
-  const lambda = new Lambda(awsConfig);
+  const lambda = new Lambda({ ...awsConfig, apiVersion: '2015-03-31' });
 
   const message = formatMessage({
     name, stage, message: 'Deleting lambda function...'

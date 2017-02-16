@@ -34,7 +34,7 @@ const IAM_POLICY_DOCUMENT = {
 };
 
 export async function ensureDefaultRole({ name, stage, awsConfig }) {
-  const iam = new IAM(awsConfig);
+  const iam = new IAM({ ...awsConfig, apiVersion: '2010-05-08' });
 
   let role, hasBeenCreated;
 
