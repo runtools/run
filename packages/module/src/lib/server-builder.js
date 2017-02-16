@@ -44,6 +44,9 @@ export async function buildServer({ entryFile, name, stage, bundle, transpile })
                 exclude: ['transform-regenerator']
               }
             ]
+          ],
+          plugins: [
+            require.resolve('babel-plugin-transform-object-rest-spread')
           ]
         }));
       }

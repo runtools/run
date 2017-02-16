@@ -47,12 +47,16 @@
           ]
         }
       ]
+    ],
+    "plugins": [
+      "transform-object-rest-spread"
     ]
   },
   "dependencies": {
     "@voila/common": "^0.3.4",
     "archiver": "^1.3.0",
     "aws-sdk": "^2.12.0",
+    "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "babel-preset-env": "^1.1.8",
     "bytes": "^2.4.0",
     "fs-promise": "^1.0.0",
