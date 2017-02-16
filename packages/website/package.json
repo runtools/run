@@ -51,6 +51,7 @@
     "aws-sdk": "^2.12.0",
     "babel-preset-env": "^1.1.8",
     "bytes": "^2.4.0",
+    "cheerio": "^0.22.0",
     "fs-promise": "^1.0.0",
     "minimist": "^1.2.0",
     "rollup": "^0.41.4",
