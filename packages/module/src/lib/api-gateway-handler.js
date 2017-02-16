@@ -4,12 +4,16 @@ import APIGateway from 'aws-sdk/clients/apigateway';
 import { generateDeploymentName, task, formatMessage, createUserError } from '@voila/common';
 import { addPermissionToLambdaFunction } from './lambda-handler';
 
+const API_GATEWAY_NAME_MAX_LENGTH = 100; // Could be longer but not user friendly
+
 export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFunctionARN, awsConfig }) {
   const apiGateway = new APIGateway({ ...awsConfig, apiVersion: '2015-07-09' });
 
   const message = formatMessage({ name, stage, message: 'Checking API Gateway...' });
   return await task(message, async (currentTask) => {
-    const apiName = generateDeploymentName({ name, version, stage });
+    const apiName = generateDeploymentName({
+      name, version, stage, maxLength: API_GATEWAY_NAME_MAX_LENGTH
+    });
 
     const stageName = generateStageName(name);
 
@@ -163,7 +167,9 @@ export async function removeAPIGateway({ name, version, stage, awsConfig }) {
 async function getAPIGatewayId({ name, version, stage, awsConfig }) {
   const apiGateway = new APIGateway({ ...awsConfig, apiVersion: '2015-07-09' });
 
-  const apiName = generateDeploymentName({ name, version, stage });
+  const apiName = generateDeploymentName({
+    name, version, stage, maxLength: API_GATEWAY_NAME_MAX_LENGTH
+  });
 
   const limit = 500;
   const result = await apiGateway.getRestApis({ limit }).promise();

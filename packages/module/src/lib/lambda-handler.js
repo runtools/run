@@ -5,6 +5,8 @@ import isEqual from 'lodash.isequal';
 import { generateDeploymentName, task, formatMessage } from '@voila/common';
 import sleep from 'sleep-promise';
 
+const LAMBDA_FUNCTION_NAME_MAX_LENGTH = 64;
+
 export async function createOrUpdateLambdaFunction({ name, version, stage, role, roleHasJustBeenCreated, memorySize, timeout, environment, archive, awsConfig }) {
   const lambda = new Lambda({ ...awsConfig, apiVersion: '2015-03-31' });
 
@@ -12,7 +14,9 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
     name, stage, message: 'Checking lambda function...'
   });
   return await task(message, async (currentTask) => {
-    const lambdaFunctionName = generateDeploymentName({ name, version, stage });
+    const lambdaFunctionName = generateDeploymentName({
+      name, version, stage, maxLength: LAMBDA_FUNCTION_NAME_MAX_LENGTH
+    });
 
     const lambdaFunction = await getLambdaFunctionConfiguration({
       name, version, stage, awsConfig
@@ -114,7 +118,9 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
 async function getLambdaFunctionConfiguration({ name, version, stage, awsConfig }) {
   const lambda = new Lambda({ ...awsConfig, apiVersion: '2015-03-31' });
 
-  const lambdaFunctionName = generateDeploymentName({ name, version, stage });
+  const lambdaFunctionName = generateDeploymentName({
+    name, version, stage, maxLength: LAMBDA_FUNCTION_NAME_MAX_LENGTH
+  });
 
   try {
     return await lambda.getFunctionConfiguration({
@@ -176,7 +182,9 @@ export async function removeLambdaFunction({ name, version, stage, awsConfig }) 
     name, stage, message: 'Lambda function removed'
   });
   return await task(message, successMessage, async (currentTask) => {
-    const lambdaFunctionName = generateDeploymentName({ name, version, stage });
+    const lambdaFunctionName = generateDeploymentName({
+      name, version, stage, maxLength: LAMBDA_FUNCTION_NAME_MAX_LENGTH
+    });
 
     try {
       await lambda.deleteFunction({ FunctionName: lambdaFunctionName }).promise();
