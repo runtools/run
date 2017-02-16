@@ -168,7 +168,7 @@ async function getAPIGatewayId({ name, version, stage, awsConfig }) {
   const limit = 500;
   const result = await apiGateway.getRestApis({ limit }).promise();
   if (result.items.length === limit) {
-    throw createUserError(`Wow, you have a lot of APIs in API Gateway (greater than or equal to ${limit})`);
+    throw createUserError('Wow, you have a lot of APIs in API Gateway', `(greater than or equal to ${limit})`);
   }
 
   const api = result.items.find((item) => item.name === apiName);

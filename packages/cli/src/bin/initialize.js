@@ -4,7 +4,7 @@
 
 import { resolve } from 'path';
 import minimist from 'minimist';
-import { red, cyan } from 'chalk';
+import { cyan } from 'chalk';
 import { showIntro, showOutro, createUserError, showErrorAndExit } from '@voila/common';
 import { initialize } from '../lib/initializer';
 
@@ -29,7 +29,7 @@ const DEFAULT_STAGE = 'development';
 
   const type = argv.type || argv._[0];
   if (!type) {
-    throw createUserError(`${red('\'type\' option is missing.')} Please specify the type of your package. Example: ${cyan('`voila init @voila/module`')}.`);
+    throw createUserError('\'type\' option is missing.', `Please specify the type of your package. Example: ${cyan('`voila init @voila/module`')}.`);
   }
 
   let pkgDir = argv['package-dir'];

@@ -5,7 +5,6 @@ import { parse as parseURL, resolve as resolveURL } from 'url';
 import { existsSync } from 'fs';
 import { readFile, outputFile as writeFile } from 'fs-promise';
 import cheerio from 'cheerio';
-import { red } from 'chalk';
 import { createUserError } from '@voila/common';
 
 export async function bundle({ inputDir, outputDir, file, referrer, filesAlreadySeen }) {
@@ -17,9 +16,9 @@ export async function bundle({ inputDir, outputDir, file, referrer, filesAlready
   const outputFile = join(outputDir, file);
 
   if (!existsSync(inputFile)) {
-    let message = `${red('File not found:')} "${file}"`;
-    if (referrer) message += ` (referred from "${referrer}")`;
-    throw createUserError(message);
+    let info = `"${file}"`;
+    if (referrer) info += ` (referred from "${referrer}")`;
+    throw createUserError('File not found:', info);
   }
 
   console.log(`Bundling ${file}`);
@@ -48,7 +47,7 @@ async function bundleHTML({ inputDir, outputDir, file, content, filesAlreadySeen
     url = url.pathname;
     url = resolveURL(file, url);
     if (url.startsWith('../')) {
-      throw createUserError(`Cannot bundle a file located outside the input directory (input directory: "${inputDir}", file: "${url}")`);
+      throw createUserError('Cannot bundle a file located outside the input directory', `(input directory: "${inputDir}", file: "${url}")`);
     }
     items.push(bundle({
       inputDir, outputDir, file: url, referrer: file, filesAlreadySeen

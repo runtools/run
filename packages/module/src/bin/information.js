@@ -4,7 +4,7 @@
 
 import { resolve } from 'path';
 import minimist from 'minimist';
-import { red, gray, bold } from 'chalk';
+import { gray, bold } from 'chalk';
 import bytes from 'bytes';
 import { showIntro, getPackage, createUserError, showErrorAndExit, getAWSConfig } from '@voila/common';
 import { getLambdaFunctionInfo } from '../lib/lambda-handler';
@@ -44,10 +44,10 @@ const DEFAULT_STAGE = 'development';
   const awsConfig = getAWSConfig({ region: DEFAULT_REGION }, process.env, config, argv);
 
   const lambda = await getLambdaFunctionInfo({ name, version, stage, awsConfig });
-  if (!lambda) throw createUserError(`${red('Lambda function not found!')} Is this module deployed?`);
+  if (!lambda) throw createUserError('Lambda function not found!', 'Is this module deployed?');
 
   const api = await getAPIGatewayInfo({ name, version, stage, awsConfig });
-  if (!api) throw createUserError(`${red('API Gateway not found!')}`);
+  if (!api) throw createUserError('API Gateway not found!');
 
   console.log(bold('Deployment:'));
   console.log(gray('         URL: ') + api.deploymentURL);

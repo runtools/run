@@ -9,7 +9,7 @@ import ora from 'ora';
 export function getPackage(dir) {
   const packageFile = join(dir, 'package.json');
   if (!existsSync(packageFile)) {
-    throw createUserError(`${red('No npm package found at')} ${dir}`);
+    throw createUserError('No npm package found at', dir);
   }
   const json = readFileSync(packageFile, 'utf8');
   const pkg = JSON.parse(json);
@@ -121,7 +121,9 @@ export function formatMessage({ status, name, stage, message, info }) {
   return `${status}${nameAndStage}${message}${info}`;
 }
 
-export function createUserError(message) {
+export function createUserError(message, info) {
+  message = red(message);
+  if (info) message += ' ' + info;
   const err = new Error(message);
   err.userError = true;
   return err;
