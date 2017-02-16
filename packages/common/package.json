@@ -1,6 +1,6 @@
 {
   "name": "@voila/common",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Common functions used by Voilà",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",

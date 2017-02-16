@@ -1,6 +1,6 @@
 {
   "name": "@voila/module-example",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Voilà Module example",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
@@ -21,6 +21,6 @@
     }
   },
   "devDependencies": {
-    "@voila/module": "^0.3.4"
+    "@voila/module": "^0.3.5"
   }
 }
