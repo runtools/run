@@ -6,6 +6,8 @@ import crypto from 'crypto';
 import semver from 'semver';
 import { green, red, gray, bold } from 'chalk';
 import ora from 'ora';
+import windowSize from 'window-size';
+import sliceANSI from 'slice-ansi';
 
 export function getPackage(dir) {
   const packageFile = join(dir, 'package.json');
@@ -98,11 +100,14 @@ export async function task(message, successMessage, fn) {
     fn = successMessage;
     successMessage = undefined;
   }
-  const spinner = ora(message).start();
+
+  const spinner = ora(truncate(message)).start();
+
   const currentTask = {
-    setMessage(message) { spinner.text = message; },
+    setMessage(message) { spinner.text = truncate(message); },
     setSuccessMessage(message) { successMessage = message; }
   };
+
   try {
     const result = await fn(currentTask);
     spinner.succeed(successMessage);
@@ -110,6 +115,10 @@ export async function task(message, successMessage, fn) {
   } catch (err) {
     spinner.fail();
     throw err;
+  }
+
+  function truncate(message) {
+    return sliceANSI(message, 0, windowSize.width - 2);
   }
 }
 
