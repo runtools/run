@@ -2,6 +2,7 @@
 
 import { join } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
+import crypto from 'crypto';
 import semver from 'semver';
 import { green, red, gray, bold } from 'chalk';
 import ora from 'ora';
@@ -203,4 +204,10 @@ export function getEnvironmentConfig(configEnvironment, argvEnvironment) {
   }
 
   return environment;
+}
+
+export function generateHash(data, algorithm = 'sha256') {
+  const hash = crypto.createHash(algorithm);
+  hash.update(data);
+  return hash.digest('hex');
 }
