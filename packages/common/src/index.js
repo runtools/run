@@ -41,7 +41,7 @@ export function packageTypeToExecutableName(type) {
   return name;
 }
 
-export function generateDeploymentName({ name, version, stage, hash, maxLength }) {
+export function generateDeploymentName({ name, version, stage, key, maxLength }) {
   if (name.slice(0, 1) === '@') name = name.slice(1);
   name = name.replace(/\//g, '-');
 
@@ -52,9 +52,9 @@ export function generateDeploymentName({ name, version, stage, hash, maxLength }
     maxLength -= version.length;
     maxLength -= '-'.length;
     maxLength -= stage.length;
-    if (hash) {
+    if (key) {
       maxLength -= '-'.length;
-      maxLength -= hash.length;
+      maxLength -= key.length;
     }
     if (name.length > maxLength) {
       let maxLeft = Math.floor(maxLength / 2);
@@ -68,7 +68,7 @@ export function generateDeploymentName({ name, version, stage, hash, maxLength }
 
   let deploymentName = `${name}-${version}-${stage}`;
 
-  if (hash) deploymentName += '-' + hash;
+  if (key) deploymentName += '-' + key;
 
   deploymentName = deploymentName.replace(/\./g, '-');
 
