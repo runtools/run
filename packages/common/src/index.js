@@ -137,7 +137,7 @@ export async function task(message, successMessage, fn) {
   }
 
   function truncate(message) {
-    return sliceANSI(message, 0, windowSize.width - 2);
+    return sliceANSI(message, 0, windowSize.width - 3);
   }
 }
 
