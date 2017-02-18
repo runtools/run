@@ -24,10 +24,15 @@ const DEFAULT_STAGE = 'development';
       'aws-region'
     ],
     boolean: [
+      'spa',
+      'hash',
       'bundle',
-      'transpile'
+      'transpile',
+      'verbose'
     ],
     default: {
+      'spa': null,
+      'hash': null,
       'bundle': null,
       'transpile': null
     }
@@ -53,6 +58,14 @@ const DEFAULT_STAGE = 'development';
 
   const awsConfig = getAWSConfig({ region: DEFAULT_REGION }, process.env, config, argv);
 
+  let spa = argv['spa'];
+  if (spa == null) spa = config.spa;
+  if (spa == null) spa = true;
+
+  let hash = argv['hash'];
+  if (hash == null) hash = config.hash;
+  if (hash == null) hash = true;
+
   let bundle = argv['bundle'];
   if (bundle == null) bundle = config.bundle;
   if (bundle == null) bundle = true;
@@ -61,8 +74,10 @@ const DEFAULT_STAGE = 'development';
   if (transpile == null) transpile = config.transpile;
   if (transpile == null) transpile = true;
 
+  const verbose = argv['verbose'] || config.verbose;
+
   const { deploymentURL } = await deploy({
-    entryFile, name, version, stage, awsConfig, bundle, transpile
+    entryFile, name, version, stage, awsConfig, spa, hash, bundle, transpile, verbose
   });
 
   showOutro('Your website has been deployed.');

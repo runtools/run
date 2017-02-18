@@ -1,7 +1,12 @@
 'use strict';
 
-export async function transformSVG({ content, ...opts }) { // eslint-disable-line
+import { readFile, writeFile } from './file';
+
+export async function transformCSS(opts) {
+  const content = await readFile(opts);
+
   // TODO: Analyse URLs inside SVG to discover new linked files
   // Ex.: <svg><image href="url" /></svg>
-  return content;
+
+  return await writeFile(opts, content);
 }

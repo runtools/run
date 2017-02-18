@@ -1,10 +1,12 @@
 'use strict';
 
-import { parse as parseURL, resolve as resolveURL } from 'url';
+import { relative, dirname } from 'path';
+import { parse as parseURL, resolve as resolveURL, format as formatURL } from 'url';
 import cheerio from 'cheerio';
-import { transformFile } from './file';
+import { readFile, writeFile, transformFile } from './file';
 
 const TAGS_WITH_URL_ATTRIBUTES = {
+  // Source: http://stackoverflow.com/a/2725168/7568015
   'a': ['href'],
   'applet': ['codebase'],
   'area': ['href'],
@@ -30,7 +32,7 @@ const TAGS_WITH_URL_ATTRIBUTES = {
   'video': ['src', 'poster']
 };
 
-export async function transformHTML({ content, ...opts }) {
+export async function transformHTML(opts) {
   // TODO:
   // - Analyse URLs inside inline styles:
   //   <div style="background: url(image.png)">
@@ -41,23 +43,33 @@ export async function transformHTML({ content, ...opts }) {
   //   <applet archive=url> or <applet archive=url1,url2,url3>
   //   <meta http-equiv="refresh" content="seconds; url">
 
+  const content = await readFile(opts);
+
   const $ = cheerio.load(content);
 
-  const files = [];
   const selector = Object.keys(TAGS_WITH_URL_ATTRIBUTES).join(',');
-  $(selector).each((index, element) => {
+  for (const element of $(selector).toArray()) {
     const urlAttributes = TAGS_WITH_URL_ATTRIBUTES[element.name];
     for (const urlAttribute of urlAttributes) {
-      let url = $(element).attr(urlAttribute);
+      const url = $(element).attr(urlAttribute);
       if (!url) continue;
-      url = parseURL(url);
-      if (url.protcol) continue; // Ignore absolute URLs
-      url = url.pathname;
-      url = resolveURL(opts.file, url);
-      files.push(transformFile({ ...opts, file: url, referrer: opts.file }));
-    }
-  });
-  await Promise.all(files);
 
-  return content;
+      const parsedURL = parseURL(url);
+      if (parsedURL.protcol) continue; // Ignore absolute URLs
+
+      const linkedFile = resolveURL(opts.file, parsedURL.pathname);
+
+      const { newFile } = await transformFile({
+        ...opts, file: linkedFile, referrer: opts.file
+      });
+
+      if (newFile && newFile !== linkedFile) { // The name of the file has changed
+        parsedURL.pathname = relative(dirname(opts.file), newFile);
+        const newURL = formatURL(parsedURL);
+        $(element).attr(urlAttribute, newURL);
+      }
+    }
+  }
+
+  return await writeFile({ ...opts, hash: false }, $.html());
 }

@@ -8,10 +8,9 @@ import commonjs from 'rollup-plugin-commonjs';
 import json from 'rollup-plugin-json';
 import globals from 'rollup-plugin-node-globals';
 import builtins from 'rollup-plugin-node-builtins';
+import { writeFile } from './file';
 
-export async function transformJS({ content, ...opts }) {
-  if (!opts.bundle) return content;
-
+export async function transformJS(opts) {
   const rollupWarnings = [];
 
   const config = {
@@ -45,12 +44,11 @@ export async function transformJS({ content, ...opts }) {
     }));
   }
 
-  const result = (await rollup(config)).generate({
+  const bundle = await rollup(config);
+  const result = bundle.generate({
     format: 'iife',
     moduleName: 'bundle'
   });
 
-  content = result.code;
-
-  return content;
+  return await writeFile(opts, result.code);
 }

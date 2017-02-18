@@ -1,30 +1,31 @@
 'use strict';
 
-import { join, extname } from 'path';
+import { join, basename, extname } from 'path';
 import { existsSync } from 'fs';
-import { readFile, outputFile as writeFile } from 'fs-promise';
+import fsp from 'fs-promise';
 import { yellow } from 'chalk';
-import { createUserError } from '@voila/common';
+import { generateHash, createUserError } from '@voila/common';
 import { transformHTML } from './html';
 import { transformCSS } from './css';
 import { transformSVG } from './svg';
 import { transformJS } from './js';
 
-export async function transformFile({ filesAlreadySeen, ...opts }) {
+export async function transformFile({ transformations, ...opts }) {
   if (opts.file.startsWith('../')) {
     let info = `"${opts.file}"`;
     if (opts.referrer) info += ` (referred from "${opts.referrer}")`;
     throw createUserError('Cannot bundle a file located outside the base directory:', info);
   }
 
-  if (!filesAlreadySeen) filesAlreadySeen = [];
-  if (filesAlreadySeen.includes(opts.file)) return;
-  filesAlreadySeen.push(opts.file);
+  let transformation;
 
-  const inputFile = join(opts.inputDir, opts.file);
-  const outputFile = join(opts.outputDir, opts.file);
+  if (!transformations) transformations = [];
+  transformation = transformations.find(item => item.oldFile === opts.file);
+  if (transformation) return transformation;
+  transformation = { oldFile: opts.file };
+  transformations.push(transformation);
 
-  if (!existsSync(inputFile)) {
+  if (!existsSync(join(opts.inputDir, opts.file))) {
     let info = `"${opts.file}"`;
     if (opts.referrer) info += ` (referred from "${opts.referrer}")`;
     throw createUserError('File not found:', info);
@@ -32,22 +33,40 @@ export async function transformFile({ filesAlreadySeen, ...opts }) {
 
   opts.currentTask.setMessage(`Bundling ${yellow(opts.file)}...`);
 
-  let content = await readFile(inputFile);
+  let result;
 
   const ext = extname(opts.file);
   if (ext === '.html' || ext === '.htm' || ext === '.xhtml') {
-    content = content.toString();
-    content = await transformHTML({ ...opts, content, filesAlreadySeen });
+    result = await transformHTML({ ...opts, transformations });
   } else if (ext === '.css') {
-    content = content.toString();
-    content = await transformCSS({ ...opts, content, filesAlreadySeen });
+    result = await transformCSS({ ...opts, transformations });
   } else if (ext === '.svg') {
-    content = content.toString();
-    content = await transformSVG({ ...opts, content, filesAlreadySeen });
-  } else if (ext === '.js' || ext === '.jsx') {
-    content = content.toString();
-    content = await transformJS({ ...opts, content, filesAlreadySeen });
+    result = await transformSVG({ ...opts, transformations });
+  } else if ((ext === '.js' || ext === '.jsx') && opts.bundle) {
+    result = await transformJS({ ...opts, transformations });
+  } else {
+    const content = await readFile({ ...opts, encoding: null });
+    const hash = opts.hash && basename(opts.file) !== 'favicon.ico';
+    result = await writeFile({ ...opts, hash }, content);
   }
 
-  await writeFile(outputFile, content);
+  transformation.newFile = result.newFile;
+
+  return transformation;
+}
+
+export async function readFile({ inputDir, file, encoding }) {
+  if (typeof encoding === 'undefined') encoding = 'utf8';
+  return await fsp.readFile(join(inputDir, file), encoding);
+}
+
+export async function writeFile({ outputDir, file, hash }, content) {
+  if (hash) {
+    const contentHash = generateHash(content, 'sha1').substr(0, 8);
+    const ext = extname(file);
+    file = file.slice(0, -ext.length);
+    file += '.' + contentHash + ext;
+  }
+  await fsp.outputFile(join(outputDir, file), content);
+  return { newFile: file };
 }
