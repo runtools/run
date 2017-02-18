@@ -85,7 +85,7 @@ const DEFAULT_TIMEOUT = 3;
   const { deploymentURL } = await deploy({ entryFile, name, version, stage, role, memorySize, timeout, environment, awsConfig, bundle, transpile });
 
   console.log(formatMessage(
-    `Deployment URL: ${formatURL(deploymentURL)}`, { status: 'info' }
+    `Deployment URL: ${formatURL(deploymentURL)}`, { status: 'deployed' }
   ));
   showOutro('Your module has been deployed.');
   console.log(gray('Find out how to use it from the client side with `voila usage`.'));

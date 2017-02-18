@@ -82,7 +82,7 @@ const DEFAULT_STAGE = 'development';
   });
 
   console.log(formatMessage(
-    `Deployment URL: ${formatURL(deploymentURL)}`, { status: 'info' }
+    `Deployment URL: ${formatURL(deploymentURL)}`, { status: 'deployed' }
   ));
   showOutro('Your website has been deployed.');
 })().catch(showErrorAndExit);

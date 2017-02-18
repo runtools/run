@@ -4,8 +4,9 @@ import { join } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import crypto from 'crypto';
 import semver from 'semver';
-import { green, red, yellow, gray, cyan, bold } from 'chalk';
+import { green, red, gray, cyan, bold } from 'chalk';
 import ora from 'ora';
+import cliSpinners from 'cli-spinners';
 import windowSize from 'window-size';
 import sliceANSI from 'slice-ansi';
 
@@ -111,7 +112,10 @@ export async function task(message, successMessage, fn) {
     successMessage = undefined;
   }
 
-  const spinner = ora(truncate(message)).start();
+  const spinner = ora({
+    text: truncate(message),
+    spinner: cliSpinners.moon
+  }).start();
 
   const currentTask = {
     setMessage(message) { spinner.text = truncate(message); },
@@ -120,10 +124,15 @@ export async function task(message, successMessage, fn) {
 
   try {
     const result = await fn(currentTask);
-    spinner.succeed(successMessage);
+    spinner.stopAndPersist({
+      text: successMessage,
+      symbol: getSuccessSymbol() + ' '
+    });
     return result;
   } catch (err) {
-    spinner.fail();
+    spinner.stopAndPersist({
+      symbol: getErrorSymbol() + ' '
+    });
     throw err;
   }
 
@@ -147,11 +156,13 @@ export function formatMessage(message, info, options) {
   }
 
   if (status === 'success') {
-    status = `${green('✔')} `;
+    status = getSuccessSymbol() + '  ';
   } else if (status === 'error') {
-    status = `${red('✘')} `;
+    status = getErrorSymbol() + '  ';
   } else if (status === 'info') {
-    status = `${yellow.bold('ℹ')} `;
+    status = 'ℹ️️  ';
+  } else if (status === 'deployed') {
+    status = '🚀  ';
   } else if (status === undefined) {
     status = '';
   } else {
@@ -159,6 +170,20 @@ export function formatMessage(message, info, options) {
   }
 
   return `${status}${message}${info}`;
+}
+
+const SUCCESS_SYMBOLS = [
+  '👍', '👍🏻', '👍🏼', '👍🏽', '👍🏾', '👍🏿',
+  '👌', '👌🏻', '👌🏼', '👌🏽', '👌🏾', '👌🏿',
+  '✌️️', '✌️🏻', '✌️🏼', '✌️🏽', '✌️🏾', '✌️🏿'
+];
+
+export function getSuccessSymbol() {
+  return SUCCESS_SYMBOLS[Math.floor(Math.random() * SUCCESS_SYMBOLS.length)];
+}
+
+export function getErrorSymbol() {
+  return '😡';
 }
 
 export function formatURL(url) {
