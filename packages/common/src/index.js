@@ -92,8 +92,12 @@ export function showIntro(pkg) {
   console.log(`${bold(pkg.displayName || pkg.name)} ${gray(`v${pkg.version}`)}`);
 }
 
-export function showOutro(message = '') {
-  console.log(bold(green('Voilà!') + ' ' + message));
+export function showOutro(message, info) {
+  let text = green('Voilà!');
+  if (message) text += ' ' + message;
+  text = bold(text);
+  if (info) text += ' ' + gray(info);
+  console.log(text);
 }
 
 export function showCommandIntro(action, { name, stage }) {

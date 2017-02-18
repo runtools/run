@@ -5,7 +5,6 @@
 import { resolve } from 'path';
 import minimist from 'minimist';
 import { showIntro, showOutro, showCommandIntro, getPackage, formatMessage, formatURL, showErrorAndExit, getEnvironmentConfig, getAWSConfig } from '@voila/common';
-import { gray } from 'chalk';
 import { deploy } from '../lib/deployer';
 
 const DEFAULT_REGION = 'us-east-1';
@@ -87,6 +86,5 @@ const DEFAULT_TIMEOUT = 3;
   console.log(formatMessage(
     `Deployment URL: ${formatURL(deploymentURL)}`, { status: 'deployed' }
   ));
-  showOutro('Your module has been deployed.');
-  console.log(gray('Find out how to use it from the client side with `voila usage`.'));
+  showOutro('Your module is deployed.', 'Find out how to use it with `voila usage`.');
 })().catch(showErrorAndExit);
