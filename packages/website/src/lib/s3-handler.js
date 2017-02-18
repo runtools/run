@@ -18,16 +18,12 @@ const BUCKET_NAME_MAX_LENGTH = 63;
 export async function synchronize(opts) {
   const s3 = new S3({ ...opts.awsConfig, apiVersion: '2006-03-01' });
 
-  const message = formatMessage({ ...opts, message: 'Synchronizing files...' });
-  const successMessage = formatMessage({ ...opts, message: 'Files synchronized' });
-  await task(message, successMessage, async (currentTask) => {
+  await task('Synchronizing files...', 'Files synchronized', async (currentTask) => {
     const bucketName = await generateBucketName(opts);
 
     const inputFiles = await recursiveReadDirPromise(opts.inputDir);
 
-    currentTask.setMessage(
-      formatMessage({ ...opts, message: 'Listing existing files on S3...' })
-    );
+    currentTask.setMessage('Listing existing files on S3...');
 
     const result = await s3.listObjectsV2({ Bucket: bucketName }).promise();
 
@@ -42,9 +38,7 @@ export async function synchronize(opts) {
       return { path: item.Key, md5, size: item.Size };
     });
 
-    currentTask.setMessage(
-      formatMessage({ ...opts, message: 'Synchronizing files...' })
-    );
+    currentTask.setMessage('Synchronizing files...');
 
     let addedFiles = 0;
     let updatedFiles = 0;
@@ -66,9 +60,7 @@ export async function synchronize(opts) {
         continue; // File already presents in S3
       }
 
-      currentTask.setMessage(formatMessage({
-        ...opts, message: `Uploading ${path}...`, info: bytes(size)
-      }));
+      currentTask.setMessage(formatMessage(`Uploading ${path}...`, bytes(size)));
 
       const contentMD5 = new Buffer(md5, 'hex').toString('base64');
       const mimeType = mime.lookup(path) || 'application/octet-stream';
@@ -90,9 +82,7 @@ export async function synchronize(opts) {
     }
 
     for (const file of existingFiles) {
-      currentTask.setMessage(formatMessage({
-        ...opts, message: `Removing ${file.path}...`
-      }));
+      currentTask.setMessage(`Removing ${file.path}...`);
       await s3.deleteObject({ Bucket: bucketName, Key: file.path }).promise();
       removedFiles++;
     }
@@ -118,18 +108,14 @@ export async function synchronize(opts) {
     if (!info) {
       info = 'no change';
     }
-    currentTask.setSuccessMessage(
-      formatMessage({ ...opts, message: 'Files synchronized', info })
-    );
+    currentTask.setSuccessMessage(formatMessage('Files synchronized', info));
   });
 }
 
 export async function createOrUpdateBucket(opts) {
   const s3 = new S3({ ...opts.awsConfig, apiVersion: '2006-03-01' });
 
-  const message = formatMessage({ ...opts, message: 'Checking S3 bucket...' });
-  const successMessage = formatMessage({ ...opts, message: 'S3 bucket checked' });
-  await task(message, successMessage, async (currentTask) => {
+  await task('Checking S3 bucket...', 'S3 bucket checked', async (currentTask) => {
     const bucketName = await generateBucketName(opts);
 
     let hasBeenCreated;
@@ -164,9 +150,7 @@ export async function createOrUpdateBucket(opts) {
       WebsiteConfiguration: websiteConfiguration
     }).promise();
 
-    currentTask.setSuccessMessage(
-      formatMessage({ ...opts, message: `S3 bucket ${hasBeenCreated ? 'created' : 'updated'}` })
-    );
+    currentTask.setSuccessMessage(`S3 bucket ${hasBeenCreated ? 'created' : 'updated'}`);
   });
 }
 

@@ -11,9 +11,8 @@ import json from 'rollup-plugin-json';
 import bytes from 'bytes';
 import { zipFiles } from './archiver';
 
-export async function buildServer({ entryFile, name, stage, bundle, transpile }) {
-  const message = formatMessage({ name, stage, message: 'Generating server bundle...' });
-  return await task(message, async (currentTask) => {
+export async function buildServer({ entryFile, bundle, transpile }) {
+  return await task('Generating server bundle...', async (currentTask) => {
     // *** bundle ***
 
     const rollupWarnings = [];
@@ -81,10 +80,9 @@ exports.handler = moduleServer.createHandler(target);\n`;
       { name: 'handler.js', data: handlerCode }
     ]);
 
-    const info = bytes(archive.length);
-    currentTask.setSuccessMessage(formatMessage({
-      name, stage, message: 'Server bundle generated', info
-    }));
+    currentTask.setSuccessMessage(
+      formatMessage('Server bundle generated', bytes(archive.length))
+    );
 
     return { archive, rollupWarnings };
   });

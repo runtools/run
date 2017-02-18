@@ -4,7 +4,7 @@
 
 import { resolve } from 'path';
 import minimist from 'minimist';
-import { showIntro, showOutro, getPackage, showErrorAndExit, getAWSConfig } from '@voila/common';
+import { showIntro, showOutro, showCommandIntro, getPackage, showErrorAndExit, getAWSConfig } from '@voila/common';
 import { remove } from '../lib/remover';
 
 const DEFAULT_REGION = 'us-east-1';
@@ -39,6 +39,8 @@ const DEFAULT_STAGE = 'development';
   const stage = argv.stage || config.stage || DEFAULT_STAGE;
 
   const awsConfig = getAWSConfig({ region: DEFAULT_REGION }, process.env, config, argv);
+
+  showCommandIntro('Removing', { name, stage });
 
   await remove({ name, version, stage, awsConfig });
 

@@ -1,7 +1,7 @@
 'use strict';
 
 import { exec } from 'child-process-promise';
-import { getPackage, putPackage, isYarnPreferred, task, formatMessage } from '@voila/common';
+import { getPackage, putPackage, isYarnPreferred, task } from '@voila/common';
 import { run } from './runner';
 
 export async function initialize({ pkgDir, stage, type, yarn }) {
@@ -38,14 +38,11 @@ export async function initialize({ pkgDir, stage, type, yarn }) {
   await run({ pkgDir, type, args });
 }
 
-async function install({ pkgDir, stage, type, yarn }) {
-  const pkg = getPackage(pkgDir);
-  const name = pkg.name;
-
+async function install({ pkgDir, type, yarn }) {
   const yarnPreferred = isYarnPreferred({ pkgDir, yarn });
 
-  const message = formatMessage({ name, stage, message: `Installing ${type} using ${yarnPreferred ? 'yarn' : 'npm'}...` });
-  const successMessage = formatMessage({ name, stage, message: `${type} installed` });
+  const message = `Installing ${type} using ${yarnPreferred ? 'yarn' : 'npm'}...`;
+  const successMessage = `${type} installed`;
   await task(message, successMessage, async () => {
     let cmd;
     if (yarnPreferred) {
@@ -57,16 +54,15 @@ async function install({ pkgDir, stage, type, yarn }) {
   });
 }
 
-async function remove({ pkgDir, stage, type, yarn }) {
+async function remove({ pkgDir, type, yarn }) {
   const pkg = getPackage(pkgDir);
-  const name = pkg.name;
 
   if (!(pkg.devDependencies && pkg.devDependencies.hasOwnProperty(type))) return;
 
   const yarnPreferred = isYarnPreferred({ pkgDir, yarn });
 
-  const message = formatMessage({ name, stage, message: `Removing ${type} using ${yarnPreferred ? 'yarn' : 'npm'}...` });
-  const successMessage = formatMessage({ name, stage, message: `${type} removed` });
+  const message = `Removing ${type} using ${yarnPreferred ? 'yarn' : 'npm'}...`;
+  const successMessage = `${type} removed`;
   await task(message, successMessage, async () => {
     let cmd;
     if (yarnPreferred) {

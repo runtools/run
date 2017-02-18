@@ -1,7 +1,7 @@
 'use strict';
 
 import APIGateway from 'aws-sdk/clients/apigateway';
-import { generateDeploymentName, task, formatMessage, createUserError } from '@voila/common';
+import { generateDeploymentName, task, createUserError } from '@voila/common';
 import { addPermissionToLambdaFunction } from './lambda-handler';
 
 const API_GATEWAY_NAME_MAX_LENGTH = 100; // Could be longer but not user friendly
@@ -9,8 +9,7 @@ const API_GATEWAY_NAME_MAX_LENGTH = 100; // Could be longer but not user friendl
 export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFunctionARN, awsConfig }) {
   const apiGateway = new APIGateway({ ...awsConfig, apiVersion: '2015-07-09' });
 
-  const message = formatMessage({ name, stage, message: 'Checking API Gateway...' });
-  return await task(message, async (currentTask) => {
+  return await task('Checking API Gateway...', async (currentTask) => {
     const apiName = generateDeploymentName({
       name, version, stage, maxLength: API_GATEWAY_NAME_MAX_LENGTH
     });
@@ -30,12 +29,8 @@ export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFun
     return { deploymentURL };
 
     async function createAPIGateway() {
-      currentTask.setMessage(formatMessage({
-        name, stage, message: 'Creating API Gateway...'
-      }));
-      currentTask.setSuccessMessage(formatMessage({
-        name, stage, message: 'API Gateway created'
-      }));
+      currentTask.setMessage('Creating API Gateway...');
+      currentTask.setSuccessMessage('API Gateway created');
 
       const api = await apiGateway.createRestApi({ name: apiName }).promise();
 
@@ -141,9 +136,7 @@ export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFun
     }
 
     async function updateAPIGateway({ restApiId }) { // eslint-disable-line no-unused-vars
-      currentTask.setSuccessMessage(formatMessage({
-        name, stage, message: 'API Gateway checked'
-      }));
+      currentTask.setSuccessMessage('API Gateway checked');
     }
   });
 }
@@ -151,15 +144,15 @@ export async function createOrUpdateAPIGateway({ name, version, stage, lambdaFun
 export async function removeAPIGateway({ name, version, stage, awsConfig }) {
   const apiGateway = new APIGateway({ ...awsConfig, apiVersion: '2015-07-09' });
 
-  const message = formatMessage({ name, stage, message: 'Removing API Gateway...' });
-  const successMessage = formatMessage({ name, stage, message: 'API Gateway removed' });
+  const message = 'Removing API Gateway...';
+  const successMessage = 'API Gateway removed';
   return await task(message, successMessage, async (currentTask) => {
     const restApiId = await getAPIGatewayId({ name, version, stage, awsConfig });
 
     if (restApiId) {
       await apiGateway.deleteRestApi({ restApiId }).promise();
     } else {
-      currentTask.setSuccessMessage(formatMessage({ name, stage, message: 'API Gateway not found' }));
+      currentTask.setSuccessMessage('API Gateway not found');
     }
   });
 }
@@ -183,12 +176,8 @@ async function getAPIGatewayId({ name, version, stage, awsConfig }) {
 }
 
 export async function getAPIGatewayInfo({ name, version, stage, awsConfig }) {
-  const message = formatMessage({
-    name, stage, message: 'Fetching API Gateway information...'
-  });
-  const successMessage = formatMessage({
-    name, stage, message: 'API Gateway information fetched'
-  });
+  const message = 'Fetching API Gateway information...';
+  const successMessage = 'API Gateway information fetched';
   return await task(message, successMessage, async () => {
     const restApiId = await getAPIGatewayId({ name, version, stage, awsConfig });
     if (!restApiId) return undefined;

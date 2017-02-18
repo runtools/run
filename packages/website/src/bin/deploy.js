@@ -4,8 +4,7 @@
 
 import { resolve } from 'path';
 import minimist from 'minimist';
-import { showIntro, showOutro, getPackage, showErrorAndExit, getAWSConfig } from '@voila/common';
-import { cyan } from 'chalk';
+import { showIntro, showCommandIntro, showOutro, getPackage, formatMessage, formatURL, showErrorAndExit, getAWSConfig } from '@voila/common';
 import { deploy } from '../lib/deployer';
 
 const DEFAULT_REGION = 'us-east-1';
@@ -76,10 +75,14 @@ const DEFAULT_STAGE = 'development';
 
   const verbose = argv['verbose'] || config.verbose;
 
+  showCommandIntro('Deploying', { name, stage });
+
   const { deploymentURL } = await deploy({
     entryFile, name, version, stage, awsConfig, spa, hash, bundle, transpile, verbose
   });
 
+  console.log(formatMessage(
+    `Deployment URL: ${formatURL(deploymentURL)}`, { status: 'info' }
+  ));
   showOutro('Your website has been deployed.');
-  console.log(`Deployment URL: ${cyan.underline(deploymentURL)}`);
 })().catch(showErrorAndExit);

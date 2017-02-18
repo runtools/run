@@ -5,7 +5,7 @@
 import { resolve } from 'path';
 import minimist from 'minimist';
 import { cyan } from 'chalk';
-import { showIntro, showOutro, createUserError, showErrorAndExit } from '@voila/common';
+import { showIntro, showOutro, showCommandIntro, getPackage, createUserError, showErrorAndExit } from '@voila/common';
 import { initialize } from '../lib/initializer';
 
 const DEFAULT_STAGE = 'development';
@@ -42,6 +42,8 @@ const DEFAULT_STAGE = 'development';
   const stage = argv['stage'] || DEFAULT_STAGE;
 
   const yarn = argv['yarn'];
+
+  showCommandIntro('Initializing', { name: getPackage(pkgDir).name, stage });
 
   await initialize({ pkgDir, stage, type, yarn });
 

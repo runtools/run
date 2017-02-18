@@ -4,7 +4,7 @@ import { join } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import crypto from 'crypto';
 import semver from 'semver';
-import { green, red, gray, bold } from 'chalk';
+import { green, red, yellow, gray, cyan, bold } from 'chalk';
 import ora from 'ora';
 import windowSize from 'window-size';
 import sliceANSI from 'slice-ansi';
@@ -95,6 +95,16 @@ export function showOutro(message = '') {
   console.log(bold(green('Voilà!') + ' ' + message));
 }
 
+export function showCommandIntro(action, { name, stage }) {
+  let message = green(action) + ' ' + name;
+  if (stage) {
+    message += ' (' + stage + ')';
+  }
+  message += '...';
+  message = bold(message);
+  console.log(message);
+}
+
 export async function task(message, successMessage, fn) {
   if (typeof successMessage === 'function') {
     fn = successMessage;
@@ -122,27 +132,13 @@ export async function task(message, successMessage, fn) {
   }
 }
 
-export function formatMessage({ status, name, stage, message, info }) {
-  if (status === 'success') {
-    status = `${green('✔')} `;
-  } else if (status === 'error') {
-    status = `${red('✘')} `;
-  } else if (status === undefined) {
-    status = '';
-  } else {
-    throw new Error('Invalid status: ' + status);
+export function formatMessage(message, info, options) {
+  if (info !== null && typeof info === 'object') {
+    options = info;
+    info = undefined;
   }
 
-  let nameAndStage;
-  if (name) {
-    nameAndStage = name;
-    if (stage) nameAndStage += ` (${stage})`;
-    nameAndStage += ':';
-    nameAndStage = gray(nameAndStage);
-    nameAndStage += ' ';
-  } else {
-    nameAndStage = '';
-  }
+  let { status } = options || {};
 
   if (info) {
     info = ` ${gray(`(${info})`)}`;
@@ -150,7 +146,23 @@ export function formatMessage({ status, name, stage, message, info }) {
     info = '';
   }
 
-  return `${status}${nameAndStage}${message}${info}`;
+  if (status === 'success') {
+    status = `${green('✔')} `;
+  } else if (status === 'error') {
+    status = `${red('✘')} `;
+  } else if (status === 'info') {
+    status = `${yellow.bold('ℹ')} `;
+  } else if (status === undefined) {
+    status = '';
+  } else {
+    throw new Error('Invalid status: ' + status);
+  }
+
+  return `${status}${message}${info}`;
+}
+
+export function formatURL(url) {
+  return cyan.underline(url);
 }
 
 export function createUserError(message, info) {
@@ -166,7 +178,7 @@ export function showError(error) {
     error = createUserError(error);
   }
   if (error.userError) {
-    const message = formatMessage({ status: 'error', message: error.message });
+    const message = formatMessage(error.message, { status: 'error' });
     console.error(message);
   } else {
     console.error(error);

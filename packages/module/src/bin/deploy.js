@@ -4,8 +4,8 @@
 
 import { resolve } from 'path';
 import minimist from 'minimist';
-import { showIntro, showOutro, getPackage, showErrorAndExit, getEnvironmentConfig, getAWSConfig } from '@voila/common';
-import { cyan, gray } from 'chalk';
+import { showIntro, showOutro, showCommandIntro, getPackage, formatMessage, formatURL, showErrorAndExit, getEnvironmentConfig, getAWSConfig } from '@voila/common';
+import { gray } from 'chalk';
 import { deploy } from '../lib/deployer';
 
 const DEFAULT_REGION = 'us-east-1';
@@ -80,8 +80,13 @@ const DEFAULT_TIMEOUT = 3;
   if (transpile == null) transpile = config.transpile;
   if (transpile == null) transpile = true;
 
+  showCommandIntro('Deploying', { name, stage });
+
   const { deploymentURL } = await deploy({ entryFile, name, version, stage, role, memorySize, timeout, environment, awsConfig, bundle, transpile });
 
+  console.log(formatMessage(
+    `Deployment URL: ${formatURL(deploymentURL)}`, { status: 'info' }
+  ));
   showOutro('Your module has been deployed.');
-  console.log(`Deployment URL: ${cyan.underline(deploymentURL)}\n${gray('Find out how to use it from the client side with `voila usage`.')}`);
+  console.log(gray('Find out how to use it from the client side with `voila usage`.'));
 })().catch(showErrorAndExit);

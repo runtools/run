@@ -6,7 +6,7 @@ import { resolve } from 'path';
 import minimist from 'minimist';
 import { gray, bold } from 'chalk';
 import bytes from 'bytes';
-import { showIntro, getPackage, createUserError, showErrorAndExit, getAWSConfig } from '@voila/common';
+import { showIntro, showCommandIntro, getPackage, createUserError, showErrorAndExit, getAWSConfig } from '@voila/common';
 import { getLambdaFunctionInfo } from '../lib/lambda-handler';
 import { getAPIGatewayInfo } from '../lib/api-gateway-handler';
 
@@ -42,6 +42,8 @@ const DEFAULT_STAGE = 'development';
   const stage = argv.stage || config.stage || DEFAULT_STAGE;
 
   const awsConfig = getAWSConfig({ region: DEFAULT_REGION }, process.env, config, argv);
+
+  showCommandIntro('Checking', { name, stage });
 
   const lambda = await getLambdaFunctionInfo({ name, version, stage, awsConfig });
   if (!lambda) throw createUserError('Lambda function not found!', 'Is this module deployed?');

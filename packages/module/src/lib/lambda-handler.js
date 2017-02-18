@@ -2,7 +2,7 @@
 
 import Lambda from 'aws-sdk/clients/lambda';
 import isEqual from 'lodash.isequal';
-import { generateDeploymentName, task, formatMessage } from '@voila/common';
+import { generateDeploymentName, task } from '@voila/common';
 import sleep from 'sleep-promise';
 
 const LAMBDA_FUNCTION_NAME_MAX_LENGTH = 64;
@@ -10,10 +10,7 @@ const LAMBDA_FUNCTION_NAME_MAX_LENGTH = 64;
 export async function createOrUpdateLambdaFunction({ name, version, stage, role, roleHasJustBeenCreated, memorySize, timeout, environment, archive, awsConfig }) {
   const lambda = new Lambda({ ...awsConfig, apiVersion: '2015-03-31' });
 
-  const message = formatMessage({
-    name, stage, message: 'Checking lambda function...'
-  });
-  return await task(message, async (currentTask) => {
+  return await task('Checking lambda function...', async (currentTask) => {
     const lambdaFunctionName = generateDeploymentName({
       name, version, stage, maxLength: LAMBDA_FUNCTION_NAME_MAX_LENGTH
     });
@@ -28,12 +25,8 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
     }
 
     async function createLambdaFunction() {
-      currentTask.setMessage(formatMessage({
-        name, stage, message: 'Creating lambda function...'
-      }));
-      currentTask.setSuccessMessage(formatMessage({
-        name, stage, message: 'Lambda function created'
-      }));
+      currentTask.setMessage('Creating lambda function...');
+      currentTask.setSuccessMessage('Lambda function created');
       let errors = 0;
       while (true) {
         try {
@@ -59,12 +52,8 @@ export async function createOrUpdateLambdaFunction({ name, version, stage, role,
     }
 
     async function updateLambdaFunction({ existingLambdaFunction }) {
-      currentTask.setMessage(formatMessage({
-        name, stage, message: 'Updating lambda function...'
-      }));
-      currentTask.setSuccessMessage(formatMessage({
-        name, stage, message: 'Lambda function updated'
-      }));
+      currentTask.setMessage('Updating lambda function...');
+      currentTask.setSuccessMessage('Lambda function updated');
 
       let changed = false;
 
@@ -133,12 +122,8 @@ async function getLambdaFunctionConfiguration({ name, version, stage, awsConfig 
 }
 
 export async function getLambdaFunctionInfo({ name, version, stage, awsConfig }) {
-  const message = formatMessage({
-    name, stage, message: 'Fetching lambda function information...'
-  });
-  const successMessage = formatMessage({
-    name, stage, message: 'Lambda function information fetched'
-  });
+  const message = 'Fetching lambda function information...';
+  const successMessage = 'Lambda function information fetched';
   return await task(message, successMessage, async () => {
     const result = await getLambdaFunctionConfiguration({
       name, version, stage, awsConfig
@@ -175,12 +160,8 @@ export async function addPermissionToLambdaFunction({ lambdaFunctionARN, restApi
 export async function removeLambdaFunction({ name, version, stage, awsConfig }) {
   const lambda = new Lambda({ ...awsConfig, apiVersion: '2015-03-31' });
 
-  const message = formatMessage({
-    name, stage, message: 'Deleting lambda function...'
-  });
-  const successMessage = formatMessage({
-    name, stage, message: 'Lambda function removed'
-  });
+  const message = 'Deleting lambda function...';
+  const successMessage = 'Lambda function removed';
   return await task(message, successMessage, async (currentTask) => {
     const lambdaFunctionName = generateDeploymentName({
       name, version, stage, maxLength: LAMBDA_FUNCTION_NAME_MAX_LENGTH
@@ -190,9 +171,7 @@ export async function removeLambdaFunction({ name, version, stage, awsConfig }) 
       await lambda.deleteFunction({ FunctionName: lambdaFunctionName }).promise();
     } catch (err) {
       if (err.code !== 'ResourceNotFoundException') throw err;
-      currentTask.setSuccessMessage(formatMessage({
-        name, stage, message: 'Lambda function not found'
-      }));
+      currentTask.setSuccessMessage('Lambda function not found');
     }
   });
 }
