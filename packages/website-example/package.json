@@ -4,7 +4,10 @@
   "description": "Voilà Website example",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
-  "main": "index.html",
+  "files": [
+    "src"
+  ],
+  "main": "src/index.html",
   "repository": {
     "type": "git",
     "url": "git://github.com/voilajs/voila"
