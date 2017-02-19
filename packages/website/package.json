@@ -11,7 +11,8 @@
     "hosting",
     "cloud",
     "deployment",
-    "deploy"
+    "deploy",
+    "voila-package-handler"
   ],
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
