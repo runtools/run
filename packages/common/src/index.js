@@ -14,7 +14,7 @@ export function getPackage(dir, errorIfNotFound = true) {
   const packageFile = join(dir, 'package.json');
   if (!existsSync(packageFile)) {
     if (!errorIfNotFound) return undefined;
-    throw createUserError('No npm package found at', dir);
+    throw createUserError('No npm package found at', `"${dir}". ${gray('Run `voila init` to initialize your package.')}`);
   }
   const json = readFileSync(packageFile, 'utf8');
   const pkg = JSON.parse(json);
