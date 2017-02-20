@@ -1,7 +1,7 @@
 {
   "name": "@voila/website",
   "displayName": "Voilà Website",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "The easiest way to deploy your website to AWS",
   "keywords": [
     "aws",
@@ -51,7 +51,7 @@
     ]
   },
   "dependencies": {
-    "@voila/common": "^0.3.8",
+    "@voila/common": "^0.3.9",
     "aws-sdk": "^2.14.0",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "babel-preset-env": "^1.1.8",
