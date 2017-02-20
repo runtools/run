@@ -10,9 +10,10 @@ import cliSpinners from 'cli-spinners';
 import windowSize from 'window-size';
 import sliceANSI from 'slice-ansi';
 
-export function getPackage(dir) {
+export function getPackage(dir, errorIfNotFound = true) {
   const packageFile = join(dir, 'package.json');
   if (!existsSync(packageFile)) {
+    if (!errorIfNotFound) return undefined;
     throw createUserError('No npm package found at', dir);
   }
   const json = readFileSync(packageFile, 'utf8');
@@ -100,12 +101,20 @@ export function showOutro(message, info) {
   console.log(text);
 }
 
-export function showCommandIntro(action, { name, stage }) {
-  let message = green(action) + ' ' + name;
-  if (stage) {
-    message += ' (' + stage + ')';
+export function showCommandIntro(action, { name, stage, info } = {}) {
+  let message = green(action);
+  if (name || info) {
+    if (name) {
+      message += ' ' + name;
+      if (stage) {
+        message += ' (' + stage + ')';
+      }
+    }
+    if (info) message += ' ' + info;
+    message += '...';
+  } else {
+    message += green('...');
   }
-  message += '...';
   message = bold(message);
   console.log(message);
 }

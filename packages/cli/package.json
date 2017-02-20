@@ -58,7 +58,11 @@
     "@voila/common": "^0.3.7",
     "child-process-promise": "^2.2.0",
     "fs-promise": "^1.0.0",
+    "fuse.js": "^2.6.1",
+    "inquirer": "^3.0.1",
+    "inquirer-autocomplete-prompt": "^0.6.0",
     "minimist": "^1.2.0",
+    "node-fetch": "^1.6.3",
     "node-version": "^1.0.0",
     "update-notifier": "^1.0.3"
   },
