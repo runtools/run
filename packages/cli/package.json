@@ -1,7 +1,7 @@
 {
   "name": "@voila/cli",
   "displayName": "Voilà CLI",
-  "version": "0.2.12",
+  "version": "0.2.13",
   "description": "The easiest way to deploy to AWS",
   "keywords": [
     "aws",
@@ -55,7 +55,7 @@
     ]
   },
   "dependencies": {
-    "@voila/common": "^0.3.10",
+    "@voila/common": "^0.3.11",
     "fs-promise": "^1.0.0",
     "fuse.js": "^2.6.1",
     "inquirer": "^3.0.1",
