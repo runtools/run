@@ -219,6 +219,7 @@ export async function autoUpdatePackageHandler({ pkgDir }) {
 
   const publishedVersions = Object.keys(publishedHandlerPkg.versions);
   const maxVersion = semver.maxSatisfying(publishedVersions, versionRange);
+  if (!maxVersion) return;
 
   const handlerDir = join(pkgDir, 'node_modules', type);
   let stats;
