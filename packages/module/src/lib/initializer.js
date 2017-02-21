@@ -3,7 +3,7 @@
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { writeFile } from 'fs-promise';
-import { getPackage, putPackage, formatMessage} from '@voila/common';
+import { getPackage, putPackage, formatMessage, formatPath } from '@voila/common';
 
 const DEFAULT_MAIN = `'use strict';
 
@@ -25,7 +25,7 @@ export async function initialize({ pkgDir }) {
     if (!existsSync(mainFile)) {
       await writeFile(mainFile, DEFAULT_MAIN);
       console.log(formatMessage(
-        `File "${pkg.main}" created`, { status: 'success' }
+        `${formatPath(pkg.main)} created`, { status: 'success' }
       ));
     }
   }

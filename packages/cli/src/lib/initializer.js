@@ -5,7 +5,10 @@ import fetch from 'node-fetch';
 import inquirer from 'inquirer';
 import autocomplete from 'inquirer-autocomplete-prompt';
 import Fuse from 'fuse.js';
-import { getPackage, putPackage, installPackageHandler, removePackageHandler, runPackageHandler, showCommandIntro, formatMessage } from '@voila/common';
+import {
+  getPackage, putPackage, installPackageHandler, removePackageHandler,
+  runPackageHandler, showCommandIntro, formatMessage, formatPath
+} from '@voila/common';
 
 inquirer.registerPrompt('autocomplete', autocomplete);
 
@@ -95,7 +98,7 @@ export async function initialize({ pkgDir, type, yarn }) {
   putPackage(pkgDir, pkg);
 
   console.log(formatMessage(
-    `File "package.json" ${isNew ? 'created' : 'updated'}`,
+    `${formatPath('package.json')} ${isNew ? 'created' : 'updated'}`,
     { status: 'success' }
   ));
 

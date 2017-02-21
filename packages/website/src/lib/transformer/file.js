@@ -3,8 +3,7 @@
 import { join, basename, extname } from 'path';
 import { existsSync } from 'fs';
 import fsp from 'fs-promise';
-import { yellow } from 'chalk';
-import { generateHash, createUserError } from '@voila/common';
+import { formatPath, generateHash, createUserError } from '@voila/common';
 import { transformHTML } from './html';
 import { transformCSS } from './css';
 import { transformSVG } from './svg';
@@ -31,7 +30,7 @@ export async function transformFile({ transformations, ...opts }) {
     throw createUserError('File not found:', info);
   }
 
-  opts.currentTask.setMessage(`Bundling ${yellow(opts.file)}...`);
+  opts.currentTask.setMessage(`Bundling ${formatPath(opts.file)}...`);
 
   let result;
 

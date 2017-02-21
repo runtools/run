@@ -3,7 +3,7 @@
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { writeFile } from 'fs-promise';
-import { getPackage, putPackage, formatMessage} from '@voila/common';
+import { getPackage, putPackage, formatMessage, formatPath } from '@voila/common';
 
 const INDEX = `<!DOCTYPE html>
 <html>
@@ -34,14 +34,14 @@ export async function initialize({ pkgDir }) {
     if (!existsSync(mainFile)) {
       await writeFile(mainFile, INDEX);
       console.log(formatMessage(
-        `File "${pkg.main}" created`, { status: 'success' }
+        `${formatPath(pkg.main)} created`, { status: 'success' }
       ));
       const favicon = 'favicon.ico';
       const faviconFile = join(pkgDir, favicon);
       if (!existsSync(faviconFile)) {
         await writeFile(faviconFile, FAVICON, { encoding: 'base64' });
         console.log(formatMessage(
-          `File "${favicon}" created`, { status: 'success' }
+          `${formatPath(favicon)} created`, { status: 'success' }
         ));
       }
     }

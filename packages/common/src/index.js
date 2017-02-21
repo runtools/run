@@ -395,6 +395,10 @@ export function formatURL(url) {
   return cyan.underline(url);
 }
 
+export function formatPath(path) {
+  return yellow(path);
+}
+
 export function createUserError(message, info) {
   message = red(message);
   if (info) message += ' ' + info;

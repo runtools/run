@@ -2,15 +2,15 @@
 
 'use strict';
 
-import { showIntro, showOutro, showErrorAndExit } from '@voila/common';
-import { yellow, cyan, gray } from 'chalk';
+import { showIntro, showOutro, formatPath, showErrorAndExit } from '@voila/common';
+import { cyan, gray } from 'chalk';
 
 (async function() {
   showIntro(require('../../package.json'));
 
   console.log();
 
-  console.log(`Once you have deployed your module, you can use it from the client side\nwith ${yellow('@voila/module-client')}:
+  console.log(`Once you have deployed your module, you can use it from the client side\nwith ${formatPath('@voila/module-client')}:
 
   ${cyan('import ModuleClient from \'@voila/module-client\';')}
 
