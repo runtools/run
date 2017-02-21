@@ -2,11 +2,12 @@
 
 'use strict';
 
-import { showErrorAndExit } from '@voila/common';
+import { getPackageDirOption, showErrorAndExit } from '@voila/common';
 import { forward } from '../lib/forwarder';
 
 (async function() {
-  const pkgDir = process.cwd();
+  const pkgDir = getPackageDirOption();
   const args = process.argv.slice(2);
-  await forward({ pkgDir, args });
+  const code = await forward({ pkgDir, args });
+  if (code) process.exit(code);
 })().catch(showErrorAndExit);

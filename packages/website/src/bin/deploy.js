@@ -4,30 +4,31 @@
 
 import { resolve } from 'path';
 import minimist from 'minimist';
-import { showIntro, showCommandIntro, showOutro, getPackage, formatMessage, formatURL, showErrorAndExit, getAWSConfig } from '@voila/common';
+import {
+  showIntro, showCommandIntro, showOutro, getCommonOptions, getPathOption,
+  autoUpdatePackageHandler, getPackage, formatMessage, formatURL, showErrorAndExit
+} from '@voila/common';
 import { deploy } from '../lib/deployer';
-
-const DEFAULT_REGION = 'us-east-1';
-const DEFAULT_STAGE = 'development';
 
 (async function() {
   showIntro(require('../../package.json'));
 
+  const { pkgDir, name, version, stage, config, awsConfig, verbose, autoUpdate } = getCommonOptions();
+
+  const pkg = getPackage(pkgDir);
+
+  let entryFile = getPathOption('entry-file');
+  if (!entryFile) {
+    entryFile = config.entryFile || pkg.main || 'index.html';
+    entryFile = resolve(pkgDir, entryFile);
+  }
+
   const argv = minimist(process.argv.slice(2), {
-    string: [
-      'package-dir',
-      'entry-file',
-      'stage',
-      'aws-access-key-id',
-      'aws-secret-access-key',
-      'aws-region'
-    ],
     boolean: [
       'spa',
       'hash',
       'bundle',
-      'transpile',
-      'verbose'
+      'transpile'
     ],
     default: {
       'spa': null,
@@ -36,26 +37,6 @@ const DEFAULT_STAGE = 'development';
       'transpile': null
     }
   });
-
-  let pkgDir = argv['package-dir'];
-  if (pkgDir) {
-    pkgDir = resolve(process.cwd(), pkgDir);
-  } else {
-    pkgDir = process.cwd();
-  }
-
-  const pkg = getPackage(pkgDir);
-
-  const { name, version } = pkg;
-
-  const config = pkg.voila || {};
-
-  let entryFile = argv['entry-file'] || config.entryFile || pkg.main || 'index.html';
-  entryFile = resolve(process.cwd(), entryFile);
-
-  const stage = argv.stage || config.stage || DEFAULT_STAGE;
-
-  const awsConfig = getAWSConfig({ region: DEFAULT_REGION }, process.env, config, argv);
 
   let spa = argv['spa'];
   if (spa == null) spa = config.spa;
@@ -73,7 +54,7 @@ const DEFAULT_STAGE = 'development';
   if (transpile == null) transpile = config.transpile;
   if (transpile == null) transpile = true;
 
-  const verbose = argv['verbose'] || config.verbose;
+  if (autoUpdate) await autoUpdatePackageHandler({ pkgDir });
 
   showCommandIntro('Deploying', { name, stage });
 

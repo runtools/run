@@ -21,6 +21,7 @@
     }
   },
   "devDependencies": {
-    "@voila/module": "^0.3.10"
-  }
+    "@voila/module": "^0.3.3"
+  },
+  "main": "index.js"
 }

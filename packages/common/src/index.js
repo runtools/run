@@ -1,24 +1,103 @@
 'use strict';
 
-import { join } from 'path';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { join, resolve } from 'path';
+import { existsSync, readFileSync, writeFileSync, statSync, lstatSync } from 'fs';
+import { outputFile } from 'fs-promise';
+import { exec, spawn } from 'child-process-promise';
+import { tmpdir } from 'os';
 import crypto from 'crypto';
 import semver from 'semver';
-import { green, red, gray, cyan, bold } from 'chalk';
+import minimist from 'minimist';
+import { green, red, gray, cyan, yellow, bold } from 'chalk';
 import ora from 'ora';
 import cliSpinners from 'cli-spinners';
 import windowSize from 'window-size';
 import sliceANSI from 'slice-ansi';
+import fetch from 'node-fetch';
+import strictUriEncode from 'strict-uri-encode';
+
+const DEFAULT_REGION = 'us-east-1';
+const DEFAULT_STAGE = 'development';
+const NPM_API_URL = 'https://registry.npmjs.org';
+
+export function getCommonOptions() {
+  const pkgDir = getPackageDirOption();
+
+  const pkg = getPackage(pkgDir);
+  const { name, version } = pkg;
+  const config = pkg.voila || {};
+
+  const argv = minimist(process.argv.slice(2), {
+    string: [
+      'stage',
+      'aws-access-key-id',
+      'aws-secret-access-key',
+      'aws-region'
+    ],
+    boolean: [
+      'verbose',
+      'auto-update'
+    ],
+    default: {
+      'auto-update': null
+    }
+  });
+
+  const stage = argv.stage || config.stage || DEFAULT_STAGE;
+
+  const awsConfig = getAWSConfig(
+    { region: DEFAULT_REGION }, process.env, config, argv
+  );
+
+  const verbose = argv['verbose'] || config.verbose;
+
+  let autoUpdate = argv['auto-update'];
+  if (autoUpdate == null) autoUpdate = config.autoUpdate;
+  if (autoUpdate == null) autoUpdate = true;
+
+  return { pkgDir, name, version, stage, config, awsConfig, verbose, autoUpdate };
+}
+
+export function getPackageDirOption(search = true) {
+  let pkgDir = getPathOption('package-dir');
+  if (!pkgDir) {
+    if (search) {
+      pkgDir = searchPackageDir(process.cwd());
+    } else {
+      pkgDir = process.cwd();
+    }
+  }
+  return pkgDir;
+}
+
+export function getPathOption(optionName) {
+  const argv = minimist(process.argv.slice(2), { string: [optionName] });
+  let path = argv[optionName];
+  if (path) {
+    path = resolve(process.cwd(), path);
+  }
+  return path;
+}
+
+function searchPackageDir(dir) {
+  if (existsSync(join(dir, 'package.json'))) return dir;
+  const parentDir = join(dir, '..');
+  if (parentDir === dir) {
+    throw createUserError('No npm package found in the current directory');
+  }
+  return searchPackageDir(parentDir);
+}
 
 export function getPackage(dir, errorIfNotFound = true) {
-  const packageFile = join(dir, 'package.json');
-  if (!existsSync(packageFile)) {
+  try {
+    const packageFile = join(dir, 'package.json');
+    const json = readFileSync(packageFile, 'utf8');
+    const pkg = JSON.parse(json);
+    return pkg;
+  } catch (err) {
     if (!errorIfNotFound) return undefined;
     throw createUserError('No npm package found at', `"${dir}". ${gray('Run `voila init` to initialize your package.')}`);
   }
-  const json = readFileSync(packageFile, 'utf8');
-  const pkg = JSON.parse(json);
-  return pkg;
 }
 
 export function putPackage(dir, pkg) {
@@ -43,6 +122,119 @@ export function packageTypeToExecutableName(type) {
   if (name.slice(0, 1) === '@') name = name.slice(1);
   name = name.replace(/\//g, '-');
   return name;
+}
+
+export async function installPackageHandler({ pkgDir, type, yarn }) {
+  const yarnPreferred = isYarnPreferred({ pkgDir, yarn });
+
+  const message = `Installing ${yellow(type)} using ${yellow(yarnPreferred ? 'yarn' : 'npm')}...`;
+  const successMessage = `${yellow(type)} installed`;
+  await task(message, successMessage, async () => {
+    let cmd;
+    if (yarnPreferred) {
+      cmd = `yarn add ${type} --dev`;
+    } else {
+      cmd = `npm install ${type} --save-dev`;
+    }
+    await exec(cmd, { cwd: pkgDir });
+  });
+}
+
+export async function removePackageHandler({ pkgDir, type, yarn }) {
+  const pkg = getPackage(pkgDir);
+
+  if (!(pkg.devDependencies && pkg.devDependencies.hasOwnProperty(type))) return;
+
+  const yarnPreferred = isYarnPreferred({ pkgDir, yarn });
+
+  const message = `Removing ${yellow(type)} using ${yellow(yarnPreferred ? 'yarn' : 'npm')}...`;
+  const successMessage = `${yellow(type)} removed`;
+  await task(message, successMessage, async () => {
+    let cmd;
+    if (yarnPreferred) {
+      cmd = `yarn remove ${type} --dev`;
+    } else {
+      cmd = `npm rm ${type} --save-dev`;
+    }
+    await exec(cmd, { cwd: pkgDir });
+  });
+}
+
+export async function updatePackageHandler({ pkgDir, type, versionRange, isAuto, yarn }) {
+  const yarnPreferred = isYarnPreferred({ pkgDir, yarn });
+
+  const message = `${isAuto ? 'Auto-updating' : 'Updating'} ${yellow(type)} using ${yellow(yarnPreferred ? 'yarn' : 'npm')}...`;
+  const successMessage = `${yellow(type)} ${isAuto ? 'auto-updated' : 'updated'}`;
+  await task(message, successMessage, async () => {
+    let cmd;
+    if (yarnPreferred) {
+      cmd = `yarn upgrade ${type}@${versionRange}`;
+    } else {
+      cmd = `npm update ${type}`;
+    }
+    await exec(cmd, { cwd: pkgDir });
+  });
+}
+
+export async function runPackageHandler({ pkgDir, type, args }) {
+  const executable = join(
+    pkgDir, 'node_modules', '.bin', packageTypeToExecutableName(type)
+  );
+  if (!existsSync(executable)) {
+    throw createUserError('Package handler not found!', `Are you sure that ${yellow(type)} is a Voilà package handler?`);
+  }
+  try {
+    await spawn(
+      `${executable}`, args, { cwd: pkgDir, stdio: 'inherit' }
+    );
+    return 0;
+  } catch (err) {
+    return err.code;
+  }
+}
+
+export async function autoUpdatePackageHandler({ pkgDir }) {
+  const pkg = getPackage(pkgDir, false);
+  if (!pkg) return;
+
+  const type = pkg.voila && pkg.voila.type;
+  if (!type) return;
+
+  const versionRange = pkg.devDependencies && pkg.devDependencies[type];
+  if (!versionRange) return;
+
+  const validRange = semver.validRange(versionRange);
+  if (!validRange) return;
+  if (validRange === versionRange) return; // Version is fully specified (no range)
+
+  let publishedHandlerPkg;
+  try {
+    const url = NPM_API_URL + '/' + type.replace('/', '%2F');
+    publishedHandlerPkg = await getJSON(url, {
+      timeout: 3 * 1000, cacheTime: 24 * 60 * 60 * 1000 // 24 hours
+    });
+  } catch (err) {
+    return;
+  }
+
+  const publishedVersions = Object.keys(publishedHandlerPkg.versions);
+  const maxVersion = semver.maxSatisfying(publishedVersions, versionRange);
+
+  const handlerDir = join(pkgDir, 'node_modules', type);
+  let stats;
+  try { stats = lstatSync(handlerDir); } catch (err) { /* Dir is missing */ }
+  if (!stats || stats.isSymbolicLink()) return;
+
+  const handlerPkgFile = join(handlerDir, 'package.json');
+  const handlerPkg = JSON.parse(readFileSync(handlerPkgFile, 'utf8'));
+
+  if (!semver.gt(maxVersion, handlerPkg.version)) return; // No updated version
+
+  await updatePackageHandler({ pkgDir, type, versionRange, isAuto: true });
+
+  const args = process.argv.slice(2);
+  const code = await runPackageHandler({ pkgDir, type, args });
+  process.exit(code);
 }
 
 export function generateDeploymentName({ name, version, stage, key, maxLength }) {
@@ -269,4 +461,38 @@ export function generateHash(data, algorithm = 'sha256') {
   const hash = crypto.createHash(algorithm);
   hash.update(data);
   return hash.digest('hex');
+}
+
+export async function getJSON(url, options = {}) {
+  let cacheFile;
+
+  if (options.cacheTime) {
+    const cacheDir = join(tmpdir(), 'voila-common', 'cache');
+    cacheFile = join(cacheDir, strictUriEncode(url));
+
+    let stats;
+    try { stats = statSync(cacheFile); } catch (err) { /* File is missing */ }
+    if (stats && Date.now() - stats.mtime.getTime() < options.cacheTime) {
+      const result = JSON.parse(readFileSync(cacheFile, 'utf8'));
+      return result;
+    }
+  }
+
+  const opts = {
+    headers: { 'Accept': 'application/json' }
+  };
+  if (options.timeout != null) opts.timeout = options.timeout;
+
+  const response = await fetch(url, opts);
+  if (response.status !== 200) {
+    throw new Error(`Unexpected ${response.status} HTTP status`);
+  }
+
+  const result = await response.json();
+
+  if (cacheFile) {
+    await outputFile(cacheFile, JSON.stringify(result));
+  }
+
+  return result;
 }

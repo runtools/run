@@ -1,8 +1,7 @@
 'use strict';
 
 import { cyan } from 'chalk';
-import { getPackage, createUserError } from '@voila/common';
-import { run } from './runner';
+import { getPackage, runPackageHandler, createUserError } from '@voila/common';
 
 export async function forward({ pkgDir, args }) {
   const pkg = getPackage(pkgDir);
@@ -12,5 +11,5 @@ export async function forward({ pkgDir, args }) {
     throw createUserError('Unknown package type!', `Please run ${cyan('`voila init <package-type>`')} at the root of your package to initialize it.`);
   }
 
-  await run({ pkgDir, type, args });
+  return await runPackageHandler({ pkgDir, type, args });
 }

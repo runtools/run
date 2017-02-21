@@ -56,7 +56,6 @@
   },
   "dependencies": {
     "@voila/common": "^0.3.9",
-    "child-process-promise": "^2.2.0",
     "fs-promise": "^1.0.0",
     "fuse.js": "^2.6.1",
     "inquirer": "^3.0.1",

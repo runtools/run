@@ -1,13 +1,11 @@
 'use strict';
 
 import { basename } from 'path';
-import { exec } from 'child-process-promise';
 import fetch from 'node-fetch';
 import inquirer from 'inquirer';
 import autocomplete from 'inquirer-autocomplete-prompt';
 import Fuse from 'fuse.js';
-import { getPackage, putPackage, showCommandIntro, formatMessage, isYarnPreferred, task } from '@voila/common';
-import { run } from './runner';
+import { getPackage, putPackage, installPackageHandler, removePackageHandler, runPackageHandler, showCommandIntro, formatMessage } from '@voila/common';
 
 inquirer.registerPrompt('autocomplete', autocomplete);
 
@@ -102,17 +100,17 @@ export async function initialize({ pkgDir, type, yarn }) {
   ));
 
   if (oldType && oldType !== type) {
-    await remove({ pkgDir, type: oldType, yarn });
+    await removePackageHandler({ pkgDir, type: oldType, yarn });
   }
 
-  await install({ pkgDir, type, yarn });
+  await installPackageHandler({ pkgDir, type, yarn });
 
   const args = [
     'initialize',
     `--package-dir=${pkgDir}`
   ];
   if (yarn != null) args.push(`--yarn=${yarn}`);
-  await run({ pkgDir, type, args });
+  return await runPackageHandler({ pkgDir, type, args });
 }
 
 async function askType() {
@@ -146,40 +144,4 @@ async function fetchVoilaPackageHandlers() {
   const json = await response.json();
   const packages = json.results.map(result => ({ name: result.package.name }));
   return packages;
-}
-
-async function install({ pkgDir, type, yarn }) {
-  const yarnPreferred = isYarnPreferred({ pkgDir, yarn });
-
-  const message = `Installing ${type} using ${yarnPreferred ? 'yarn' : 'npm'}...`;
-  const successMessage = `${type} installed`;
-  await task(message, successMessage, async () => {
-    let cmd;
-    if (yarnPreferred) {
-      cmd = `yarn add ${type} --dev`;
-    } else {
-      cmd = `npm install ${type} --save-dev`;
-    }
-    await exec(cmd, { cwd: pkgDir });
-  });
-}
-
-async function remove({ pkgDir, type, yarn }) {
-  const pkg = getPackage(pkgDir);
-
-  if (!(pkg.devDependencies && pkg.devDependencies.hasOwnProperty(type))) return;
-
-  const yarnPreferred = isYarnPreferred({ pkgDir, yarn });
-
-  const message = `Removing ${type} using ${yarnPreferred ? 'yarn' : 'npm'}...`;
-  const successMessage = `${type} removed`;
-  await task(message, successMessage, async () => {
-    let cmd;
-    if (yarnPreferred) {
-      cmd = `yarn remove ${type} --dev`;
-    } else {
-      cmd = `npm rm ${type} --save-dev`;
-    }
-    await exec(cmd, { cwd: pkgDir });
-  });
 }

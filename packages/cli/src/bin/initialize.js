@@ -2,17 +2,19 @@
 
 'use strict';
 
-import { resolve } from 'path';
 import minimist from 'minimist';
-import { showIntro, showOutro, showErrorAndExit } from '@voila/common';
+import {
+  showIntro, showOutro, getPackageDirOption, showErrorAndExit
+} from '@voila/common';
 import { initialize } from '../lib/initializer';
 
 (async function() {
   showIntro(require('../../package.json'));
 
+  const pkgDir = getPackageDirOption(false);
+
   const argv = minimist(process.argv.slice(2), {
     string: [
-      'package-dir',
       'type'
     ],
     boolean: [
@@ -23,18 +25,12 @@ import { initialize } from '../lib/initializer';
     }
   });
 
-  let pkgDir = argv['package-dir'];
-  if (pkgDir) {
-    pkgDir = resolve(process.cwd(), pkgDir);
-  } else {
-    pkgDir = process.cwd();
-  }
-
   const type = argv.type || argv._[0];
 
   const yarn = argv['yarn'];
 
-  await initialize({ pkgDir, type, yarn });
+  const code = await initialize({ pkgDir, type, yarn });
+  if (code) process.exit(code);
 
   showOutro('Your package is ready.');
 })().catch(showErrorAndExit);

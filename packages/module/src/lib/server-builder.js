@@ -16,7 +16,6 @@ export async function buildServer({ entryFile, bundle, transpile }) {
     // *** bundle ***
 
     const rollupWarnings = [];
-
     let bundleCode;
     if (bundle) {
       const config = {
