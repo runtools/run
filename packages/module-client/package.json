@@ -1,6 +1,6 @@
 {
   "name": "@voila/module-client",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Voilà Module client",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",

@@ -1,6 +1,6 @@
 {
   "name": "@voila/voila.cloud",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Official Voilà website",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
@@ -16,6 +16,6 @@
     "type": "@voila/website"
   },
   "devDependencies": {
-    "@voila/website": "^0.1.9"
+    "@voila/website": "^0.1.10"
   }
 }
