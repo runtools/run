@@ -6,8 +6,7 @@ import { resolve } from 'path';
 import minimist from 'minimist';
 import {
   getCommonOptions, getPathOption, showIntro, showOutro, showCommandIntro,
-  autoUpdatePackageHandler, getPackage, formatMessage, formatURL,
-  showErrorAndExit, getEnvironmentConfig
+  getPackage, formatMessage, formatURL, showErrorAndExit, getEnvironmentConfig
 } from '@voila/common';
 import { deploy } from '../lib/deployer';
 
@@ -64,8 +63,6 @@ const DEFAULT_TIMEOUT = 3;
   let transpile = argv['transpile'];
   if (transpile == null) transpile = config.transpile;
   if (transpile == null) transpile = true;
-
-  if (autoUpdate) await autoUpdatePackageHandler({ pkgDir });
 
   showCommandIntro('Deploying', { name, stage });
 

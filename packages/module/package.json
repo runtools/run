@@ -56,11 +56,12 @@
   "dependencies": {
     "@voila/common": "^0.3.12",
     "archiver": "^1.3.0",
-    "aws-sdk": "^2.12.0",
+    "aws-sdk": "^2.17.0",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "babel-preset-env": "^1.1.8",
     "bytes": "^2.4.0",
-    "fs-promise": "^1.0.0",
+    "chalk": "^1.1.3",
+    "fs-promise": "^2.0.0",
     "lodash.isequal": "^4.5.0",
     "minimist": "^1.2.0",
     "rollup": "^0.41.4",
@@ -72,6 +73,6 @@
     "stream-buffers": "^3.0.1"
   },
   "devDependencies": {
-    "babel-cli": "^6.22.2"
+    "babel-cli": "^6.23.0"
   }
 }

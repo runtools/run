@@ -1,9 +1,8 @@
 'use strict';
 
 import { join, resolve } from 'path';
-import { existsSync, readFileSync, writeFileSync, statSync, lstatSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, statSync } from 'fs';
 import { outputFile } from 'fs-promise';
-import { exec, spawn } from 'child-process-promise';
 import { tmpdir } from 'os';
 import crypto from 'crypto';
 import semver from 'semver';
@@ -18,7 +17,6 @@ import strictUriEncode from 'strict-uri-encode';
 
 const DEFAULT_REGION = 'us-east-1';
 const DEFAULT_STAGE = 'development';
-const NPM_API_URL = 'https://registry.npmjs.org';
 
 export function getCommonOptions() {
   const pkgDir = getPackageDirOption();
@@ -35,12 +33,8 @@ export function getCommonOptions() {
       'aws-region'
     ],
     boolean: [
-      'verbose',
-      'auto-update'
-    ],
-    default: {
-      'auto-update': null
-    }
+      'verbose'
+    ]
   });
 
   const stage = argv.stage || config.stage || DEFAULT_STAGE;
@@ -51,11 +45,7 @@ export function getCommonOptions() {
 
   const verbose = argv['verbose'] || config.verbose;
 
-  let autoUpdate = argv['auto-update'];
-  if (autoUpdate == null) autoUpdate = config.autoUpdate;
-  if (autoUpdate == null) autoUpdate = true;
-
-  return { pkgDir, name, version, stage, config, awsConfig, verbose, autoUpdate };
+  return { pkgDir, name, version, stage, config, awsConfig, verbose };
 }
 
 export function getPackageDirOption(search = true) {
@@ -83,7 +73,7 @@ function searchPackageDir(dir) {
   if (existsSync(join(dir, 'package.json'))) return dir;
   const parentDir = join(dir, '..');
   if (parentDir === dir) {
-    throw createUserError('No npm package found in the current directory');
+    throw createUserError('No npm package found.', `Please run ${cyan('`voila init <package-type>`')} at the root of your package to initialize it.`);
   }
   return searchPackageDir(parentDir);
 }
@@ -115,127 +105,6 @@ export function isYarnPreferred({ pkgDir, yarn }) {
   if (existsSync(join(pkgDir, 'yarn.lock'))) return true;
 
   return false;
-}
-
-export function packageTypeToExecutableName(type) {
-  let name = type;
-  if (name.slice(0, 1) === '@') name = name.slice(1);
-  name = name.replace(/\//g, '-');
-  return name;
-}
-
-export async function installPackageHandler({ pkgDir, type, yarn }) {
-  const yarnPreferred = isYarnPreferred({ pkgDir, yarn });
-
-  const message = `Installing ${yellow(type)} using ${yellow(yarnPreferred ? 'yarn' : 'npm')}...`;
-  const successMessage = `${yellow(type)} installed`;
-  await task(message, successMessage, async () => {
-    let cmd;
-    if (yarnPreferred) {
-      cmd = `yarn add ${type} --dev`;
-    } else {
-      cmd = `npm install ${type} --save-dev`;
-    }
-    await exec(cmd, { cwd: pkgDir });
-  });
-}
-
-export async function removePackageHandler({ pkgDir, type, yarn }) {
-  const pkg = getPackage(pkgDir);
-
-  if (!(pkg.devDependencies && pkg.devDependencies.hasOwnProperty(type))) return;
-
-  const yarnPreferred = isYarnPreferred({ pkgDir, yarn });
-
-  const message = `Removing ${yellow(type)} using ${yellow(yarnPreferred ? 'yarn' : 'npm')}...`;
-  const successMessage = `${yellow(type)} removed`;
-  await task(message, successMessage, async () => {
-    let cmd;
-    if (yarnPreferred) {
-      cmd = `yarn remove ${type} --dev`;
-    } else {
-      cmd = `npm rm ${type} --save-dev`;
-    }
-    await exec(cmd, { cwd: pkgDir });
-  });
-}
-
-export async function updatePackageHandler({ pkgDir, type, versionRange, isAuto, yarn }) {
-  const yarnPreferred = isYarnPreferred({ pkgDir, yarn });
-
-  const message = `${isAuto ? 'Auto-updating' : 'Updating'} ${yellow(type)} using ${yellow(yarnPreferred ? 'yarn' : 'npm')}...`;
-  const successMessage = `${yellow(type)} ${isAuto ? 'auto-updated' : 'updated'}`;
-  await task(message, successMessage, async () => {
-    let cmd;
-    if (yarnPreferred) {
-      cmd = `yarn upgrade ${type}@${versionRange}`;
-    } else {
-      cmd = `npm update ${type}`;
-    }
-    await exec(cmd, { cwd: pkgDir });
-  });
-}
-
-export async function runPackageHandler({ pkgDir, type, args }) {
-  const executable = join(
-    pkgDir, 'node_modules', '.bin', packageTypeToExecutableName(type)
-  );
-  if (!existsSync(executable)) {
-    throw createUserError('Package handler not found!', `Are you sure that ${yellow(type)} is a Voilà package handler?`);
-  }
-  try {
-    await spawn(
-      `${executable}`, args, { cwd: pkgDir, stdio: 'inherit' }
-    );
-    return 0;
-  } catch (err) {
-    return err.code;
-  }
-}
-
-export async function autoUpdatePackageHandler({ pkgDir }) {
-  const pkg = getPackage(pkgDir, false);
-  if (!pkg) return;
-
-  const type = pkg.voila && pkg.voila.type;
-  if (!type) return;
-
-  const versionRange = pkg.devDependencies && pkg.devDependencies[type];
-  if (!versionRange) return;
-
-  const validRange = semver.validRange(versionRange);
-  if (!validRange) return;
-  if (validRange === versionRange) return; // Version is fully specified (no range)
-
-  let publishedHandlerPkg;
-  try {
-    const url = NPM_API_URL + '/' + type.replace('/', '%2F');
-    publishedHandlerPkg = await getJSON(url, {
-      timeout: 3 * 1000, cacheTime: 24 * 60 * 60 * 1000 // 24 hours
-    });
-  } catch (err) {
-    return;
-  }
-
-  const publishedVersions = Object.keys(publishedHandlerPkg.versions);
-  const maxVersion = semver.maxSatisfying(publishedVersions, versionRange);
-  if (!maxVersion) return;
-
-  const handlerDir = join(pkgDir, 'node_modules', type);
-  let stats;
-  try { stats = lstatSync(handlerDir); } catch (err) { /* Dir is missing */ }
-  if (!stats || stats.isSymbolicLink()) return;
-
-  const handlerPkgFile = join(handlerDir, 'package.json');
-  const handlerPkg = JSON.parse(readFileSync(handlerPkgFile, 'utf8'));
-
-  if (!semver.gt(maxVersion, handlerPkg.version)) return; // No updated version
-
-  await updatePackageHandler({ pkgDir, type, versionRange, isAuto: true });
-
-  const args = process.argv.slice(2);
-  const code = await runPackageHandler({ pkgDir, type, args });
-  process.exit(code);
 }
 
 export function generateDeploymentName({ name, version, stage, key, maxLength }) {

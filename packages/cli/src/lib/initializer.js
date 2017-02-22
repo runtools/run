@@ -1,14 +1,15 @@
 'use strict';
 
 import { basename } from 'path';
-import fetch from 'node-fetch';
 import inquirer from 'inquirer';
 import autocomplete from 'inquirer-autocomplete-prompt';
 import Fuse from 'fuse.js';
 import {
-  getPackage, putPackage, installPackageHandler, removePackageHandler,
-  runPackageHandler, showCommandIntro, formatMessage, formatPath
+  getPackage, putPackage, getJSON, showCommandIntro, formatMessage, formatPath
 } from '@voila/common';
+import {
+  installPackageHandler, removePackageHandler, runPackageHandler
+} from './package-handler';
 
 inquirer.registerPrompt('autocomplete', autocomplete);
 
@@ -143,8 +144,7 @@ async function askType() {
 
 async function fetchVoilaPackageHandlers() {
   const url = NPMS_API_URL + '/search?q=keywords:voila-package-handler&size=250';
-  const response = await fetch(url);
-  const json = await response.json();
+  const json = await getJSON(url, { timeout: 15 * 1000, cacheTime: 60 * 1000 });
   const packages = json.results.map(result => ({ name: result.package.name }));
   return packages;
 }

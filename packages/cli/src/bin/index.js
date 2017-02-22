@@ -6,12 +6,12 @@ import { join } from 'path';
 import nodeVersion from 'node-version';
 import updateNotifier from 'update-notifier';
 import { showErrorAndExit } from '@voila/common';
-const pkg = require('../../package');
 
 if (nodeVersion.major < 4) {
   showErrorAndExit('Voilà Module requires at least version 4 of Node.');
 }
 
+const pkg = require('../../package');
 updateNotifier({ pkg }).notify();
 
 const defaultCommand = 'forward';
