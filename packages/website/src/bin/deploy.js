@@ -6,14 +6,14 @@ import { resolve } from 'path';
 import minimist from 'minimist';
 import {
   showIntro, showCommandIntro, showOutro, getCommonOptions, getPathOption,
-  autoUpdatePackageHandler, getPackage, formatMessage, formatURL, showErrorAndExit
+  getPackage, formatMessage, formatURL, showErrorAndExit
 } from '@voila/common';
 import { deploy } from '../lib/deployer';
 
 (async function() {
   showIntro(require('../../package.json'));
 
-  const { pkgDir, name, version, stage, config, awsConfig, verbose, autoUpdate } = getCommonOptions();
+  const { pkgDir, name, version, stage, config, awsConfig, verbose } = getCommonOptions();
 
   const pkg = getPackage(pkgDir);
 
@@ -53,8 +53,6 @@ import { deploy } from '../lib/deployer';
   let transpile = argv['transpile'];
   if (transpile == null) transpile = config.transpile;
   if (transpile == null) transpile = true;
-
-  if (autoUpdate) await autoUpdatePackageHandler({ pkgDir });
 
   showCommandIntro('Deploying', { name, stage });
 

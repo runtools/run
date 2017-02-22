@@ -16,7 +16,7 @@ const DEFAULT_TIMEOUT = 3;
 (async function() {
   showIntro(require('../../package.json'));
 
-  const { pkgDir, name, version, stage, config, awsConfig, autoUpdate } = getCommonOptions();
+  const { pkgDir, name, version, stage, config, awsConfig } = getCommonOptions();
 
   const pkg = getPackage(pkgDir);
 

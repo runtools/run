@@ -3,17 +3,14 @@
 'use strict';
 
 import {
-  showIntro, showOutro, showCommandIntro, getCommonOptions,
-  autoUpdatePackageHandler, showErrorAndExit
+  showIntro, showOutro, showCommandIntro, getCommonOptions, showErrorAndExit
 } from '@voila/common';
 import { remove } from '../lib/remover';
 
 (async function() {
   showIntro(require('../../package.json'));
 
-  const { pkgDir, name, version, stage, awsConfig, autoUpdate } = getCommonOptions();
-
-  if (autoUpdate) await autoUpdatePackageHandler({ pkgDir });
+  const { name, version, stage, awsConfig } = getCommonOptions();
 
   showCommandIntro('Removing', { name, stage });
 

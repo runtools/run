@@ -5,7 +5,7 @@
 import { gray, bold } from 'chalk';
 import bytes from 'bytes';
 import {
-  getCommonOptions, showIntro, showCommandIntro, autoUpdatePackageHandler,
+  getCommonOptions, showIntro, showCommandIntro,
   createUserError, showErrorAndExit
 } from '@voila/common';
 import { getLambdaFunctionInfo } from '../lib/lambda-handler';
@@ -14,9 +14,7 @@ import { getAPIGatewayInfo } from '../lib/api-gateway-handler';
 (async function() {
   showIntro(require('../../package.json'));
 
-  const { pkgDir, name, version, stage, awsConfig, autoUpdate } = getCommonOptions();
-
-  if (autoUpdate) await autoUpdatePackageHandler({ pkgDir });
+  const { name, version, stage, awsConfig } = getCommonOptions();
 
   showCommandIntro('Checking', { name, stage });
 
