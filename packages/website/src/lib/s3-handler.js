@@ -115,7 +115,7 @@ export async function synchronize(opts) {
 export async function createOrUpdateBucket(opts) {
   const s3 = new S3({ ...opts.awsConfig, apiVersion: '2006-03-01' });
 
-  await task('Checking S3 bucket...', 'S3 bucket checked', async (currentTask) => {
+  return await task('Checking S3 bucket...', 'S3 bucket checked', async (currentTask) => {
     const bucketName = await generateBucketName(opts);
 
     let hasBeenCreated;
@@ -123,7 +123,8 @@ export async function createOrUpdateBucket(opts) {
 
     try {
       await s3.createBucket({
-        Bucket: bucketName
+        Bucket: bucketName,
+        ACL: 'public-read'
       }).promise();
       hasBeenCreated = true;
     } catch (err) {
@@ -141,16 +142,19 @@ export async function createOrUpdateBucket(opts) {
 
     const indexDocument = basename(opts.entryFile);
     const websiteConfiguration = { IndexDocument: { Suffix: indexDocument } };
-    if (opts.spa) websiteConfiguration.ErrorDocument = { Key: indexDocument };
 
-    if (isEqual(currentWebsiteConfiguration, websiteConfiguration)) return;
+    if (!isEqual(currentWebsiteConfiguration, websiteConfiguration)) {
+      await s3.putBucketWebsite({
+        Bucket: bucketName,
+        WebsiteConfiguration: websiteConfiguration
+      }).promise();
 
-    await s3.putBucketWebsite({
-      Bucket: bucketName,
-      WebsiteConfiguration: websiteConfiguration
-    }).promise();
+      currentTask.setSuccessMessage(`S3 bucket ${hasBeenCreated ? 'created' : 'updated'}`);
+    }
 
-    currentTask.setSuccessMessage(`S3 bucket ${hasBeenCreated ? 'created' : 'updated'}`);
+    const s3WebsiteDomainName = `${bucketName}.s3-website-${opts.awsConfig.region}.amazonaws.com`;
+
+    return { s3WebsiteDomainName };
   });
 }
 
