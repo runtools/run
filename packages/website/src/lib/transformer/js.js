@@ -34,7 +34,8 @@ export async function transformJS(opts) {
           {
             targets: { ie: 10, node: 4 },
             loose: true,
-            modules: false
+            modules: false,
+            useBuiltIns: true
           }
         ]
       ],

@@ -1,4 +1,4 @@
 'use strict';
 
-require('babel-polyfill');
-require('./main');
+import 'babel-polyfill';
+import './main';

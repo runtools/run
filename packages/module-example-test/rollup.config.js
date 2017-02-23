@@ -21,7 +21,8 @@ export default {
               node: 4
             },
             loose: true,
-            modules: false
+            modules: false,
+            useBuiltIns: true
           }
         ]
       ]
