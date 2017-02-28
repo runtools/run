@@ -2,12 +2,12 @@
 
 import nodeVersion from 'node-version';
 import updateNotifier from 'update-notifier';
-import {showErrorAndExit} from 'ntm-tools';
+import {showErrorAndExit} from '@high/shared';
 
 import * as commands from './commands';
 
 if (nodeVersion.major < 4) {
-  showErrorAndExit('Voilà CLI requires at least version 4 of Node.');
+  showErrorAndExit('⚡high requires at least version 4 of Node.');
 }
 
 const pkg = require('../../package');

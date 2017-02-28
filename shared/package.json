@@ -1,7 +1,7 @@
 {
-  "name": "ntm-tools",
+  "name": "@high/shared",
   "version": "0.5.0",
-  "description": "Miscellaneous tools used by ntm",
+  "description": "Miscellaneous functions used by ⚡high",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
   "files": [
@@ -10,7 +10,7 @@
   "main": "dist/index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/ntmjs/ntm"
+    "url": "git://github.com/high-js/high"
   },
   "scripts": {
     "build": "rm -rf dist && babel src --out-dir dist",

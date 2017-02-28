@@ -1,10 +1,10 @@
 {
-  "name": "ntm-monorepo",
-  "description": "The Node.js tool manager",
+  "name": "@high/monorepo",
+  "description": "⚡high monorepo",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git://github.com/ntmjs/ntm"
+    "url": "git://github.com/high-js/high"
   },
   "scripts": {
     "lint": "eslint ."

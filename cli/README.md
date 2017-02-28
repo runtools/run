@@ -1,4 +1,4 @@
-# Voilà CLI
+# ⚡high
 
 ```javascript
 // TODO: documentation!

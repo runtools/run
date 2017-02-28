@@ -306,7 +306,7 @@ export async function fetchJSON(url, options = {}) {
   let cacheFile;
 
   if (options.cacheTime) {
-    const cacheDir = join(tmpdir(), 'ntm-tools', 'cache');
+    const cacheDir = join(tmpdir(), 'high-shared', 'cache');
     cacheFile = join(cacheDir, strictUriEncode(url));
 
     let stats;
