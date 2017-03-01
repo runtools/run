@@ -1,2 +1,2 @@
 export {initialize} from './initialize';
-export {__forward__, __forward__ as default} from './forward';
+export {__default__, __default__ as default} from './default';

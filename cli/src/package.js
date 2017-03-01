@@ -7,19 +7,20 @@ import autocomplete from 'inquirer-autocomplete-prompt';
 import Fuse from 'fuse.js';
 import {gray} from 'chalk';
 
-import {showIntro, fetchJSON, adjustToWindowWidth} from '@high/shared';
-
 inquirer.registerPrompt('autocomplete', autocomplete);
+
+import {createUserError, fetchJSON, adjustToWindowWidth} from '@high/shared';
+
+import Tool from './tool';
+import repository from './repository';
 
 const NPMS_API_URL = 'https://api.npms.io/v2';
 
 export class Package {
-  constructor(opts) {
-    this.type = opts.type;
-    this.yarn = opts.yarn;
-  }
+  constructor() {} // eslint-disable-line
 
   async initialize() {
+    // opts
     const pkgDir = process.cwd();
     const pkgFile = join(pkgDir, 'package.json');
     let pkg;
@@ -29,23 +30,87 @@ export class Package {
       pkg = {name: '', version: ''};
       writeJSON(pkgFile, pkg, {spaces: 2});
     }
-
-    if (!pkg.voila) {
-      pkg.voila = {};
-    }
-
-    if (!pkg.voila.type) {
-      if (!this.type) {
-        showIntro(require('../package.json'));
-        const result = await Package.promptType();
-        this.type = result.name + '@^' + result.version;
-      }
-      pkg.voila.type = this.type;
-      writeJSON(pkgFile, pkg, {spaces: 2});
-    }
   }
 
-  async installOrUpdatePackage() {}
+  async getTools() {
+    if (!this._tools) {
+      const pkg = await this.getPackageFileContent();
+      const tools = Package.normalizeTools(pkg.tools);
+      const mergedTools = [];
+      for (const tool of tools) {
+        const {name, version} = tool;
+        const {packageDir, packageContent} = await repository.loadPackage({name, version});
+        let loadedTool = packageContent.tool;
+        if (!loadedTool) {
+          throw createUserError(`${name}@${version} is not a tool`);
+        }
+        Object.assign(loadedTool, {name, version, packageDir});
+        loadedTool = new Tool(Tool.normalize(loadedTool));
+        loadedTool.merge(tool);
+        mergedTools.push(loadedTool);
+      }
+      this._tools = mergedTools;
+    }
+    return this._tools;
+  }
+
+  static normalizeTools(tools) {
+    if (!tools) {
+      return [];
+    }
+
+    if (!Array.isArray(tools)) {
+      const normalizedTools = [];
+
+      for (const name of Object.keys(tools)) {
+        let tool = tools[name];
+        if (typeof tool === 'string') {
+          tool = {version: tool};
+        }
+        tool.name = name;
+        tool = new Tool(Tool.normalize(tool));
+        normalizedTools.push(tool);
+      }
+
+      return normalizedTools;
+    }
+
+    return tools.map(tool => new Tool(Tool.normalize(tool)));
+  }
+
+  static normalizeConfig(config) {
+    if (!config) {
+      return {};
+    }
+
+    return config; // TODO: more normalizations
+  }
+
+  async getPackageFileContent() {
+    if (!this._packageFileContent) {
+      const pkgFile = join(this.getPackageDir(), 'package.json');
+      this._packageFileContent = readJSON(pkgFile);
+    }
+    return this._packageFileContent;
+  }
+
+  getPackageDir() {
+    if (!this._packageDir) {
+      this._packageDir = Package.searchPackageDir(process.cwd());
+    }
+    return this._packageDir;
+  }
+
+  static searchPackageDir(dir) {
+    if (existsSync(join(dir, 'package.json'))) {
+      return dir;
+    }
+    const parentDir = join(dir, '..');
+    if (parentDir === dir) {
+      throw createUserError('No package found in the current directory');
+    }
+    return Package.searchPackageDir(parentDir);
+  }
 
   static async promptType() {
     const types = await Package.fetchTypes();

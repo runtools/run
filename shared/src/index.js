@@ -1,7 +1,7 @@
 import {join} from 'path';
-import {existsSync, readFileSync, statSync} from 'fs';
+import {existsSync, mkdirSync, readFileSync, statSync} from 'fs';
 import {outputFile} from 'fs-promise';
-import {tmpdir} from 'os';
+import {homedir, tmpdir} from 'os';
 import crypto from 'crypto';
 import semver from 'semver';
 import pick from 'lodash.pick';
@@ -12,6 +12,18 @@ import windowSize from 'window-size';
 import sliceANSI from 'slice-ansi';
 import fetch from 'node-fetch';
 import strictUriEncode from 'strict-uri-encode';
+
+let _highDir;
+export function getHighDir() {
+  if (!_highDir) {
+    const dir = join(homedir(), '.high');
+    if (!existsSync(dir)) {
+      mkdirSync(dir);
+    }
+    _highDir = dir;
+  }
+  return _highDir;
+}
 
 export function isYarnPreferred({pkgDir, yarn}) {
   if (yarn !== undefined) {
