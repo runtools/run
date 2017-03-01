@@ -1,6 +1,6 @@
 {
   "name": "@high/package",
-  "version": "0.6.0",
+  "version": "0.6.2",
   "keywords": [
     "node-tool"
   ],
@@ -10,7 +10,19 @@
     "type": "git",
     "url": "git://github.com/high-js/high"
   },
-  "tool": {},
+  "tool": {
+    "aliase": [
+      "pkg"
+    ],
+    "commands": {
+      "information": {
+        "target": "./information",
+        "aliases": [
+          "info"
+        ]
+      }
+    }
+  },
   "dependencies": {
     "uuid": "^3.0.1"
   }
