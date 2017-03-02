@@ -11,34 +11,48 @@ inquirer.registerPrompt('autocomplete', autocomplete);
 
 import {createUserError, formatPath, fetchJSON, adjustToWindowWidth} from '@high/shared';
 
+import Executable from './executable';
 import Tool from './tool';
-import packageStore from './package-store';
+import ToolDefinition from './tool-definition';
+import ToolReference from './tool-reference';
 
 const NPMS_API_URL = 'https://api.npms.io/v2';
 
-export class Package {
+export class Package extends Executable {
   constructor(pkg) {
-    Object.assign(this, pkg);
+    super();
+    Object.assign(
+      this,
+      pick(pkg, [
+        'name',
+        'version',
+        'description',
+        'author',
+        'private',
+        'license',
+        'repository',
+        'tools'
+      ])
+    );
   }
 
   static async load(dir = process.cwd()) {
     dir = this.searchPackageDir(dir);
-    let pkg = this.readPackageFileContent(dir);
+    let pkg = this.readPackageFile(dir);
     pkg = this.normalize(pkg);
-    pkg = new this(pkg);
     pkg.packageDir = dir;
     return pkg;
   }
 
   static async create(dir = process.cwd()) {
-    let pkg = this.readPackageFileContent(dir, false);
+    let pkg = this.readPackageFile(dir, false);
     if (pkg) {
       pkg = this.normalize(pkg);
     } else {
       pkg = {name: '', version: ''};
-      this.writePackageFileContent(dir, pkg);
+      this.writePackageFile(dir, pkg);
+      pkg = new this(pkg);
     }
-    pkg = new this(pkg);
     pkg.packageDir = dir;
     return pkg;
   }
@@ -47,16 +61,13 @@ export class Package {
     if (!pkg) {
       throw new Error("'pkg' parameter is missing");
     }
-
     if (!pkg.name) {
-      throw new Error("'name' property is missing in a package");
+      throw new Error("Package 'name' property is missing");
     }
-
     if (!pkg.version) {
-      throw new Error("'version' property is missing in a package");
+      throw new Error("Package 'version' property is missing");
     }
-
-    const normalizedPackage = pick(pkg, [
+    let normalizedPackage = pick(pkg, [
       'name',
       'version',
       'description',
@@ -64,14 +75,13 @@ export class Package {
       'private',
       'license'
     ]);
-
-    normalizedPackage.repository = Package.normalizeRepository(pkg.repository);
-    normalizedPackage.tools = Package.normalizeTools(pkg.tools);
-
+    normalizedPackage.repository = this.normalizeRepository(pkg.repository);
+    normalizedPackage.tools = ToolReference.normalizeMany(pkg.tools);
+    normalizedPackage = new this(normalizedPackage);
     return normalizedPackage;
   }
 
-  static readPackageFileContent(dir, errorIfNotFound = true) {
+  static readPackageFile(dir, errorIfNotFound = true) {
     try {
       return readJSON(join(dir, 'package.json'));
     } catch (err) {
@@ -82,7 +92,7 @@ export class Package {
     }
   }
 
-  static writePackageFileContent(dir, pkg) {
+  static writePackageFile(dir, pkg) {
     writeJSON(join(dir, 'package.json'), pkg, {spaces: 2});
   }
 
@@ -94,59 +104,21 @@ export class Package {
     if (parentDir === dir) {
       throw createUserError('No package found in the current directory');
     }
-    return Package.searchPackageDir(parentDir);
+    return this.searchPackageDir(parentDir);
   }
 
   async instantiateTools() {
     if (!this._instantiatedTools) {
       const instantiatedTools = [];
-      for (const tool of this.tools) {
-        const {name, version} = tool;
-        const {packageDir, packageContent} = await packageStore.loadPackage({name, version});
-        let loadedTool = packageContent.tool;
-        if (!loadedTool) {
-          throw createUserError(`${name}@${version} is not a tool`);
-        }
-        Object.assign(loadedTool, {name, version, packageDir});
-        const instantiatedTool = new Tool(Tool.normalize(loadedTool));
-        instantiatedTool.merge(tool);
+      for (const toolRef of this.tools) {
+        const {name, version} = toolRef;
+        const toolDef = await ToolDefinition.loadFromStore({name, version});
+        const instantiatedTool = new Tool(toolDef, toolRef);
         instantiatedTools.push(instantiatedTool);
       }
       this._instantiatedTools = instantiatedTools;
     }
     return this._instantiatedTools;
-  }
-
-  static normalizeTools(tools) {
-    if (!tools) {
-      return [];
-    }
-
-    if (!Array.isArray(tools)) {
-      const normalizedTools = [];
-
-      for (const name of Object.keys(tools)) {
-        let tool = tools[name];
-        if (typeof tool === 'string') {
-          tool = {version: tool};
-        }
-        tool.name = name;
-        tool = new Tool(Tool.normalize(tool));
-        normalizedTools.push(tool);
-      }
-
-      return normalizedTools;
-    }
-
-    return tools.map(tool => new Tool(Tool.normalize(tool)));
-  }
-
-  static normalizeConfig(config) {
-    if (!config) {
-      return {};
-    }
-
-    return config; // TODO: more normalizations
   }
 
   static normalizeRepository(repository) {
@@ -161,7 +133,7 @@ export class Package {
   }
 
   static async promptType() {
-    const types = await Package.fetchTypes();
+    const types = await this.fetchTypes();
 
     const fuse = new Fuse(types, {keys: ['name', 'description', 'keywords']});
 

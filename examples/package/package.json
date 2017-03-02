@@ -7,6 +7,10 @@
     "type": "git",
     "url": "git://github.com/high-js/high"
   },
+  "commands": {
+    "i": "pkg info"
+  },
+  "defaultCommand": "i",
   "tools": {
     "@high/package": {
       "version": "^0.6.0",

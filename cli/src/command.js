@@ -1,42 +1,54 @@
 import pick from 'lodash.pick';
 
-import Package from './package';
+import Aliases from './aliases';
+import Config from './config';
 
 export class Command {
   constructor(command) {
-    Object.assign(this, command);
+    Object.assign(this, pick(command, ['name', 'target', 'aliases', 'arguments', 'config']));
   }
 
   static normalize(command) {
     if (!command) {
       throw new Error("'command' parameter is missing");
     }
-
-    if (!command.name) {
-      throw new Error("'name' property is missing in a command");
+    if (typeof command.name !== 'string') {
+      throw new Error("Command 'name' property must be a string");
     }
-
     if (!command.target) {
-      throw new Error("'target' property is missing in a command");
+      throw new Error("Command 'target' property is missing");
     }
 
-    const normalizedCommand = pick(command, ['name', 'target']);
-
-    normalizedCommand.aliases = Command.normalizeAliases(command.aliases);
-    normalizedCommand.arguments = Command.normalizeArguments(command.arguments);
-    normalizedCommand.config = Package.normalizeConfig(command.config);
-
+    let normalizedCommand = pick(command, ['name', 'target']);
+    normalizedCommand.aliases = Aliases.normalize(command.aliases);
+    normalizedCommand.arguments = this.normalizeArguments(command.arguments);
+    normalizedCommand.config = Config.normalize(command.config);
+    normalizedCommand = new this(normalizedCommand);
     return normalizedCommand;
   }
 
-  static normalizeAliases(aliases) {
-    if (!aliases) {
-      return [];
+  static normalizeMany(commands, defaultCommand) {
+    const normalizedCommands = [];
+
+    if (!commands) {
+      commands = {};
     }
-    if (!Array.isArray(aliases)) {
-      return [aliases];
+
+    if (defaultCommand) {
+      commands[''] = defaultCommand;
     }
-    return aliases;
+
+    for (const name of Object.keys(commands)) {
+      let command = commands[name];
+      if (typeof command === 'string') {
+        command = {target: command};
+      }
+      command.name = name;
+      const normalizedCommand = this.normalize(command);
+      normalizedCommands.push(normalizedCommand);
+    }
+
+    return normalizedCommands;
   }
 
   static normalizeArguments(args) {
