@@ -1,10 +1,9 @@
+import PackageDefinition from '../../package-definition';
 import Package from '../../package';
 
 export async function __default__(args) {
-  const pkg = await Package.load();
-
-  const tools = await pkg.instantiateTools();
-
+  const pkgDef = await PackageDefinition.load();
+  const pkg = await Package.create(pkgDef);
   console.dir(pkg, {depth: 5});
 }
 
