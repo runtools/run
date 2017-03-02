@@ -1,10 +1,11 @@
 import Package from '../../package';
 
 export async function __default__(args) {
-  const pkg = new Package();
+  const pkg = await Package.load();
 
-  const tools = await pkg.getTools();
-  console.dir(tools, {depth: 200});
+  const tools = await pkg.instantiateTools();
+
+  console.dir(pkg, {depth: 5});
 }
 
 //

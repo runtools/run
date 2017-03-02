@@ -1,3 +1,6 @@
 {
-  "extends": ["xo-space", "prettier"]
+  "extends": ["xo-space", "prettier"],
+  "rules": {
+    "no-warning-comments": 0
+  }
 }

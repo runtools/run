@@ -23,12 +23,9 @@ export class Tool {
       throw new Error("'tool' parameter is missing");
     }
 
-    if (!tool.name) {
-      throw new Error("'name' property is missing in a tool");
-    }
+    const normalizedTool = pick(tool, ['defaultCommand']);
 
-    const normalizedTool = pick(tool, ['name', 'defaultCommand']);
-
+    normalizedTool.name = Tool.normalizeName(tool.name);
     normalizedTool.version = Tool.normalizeVersion(tool.version);
     normalizedTool.aliases = Tool.normalizeAliases(tool.aliases);
     normalizedTool.commands = Tool.normalizeCommands(tool.commands);
@@ -36,6 +33,23 @@ export class Tool {
     normalizedTool.config = Package.normalizeConfig(tool.config);
 
     return normalizedTool;
+  }
+
+  static normalizeName(name) {
+    if (!name) {
+      throw new Error('Tool name property is missing');
+    }
+
+    if (/[^a-z0-9.@/_]/i.test(name)) {
+      throw new Error(`Tool name '${name}' is invalid`);
+    }
+
+    if (name.startsWith('/') || name.includes('..')) {
+      // Safety precaution
+      throw new Error(`Tool name '${name}' is invalid`);
+    }
+
+    return name;
   }
 
   static normalizeVersion(version) {
@@ -57,10 +71,6 @@ export class Tool {
     const strictVersion = semver.clean(version);
     if (strictVersion) {
       return strictVersion; // Strict version ('0.3.2', '2.3.1-beta',...)
-    }
-
-    if (/^[a-z]+$/i.test(version)) {
-      return version; // Tag ('latest', 'beta',...)
     }
 
     const range = semver.validRange(version); // Return something like '>=1.3.3 <2.0.0'...

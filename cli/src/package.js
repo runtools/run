@@ -9,49 +9,112 @@ import {gray} from 'chalk';
 
 inquirer.registerPrompt('autocomplete', autocomplete);
 
-import {createUserError, fetchJSON, adjustToWindowWidth} from '@high/shared';
+import {createUserError, formatPath, fetchJSON, adjustToWindowWidth} from '@high/shared';
 
 import Tool from './tool';
-import repository from './repository';
+import packageStore from './package-store';
 
 const NPMS_API_URL = 'https://api.npms.io/v2';
 
 export class Package {
-  constructor() {} // eslint-disable-line
+  constructor(pkg) {
+    Object.assign(this, pkg);
+  }
 
-  async initialize() {
-    // opts
-    const pkgDir = process.cwd();
-    const pkgFile = join(pkgDir, 'package.json');
-    let pkg;
-    if (existsSync(pkgFile)) {
-      pkg = readJSON(pkgFile);
+  static async load(dir = process.cwd()) {
+    dir = this.searchPackageDir(dir);
+    let pkg = this.readPackageFileContent(dir);
+    pkg = this.normalize(pkg);
+    pkg = new this(pkg);
+    pkg.packageDir = dir;
+    return pkg;
+  }
+
+  static async create(dir = process.cwd()) {
+    let pkg = this.readPackageFileContent(dir, false);
+    if (pkg) {
+      pkg = this.normalize(pkg);
     } else {
       pkg = {name: '', version: ''};
-      writeJSON(pkgFile, pkg, {spaces: 2});
+      this.writePackageFileContent(dir, pkg);
+    }
+    pkg = new this(pkg);
+    pkg.packageDir = dir;
+    return pkg;
+  }
+
+  static normalize(pkg) {
+    if (!pkg) {
+      throw new Error("'pkg' parameter is missing");
+    }
+
+    if (!pkg.name) {
+      throw new Error("'name' property is missing in a package");
+    }
+
+    if (!pkg.version) {
+      throw new Error("'version' property is missing in a package");
+    }
+
+    const normalizedPackage = pick(pkg, [
+      'name',
+      'version',
+      'description',
+      'author',
+      'private',
+      'license'
+    ]);
+
+    normalizedPackage.repository = Package.normalizeRepository(pkg.repository);
+    normalizedPackage.tools = Package.normalizeTools(pkg.tools);
+
+    return normalizedPackage;
+  }
+
+  static readPackageFileContent(dir, errorIfNotFound = true) {
+    try {
+      return readJSON(join(dir, 'package.json'));
+    } catch (err) {
+      if (errorIfNotFound) {
+        throw createUserError(`${formatPath('package.json')} file not found in ${formatPath(dir)}`);
+      }
+      return undefined;
     }
   }
 
-  async getTools() {
-    if (!this._tools) {
-      const pkg = await this.getPackageFileContent();
-      const tools = Package.normalizeTools(pkg.tools);
-      const mergedTools = [];
-      for (const tool of tools) {
+  static writePackageFileContent(dir, pkg) {
+    writeJSON(join(dir, 'package.json'), pkg, {spaces: 2});
+  }
+
+  static searchPackageDir(dir) {
+    if (existsSync(join(dir, 'package.json'))) {
+      return dir;
+    }
+    const parentDir = join(dir, '..');
+    if (parentDir === dir) {
+      throw createUserError('No package found in the current directory');
+    }
+    return Package.searchPackageDir(parentDir);
+  }
+
+  async instantiateTools() {
+    if (!this._instantiatedTools) {
+      const instantiatedTools = [];
+      for (const tool of this.tools) {
         const {name, version} = tool;
-        const {packageDir, packageContent} = await repository.loadPackage({name, version});
+        const {packageDir, packageContent} = await packageStore.loadPackage({name, version});
         let loadedTool = packageContent.tool;
         if (!loadedTool) {
           throw createUserError(`${name}@${version} is not a tool`);
         }
         Object.assign(loadedTool, {name, version, packageDir});
-        loadedTool = new Tool(Tool.normalize(loadedTool));
-        loadedTool.merge(tool);
-        mergedTools.push(loadedTool);
+        const instantiatedTool = new Tool(Tool.normalize(loadedTool));
+        instantiatedTool.merge(tool);
+        instantiatedTools.push(instantiatedTool);
       }
-      this._tools = mergedTools;
+      this._instantiatedTools = instantiatedTools;
     }
-    return this._tools;
+    return this._instantiatedTools;
   }
 
   static normalizeTools(tools) {
@@ -86,30 +149,15 @@ export class Package {
     return config; // TODO: more normalizations
   }
 
-  async getPackageFileContent() {
-    if (!this._packageFileContent) {
-      const pkgFile = join(this.getPackageDir(), 'package.json');
-      this._packageFileContent = readJSON(pkgFile);
+  static normalizeRepository(repository) {
+    if (!repository) {
+      return undefined;
     }
-    return this._packageFileContent;
-  }
 
-  getPackageDir() {
-    if (!this._packageDir) {
-      this._packageDir = Package.searchPackageDir(process.cwd());
-    }
-    return this._packageDir;
-  }
+    // TODO: more normalizations
+    // Also, we should not assume that the repository type is always Git
 
-  static searchPackageDir(dir) {
-    if (existsSync(join(dir, 'package.json'))) {
-      return dir;
-    }
-    const parentDir = join(dir, '..');
-    if (parentDir === dir) {
-      throw createUserError('No package found in the current directory');
-    }
-    return Package.searchPackageDir(parentDir);
+    return repository.url || repository;
   }
 
   static async promptType() {
