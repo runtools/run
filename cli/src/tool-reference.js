@@ -1,49 +1,46 @@
-import pick from 'lodash.pick';
+import entries from 'lodash.topairs';
 import semver from 'semver';
 
 import Hook from './hook';
 import Config from './config';
 
 export class ToolReference {
-  constructor(toolRef) {
-    Object.assign(this, pick(toolRef, ['name', 'version', 'hooks', 'config']));
+  constructor(normalizedToolRef) {
+    Object.assign(this, normalizedToolRef);
   }
 
-  static normalize(toolRef) {
+  static normalize(toolRef, defaultName) {
     if (!toolRef) {
       throw new Error("'toolRef' parameter is missing");
     }
 
-    let normalizedToolRef = {
+    if (typeof toolRef === 'string') {
+      toolRef = {version: toolRef};
+    }
+
+    if (!toolRef.name) {
+      if (defaultName) {
+        toolRef.name = defaultName;
+      } else {
+        throw new Error("ToolReference 'name' property is missing");
+      }
+    }
+
+    const normalizedToolRef = {
       name: this.normalizeName(toolRef.name),
       version: this.normalizeVersion(toolRef.version),
       hooks: Hook.normalizeMany(toolRef.hooks),
       config: Config.normalize(toolRef.config)
     };
 
-    normalizedToolRef = new this(normalizedToolRef);
-
-    return normalizedToolRef;
+    return new this(normalizedToolRef);
   }
 
-  static normalizeMany(toolRefs) {
-    const normalizedToolRefs = [];
-
-    if (!toolRefs) {
-      toolRefs = {};
+  static normalizeMany(toolRefs = []) {
+    if (Array.isArray(toolRefs)) {
+      return toolRefs.map(this.normalize, this);
     }
-
-    for (const name of Object.keys(toolRefs)) {
-      let toolRef = toolRefs[name];
-      if (typeof toolRef === 'string') {
-        toolRef = {version: toolRef};
-      }
-      toolRef.name = name;
-      const normalizedToolRef = this.normalize(toolRef);
-      normalizedToolRefs.push(normalizedToolRef);
-    }
-
-    return normalizedToolRefs;
+    return entries(toolRefs).map(([name, toolRef]) => this.normalize(toolRef, name));
   }
 
   static normalizeName(name) {

@@ -10,22 +10,8 @@ import Config from './config';
 import ToolReference from './tool-reference';
 
 export class PackageDefinition {
-  constructor(pkgDef) {
-    Object.assign(
-      this,
-      pick(pkgDef, [
-        'name',
-        'version',
-        'description',
-        'author',
-        'private',
-        'license',
-        'repository',
-        'commands',
-        'config',
-        'toolRefs'
-      ])
-    );
+  constructor(normalizedPkgDef) {
+    Object.assign(this, normalizedPkgDef);
   }
 
   static async load(dir = process.cwd()) {
@@ -59,7 +45,8 @@ export class PackageDefinition {
     if (!pkgDef.version) {
       throw new Error("Package 'version' property is missing");
     }
-    let normalizedPkgDef = pick(pkgDef, [
+
+    const normalizedPkgDef = pick(pkgDef, [
       'name',
       'version',
       'description',
@@ -67,12 +54,16 @@ export class PackageDefinition {
       'private',
       'license'
     ]);
+
     normalizedPkgDef.repository = this.normalizeRepository(pkgDef.repository);
-    normalizedPkgDef.commands = Command.normalizeMany(pkgDef.commands, pkgDef.defaultCommand);
+    normalizedPkgDef.commands = Command.normalizeMany(pkgDef.commands);
+    if (pkgDef.defaultCommand) {
+      normalizedPkgDef.defaultCommand = Command.normalize(pkgDef.defaultCommand, '__default__');
+    }
     normalizedPkgDef.config = Config.normalize(pkgDef.config);
     normalizedPkgDef.toolRefs = ToolReference.normalizeMany(pkgDef.tools);
-    normalizedPkgDef = new this(normalizedPkgDef);
-    return normalizedPkgDef;
+
+    return new this(normalizedPkgDef);
   }
 
   static readPackageFile(dir, errorIfNotFound = true) {

@@ -1,5 +1,3 @@
-import pick from 'lodash.pick';
-
 import {createUserError} from '@high/shared';
 
 import Aliases from './aliases';
@@ -8,8 +6,8 @@ import Config from './config';
 import packageStore from './package-store';
 
 export class ToolDefinition {
-  constructor(toolDefinition) {
-    Object.assign(this, pick(toolDefinition, ['name', 'version', 'aliases', 'commands', 'config']));
+  constructor(normalizedToolDef) {
+    Object.assign(this, normalizedToolDef);
   }
 
   static async loadFromStore({name, version}) {
@@ -30,17 +28,19 @@ export class ToolDefinition {
       throw new Error("'toolDef' parameter is missing");
     }
 
-    let normalizedToolDef = {
+    const normalizedToolDef = {
       name: this.normalizeName(toolDef.name),
       version: this.normalizeVersion(toolDef.version),
       aliases: Aliases.normalize(toolDef.aliases),
-      commands: Command.normalizeMany(toolDef.commands, toolDef.defaultCommand),
+      commands: Command.normalizeMany(toolDef.commands),
       config: Config.normalize(toolDef.config)
     };
 
-    normalizedToolDef = new this(normalizedToolDef);
+    if (toolDef.defaultCommand) {
+      normalizedToolDef.defaultCommand = Command.normalize(toolDef.defaultCommand, '__default__');
+    }
 
-    return normalizedToolDef;
+    return new this(normalizedToolDef);
   }
 
   static normalizeName(name) {

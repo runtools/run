@@ -1,16 +1,12 @@
 export class Config {
-  constructor(config) {
-    Object.assign(this, config);
+  constructor(normalizedConfig) {
+    Object.assign(this, normalizedConfig);
   }
 
-  static normalize(config) {
-    let normalizedConfig = config;
-    if (!normalizedConfig) {
-      normalizedConfig = {};
-    }
+  static normalize(config = {}) {
+    const normalizedConfig = config;
     // TODO: more normalizations
-    normalizedConfig = new this(normalizedConfig);
-    return normalizedConfig;
+    return new this(normalizedConfig);
   }
 
   merge(other) {

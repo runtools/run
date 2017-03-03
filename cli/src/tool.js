@@ -1,5 +1,3 @@
-import pick from 'lodash.pick';
-
 import Executable from './executable';
 import ToolDefinition from './tool-definition';
 
@@ -12,11 +10,10 @@ export class Tool extends Executable {
   static async create(toolRef) {
     const {name, version} = toolRef;
     const toolDef = await ToolDefinition.loadFromStore({name, version});
-    let tool = pick(toolDef, ['name', 'version', 'aliases', 'commands', 'packageDir']);
+    const tool = {...toolDef};
     tool.hooks = toolRef.hooks;
     tool.config = toolDef.config.merge(toolRef.config);
-    tool = new this(tool);
-    return tool;
+    return new this(tool);
   }
 
   static async createMany(toolRefs) {

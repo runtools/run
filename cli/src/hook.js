@@ -1,44 +1,41 @@
 import pick from 'lodash.pick';
+import entries from 'lodash.topairs';
 
 export class Hook {
-  constructor(hook) {
-    Object.assign(this, pick(hook, ['name', 'target']));
+  constructor(normalizedHook) {
+    Object.assign(this, normalizedHook);
   }
 
-  static normalize(hook) {
+  static normalize(hook, defaultName) {
     if (!hook) {
       throw new Error("'hook' parameter is missing");
     }
-    if (!hook.name) {
-      throw new Error("'name' property is missing in a hook");
-    }
-    if (!hook.target) {
-      throw new Error("'target' property is missing in a hook");
+
+    if (typeof hook === 'string') {
+      hook = {target: hook};
     }
 
-    let normalizedHook = pick(hook, ['name', 'target']);
-    normalizedHook = new this(hook);
-    return normalizedHook;
+    if (!hook.name) {
+      if (defaultName) {
+        hook.name = defaultName;
+      } else {
+        throw new Error("Hook 'name' property is missing");
+      }
+    }
+
+    if (!hook.target) {
+      throw new Error("Hook 'target' property is missing");
+    }
+
+    const normalizedHook = pick(hook, ['name', 'target']);
+    return new this(normalizedHook);
   }
 
-  static normalizeMany(hooks) {
-    const normalizedHooks = [];
-
-    if (!hooks) {
-      hooks = {};
+  static normalizeMany(hooks = []) {
+    if (Array.isArray(hooks)) {
+      return hooks.map(this.normalize, this);
     }
-
-    for (const name of Object.keys(hooks)) {
-      let hook = hooks[name];
-      if (typeof hook === 'string') {
-        hook = {target: hook};
-      }
-      hook.name = name;
-      const normalizedHook = this.normalize(hook);
-      normalizedHooks.push(normalizedHook);
-    }
-
-    return normalizedHooks;
+    return entries(hooks).map(([name, hook]) => this.normalize(hook, name));
   }
 }
 
