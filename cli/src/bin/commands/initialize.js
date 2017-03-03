@@ -1,9 +1,8 @@
-import Package from '../../package';
+import PackageDefinition from '../../package-definition';
 
 export async function initialize(args) {
-  const pkg = await Package.create();
-
-  console.dir(pkg, {depth: 5});
+  const pkgDef = await PackageDefinition.create();
+  console.dir(pkgDef, {depth: 5});
 }
 
 initialize.aliases = ['init'];

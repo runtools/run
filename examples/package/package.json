@@ -8,9 +8,17 @@
     "url": "git://github.com/high-js/high"
   },
   "commands": {
-    "i": "pkg info"
+    "deploy": ["babel transpile", "rollup --verbose"],
+    "info": {
+      "target": "pkg info",
+      "aliases": "i"
+    },
+    "run": "./dist/commands/run --hello"
   },
-  "defaultCommand": "i",
+  "config": {
+    "verbose": true
+  },
+  "defaultCommand": "info",
   "tools": {
     "@high/package": {
       "version": "^0.6.0",

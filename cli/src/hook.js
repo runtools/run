@@ -1,5 +1,6 @@
-import pick from 'lodash.pick';
 import entries from 'lodash.topairs';
+
+import Target from './target';
 
 export class Hook {
   constructor(normalizedHook) {
@@ -12,7 +13,7 @@ export class Hook {
     }
 
     if (typeof hook === 'string') {
-      hook = {target: hook};
+      hook = {targets: hook};
     }
 
     if (!hook.name) {
@@ -23,11 +24,11 @@ export class Hook {
       }
     }
 
-    if (!hook.target) {
-      throw new Error("Hook 'target' property is missing");
-    }
+    const normalizedHook = {
+      name: hook.name,
+      targets: Target.normalizeMany(hook.targets || hook.target)
+    };
 
-    const normalizedHook = pick(hook, ['name', 'target']);
     return new this(normalizedHook);
   }
 

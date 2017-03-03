@@ -1,5 +1,6 @@
 import Executable from './executable';
 import Tool from './tool';
+import Target from './target';
 
 export class Package extends Executable {
   constructor(pkg) {
@@ -11,6 +12,12 @@ export class Package extends Executable {
     const pkg = {...pkgDef};
     pkg.tools = await Tool.createMany(pkgDef.toolRefs);
     return new this(pkg);
+  }
+
+  runCommand(target) {
+    const normalizedTarget = Target.normalize(target);
+    console.log(normalizedTarget.resolve({context: this, config: this.config}));
+    // console.dir(command.resolveTargets({context: this}), {depth: 10});
   }
 }
 

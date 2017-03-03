@@ -4,7 +4,8 @@ import Package from '../../package';
 export async function __default__(args) {
   const pkgDef = await PackageDefinition.load();
   const pkg = await Package.create(pkgDef);
-  console.dir(pkg, {depth: 5});
+  // console.dir(pkg, {depth: 10});
+  pkg.runCommand(args);
 }
 
 //

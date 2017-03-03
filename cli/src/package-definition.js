@@ -1,5 +1,5 @@
 import {existsSync} from 'fs';
-import {join} from 'path';
+import {join, basename} from 'path';
 import {readFileSync as readJSON, writeFileSync as writeJSON} from 'jsonfile';
 import pick from 'lodash.pick';
 
@@ -27,7 +27,7 @@ export class PackageDefinition {
     if (pkgDef) {
       pkgDef = this.normalize(pkgDef);
     } else {
-      pkgDef = {name: '', version: ''};
+      pkgDef = {name: basename(dir), version: '0.1.0'};
       this.writePackageFile(dir, pkgDef);
       pkgDef = new this(pkgDef);
     }

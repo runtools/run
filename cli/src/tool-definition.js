@@ -1,6 +1,6 @@
 import {createUserError} from '@high/shared';
 
-import Aliases from './aliases';
+import Alias from './alias';
 import Command from './command';
 import Config from './config';
 import packageStore from './package-store';
@@ -31,7 +31,7 @@ export class ToolDefinition {
     const normalizedToolDef = {
       name: this.normalizeName(toolDef.name),
       version: this.normalizeVersion(toolDef.version),
-      aliases: Aliases.normalize(toolDef.aliases),
+      aliases: Alias.normalizeMany(toolDef.aliases || toolDef.alias),
       commands: Command.normalizeMany(toolDef.commands),
       config: Config.normalize(toolDef.config)
     };

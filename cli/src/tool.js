@@ -24,6 +24,10 @@ export class Tool extends Executable {
     }
     return tools;
   }
+
+  isMatching(name) {
+    return this.name === name || this.aliases.find(alias => alias.toString() === name);
+  }
 }
 
 export default Tool;

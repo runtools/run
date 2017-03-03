@@ -10,7 +10,7 @@ export class Config {
   }
 
   merge(other) {
-    return this; // TODO
+    return new this.constructor({...this, ...other}); // TODO: do a deep merge?
   }
 }
 

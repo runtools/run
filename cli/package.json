@@ -65,6 +65,8 @@
     "inquirer": "^3.0.1",
     "inquirer-autocomplete-prompt": "^0.6.0",
     "jsonfile": "^2.4.0",
+    "lodash.compact": "^3.0.1",
+    "lodash.omit": "^4.5.0",
     "lodash.pick": "^4.4.0",
     "lodash.topairs": "^4.3.0",
     "minimist": "^1.2.0",

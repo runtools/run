@@ -1,7 +1,7 @@
-import pick from 'lodash.pick';
 import entries from 'lodash.topairs';
 
-import Aliases from './aliases';
+import Target from './target';
+import Alias from './alias';
 import Config from './config';
 
 export class Command {
@@ -14,8 +14,8 @@ export class Command {
       throw new Error("'command' parameter is missing");
     }
 
-    if (typeof command === 'string') {
-      command = {target: command};
+    if (typeof command === 'string' || Array.isArray(command)) {
+      command = {targets: command};
     }
 
     if (!command.name) {
@@ -26,14 +26,14 @@ export class Command {
       }
     }
 
-    if (!command.target) {
-      throw new Error("Command 'target' property is missing");
-    }
+    const normalizedCommand = {
+      name: command.name,
+      targets: Target.normalizeMany(command.targets || command.target),
+      aliases: Alias.normalizeMany(command.aliases || command.alias),
+      arguments: this.normalizeArguments(command.arguments),
+      config: Config.normalize(command.config)
+    };
 
-    const normalizedCommand = pick(command, ['name', 'target']);
-    normalizedCommand.aliases = Aliases.normalize(command.aliases);
-    normalizedCommand.arguments = this.normalizeArguments(command.arguments);
-    normalizedCommand.config = Config.normalize(command.config);
     return new this(normalizedCommand);
   }
 
@@ -42,6 +42,15 @@ export class Command {
       return commands.map(this.normalize, this);
     }
     return entries(commands).map(([name, command]) => this.normalize(command, name));
+  }
+
+  isMatching(name) {
+    return this.name === name || this.aliases.find(alias => alias.toString() === name);
+  }
+
+  resolveTargets({context, config}) {
+    config = config.merge(this.config);
+    return this.targets.map(target => target.resolve({context, config}));
   }
 
   static normalizeArguments(args = []) {
