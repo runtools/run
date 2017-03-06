@@ -76,9 +76,9 @@ export class ToolReference {
       return version; // Tag ('latest', 'beta',...)
     }
 
-    const strictVersion = semver.clean(version);
-    if (strictVersion) {
-      return strictVersion; // Strict version ('0.3.2', '2.3.1-beta',...)
+    const exactVersion = semver.clean(version);
+    if (exactVersion) {
+      return exactVersion; // '0.3.2', '2.3.1-beta',...
     }
 
     const range = semver.validRange(version); // Return something like '>=1.3.3 <2.0.0'...
