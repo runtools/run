@@ -1,9 +1,13 @@
 {
-  "lerna": "2.0.0-beta.36",
+  "lerna": "2.0.0-beta.38",
   "packages": [
-    "cli",
-    "examples/*",
-    "shared"
+    "cli.disabled",
+    "examples.disabled/*",
+    "tools/*",
+    "shared.disabled"
   ],
-  "version": "independent"
+  "version": "independent",
+  "onlyExplicitUpdates": true,
+  "skipTempTag": true,
+  "npmClient": "yarn"
 }
