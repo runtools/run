@@ -4,7 +4,7 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git://github.com/high-js/high"
+    "url": "git://github.com/hightools/high"
   },
   "scripts": {
     "lint": "eslint ."

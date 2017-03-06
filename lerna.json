@@ -1,10 +1,10 @@
 {
   "lerna": "2.0.0-beta.38",
   "packages": [
-    "cli.disabled",
+    "cli",
     "examples.disabled/*",
     "tools/*",
-    "shared.disabled"
+    "shared"
   ],
   "version": "independent",
   "onlyExplicitUpdates": true,

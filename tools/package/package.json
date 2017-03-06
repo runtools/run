@@ -8,7 +8,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/high-js/high"
+    "url": "git://github.com/hightools/high"
   },
   "tool": {
     "aliases": [
