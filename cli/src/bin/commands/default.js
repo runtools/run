@@ -1,11 +1,16 @@
-import PackageDefinition from '../../package-definition';
-import Package from '../../package';
+import Tool from '../../tool';
 
-export async function __default__(args) {
-  const pkgDef = await PackageDefinition.load();
-  const pkg = await Package.create(pkgDef);
-  // console.dir(pkg, {depth: 10});
-  pkg.runCommand(args);
+export async function __default__(invocation) {
+  invocation.name = invocation.arguments.shift();
+
+  const tool = await Tool.load(process.cwd());
+  // console.dir(tool, {depth: 10});
+  await tool.run(invocation);
+
+  // const pkgDef = await PackageDefinition.load();
+  // const pkg = await Package.create(pkgDef);
+  // // console.dir(pkg, {depth: 10});
+  // pkg.runCommand(args);
 }
 
 //

@@ -3,7 +3,7 @@ export class Alias {
     this.value = value;
   }
 
-  static create(alias) {
+  static normalize(alias) {
     if (!alias) {
       throw new Error("'alias' property is missing");
     }
@@ -15,13 +15,13 @@ export class Alias {
     return new this(alias);
   }
 
-  static createMany(aliases = []) {
+  static normalizeMany(aliases = []) {
     if (typeof aliases === 'string') {
-      return [this.create(aliases)];
+      return [this.normalize(aliases)];
     }
 
     if (Array.isArray(aliases)) {
-      return aliases.map(this.create, this);
+      return aliases.map(this.normalize, this);
     }
 
     throw new Error("'aliases' property should be a string or an array");

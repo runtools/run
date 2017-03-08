@@ -1,16 +1,16 @@
 export class Config {
-  constructor(normalizedConfig) {
-    Object.assign(this, normalizedConfig);
+  constructor(config) {
+    Object.assign(this, config);
   }
 
-  static normalize(config = {}) {
-    const normalizedConfig = config;
+  static create(obj = {}) {
+    const config = obj;
     // TODO: more normalizations
-    return new this(normalizedConfig);
+    return new this(config);
   }
 
   merge(other) {
-    return new this.constructor({...this, ...other}); // TODO: do a deep merge?
+    return new this.constructor({...this, ...other}); // TODO: deep merge
   }
 }
 

@@ -4,6 +4,7 @@ import nodeVersion from 'node-version';
 import updateNotifier from 'update-notifier';
 import {showErrorAndExit} from '@high/shared';
 
+import Invocation from '../invocation';
 import * as commands from './commands';
 
 if (nodeVersion.major < 4) {
@@ -23,26 +24,23 @@ for (const key of Object.keys(commands)) {
   }
 }
 
-const args = process.argv.slice(2);
+const invocation = Invocation.create(process.argv.slice(2), process.cwd());
 
-let command = args[0];
-
-if (command) {
-  const actualCommand = aliases.get(command);
-  if (actualCommand) {
-    command = actualCommand;
+if (invocation.name) {
+  const actualName = aliases.get(invocation.name);
+  if (actualName) {
+    invocation.name = actualName;
   }
-  if (!(command in commands)) {
-    command = undefined;
+  if (!(invocation.name in commands)) {
+    invocation.arguments.unshift(invocation.name);
+    invocation.name = undefined;
   }
 }
 
-if (command) {
-  args.shift();
-} else {
-  command = 'default';
+if (!invocation.name) {
+  invocation.name = 'default';
 }
 
-const commandFn = commands[command];
+const commandFn = commands[invocation.name];
 
-commandFn(args).catch(showErrorAndExit);
+commandFn(invocation).catch(showErrorAndExit);

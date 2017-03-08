@@ -1,5 +1,5 @@
-import {join} from 'path';
-import {existsSync, mkdirSync, readFileSync, statSync} from 'fs';
+import {join, extname} from 'path';
+import {existsSync, mkdirSync, readFileSync, writeFileSync, statSync} from 'fs';
 import {outputFile} from 'fs-promise';
 import {homedir, tmpdir} from 'os';
 import crypto from 'crypto';
@@ -12,6 +12,56 @@ import windowSize from 'window-size';
 import sliceANSI from 'slice-ansi';
 import fetch from 'node-fetch';
 import strictUriEncode from 'strict-uri-encode';
+import JSON5 from 'json5';
+import YAML from 'js-yaml';
+
+export function readFile(file, {parse = false} = {}) {
+  let data;
+  try {
+    data = readFileSync(file, 'utf8');
+  } catch (_) {
+    throw createUserError(`File not found: ${formatPath(file)}`);
+  }
+
+  if (parse) {
+    try {
+      const ext = extname(file);
+      if (ext === '.json5') {
+        data = JSON5.parse(data);
+      } else if (ext === '.json') {
+        data = JSON.parse(data);
+      } else if (ext === '.yaml' || ext === '.yml') {
+        data = YAML.safeLoad(data);
+      } else {
+        throw createUserError(`Unsupported file format: ${formatPath(file)}`);
+      }
+    } catch (err) {
+      if (err.userError) {
+        throw err;
+      }
+      throw createUserError(`Invalid file: ${formatPath(file)}`);
+    }
+  }
+
+  return data;
+}
+
+export function writeFile(file, data, {stringify = false} = {}) {
+  if (stringify) {
+    const ext = extname(file);
+    if (ext === '.json5') {
+      data = JSON5.stringify(data, undefined, 2);
+    } else if (ext === '.json') {
+      data = JSON.stringify(data, undefined, 2);
+    } else if (ext === '.yaml' || ext === '.yml') {
+      data = YAML.safeDump(data);
+    } else {
+      throw createUserError(`Unsupported file format: ${formatPath(file)}`);
+    }
+  }
+
+  writeFileSync(file, data);
+}
 
 let _highDir;
 export function getHighDir() {

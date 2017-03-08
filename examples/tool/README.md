@@ -1,4 +1,4 @@
-# ⚡high package example
+# ⚡high tool example
 
 ```javascript
 // TODO: documentation!

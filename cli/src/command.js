@@ -1,61 +1,58 @@
 import entries from 'lodash.topairs';
 
-import Target from './target';
+import Invocation from './invocation';
 import Alias from './alias';
 import Config from './config';
 
 export class Command {
-  constructor(normalizedCommand) {
-    Object.assign(this, normalizedCommand);
+  constructor(cmd) {
+    Object.assign(this, cmd);
   }
 
-  static normalize(command, defaultName) {
-    if (!command) {
-      throw new Error("'command' parameter is missing");
+  static create(obj, cwd, defaultName) {
+    if (!obj) {
+      throw new Error("'obj' parameter is missing");
     }
 
-    if (typeof command === 'string' || Array.isArray(command)) {
-      command = {targets: command};
+    if (typeof obj === 'string' || Array.isArray(obj)) {
+      obj = {invoke: obj};
     }
 
-    if (!command.name) {
-      if (defaultName) {
-        command.name = defaultName;
-      } else {
-        throw new Error("Command 'name' property is missing");
-      }
+    const name = obj.name || defaultName;
+    if (!name) {
+      throw new Error("Command 'name' property is missing");
     }
 
-    const normalizedCommand = {
-      name: command.name,
-      targets: Target.normalizeMany(command.targets || command.target),
-      aliases: Alias.normalizeMany(command.aliases || command.alias),
-      arguments: this.normalizeArguments(command.arguments),
-      config: Config.normalize(command.config)
+    const cmd = {
+      name,
+      invocations: Invocation.createMany(obj.invoke || obj.invokes, cwd),
+      aliases: Alias.createMany(obj.aliases || obj.alias),
+      arguments: this.normalizeArguments(obj.arguments || obj.argument),
+      config: Config.create(obj.config)
     };
 
-    return new this(normalizedCommand);
+    return new this(cmd);
   }
 
-  static normalizeMany(commands = []) {
-    if (Array.isArray(commands)) {
-      return commands.map(this.normalize, this);
+  static createMany(objs = [], cwd) {
+    if (Array.isArray(objs)) {
+      return objs.map(obj => this.create(obj, cwd));
     }
-    return entries(commands).map(([name, command]) => this.normalize(command, name));
+    return entries(objs).map(([name, obj]) => this.create(obj, cwd, name));
+  }
+
+  static normalizeArguments(args = []) {
+    return args; // TODO: more normalizations
   }
 
   isMatching(name) {
     return this.name === name || this.aliases.find(alias => alias.toString() === name);
   }
 
-  resolveTargets({context, config}) {
-    config = config.merge(this.config);
-    return this.targets.map(target => target.resolve({context, config}));
-  }
-
-  static normalizeArguments(args = []) {
-    return args; // TODO: more normalizations
-  }
+  // resolveInvocations({context, config}) {
+  //   config = config.merge(this.config);
+  //   return this.invocations.map(invocation => invocation.resolve({context, config}));
+  // }
 }
 
 export default Command;

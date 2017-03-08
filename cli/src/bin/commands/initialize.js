@@ -1,8 +1,8 @@
-import PackageDefinition from '../../package-definition';
+import Tool from '../../tool';
 
-export async function initialize(args) {
-  const pkgDef = await PackageDefinition.create();
-  console.dir(pkgDef, {depth: 5});
+export async function initialize(invocation) {
+  const tool = await Tool.ensure(process.cwd(), invocation.config);
+  console.dir(tool, {depth: 5});
 }
 
 initialize.aliases = ['init'];
