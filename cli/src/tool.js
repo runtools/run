@@ -1,5 +1,5 @@
 import {existsSync} from 'fs';
-import {join, dirname, basename} from 'path';
+import {join, dirname, basename, isAbsolute} from 'path';
 
 import {readFile, writeFile, createUserError, formatPath, formatCode} from '@high/shared';
 
@@ -37,9 +37,9 @@ export class Tool {
       authors: obj.authors || obj.author,
       license: obj.license,
       repository: obj.repository && this.normalizeRepository(obj.repository),
-      commands: Command.createMany(obj.commands, toolDir),
+      commands: Command.createMany(toolDir, obj.commands),
       defaultCommand: obj.defaultCommand &&
-        Command.create(obj.defaultCommand, toolDir, '__default__'),
+        Command.create(toolDir, obj.defaultCommand, '__default__'),
       config: Config.create(obj.config),
       runtime: obj.runtime && Runtime.create(obj.runtime),
       toolFile: obj.toolFile,
@@ -113,18 +113,39 @@ export class Tool {
   }
 
   async run(invocation) {
+    const cmd = this.findMatchingCommand(invocation.name);
+    if (cmd) {
+      return await cmd.run({
+        tool: this,
+        arguments: invocation.arguments,
+        config: invocation.config
+      });
+    }
+
     if (!this.runtime) {
       throw createUserError(
         `Trying to run ${formatCode(invocation.name)} but no runtime is defined for the tool ${formatPath(this.name)}`
       );
     }
 
-    await this.runtime.run({
+    return await this.runtime.run({
       dir: this.toolDir,
       file: invocation.getFile(this.toolDir),
       arguments: invocation.arguments,
       config: invocation.config
     });
+  }
+
+  findMatchingCommand(name) {
+    if (name.startsWith('.') || isAbsolute(name)) {
+      return undefined;
+    }
+    for (const cmd of this.commands) {
+      if (cmd.isMatching(name)) {
+        return cmd;
+      }
+    }
+    return undefined;
   }
 
   static normalizeName(name) {

@@ -9,7 +9,11 @@ export class Command {
     Object.assign(this, cmd);
   }
 
-  static create(obj, cwd, defaultName) {
+  static create(dir, obj, defaultName) {
+    if (!dir) {
+      throw new Error("'dir' parameter is missing");
+    }
+
     if (!obj) {
       throw new Error("'obj' parameter is missing");
     }
@@ -25,7 +29,7 @@ export class Command {
 
     const cmd = {
       name,
-      invocations: Invocation.createMany(obj.invoke || obj.invokes, cwd),
+      invocations: Invocation.createMany(dir, obj.invoke || obj.invokes),
       aliases: Alias.createMany(obj.aliases || obj.alias),
       arguments: this.normalizeArguments(obj.arguments || obj.argument),
       config: Config.create(obj.config)
@@ -34,11 +38,16 @@ export class Command {
     return new this(cmd);
   }
 
-  static createMany(objs = [], cwd) {
-    if (Array.isArray(objs)) {
-      return objs.map(obj => this.create(obj, cwd));
+  static createMany(dir, objs = []) {
+    if (!dir) {
+      throw new Error("'dir' parameter is missing");
     }
-    return entries(objs).map(([name, obj]) => this.create(obj, cwd, name));
+
+    if (Array.isArray(objs)) {
+      return objs.map(obj => this.create(dir, obj));
+    }
+
+    return entries(objs).map(([name, obj]) => this.create(dir, obj, name));
   }
 
   static normalizeArguments(args = []) {
@@ -47,6 +56,10 @@ export class Command {
 
   isMatching(name) {
     return this.name === name || this.aliases.find(alias => alias.toString() === name);
+  }
+
+  async run({tool, arguments: args, config}) {
+    console.log(this);
   }
 
   // resolveInvocations({context, config}) {

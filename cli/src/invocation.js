@@ -13,21 +13,25 @@ export class Invocation {
     Object.assign(this, invocation);
   }
 
-  static create(obj, cwd) {
-    // 'cook pizza --salami' => {name: 'cook', arguments: ['pizza'], config: {salami: true}, cwd}
+  static create(dir, array) {
+    // 'cook pizza --salami' => {dir, name: 'cook', arguments: ['pizza'], config: {salami: true}}
 
-    if (!obj) {
-      throw new Error("'obj' property is missing");
+    if (!dir) {
+      throw new Error("'dir' property is missing");
     }
 
-    let invocation = obj;
+    if (!array) {
+      throw new Error("'array' property is missing");
+    }
+
+    let invocation = array;
 
     if (typeof invocation === 'string') {
       invocation = parse(invocation);
     }
 
     if (!Array.isArray(invocation)) {
-      throw new Error("'obj' property should be a string or an array");
+      throw new Error("'array' property should be a string or an array");
     }
 
     invocation = minimist(invocation);
@@ -40,32 +44,36 @@ export class Invocation {
     const args = invocation._;
     const name = args.shift();
 
-    invocation = {name, arguments: args, config, cwd};
+    invocation = {dir, name, arguments: args, config};
 
     return new this(invocation);
   }
 
-  static createMany(objs, cwd) {
-    if (!objs) {
-      throw new Error("'objs' property is missing");
+  static createMany(dir, arrays) {
+    if (!dir) {
+      throw new Error("'dir' property is missing");
     }
 
-    if (typeof objs === 'string') {
-      const obj = objs;
-      return [this.create(obj, cwd)];
+    if (!arrays) {
+      throw new Error("'arrays' property is missing");
     }
 
-    if (Array.isArray(objs)) {
-      return objs.map(obj => this.create(obj, cwd));
+    if (typeof arrays === 'string') {
+      const str = arrays;
+      return [this.create(dir, str)];
     }
 
-    throw new Error("'objs' property should be a string or an array");
+    if (Array.isArray(arrays)) {
+      return arrays.map(obj => this.create(dir, obj));
+    }
+
+    throw new Error("'arrays' property should be a string or an array");
   }
 
   getFile(baseDir) {
     let file = this.name;
     if (!isAbsolute(file)) {
-      file = resolve(this.cwd, file);
+      file = resolve(this.dir, file);
       file = relative(baseDir, file);
     }
     return file;
