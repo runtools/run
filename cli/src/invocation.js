@@ -13,12 +13,8 @@ export class Invocation {
     Object.assign(this, invocation);
   }
 
-  static create(dir, array) {
-    // 'cook pizza --salami' => {dir, name: 'cook', arguments: ['pizza'], config: {salami: true}}
-
-    if (!dir) {
-      throw new Error("'dir' property is missing");
-    }
+  static create(array) {
+    // 'cook pizza --salami' => {name: 'cook', arguments: ['pizza'], config: {salami: true}}
 
     if (!array) {
       throw new Error("'array' property is missing");
@@ -45,66 +41,27 @@ export class Invocation {
     const args = invocation._;
     const name = args.shift();
 
-    invocation = {dir, name, arguments: args, config};
+    invocation = {name, arguments: args, config};
 
     return new this(invocation);
   }
 
-  static createMany(dir, arrays) {
-    if (!dir) {
-      throw new Error("'dir' property is missing");
-    }
-
+  static createMany(arrays) {
     if (!arrays) {
       throw new Error("'arrays' property is missing");
     }
 
     if (typeof arrays === 'string') {
       const str = arrays;
-      return [this.create(dir, str)];
+      return [this.create(str)];
     }
 
     if (Array.isArray(arrays)) {
-      return arrays.map(obj => this.create(dir, obj));
+      return arrays.map(obj => this.create(obj));
     }
 
     throw new Error("'arrays' property should be a string or an array");
   }
-
-  merge(other) {
-    const config = this.config.merge(other.config);
-    return new this.constructor({...this, config});
-  }
-
-  getFile(baseDir) {
-    let file = this.name;
-    if (!isAbsolute(file)) {
-      file = resolve(this.dir, file);
-      file = relative(baseDir, file);
-    }
-    return file;
-  }
-
-  // resolve({context, config}) {
-  //   config = config.merge(this.config);
-  //
-  //   // It the target a file?
-  //   if (this.name.startsWith('.') || isAbsolute(this.name)) {
-  //     return {context, name: this.name, arguments: this.arguments, config};
-  //   }
-  //
-  //   // The target should be another command
-  //   for (const command of context.commands) {
-  //     if (command.isMatching(this.name)) {
-  //       return command.resolveInvocations({context, config});
-  //     }
-  //   }
-  //
-  //   for (const tool of context.tools) {
-  //     if (tool.isMatching(this.name)) {
-  //     }
-  //   }
-  // }
 }
 
 export default Invocation;

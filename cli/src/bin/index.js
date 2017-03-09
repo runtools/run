@@ -15,14 +15,14 @@ const pkg = require('../../package');
 updateNotifier({pkg}).notify();
 
 async function cli(dir, args) {
-  const invocation = Invocation.create(dir, args);
+  const invocation = Invocation.create(args);
   if (invocation.name === 'initialize' || invocation.name === 'init') {
     const tool = await Tool.ensure(dir, invocation.config);
     console.dir(tool, {depth: 10});
   } else {
     const tool = await Tool.load(dir);
     // console.dir(tool, {depth: 10});
-    await tool.run(invocation);
+    await tool.run(invocation, process.cwd());
   }
 }
 

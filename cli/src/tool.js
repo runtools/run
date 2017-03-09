@@ -1,11 +1,10 @@
 import {existsSync} from 'fs';
-import {join, dirname, basename, isAbsolute} from 'path';
+import {join, dirname, basename, isAbsolute, resolve} from 'path';
 
 import {readFile, writeFile, createUserError, formatPath, formatCode} from '@high/shared';
 
 import Version from './version';
 import Command from './command';
-import Invocation from './invocation';
 import Config from './config';
 import Runtime from './runtime';
 
@@ -16,6 +15,7 @@ const DEFAULT_TOOL_FILE_FORMAT = 'json5';
 export class Tool {
   constructor(properties) {
     Object.assign(this, properties);
+    this.toolDir = dirname(this.toolFile);
   }
 
   static async create(obj) {
@@ -29,8 +29,6 @@ export class Tool {
       throw new Error("Tool 'toolFile' property is missing");
     }
 
-    const toolDir = obj.toolDir || dirname(obj.toolFile);
-
     const tool = {
       name: this.normalizeName(obj.name),
       version: obj.version && Version.create(obj.version),
@@ -38,13 +36,11 @@ export class Tool {
       authors: obj.authors || obj.author,
       license: obj.license,
       repository: obj.repository && this.normalizeRepository(obj.repository),
-      commands: Command.createMany(toolDir, obj.commands),
-      defaultCommand: obj.defaultCommand &&
-        Command.create(toolDir, obj.defaultCommand, '__default__'),
+      commands: Command.createMany(obj.commands),
+      defaultCommand: obj.defaultCommand && Command.create(obj.defaultCommand, '__default__'),
       config: Config.create(obj.config),
       runtime: obj.runtime && Runtime.create(obj.runtime),
-      toolFile: obj.toolFile,
-      toolDir
+      toolFile: obj.toolFile
     };
 
     // tool.toolRefs = ToolReference.normalizeMany(obj.tools);
@@ -97,23 +93,7 @@ export class Tool {
     return undefined;
   }
 
-  getNameUniverse() {
-    const [universe, identifier] = this.name.split('/');
-    if (!identifier) {
-      return undefined;
-    }
-    return universe;
-  }
-
-  getNameIdentifier() {
-    const [universe, identifier] = this.name.split('/');
-    if (!identifier) {
-      return universe;
-    }
-    return identifier;
-  }
-
-  async run(invocation) {
+  async run(invocation, baseDir) {
     const cmd = this.findMatchingCommand(invocation.name);
     if (cmd) {
       return await cmd.run(this, invocation);
@@ -126,8 +106,7 @@ export class Tool {
     }
 
     return await this.runtime.run({
-      dir: this.toolDir,
-      file: invocation.getFile(this.toolDir),
+      file: resolve(baseDir || this.toolDir, invocation.name),
       arguments: invocation.arguments,
       config: this.config.merge(invocation.config)
     });
@@ -143,6 +122,22 @@ export class Tool {
       }
     }
     return undefined;
+  }
+
+  getNameUniverse() {
+    const [universe, identifier] = this.name.split('/');
+    if (!identifier) {
+      return undefined;
+    }
+    return universe;
+  }
+
+  getNameIdentifier() {
+    const [universe, identifier] = this.name.split('/');
+    if (!identifier) {
+      return universe;
+    }
+    return identifier;
   }
 
   static normalizeName(name) {

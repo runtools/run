@@ -1,5 +1,5 @@
 import {existsSync, readFileSync} from 'fs';
-import {join, resolve, isAbsolute} from 'path';
+import {join} from 'path';
 import {spawn} from 'child-process-promise';
 import stream from 'stream';
 import {quote} from 'quote-unquote';
@@ -23,12 +23,12 @@ export class NodeRuntime extends Runtime {
     return new this(runtime);
   }
 
-  async run({dir, file: requestedFile, arguments: args, config}) {
-    let file = this.searchFile(dir, requestedFile);
+  async run({file: requestedFile, arguments: args, config}) {
+    let file = this.searchFile(requestedFile);
 
     if (!file) {
       throw createUserError(
-        `${formatCode(this.name)} runtime cannot find ${formatPath(requestedFile)} in directory ${formatPath(dir)}`
+        `${formatCode(this.name)} runtime cannot load ${formatPath(requestedFile)}`
       );
     }
 
@@ -37,25 +37,14 @@ export class NodeRuntime extends Runtime {
     if (this.version.includes(nodeVersion.long)) {
       // The running node satisfies the required version
       // Let's use it to run the file and save 100 ms
-      const cwd = process.cwd(dir);
-      try {
-        process.chdir(dir);
-        result = require(resolve(dir, file))(args, config);
-      } finally {
-        process.chdir(cwd);
-      }
+      result = require(file)(args, config);
     } else {
       // The running node doesn't satisfy the required version
       // TODO: Install and use the required version
 
-      if (!(isAbsolute(file) || file.startsWith('.'))) {
-        file = './' + file;
-      }
-
       const script = `JSON.stringify({__high__: {result: require(${quote(file)})(${JSON.stringify(args)}, ${JSON.stringify(config)})}})`;
 
       const promise = spawn('node', ['--print', script], {
-        cwd: dir,
         stdio: [process.stdin, 'pipe', process.stderr]
       });
 
@@ -80,29 +69,28 @@ export class NodeRuntime extends Runtime {
     return result;
   }
 
-  searchFile(dir, requestedFile) {
-    let file = requestedFile;
-
-    if (isDirectory.sync(resolve(dir, file))) {
+  searchFile(file) {
+    if (isDirectory.sync(file)) {
+      const dir = file;
       let main;
-      const packageFile = resolve(dir, join(requestedFile, 'package.json'));
+      const packageFile = join(dir, 'package.json');
       try {
         const pkg = JSON.parse(readFileSync(packageFile, 'utf8'));
         main = pkg.main;
       } catch (_) {
         // File not found or JSON parse error
       }
-      file = join(requestedFile, main || 'index.js');
-      if (existsSync(resolve(dir, file))) {
-        return file;
+      const mainFile = join(dir, main || 'index.js');
+      if (existsSync(mainFile)) {
+        return mainFile;
       }
     } else {
-      if (existsSync(resolve(dir, file))) {
+      if (existsSync(file)) {
         return file;
       }
-      file = requestedFile + '.js';
-      if (existsSync(resolve(dir, file))) {
-        return file;
+      const fileWithExtension = file + '.js';
+      if (existsSync(fileWithExtension)) {
+        return fileWithExtension;
       }
     }
 
