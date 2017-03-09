@@ -1,4 +1,5 @@
 // import {isAbsolute} from 'path';
+import {resolve, relative, isAbsolute} from 'path';
 import omit from 'lodash.omit';
 import entries from 'lodash.topairs';
 import camelCase from 'lodash.camelcase';
@@ -59,6 +60,15 @@ export class Invocation {
     }
 
     throw new Error("'objs' property should be a string or an array");
+  }
+
+  getFile(baseDir) {
+    let file = this.name;
+    if (!isAbsolute(file)) {
+      file = resolve(this.cwd, file);
+      file = relative(baseDir, file);
+    }
+    return file;
   }
 
   // resolve({context, config}) {

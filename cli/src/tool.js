@@ -119,7 +119,12 @@ export class Tool {
       );
     }
 
-    await this.runtime.run({invocation, cwd: this.toolDir});
+    await this.runtime.run({
+      dir: this.toolDir,
+      file: invocation.getFile(this.toolDir),
+      arguments: invocation.arguments,
+      config: invocation.config
+    });
   }
 
   static normalizeName(name) {

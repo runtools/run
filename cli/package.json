@@ -60,11 +60,11 @@
   },
   "dependencies": {
     "@high/shared": "^0.5.0",
-    "chalk": "^1.1.3",
     "child-process-promise": "^2.2.0",
     "fuse.js": "^2.6.1",
     "inquirer": "^3.0.1",
     "inquirer-autocomplete-prompt": "^0.6.0",
+    "is-directory": "^0.3.1",
     "json5": "^0.5.1",
     "jsonfile": "^2.4.0",
     "lodash.camelcase": "^4.3.0",

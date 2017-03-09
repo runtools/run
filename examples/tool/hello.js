@@ -1,3 +1,5 @@
-module.exports = function(args, config) {
-  console.log('Hello, World!');
+const clc = require('cli-color');
+
+module.exports = function([what = 'world'], { color = 'white' }) {
+  console.log('hello', clc[color](what));
 };

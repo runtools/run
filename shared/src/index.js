@@ -277,7 +277,7 @@ export function formatURL(url) {
 }
 
 export function formatPath(path) {
-  return yellow(path);
+  return yellow("'" + path + "'");
 }
 
 export function formatCode(path) {

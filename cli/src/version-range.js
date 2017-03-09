@@ -83,7 +83,30 @@ export class VersionRange {
   }
 
   toString() {
-    return this.value; // <---------------
+    let str = this.value;
+    for (const exclusion of this.exclusions) {
+      str += ' !' + exclusion;
+    }
+    return str;
+  }
+
+  includes(version) {
+    version = semver.clean(version);
+    if (!version) {
+      throw new Error(`Version '${version}' is invalid`);
+    }
+
+    if (!semver.satisfies(version, this.value)) {
+      return false;
+    }
+
+    for (const exclusion of this.exclusions) {
+      if (version === exclusion) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }
 
