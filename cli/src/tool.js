@@ -5,6 +5,7 @@ import {readFile, writeFile, createUserError, formatPath, formatCode} from '@hig
 
 import Version from './version';
 import Command from './command';
+import Invocation from './invocation';
 import Config from './config';
 import Runtime from './runtime';
 
@@ -115,11 +116,7 @@ export class Tool {
   async run(invocation) {
     const cmd = this.findMatchingCommand(invocation.name);
     if (cmd) {
-      return await cmd.run({
-        tool: this,
-        arguments: invocation.arguments,
-        config: invocation.config
-      });
+      return await cmd.run(this, invocation);
     }
 
     if (!this.runtime) {
@@ -132,7 +129,7 @@ export class Tool {
       dir: this.toolDir,
       file: invocation.getFile(this.toolDir),
       arguments: invocation.arguments,
-      config: invocation.config
+      config: this.config.merge(invocation.config)
     });
   }
 

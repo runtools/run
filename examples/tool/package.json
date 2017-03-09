@@ -1,11 +1,8 @@
 {
-  "name": "tool",
+  "name": "tool-example",
   "version": "1.0.0",
-  "description": "```javascript // TODO: documentation! ```",
-  "main": "hello.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC"
+  "main": "./commands/hello.js",
+  "dependencies": {
+    "cli-color": "^1.2.0"
+  }
 }

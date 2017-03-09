@@ -58,8 +58,12 @@ export class Command {
     return this.name === name || this.aliases.find(alias => alias.toString() === name);
   }
 
-  async run({tool, arguments: args, config}) {
-    console.log(this);
+  async run(tool, invocation) {
+    for (let commandInvocation of this.invocations) {
+      const config = this.config.merge(commandInvocation.config.merge(invocation.config));
+      invocation = new Invocation({...commandInvocation, config});
+      await tool.run(invocation);
+    }
   }
 
   // resolveInvocations({context, config}) {

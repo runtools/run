@@ -36,11 +36,12 @@ export class Invocation {
 
     invocation = minimist(invocation);
 
-    const rawConfig = Config.create(omit(invocation, '_'));
-    const config = {};
+    const rawConfig = omit(invocation, '_');
+    let config = {};
     for (const [key, value] of entries(rawConfig)) {
       config[camelCase(key)] = value;
     }
+    config = Config.create(config);
     const args = invocation._;
     const name = args.shift();
 
@@ -68,6 +69,11 @@ export class Invocation {
     }
 
     throw new Error("'arrays' property should be a string or an array");
+  }
+
+  merge(other) {
+    const config = this.config.merge(other.config);
+    return new this.constructor({...this, config});
   }
 
   getFile(baseDir) {
