@@ -1,4 +1,4 @@
-# ⚡high package
+# ⚡run package
 
 ```javascript
 // TODO: documentation!

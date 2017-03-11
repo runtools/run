@@ -3,7 +3,7 @@ import {existsSync, mkdirSync} from 'fs';
 import {readFileSync as readJSON, writeFileSync as writeJSON} from 'jsonfile';
 import {exec} from 'child-process-promise';
 
-import {getHighDir, task, formatPath, createUserError} from '@high/shared';
+import {getHighDir, task, formatPath, createUserError} from 'run-shared';
 
 import installerStore from './installer-store';
 

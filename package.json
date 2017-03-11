@@ -1,10 +1,10 @@
 {
-  "name": "@high/monorepo",
-  "description": "⚡high monorepo",
+  "name": "run-monorepo",
+  "description": "⚡run monorepo",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git://github.com/hightools/high"
+    "url": "git://github.com/runtools/run"
   },
   "scripts": {
     "lint": "eslint ."

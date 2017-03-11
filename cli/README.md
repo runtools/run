@@ -1,4 +1,4 @@
-# ⚡high
+# ⚡run
 
 ```javascript
 // TODO: documentation!

@@ -33,7 +33,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/hightools/high"
+    "url": "git://github.com/runtools/run"
   },
   "scripts": {
     "build": "rm -rf dist && babel src --out-dir dist",

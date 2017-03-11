@@ -63,16 +63,16 @@ export function writeFile(file, data, {stringify = false} = {}) {
   writeFileSync(file, data);
 }
 
-let _highDir;
-export function getHighDir() {
-  if (!_highDir) {
-    const dir = join(homedir(), '.high');
+let _runDir;
+export function getRunDir() {
+  if (!_runDir) {
+    const dir = join(homedir(), '.run');
     if (!existsSync(dir)) {
       mkdirSync(dir);
     }
-    _highDir = dir;
+    _runDir = dir;
   }
-  return _highDir;
+  return _runDir;
 }
 
 export function isYarnPreferred({pkgDir, yarn}) {
@@ -368,7 +368,7 @@ export async function fetchJSON(url, options = {}) {
   let cacheFile;
 
   if (options.cacheTime) {
-    const cacheDir = join(tmpdir(), 'high-shared', 'cache');
+    const cacheDir = join(tmpdir(), 'run-shared', 'cache');
     cacheFile = join(cacheDir, strictUriEncode(url));
 
     let stats;

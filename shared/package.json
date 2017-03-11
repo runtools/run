@@ -1,7 +1,7 @@
 {
-  "name": "@high/shared",
+  "name": "run-shared",
   "version": "0.5.0",
-  "description": "Miscellaneous functions used by ⚡high",
+  "description": "Miscellaneous functions used by ⚡run",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
   "files": [
@@ -10,7 +10,7 @@
   "main": "dist/index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/hightools/high"
+    "url": "git://github.com/runtools/run"
   },
   "scripts": {
     "build": "rm -rf dist && babel src --out-dir dist",

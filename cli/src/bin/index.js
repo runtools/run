@@ -3,13 +3,13 @@
 import flattenDeep from 'lodash.flattendeep';
 import nodeVersion from 'node-version';
 import updateNotifier from 'update-notifier';
-import {showErrorAndExit} from '@high/shared';
+import {showErrorAndExit} from 'run-shared';
 
 import Tool from '../tool';
 import Invocation from '../invocation';
 
 if (nodeVersion.major < 4) {
-  showErrorAndExit('⚡high requires at least version 4 of Node.');
+  showErrorAndExit('⚡run requires at least version 4 of Node.');
 }
 
 const pkg = require('../../package');

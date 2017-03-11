@@ -1,7 +1,7 @@
 import {existsSync} from 'fs';
 import {join, dirname, basename, isAbsolute, resolve} from 'path';
 
-import {readFile, writeFile, createUserError, formatPath, formatCode} from '@high/shared';
+import {readFile, writeFile, createUserError, formatPath, formatCode} from 'run-shared';
 
 import Version from './version';
 import Command from './command';

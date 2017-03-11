@@ -1,7 +1,7 @@
 import compact from 'lodash.compact';
 import semver from 'semver';
 
-import {createUserError} from '@high/shared';
+import {createUserError} from 'run-shared';
 
 export class VersionRange {
   constructor(versionRange) {

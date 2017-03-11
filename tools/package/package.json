@@ -1,5 +1,5 @@
 {
-  "name": "@high/package",
+  "name": "run-package",
   "version": "0.6.5",
   "keywords": [
     "node-tool"
@@ -8,7 +8,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/hightools/high"
+    "url": "git://github.com/runtools/run"
   },
   "tool": {
     "aliases": [

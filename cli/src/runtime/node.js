@@ -6,7 +6,7 @@ import {quote} from 'quote-unquote';
 import isDirectory from 'is-directory';
 import nodeVersion from 'node-version';
 
-import {createUserError, formatPath, formatCode} from '@high/shared';
+import {createUserError, formatPath, formatCode} from 'run-shared';
 
 import Runtime from './';
 import VersionRange from '../version-range';
@@ -46,7 +46,7 @@ export class NodeRuntime extends Runtime {
       // The running node doesn't satisfy the required version
       // TODO: Install and use the required version
 
-      const script = `JSON.stringify({__high__: {result: require(${quote(file)})(${JSON.stringify(args)}, ${JSON.stringify(config)})}})`;
+      const script = `JSON.stringify({__run__: {result: require(${quote(file)})(${JSON.stringify(args)}, ${JSON.stringify(config)})}})`;
 
       const promise = spawn('node', ['--print', script], {
         stdio: [process.stdin, 'pipe', process.stderr]
@@ -56,9 +56,9 @@ export class NodeRuntime extends Runtime {
         new stream.Writable({
           write: function(chunk, encoding, next) {
             const str = chunk.toString();
-            if (str.startsWith('{"__high__":{')) {
+            if (str.startsWith('{"__run__":{')) {
               // Intercept the result
-              result = JSON.parse(str).__high__.result;
+              result = JSON.parse(str).__run__.result;
             } else {
               process.stdout.write(chunk, encoding);
             }

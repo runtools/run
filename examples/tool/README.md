@@ -1,4 +1,4 @@
-# ⚡high tool example
+# ⚡run tool example
 
 ```javascript
 // TODO: documentation!

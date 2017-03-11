@@ -1,8 +1,8 @@
 {
-  "name": "@high/cli",
-  "displayName": "⚡high",
+  "name": "run-cli",
+  "displayName": "⚡run",
   "version": "0.5.0",
-  "description": "The Node.js tool manager",
+  "description": "One tool to run them all",
   "keywords": [
     "node",
     "tool",
@@ -15,7 +15,7 @@
     "nodejs",
     "npm",
     "dev",
-    "devoloper",
+    "developer",
     "development",
     "javascript"
   ],
@@ -27,13 +27,11 @@
   ],
   "main": "dist/index.js",
   "bin": {
-    "high": "dist/bin/index.js",
-    "hi": "dist/bin/index.js",
-    "h": "dist/bin/index.js"
+    "run": "dist/bin/index.js"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/hightools/high"
+    "url": "git://github.com/runtools/run"
   },
   "scripts": {
     "build": "rm -rf dist && babel src --out-dir dist",
@@ -59,7 +57,7 @@
     ]
   },
   "dependencies": {
-    "@high/shared": "^0.5.0",
+    "run-shared": "^0.5.0",
     "child-process-promise": "^2.2.0",
     "fuse.js": "^2.6.1",
     "inquirer": "^3.0.1",
