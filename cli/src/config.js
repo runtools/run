@@ -1,16 +1,21 @@
+import cloneDeep from 'lodash.clonedeep';
+import defaultsDeep from 'lodash.defaultsdeep';
+
 export class Config {
   constructor(config) {
     Object.assign(this, config);
   }
 
   static create(obj = {}) {
-    const config = obj;
-    // TODO: more normalizations
-    return new this(config);
+    return new this(obj);
   }
 
-  merge(other) {
-    return new this.constructor({...this, ...other}); // TODO: deep merge
+  clone() {
+    return new this.constructor(cloneDeep(this));
+  }
+
+  setDefaults(...sources) {
+    defaultsDeep(this, ...sources);
   }
 }
 

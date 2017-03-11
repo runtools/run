@@ -10,12 +10,12 @@
   commands: {
     deploy: ['babel transpile', 'rollup --verbose'],
     info: {
-      invoke: 'pkg info',
+      run: 'pkg info',
       alias: 'i'
     },
     hello: {
       alias: 'hi',
-      invoke: './commands/hello',
+      run: './commands/hello $1',
       arguments: {
         name: 'World'
       },
@@ -23,7 +23,12 @@
         color: 'white'
       }
     },
-    'green-hello': 'hello --color=green'
+    'green-hello': {
+      run: 'hello $1',
+      config: {
+        color: 'green'
+      }
+    }
   },
   defaultCommand: 'hello',
   config: {

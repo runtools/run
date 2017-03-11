@@ -1,7 +1,10 @@
 import entries from 'lodash.topairs';
+import cloneDeep from 'lodash.clonedeep';
+import defaults from 'lodash.defaults';
 
 import Invocation from './invocation';
 import Alias from './alias';
+import Argument from './argument';
 import Config from './config';
 
 export class Command {
@@ -9,13 +12,17 @@ export class Command {
     Object.assign(this, cmd);
   }
 
-  static create(obj, defaultName) {
+  static create(tool, obj, defaultName) {
+    if (!tool) {
+      throw new Error("'tool' parameter is missing");
+    }
+
     if (!obj) {
       throw new Error("'obj' parameter is missing");
     }
 
     if (typeof obj === 'string' || Array.isArray(obj)) {
-      obj = {invoke: obj};
+      obj = {run: obj};
     }
 
     const name = obj.name || defaultName;
@@ -23,45 +30,49 @@ export class Command {
       throw new Error("Command 'name' property is missing");
     }
 
-    const cmd = {
+    const cmd = new this({
       name,
-      invocations: Invocation.createMany(obj.invoke || obj.invokes),
       aliases: Alias.createMany(obj.aliases || obj.alias),
-      arguments: this.normalizeArguments(obj.arguments || obj.argument),
-      config: Config.create(obj.config)
-    };
+      invocations: Invocation.createMany(obj.run || obj.runs),
+      arguments: Argument.createMany(obj.arguments || obj.argument),
+      config: Config.create(obj.config),
+      tool
+    });
 
-    return new this(cmd);
+    return cmd;
   }
 
-  static createMany(objs = []) {
-    if (Array.isArray(objs)) {
-      return objs.map(obj => this.create(obj));
+  static createMany(tool, objs = []) {
+    if (!tool) {
+      throw new Error("'tool' parameter is missing");
     }
 
-    return entries(objs).map(([name, obj]) => this.create(obj, name));
-  }
+    if (Array.isArray(objs)) {
+      return objs.map(obj => this.create(tool, obj));
+    }
 
-  static normalizeArguments(args = []) {
-    return args; // TODO: more normalizations
+    return entries(objs).map(([name, obj]) => this.create(tool, obj, name));
   }
 
   isMatching(name) {
     return this.name === name || this.aliases.find(alias => alias.toString() === name);
   }
 
-  async run(tool, invocation) {
-    for (let commandInvocation of this.invocations) {
-      const config = this.config.merge(commandInvocation.config.merge(invocation.config));
-      invocation = new Invocation({...commandInvocation, config});
-      await tool.run(invocation);
-    }
-  }
+  resolveInvocation(invocation) {
+    const defaultArgs = this.arguments.map(arg => arg.default);
+    defaultArgs.unshift(undefined); // first argument is the command name
+    const args = cloneDeep(invocation.arguments);
+    defaults(args, defaultArgs);
 
-  // resolveInvocations({context, config}) {
-  //   config = config.merge(this.config);
-  //   return this.invocations.map(invocation => invocation.resolve({context, config}));
-  // }
+    return this.invocations.map(cmdInvocation => {
+      cmdInvocation = cmdInvocation.clone();
+      cmdInvocation.resolveArguments(args);
+      cmdInvocation.config.setDefaults(invocation.config, this.config, this.tool.config);
+      cmdInvocation.runtime = this.runtime || this.tool.runtime;
+      cmdInvocation.dir = this.tool.toolDir;
+      return this.tool.resolveInvocation(cmdInvocation);
+    });
+  }
 }
 
 export default Command;

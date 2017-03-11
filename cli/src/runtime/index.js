@@ -28,6 +28,10 @@ export class Runtime {
 
     return require('./' + runtime.name).default.create(runtime);
   }
+
+  clone() {
+    return new this.constructor({...this});
+  }
 }
 
 export default Runtime;

@@ -29,23 +29,25 @@ export class Tool {
       throw new Error("Tool 'toolFile' property is missing");
     }
 
-    const tool = {
+    const tool = new this({
       name: this.normalizeName(obj.name),
       version: obj.version && Version.create(obj.version),
       description: obj.description,
       authors: obj.authors || obj.author,
       license: obj.license,
       repository: obj.repository && this.normalizeRepository(obj.repository),
-      commands: Command.createMany(obj.commands),
-      defaultCommand: obj.defaultCommand && Command.create(obj.defaultCommand, '__default__'),
       config: Config.create(obj.config),
       runtime: obj.runtime && Runtime.create(obj.runtime),
       toolFile: obj.toolFile
-    };
+    });
 
-    // tool.toolRefs = ToolReference.normalizeMany(obj.tools);
+    tool.commands = Command.createMany(tool, obj.commands);
 
-    return new this(tool);
+    if (obj.defaultCommand) {
+      tool.defaultCommand = Command.create(tool, obj.defaultCommand, '__default__');
+    }
+
+    return tool;
   }
 
   static async load(dir) {
@@ -67,54 +69,97 @@ export class Tool {
     return await this.create({...obj, toolFile: file});
   }
 
-  static searchFile(dir, opts = {}) {
-    const {searchInPath = false, errorIfNotFound = true} = opts;
+  static async resolveInvocation(invocation) {
+    let dir = invocation.dir;
 
+    while (true) {
+      const file = this.searchFile(dir);
+      if (file) {
+        const obj = readFile(file, {parse: true});
+        const tool = await this.create({...obj, toolFile: file});
+        // console.dir(tool, {depth: 5});
+        const invocations = tool.resolveInvocation(invocation);
+        if (invocations !== invocation) {
+          return invocations;
+        }
+      }
+
+      const parentDir = join(dir, '..');
+      if (parentDir === dir) {
+        return [invocation];
+      }
+
+      dir = parentDir;
+    }
+  }
+
+  static searchFile(dir) {
     for (const format of TOOL_FILE_FORMATS) {
       const file = join(dir, TOOL_FILE_NAME + '.' + format);
       if (existsSync(file)) {
         return file;
       }
     }
-
-    if (searchInPath) {
-      const parentDir = join(dir, '..');
-      if (parentDir !== dir) {
-        return this.searchFile(parentDir, opts);
-      }
-    }
-
-    if (errorIfNotFound) {
-      throw createUserError(
-        `No tool file found in the ${searchInPath ? 'current and parent directories' : 'current directory'}`
-      );
-    }
-
-    return undefined;
   }
 
-  async run(invocation, baseDir) {
-    const cmd = this.findMatchingCommand(invocation.name);
-    if (cmd) {
-      return await cmd.run(this, invocation);
+  resolveInvocation(invocation) {
+    const cmd = this.findCommand(invocation.arguments[0]);
+    if (!cmd) {
+      return invocation;
     }
-
-    if (!this.runtime) {
-      throw createUserError(
-        `Trying to run ${formatCode(invocation.name)} but no runtime is defined for the tool ${formatPath(this.name)}`
-      );
-    }
-
-    return await this.runtime.run({
-      file: resolve(baseDir || this.toolDir, invocation.name),
-      arguments: invocation.arguments,
-      config: this.config.merge(invocation.config)
-    });
+    // invocation = invocation.clone();
+    // invocation.arguments.shift();
+    return cmd.resolveInvocation(invocation);
   }
 
-  findMatchingCommand(name) {
+  // static searchFile(dir, opts = {}) {
+  //   const {searchInPath = false, errorIfNotFound = true} = opts;
+  //
+  //   for (const format of TOOL_FILE_FORMATS) {
+  //     const file = join(dir, TOOL_FILE_NAME + '.' + format);
+  //     if (existsSync(file)) {
+  //       return file;
+  //     }
+  //   }
+  //
+  //   if (searchInPath) {
+  //     const parentDir = join(dir, '..');
+  //     if (parentDir !== dir) {
+  //       return this.searchFile(parentDir, opts);
+  //     }
+  //   }
+  //
+  //   if (errorIfNotFound) {
+  //     throw createUserError(
+  //       `No tool file found in the ${searchInPath ? 'current and parent directories' : 'current directory'}`
+  //     );
+  //   }
+  //
+  //   return undefined;
+  // }
+  //
+  // async run(invocation, baseDir) {
+  //   const cmd = this.findCommand(invocation.name);
+  //   if (cmd) {
+  //     return await cmd.run(invocation);
+  //   }
+  //
+  //   if (!this.runtime) {
+  //     throw createUserError(
+  //       `Trying to run ${formatCode(invocation.name)} but no runtime is defined for the tool ${formatPath(this.name)}`
+  //     );
+  //   }
+  //
+  //   return await this.runtime.run({
+  //     file: resolve(baseDir || this.toolDir, invocation.name),
+  //     arguments: invocation.arguments,
+  //     config: this.config.merge(invocation.config) // <----------
+  //   });
+  // }
+
+  findCommand(name) {
     if (name.startsWith('.') || isAbsolute(name)) {
-      return undefined;
+      return undefined; // Little optimization
     }
     for (const cmd of this.commands) {
       if (cmd.isMatching(name)) {

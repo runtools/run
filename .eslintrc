@@ -1,6 +1,7 @@
 {
   "extends": ["xo-space", "prettier"],
   "rules": {
+    "no-constant-condition": [2, {"checkLoops": false}],
     "no-warning-comments": 0
   }
 }

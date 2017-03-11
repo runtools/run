@@ -1,5 +1,5 @@
 import {existsSync, readFileSync} from 'fs';
-import {join} from 'path';
+import {join, resolve} from 'path';
 import {spawn} from 'child-process-promise';
 import stream from 'stream';
 import {quote} from 'quote-unquote';
@@ -23,8 +23,12 @@ export class NodeRuntime extends Runtime {
     return new this(runtime);
   }
 
-  async run({file: requestedFile, arguments: args, config}) {
-    let file = this.searchFile(requestedFile);
+  async run({dir, arguments: fileAndArgs, config}) {
+    const [requestedFile, ...args] = fileAndArgs;
+
+    let file = resolve(dir, requestedFile);
+
+    file = this.searchFile(file);
 
     if (!file) {
       throw createUserError(
