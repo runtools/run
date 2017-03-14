@@ -1,8 +1,6 @@
-import {omit, entries, camelCase, cloneDeep, mapValues, get} from 'lodash';
+import {omit, entries, camelCase, mapValues, get} from 'lodash';
 import minimist from 'minimist';
 import {parse} from 'shell-quote';
-
-import Config from './config';
 
 export class Invocation {
   constructor(invocation) {
@@ -10,7 +8,7 @@ export class Invocation {
   }
 
   static create(array) {
-    // 'cook pizza --salami' => {name: 'cook', arguments: ['pizza'], config: {salami: true}}
+    // 'cook pizza --salami' => {arguments: ['cook', 'pizza'], config: {salami: true}}
 
     if (!array) {
       throw new Error("'array' property is missing");
@@ -42,7 +40,6 @@ export class Invocation {
     for (const [key, value] of entries(originalConfig)) {
       config[camelCase(key)] = value;
     }
-    config = Config.create(config);
 
     invocation = {arguments: args, config};
 
@@ -64,13 +61,6 @@ export class Invocation {
     }
 
     throw new Error("'arrays' property should be a string or an array");
-  }
-
-  clone() {
-    return new this.constructor({
-      arguments: cloneDeep(this.arguments),
-      config: this.config.clone()
-    });
   }
 
   getCommandName() {
@@ -105,9 +95,12 @@ export class Invocation {
       return undefined;
     };
 
-    this.arguments = resolveVars(this.arguments, getter);
+    const resolvedInvocation = {
+      arguments: resolveVars(this.arguments, getter),
+      config: resolveVars(this.config, getter)
+    };
 
-    this.config = new Config(resolveVars(this.config, getter));
+    return new this.constructor(resolvedInvocation);
   }
 }
 

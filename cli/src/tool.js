@@ -43,10 +43,6 @@ export class Tool {
 
     tool.commands = Command.createMany(tool, obj.commands);
 
-    if (obj.defaultCommand) {
-      tool.defaultCommand = Command.create(tool, obj.defaultCommand, '__default__');
-    }
-
     return tool;
   }
 
@@ -110,69 +106,6 @@ export class Tool {
 
     return await cmd.run(invocation);
   }
-
-  // static async resolveInvocation(invocation) {
-  //   let dir = invocation.dir;
-  //
-  //   while (true) {
-  //     const file = this.searchFile(dir);
-  //     if (file) {
-  //       const obj = readFile(file, {parse: true});
-  //       const tool = await this.create({...obj, toolFile: file});
-  //       // console.dir(tool, {depth: 5});
-  //       const invocations = tool.resolveInvocation(invocation);
-  //       if (invocations !== invocation) {
-  //         return invocations;
-  //       }
-  //     }
-  //
-  //     const parentDir = join(dir, '..');
-  //     if (parentDir === dir) {
-  //       return [invocation];
-  //     }
-  //
-  //     dir = parentDir;
-  //   }
-  // }
-
-  // static searchFile(dir) {
-  //   for (const format of TOOL_FILE_FORMATS) {
-  //     const file = join(dir, TOOL_FILE_NAME + '.' + format);
-  //     if (existsSync(file)) {
-  //       return file;
-  //     }
-  //   }
-  // }
-  //
-  // resolveInvocation(invocation) {
-  //   const cmd = this.findCommand(invocation.arguments[0]);
-  //   if (!cmd) {
-  //     return invocation;
-  //   }
-  //   // invocation = invocation.clone();
-  //   // invocation.arguments.shift();
-  //   return cmd.resolveInvocation(invocation);
-  // }
-
-  //
-  // async run(invocation, baseDir) {
-  //   const cmd = this.findCommand(invocation.name);
-  //   if (cmd) {
-  //     return await cmd.run(invocation);
-  //   }
-  //
-  //   if (!this.runtime) {
-  //     throw createUserError(
-  //       `Trying to run ${formatCode(invocation.name)} but no runtime is defined for the tool ${formatPath(this.name)}`
-  //     );
-  //   }
-  //
-  //   return await this.runtime.run({
-  //     file: resolve(baseDir || this.toolDir, invocation.name),
-  //     arguments: invocation.arguments,
-  //     config: this.config.merge(invocation.config) // <----------
-  //   });
-  // }
 
   findCommand(name) {
     if (name.startsWith('.') || isAbsolute(name)) {
@@ -257,7 +190,7 @@ export class Tool {
 
   static normalizeRepository(repository) {
     // TODO: more normalizations...
-    // Also, we should not assume that the repository type is always Git
+    // We should not assume that the repository type is always Git
     return repository.url || repository;
   }
 }

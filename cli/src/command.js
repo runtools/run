@@ -1,5 +1,5 @@
 import {resolve, isAbsolute} from 'path';
-import {entries, defaults} from 'lodash';
+import {entries, defaults, cloneDeep, defaultsDeep} from 'lodash';
 
 import Invocation from './invocation';
 import Alias from './alias';
@@ -73,8 +73,8 @@ export class Command {
     const [_, ...args] = invocation.arguments;
     defaults(args, defaultArgs);
 
-    const config = invocation.config.clone();
-    config.setDefaults(this.config, this.tool.config);
+    const config = cloneDeep(invocation.config);
+    defaultsDeep(config, this.config.getDefaults(), this.tool.config.getDefaults());
 
     if (this.file) {
       const runtime = this.runtime || this.tool.runtime;
@@ -84,8 +84,7 @@ export class Command {
 
     let result;
     for (let cmdInvocation of this.invocations) {
-      cmdInvocation = cmdInvocation.clone();
-      cmdInvocation.resolveVariables({arguments: args, config});
+      cmdInvocation = cmdInvocation.resolveVariables({arguments: args, config});
       result = this.tool.run(cmdInvocation);
     }
     return result;

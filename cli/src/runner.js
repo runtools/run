@@ -6,7 +6,6 @@ import Tool from './tool';
 export async function run(dir, invocation) {
   const tool = await Tool.load(dir);
   if (tool) {
-    // console.dir(tool, {depth: 10});
     try {
       return await tool.run(invocation);
     } catch (err) {
