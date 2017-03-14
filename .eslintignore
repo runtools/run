@@ -1,5 +1,6 @@
 node_modules
 dist
 vendor
-_*_.js
 *.json5
+old
+_drafts

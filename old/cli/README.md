@@ -1,5 +1,0 @@
-# ⚡high
-
-```javascript
-// TODO: documentation!
-```
