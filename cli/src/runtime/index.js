@@ -1,5 +1,6 @@
 import {join} from 'path';
 import {existsSync} from 'fs';
+import {createUserError, formatCode, formatPath} from 'run-common';
 
 export class Runtime {
   constructor(runtime) {
@@ -19,11 +20,11 @@ export class Runtime {
     }
 
     if (!runtime.name) {
-      throw new Error("Runtime 'name' property is missing");
+      throw createUserError(`Runtime ${formatCode('name')} property is missing`);
     }
 
     if (!existsSync(join(__dirname, runtime.name + '.js'))) {
-      throw new Error(`Runtime '${runtime.name}' is not supported`);
+      throw createUserError(`Runtime ${formatPath(runtime.name)} is not supported`);
     }
 
     return require('./' + runtime.name).default.create(runtime);

@@ -1,7 +1,7 @@
 {
   name: 'tool-example',
   version: '0.1.0',
-  author: 'Manuel Vila <mvila@3base.com>',
+  authors: 'Manuel Vila <mvila@3base.com>',
   license: 'MIT',
   repository: {
     type: 'git',
@@ -11,10 +11,10 @@
     deploy: ['babel transpile', 'rollup --verbose'],
     info: {
       run: 'pkg info',
-      alias: 'i'
+      aliases: 'i'
     },
     hello: {
-      alias: 'hi',
+      aliases: 'hi',
       file: './commands/hello',
       arguments: {
         name: 'World'

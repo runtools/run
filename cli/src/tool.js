@@ -22,18 +22,16 @@ export class Tool {
     if (!obj) {
       throw new Error("'obj' parameter is missing");
     }
-    if (!obj.name) {
-      throw new Error("Tool 'name' property is missing");
-    }
+
     if (!obj.toolFile) {
-      throw new Error("Tool 'toolFile' property is missing");
+      throw new Error(`Tool 'toolFile' property is missing`);
     }
 
     const tool = new this({
       name: this.normalizeName(obj.name),
       version: obj.version && Version.create(obj.version),
       description: obj.description,
-      authors: obj.authors || obj.author,
+      authors: obj.authors,
       license: obj.license,
       repository: obj.repository && this.normalizeRepository(obj.repository),
       config: Config.create(obj.config),
@@ -137,7 +135,7 @@ export class Tool {
 
   static normalizeName(name) {
     if (!name) {
-      throw new Error("Tool 'name' property is missing");
+      throw createUserError(`Tool ${formatCode('name')} property is missing`);
     }
 
     name = name.trim();

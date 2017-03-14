@@ -1,4 +1,5 @@
 import {entries} from 'lodash';
+import {createUserError, formatCode} from 'run-common';
 
 export class Argument {
   constructor(arg) {
@@ -16,7 +17,7 @@ export class Argument {
 
     const name = obj.name || defaultName;
     if (!name) {
-      throw new Error("Argument 'name' property is missing");
+      throw createUserError(`Argument ${formatCode('name')} property is missing`);
     }
 
     const arg = new this({

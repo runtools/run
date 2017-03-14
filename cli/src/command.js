@@ -1,5 +1,6 @@
 import {resolve, isAbsolute} from 'path';
 import {entries, defaults, cloneDeep, defaultsDeep} from 'lodash';
+import {createUserError, formatCode} from 'run-common';
 
 import Invocation from './invocation';
 import Alias from './alias';
@@ -30,20 +31,26 @@ export class Command {
     }
 
     if (Array.isArray(obj)) {
-      obj = {invocations: obj};
+      obj = {run: obj};
     }
 
     const name = obj.name || defaultName;
     if (!name) {
-      throw new Error("Command 'name' property is missing");
+      throw createUserError(`Command ${formatCode('name')} property is missing`);
+    }
+
+    if (!(obj.file || obj.run)) {
+      throw createUserError(
+        `Command ${formatCode('file')} or  ${formatCode('run')} property is missing`
+      );
     }
 
     const cmd = new this({
       name,
-      aliases: Alias.createMany(obj.aliases || obj.alias),
+      aliases: Alias.createMany(obj.aliases),
       file: obj.file,
-      invocations: Invocation.createMany(obj.invocations || obj.run || obj.runs),
-      arguments: Argument.createMany(obj.arguments || obj.argument),
+      invocations: obj.run && Invocation.createMany(obj.run),
+      arguments: Argument.createMany(obj.arguments),
       config: Config.create(obj.config),
       runtime: obj.runtime && Runtime.create(obj.runtime),
       tool

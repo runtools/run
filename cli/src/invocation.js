@@ -46,11 +46,7 @@ export class Invocation {
     return new this(invocation);
   }
 
-  static createMany(arrays) {
-    if (!arrays) {
-      return undefined;
-    }
-
+  static createMany(arrays = []) {
     if (typeof arrays === 'string') {
       const str = arrays;
       return [this.create(str)];

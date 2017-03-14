@@ -1,3 +1,5 @@
+import {createUserError, formatCode} from 'run-common';
+
 export class Alias {
   constructor(value) {
     this.value = value;
@@ -9,7 +11,7 @@ export class Alias {
     }
 
     if (typeof alias !== 'string') {
-      throw new Error("'alias' property should be a string");
+      throw createUserError(`An ${formatCode('alias')} should be a string`);
     }
 
     return new this(alias);
@@ -24,7 +26,7 @@ export class Alias {
       return aliases.map(this.create, this);
     }
 
-    throw new Error("'aliases' property should be a string or an array");
+    throw createUserError(`${formatCode('aliases')} property should be a string or an array`);
   }
 
   toString() {
