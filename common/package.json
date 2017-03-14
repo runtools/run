@@ -1,5 +1,5 @@
 {
-  "name": "run-shared",
+  "name": "run-common",
   "version": "0.5.0",
   "description": "Miscellaneous functions used by ⚡run",
   "author": "Manuel Vila <mvila@3base.com>",

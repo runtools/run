@@ -2,7 +2,7 @@
 
 import nodeVersion from 'node-version';
 import updateNotifier from 'update-notifier';
-import {showErrorAndExit} from 'run-shared';
+import {showErrorAndExit} from 'run-common';
 
 import * as commands from './commands';
 

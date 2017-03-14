@@ -1,11 +1,11 @@
-import entries from 'lodash.topairs';
-import cloneDeep from 'lodash.clonedeep';
-import defaults from 'lodash.defaults';
+import {resolve, isAbsolute} from 'path';
+import {entries, defaults} from 'lodash';
 
 import Invocation from './invocation';
 import Alias from './alias';
 import Argument from './argument';
 import Config from './config';
+import Runtime from './runtime';
 
 export class Command {
   constructor(cmd) {
@@ -21,8 +21,16 @@ export class Command {
       throw new Error("'obj' parameter is missing");
     }
 
-    if (typeof obj === 'string' || Array.isArray(obj)) {
-      obj = {run: obj};
+    if (typeof obj === 'string') {
+      if (obj.startsWith('.') || isAbsolute(obj)) {
+        obj = {file: obj};
+      } else {
+        obj = [obj];
+      }
+    }
+
+    if (Array.isArray(obj)) {
+      obj = {invocations: obj};
     }
 
     const name = obj.name || defaultName;
@@ -33,9 +41,11 @@ export class Command {
     const cmd = new this({
       name,
       aliases: Alias.createMany(obj.aliases || obj.alias),
-      invocations: Invocation.createMany(obj.run || obj.runs),
+      file: obj.file,
+      invocations: Invocation.createMany(obj.invocations || obj.run || obj.runs),
       arguments: Argument.createMany(obj.arguments || obj.argument),
       config: Config.create(obj.config),
+      runtime: obj.runtime && Runtime.create(obj.runtime),
       tool
     });
 
@@ -58,20 +68,27 @@ export class Command {
     return this.name === name || this.aliases.find(alias => alias.toString() === name);
   }
 
-  resolveInvocation(invocation) {
+  async run(invocation) {
     const defaultArgs = this.arguments.map(arg => arg.default);
-    defaultArgs.unshift(undefined); // first argument is the command name
-    const args = cloneDeep(invocation.arguments);
+    const [_, ...args] = invocation.arguments;
     defaults(args, defaultArgs);
 
-    return this.invocations.map(cmdInvocation => {
+    const config = invocation.config.clone();
+    config.setDefaults(this.config, this.tool.config);
+
+    if (this.file) {
+      const runtime = this.runtime || this.tool.runtime;
+      const file = resolve(this.tool.toolDir, this.file);
+      return await runtime.run({file, arguments: args, config});
+    }
+
+    let result;
+    for (let cmdInvocation of this.invocations) {
       cmdInvocation = cmdInvocation.clone();
-      cmdInvocation.resolveArguments(args);
-      cmdInvocation.config.setDefaults(invocation.config, this.config, this.tool.config);
-      cmdInvocation.runtime = this.runtime || this.tool.runtime;
-      cmdInvocation.dir = this.tool.toolDir;
-      return this.tool.resolveInvocation(cmdInvocation);
-    });
+      cmdInvocation.resolveVariables({arguments: args, config});
+      result = this.tool.run(cmdInvocation);
+    }
+    return result;
   }
 }
 

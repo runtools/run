@@ -1,6 +1,6 @@
 import semver from 'semver';
 
-import {createUserError} from 'run-shared';
+import {createUserError} from 'run-common';
 
 export class Version {
   constructor(value) {

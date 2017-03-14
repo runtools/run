@@ -368,7 +368,7 @@ export async function fetchJSON(url, options = {}) {
   let cacheFile;
 
   if (options.cacheTime) {
-    const cacheDir = join(tmpdir(), 'run-shared', 'cache');
+    const cacheDir = join(tmpdir(), 'run-common', 'cache');
     cacheFile = join(cacheDir, strictUriEncode(url));
 
     let stats;

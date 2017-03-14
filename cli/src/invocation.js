@@ -1,7 +1,4 @@
-import omit from 'lodash.omit';
-import entries from 'lodash.topairs';
-import camelCase from 'lodash.camelcase';
-import cloneDeep from 'lodash.clonedeep';
+import {omit, entries, camelCase, cloneDeep, mapValues, get} from 'lodash';
 import minimist from 'minimist';
 import {parse} from 'shell-quote';
 
@@ -12,7 +9,7 @@ export class Invocation {
     Object.assign(this, invocation);
   }
 
-  static create(array, dir) {
+  static create(array) {
     // 'cook pizza --salami' => {name: 'cook', arguments: ['pizza'], config: {salami: true}}
 
     if (!array) {
@@ -22,7 +19,14 @@ export class Invocation {
     let invocation = array;
 
     if (typeof invocation === 'string') {
-      invocation = parse(invocation, name => ({var: name}));
+      invocation = parse(invocation, name => ({__var__: name}));
+      invocation = invocation.map(part => {
+        // Fix '--option=${config.option}' parsing by removing '=' at the end of '--option='
+        if (typeof part === 'string' && part.endsWith('=')) {
+          part = part.slice(0, -1);
+        }
+        return part;
+      });
     }
 
     if (!Array.isArray(invocation)) {
@@ -42,25 +46,21 @@ export class Invocation {
 
     invocation = {arguments: args, config};
 
-    if (dir) {
-      invocation.dir = dir;
-    }
-
     return new this(invocation);
   }
 
-  static createMany(arrays, dir) {
+  static createMany(arrays) {
     if (!arrays) {
-      throw new Error("'arrays' property is missing");
+      return undefined;
     }
 
     if (typeof arrays === 'string') {
       const str = arrays;
-      return [this.create(str, dir)];
+      return [this.create(str)];
     }
 
     if (Array.isArray(arrays)) {
-      return arrays.map(obj => this.create(obj, dir));
+      return arrays.map(obj => this.create(obj));
     }
 
     throw new Error("'arrays' property should be a string or an array");
@@ -69,28 +69,63 @@ export class Invocation {
   clone() {
     return new this.constructor({
       arguments: cloneDeep(this.arguments),
-      config: this.config.clone(),
-      dir: this.dir,
-      runtime: this.runtime && this.runtime.clone()
+      config: this.config.clone()
     });
   }
 
-  resolveArguments(callerArgs) {
-    for (var i = 0; i < this.arguments.length; i++) {
-      const arg = this.arguments[i];
-      if (typeof arg === 'object' && 'var' in arg) {
-        const name = arg.var;
-        const position = Number(name);
-        if (position.toString() === name) {
-          // arg is a positional argument variable
-          this.arguments[i] = callerArgs[position] || '';
-        } else {
-          // arg should be an environment variable
-          this.arguments[i] = process.env[name] || '';
-        }
-      }
-    }
+  getCommandName() {
+    return this.arguments[0];
   }
+
+  resolveVariables({arguments: args, config}) {
+    const getter = name => {
+      const num = Number(name);
+      if (num.toString() === name) {
+        return args[num];
+      }
+
+      const matches = name.match(/^arguments\[(\d+)\]$/);
+      if (matches) {
+        const num = Number(matches[1]);
+        return args[num];
+      }
+
+      if (name === 'config') {
+        return config;
+      }
+
+      if (name.startsWith('config.')) {
+        return get(config, name.slice('config.'.length));
+      }
+
+      if (name.startsWith('env.')) {
+        return get(process.env, name.slice('env.'.length));
+      }
+
+      return undefined;
+    };
+
+    this.arguments = resolveVars(this.arguments, getter);
+
+    this.config = new Config(resolveVars(this.config, getter));
+  }
+}
+
+function resolveVars(value, getter) {
+  if (Array.isArray(value)) {
+    const array = value;
+    return array.map(value => resolveVars(value, getter));
+  }
+
+  if (value !== null && typeof value === 'object') {
+    const obj = value;
+    if ('__var__' in obj) {
+      return getter(obj.__var__);
+    }
+    return mapValues(obj, value => resolveVars(value, getter));
+  }
+
+  return value;
 }
 
 export default Invocation;

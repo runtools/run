@@ -2,7 +2,7 @@ import {join, sep} from 'path';
 import {existsSync, mkdirSync} from 'fs';
 import {writeFileSync as writeJSON} from 'jsonfile';
 
-import {getHighDir} from 'run-shared';
+import {getHighDir} from 'run-common';
 
 const INSTALLER = {
   name: undefined,

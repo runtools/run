@@ -3,7 +3,7 @@ import {join, basename} from 'path';
 import {readFileSync as readJSON, writeFileSync as writeJSON} from 'jsonfile';
 import pick from 'lodash.pick';
 
-import {createUserError, formatPath} from 'run-shared';
+import {createUserError, formatPath} from 'run-common';
 
 import Command from './command';
 import Config from './config';

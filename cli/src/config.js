@@ -1,5 +1,4 @@
-import cloneDeep from 'lodash.clonedeep';
-import defaultsDeep from 'lodash.defaultsdeep';
+import {cloneDeep, defaultsDeep} from 'lodash';
 
 export class Config {
   constructor(config) {

@@ -57,7 +57,6 @@
     ]
   },
   "dependencies": {
-    "run-shared": "^0.5.0",
     "child-process-promise": "^2.2.0",
     "fuse.js": "^2.6.1",
     "inquirer": "^3.0.1",
@@ -65,18 +64,11 @@
     "is-directory": "^0.3.1",
     "json5": "^0.5.1",
     "jsonfile": "^2.4.0",
-    "lodash.camelcase": "^4.3.0",
-    "lodash.clonedeep": "^4.5.0",
-    "lodash.compact": "^3.0.1",
-    "lodash.defaults": "^4.2.0",
-    "lodash.defaultsdeep": "^4.6.0",
-    "lodash.flattendeep": "^4.4.0",
-    "lodash.omit": "^4.5.0",
-    "lodash.pick": "^4.4.0",
-    "lodash.topairs": "^4.3.0",
+    "lodash": "^4.17.4",
     "minimist": "^1.2.0",
     "node-version": "^1.0.0",
     "quote-unquote": "^1.0.0",
+    "run-common": "^0.5.0",
     "semver": "^5.3.0",
     "shell-quote": "^1.6.1",
     "update-notifier": "^2.1.0"

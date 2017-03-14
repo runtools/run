@@ -7,7 +7,7 @@ import autocomplete from 'inquirer-autocomplete-prompt';
 import Fuse from 'fuse.js';
 import {gray} from 'chalk';
 
-import {showIntro, fetchJSON, adjustToWindowWidth} from 'run-shared';
+import {showIntro, fetchJSON, adjustToWindowWidth} from 'run-common';
 
 inquirer.registerPrompt('autocomplete', autocomplete);
 

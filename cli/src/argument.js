@@ -1,4 +1,4 @@
-import entries from 'lodash.topairs';
+import {entries} from 'lodash';
 
 export class Argument {
   constructor(arg) {

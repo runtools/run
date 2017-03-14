@@ -1,12 +1,12 @@
 import {existsSync, readFileSync} from 'fs';
-import {join, resolve} from 'path';
+import {join} from 'path';
 import {spawn} from 'child-process-promise';
 import stream from 'stream';
 import {quote} from 'quote-unquote';
 import isDirectory from 'is-directory';
 import nodeVersion from 'node-version';
 
-import {createUserError, formatPath, formatCode} from 'run-shared';
+import {createUserError, formatPath, formatCode} from 'run-common';
 
 import Runtime from './';
 import VersionRange from '../version-range';
@@ -23,13 +23,8 @@ export class NodeRuntime extends Runtime {
     return new this(runtime);
   }
 
-  async run({dir, arguments: fileAndArgs, config}) {
-    const [requestedFile, ...args] = fileAndArgs;
-
-    let file = resolve(dir, requestedFile);
-
-    file = this.searchFile(file);
-
+  async run({file: requestedFile, arguments: args, config}) {
+    const file = this.searchFile(requestedFile);
     if (!file) {
       throw createUserError(
         `${formatCode(this.name)} runtime cannot load ${formatPath(requestedFile)}`

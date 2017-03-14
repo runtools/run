@@ -15,7 +15,7 @@
     },
     hello: {
       alias: 'hi',
-      run: './commands/hello $1',
+      file: './commands/hello',
       arguments: {
         name: 'World'
       },
@@ -23,10 +23,13 @@
         color: 'white'
       }
     },
-    'green-hello': {
-      run: 'hello $1',
+    'run-hello': {
+      run: 'hello $0 --color=${config.color}',
+      arguments: {
+        name: 'Forest'
+      },
       config: {
-        color: 'green'
+        color: 'blue'
       }
     }
   },

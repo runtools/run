@@ -1,4 +1,4 @@
-import {createUserError} from 'run-shared';
+import {createUserError} from 'run-common';
 
 import Alias from './alias';
 import Command from './command';
