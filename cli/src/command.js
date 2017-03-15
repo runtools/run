@@ -1,6 +1,6 @@
 import {resolve, isAbsolute} from 'path';
 import {entries, defaults, cloneDeep, defaultsDeep} from 'lodash';
-import {createUserError, formatCode} from 'run-common';
+import {createUserError, checkMistakes, formatPath, formatCode} from 'run-common';
 
 import Invocation from './invocation';
 import Alias from './alias';
@@ -44,6 +44,11 @@ export class Command {
         `Command ${formatCode('file')} or  ${formatCode('run')} property is missing`
       );
     }
+
+    checkMistakes(obj, {alias: 'aliases', files: 'file', runs: 'run', argument: 'arguments'}, {
+      file: formatPath(tool.toolFile),
+      command: formatCode(name)
+    });
 
     const cmd = new this({
       name,

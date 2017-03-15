@@ -4,7 +4,7 @@ import {outputFile} from 'fs-promise';
 import {homedir, tmpdir} from 'os';
 import crypto from 'crypto';
 import semver from 'semver';
-import pick from 'lodash.pick';
+import {pick, entries} from 'lodash';
 import {green, red, gray, cyan, yellow, bold} from 'chalk';
 import ora from 'ora';
 import cliSpinners from 'cli-spinners';
@@ -313,6 +313,20 @@ export function showError(error) {
 export function showErrorAndExit(error, code = 1) {
   showError(error);
   process.exit(code);
+}
+
+export function checkMistakes(obj, mistakes, context = {}) {
+  for (const [wrong, correct] of entries(mistakes)) {
+    if (wrong in obj) {
+      const message = `Wrong property name: ${formatCode(wrong)}.`;
+      let info = `Did you mean ${formatCode(correct)}?`;
+      const contextStrings = entries(context).map(([key, value]) => key + ': ' + value);
+      if (contextStrings.length) {
+        info += ' (' + contextStrings.join(', ') + ')';
+      }
+      throw createUserError(message, info);
+    }
+  }
 }
 
 export function getAWSConfig(defaults, env, config, argv) {

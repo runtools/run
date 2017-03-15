@@ -1,7 +1,13 @@
 import {existsSync} from 'fs';
 import {join, dirname, basename, isAbsolute} from 'path';
-
-import {readFile, writeFile, createUserError, formatPath, formatCode} from 'run-common';
+import {
+  readFile,
+  writeFile,
+  createUserError,
+  checkMistakes,
+  formatPath,
+  formatCode
+} from 'run-common';
 
 import Version from './version';
 import Command from './command';
@@ -26,6 +32,8 @@ export class Tool {
     if (!obj.toolFile) {
       throw new Error(`Tool 'toolFile' property is missing`);
     }
+
+    checkMistakes(obj, {author: 'authors', command: 'commands'}, {file: formatPath(obj.toolFile)});
 
     const tool = new this({
       name: this.normalizeName(obj.name),
