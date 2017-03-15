@@ -3,8 +3,9 @@ import {join, dirname, basename, isAbsolute} from 'path';
 import {
   readFile,
   writeFile,
-  createUserError,
+  throwUserError,
   checkMistakes,
+  formatString,
   formatPath,
   formatCode
 } from 'run-common';
@@ -24,7 +25,7 @@ export class Tool {
     this.toolDir = dirname(this.toolFile);
   }
 
-  static async create(obj) {
+  static async create(obj, context) {
     if (!obj) {
       throw new Error("'obj' parameter is missing");
     }
@@ -33,23 +34,29 @@ export class Tool {
       throw new Error(`Tool 'toolFile' property is missing`);
     }
 
-    checkMistakes(obj, {author: 'authors', command: 'commands'}, {file: formatPath(obj.toolFile)});
+    context = this.extendContext(context, obj);
+
+    checkMistakes(obj, {author: 'authors', command: 'commands'}, {context});
 
     const tool = new this({
-      name: this.normalizeName(obj.name),
-      version: obj.version && Version.create(obj.version),
+      name: obj.name && this.normalizeName(obj.name, context),
+      version: obj.version && Version.create(obj.version, context),
       description: obj.description,
       authors: obj.authors,
       license: obj.license,
       repository: obj.repository && this.normalizeRepository(obj.repository),
-      config: Config.create(obj.config),
-      runtime: obj.runtime && Runtime.create(obj.runtime),
+      config: Config.create(obj.config || {}, context),
+      runtime: obj.runtime && Runtime.create(obj.runtime, context),
       toolFile: obj.toolFile
     });
 
-    tool.commands = Command.createMany(tool, obj.commands);
+    tool.commands = Command.createMany(tool, obj.commands || [], context);
 
     return tool;
+  }
+
+  static extendContext(base, obj) {
+    return {...base, tool: formatPath(obj.toolFile)};
   }
 
   static async load(dir) {
@@ -92,7 +99,14 @@ export class Tool {
     return undefined;
   }
 
-  async run(invocation) {
+  canRun(invocation) {
+    const cmdName = invocation.getCommandName();
+    return !cmdName || Boolean(this.findCommand(cmdName));
+  }
+
+  async run(invocation, context) {
+    context = this.constructor.extendContext(context, this);
+
     const cmdName = invocation.getCommandName();
 
     if (!cmdName) {
@@ -103,14 +117,10 @@ export class Tool {
     const cmd = this.findCommand(cmdName);
 
     if (!cmd) {
-      const err = new Error(
-        `Command ${formatCode(cmdName)} not found in tool ${formatPath(this.name)}`
-      );
-      err.code = 'COMMAND_NOT_FOUND';
-      throw err;
+      throwUserError(`Command ${formatCode(cmdName)} not found`, {context});
     }
 
-    return await cmd.run(invocation);
+    return await cmd.run(invocation, context);
   }
 
   findCommand(name) {
@@ -141,15 +151,15 @@ export class Tool {
     return identifier;
   }
 
-  static normalizeName(name) {
+  static normalizeName(name, context) {
     if (!name) {
-      throw createUserError(`Tool ${formatCode('name')} property is missing`);
+      throw new Error(`${formatCode('name')} parameter is missing`);
     }
 
     name = name.trim();
 
     if (!this.validateName(name)) {
-      throw createUserError(`Tool name '${name}' is invalid`);
+      throwUserError(`Tool name ${formatString(name)} is invalid`, {context});
     }
 
     return name;

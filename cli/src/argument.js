@@ -1,12 +1,12 @@
 import {entries} from 'lodash';
-import {createUserError, formatCode} from 'run-common';
+import {throwUserError, formatCode} from 'run-common';
 
 export class Argument {
   constructor(arg) {
     Object.assign(this, arg);
   }
 
-  static create(obj, defaultName) {
+  static create(obj, context, defaultName) {
     if (!obj) {
       throw new Error("'obj' parameter is missing");
     }
@@ -17,7 +17,7 @@ export class Argument {
 
     const name = obj.name || defaultName;
     if (!name) {
-      throw createUserError(`Argument ${formatCode('name')} property is missing`);
+      throwUserError(`Argument ${formatCode('name')} property is missing`, {context});
     }
 
     const arg = new this({
@@ -28,12 +28,16 @@ export class Argument {
     return arg;
   }
 
-  static createMany(objs = []) {
-    if (Array.isArray(objs)) {
-      return objs.map(obj => this.create(obj));
+  static createMany(objs, context) {
+    if (!objs) {
+      throw new Error("'objs' parameter is missing");
     }
 
-    return entries(objs).map(([name, obj]) => this.create(obj, name));
+    if (Array.isArray(objs)) {
+      return objs.map(obj => this.create(obj, context));
+    }
+
+    return entries(objs).map(([name, obj]) => this.create(obj, context, name));
   }
 }
 

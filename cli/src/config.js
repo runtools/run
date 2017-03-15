@@ -3,7 +3,11 @@ export class Config {
     Object.assign(this, config);
   }
 
-  static create(obj = {}) {
+  static create(obj, context) {
+    if (!obj) {
+      throw new Error("'obj' parameter is missing");
+    }
+
     return new this(obj);
   }
 

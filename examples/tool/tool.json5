@@ -8,13 +8,13 @@
     url: 'git://github.com/runtools/run'
   },
   commands: {
-    deploy: ['babel transpile', 'rollup --verbose'],
+    'deploy': ['babel transpile', 'rollup --verbose'],
     info: {
       run: 'pkg info',
       aliases: 'i'
     },
-    hello: {
-      aliases: 'hi',
+    'hello': {
+      aliases: ['hi'],
       file: './commands/hello',
       arguments: {
         name: 'World'

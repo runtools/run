@@ -6,29 +6,29 @@ import {quote} from 'quote-unquote';
 import isDirectory from 'is-directory';
 import nodeVersion from 'node-version';
 
-import {createUserError, formatPath, formatCode} from 'run-common';
+import {throwUserError, formatPath, formatCode} from 'run-common';
 
 import Runtime from './';
 import VersionRange from '../version-range';
 
 export class NodeRuntime extends Runtime {
-  static create(obj) {
+  static create(obj, context) {
     if (!obj) {
       throw new Error("'obj' property is missing");
     }
     const runtime = {
       name: obj.name,
-      version: VersionRange.create(obj.version)
+      version: VersionRange.create(obj.version || '>=0.0.0', context)
     };
     return new this(runtime);
   }
 
-  async run({file: requestedFile, arguments: args, config}) {
+  async run({file: requestedFile, arguments: args, config, context}) {
     const file = this.searchFile(requestedFile);
     if (!file) {
-      throw createUserError(
-        `${formatCode(this.name)} runtime cannot load ${formatPath(requestedFile)}`
-      );
+      throwUserError(`${formatCode(this.name)} runtime cannot load ${formatPath(requestedFile)}`, {
+        context
+      });
     }
 
     let result;

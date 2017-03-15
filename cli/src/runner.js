@@ -1,18 +1,12 @@
 import {join} from 'path';
-import {formatCode, createUserError} from 'run-common';
+import {formatCode, throwUserError} from 'run-common';
 
 import Tool from './tool';
 
 export async function run(dir, invocation) {
   const tool = await Tool.load(dir);
-  if (tool) {
-    try {
-      return await tool.run(invocation);
-    } catch (err) {
-      if (err.code !== 'COMMAND_NOT_FOUND') {
-        throw err;
-      }
-    }
+  if (tool && tool.canRun(invocation)) {
+    return await tool.run(invocation);
   }
 
   const parentDir = join(dir, '..');
@@ -27,5 +21,5 @@ export async function run(dir, invocation) {
     return;
   }
 
-  throw createUserError(`Command ${formatCode(cmdName)} not found`);
+  throwUserError(`Command ${formatCode(cmdName)} not found`);
 }

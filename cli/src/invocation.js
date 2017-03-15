@@ -1,17 +1,18 @@
 import {omit, entries, camelCase, mapValues, get} from 'lodash';
 import minimist from 'minimist';
 import {parse} from 'shell-quote';
+import {throwUserError, formatCode} from 'run-common';
 
 export class Invocation {
   constructor(invocation) {
     Object.assign(this, invocation);
   }
 
-  static create(array) {
+  static create(array, context) {
     // 'cook pizza --salami' => {arguments: ['cook', 'pizza'], config: {salami: true}}
 
     if (!array) {
-      throw new Error("'array' property is missing");
+      throw new Error("'array' parameter is missing");
     }
 
     let invocation = array;
@@ -28,7 +29,7 @@ export class Invocation {
     }
 
     if (!Array.isArray(invocation)) {
-      throw new Error("'array' property should be a string or an array");
+      throwUserError(`${formatCode('run')} item should be a string or an array`, {context});
     }
 
     invocation = minimist(invocation);
@@ -46,17 +47,17 @@ export class Invocation {
     return new this(invocation);
   }
 
-  static createMany(arrays = []) {
+  static createMany(arrays, context) {
     if (typeof arrays === 'string') {
       const str = arrays;
-      return [this.create(str)];
+      return [this.create(str, context)];
     }
 
     if (Array.isArray(arrays)) {
-      return arrays.map(obj => this.create(obj));
+      return arrays.map(obj => this.create(obj, context));
     }
 
-    throw new Error("'arrays' property should be a string or an array");
+    throwUserError(`${formatCode('run')} property should be a string or an array`, {context});
   }
 
   getCommandName() {

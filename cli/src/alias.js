@@ -1,32 +1,36 @@
-import {createUserError, formatCode} from 'run-common';
+import {throwUserError, formatCode} from 'run-common';
 
 export class Alias {
   constructor(value) {
     this.value = value;
   }
 
-  static create(alias) {
+  static create(alias, context) {
     if (!alias) {
       throw new Error("'alias' property is missing");
     }
 
     if (typeof alias !== 'string') {
-      throw createUserError(`An ${formatCode('alias')} should be a string`);
+      throwUserError('Invalid alias definition.', {info: 'A string was expected.', context});
     }
 
     return new this(alias);
   }
 
-  static createMany(aliases = []) {
+  static createMany(aliases, context) {
+    if (!aliases) {
+      throw new Error("'aliases' parameter is missing");
+    }
+
     if (typeof aliases === 'string') {
-      return [this.create(aliases)];
+      return [this.create(aliases, context)];
     }
 
     if (Array.isArray(aliases)) {
-      return aliases.map(this.create, this);
+      return aliases.map(alias => this.create(alias, context));
     }
 
-    throw createUserError(`${formatCode('aliases')} property should be a string or an array`);
+    throwUserError(`${formatCode('aliases')} property should be a string or an array`, {context});
   }
 
   toString() {

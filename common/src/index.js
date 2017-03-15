@@ -20,7 +20,7 @@ export function readFile(file, {parse = false} = {}) {
   try {
     data = readFileSync(file, 'utf8');
   } catch (_) {
-    throw createUserError(`File not found: ${formatPath(file)}`);
+    throwUserError(`File not found: ${formatPath(file)}`);
   }
 
   if (parse) {
@@ -33,13 +33,15 @@ export function readFile(file, {parse = false} = {}) {
       } else if (ext === '.yaml' || ext === '.yml') {
         data = YAML.safeLoad(data);
       } else {
-        throw createUserError(`Unsupported file format: ${formatPath(file)}`);
+        throwUserError(`Unsupported file format: ${formatPath(ext)}`, {
+          context: {file: formatPath(file)}
+        });
       }
     } catch (err) {
       if (err.userError) {
         throw err;
       }
-      throw createUserError(`Invalid file: ${formatPath(file)}`);
+      throwUserError(`Invalid file: ${formatPath(file)}`);
     }
   }
 
@@ -56,7 +58,9 @@ export function writeFile(file, data, {stringify = false} = {}) {
     } else if (ext === '.yaml' || ext === '.yml') {
       data = YAML.safeDump(data);
     } else {
-      throw createUserError(`Unsupported file format: ${formatPath(file)}`);
+      throwUserError(`Unsupported file format: ${formatPath(ext)}`, {
+        context: {file: formatPath(file)}
+      });
     }
   }
 
@@ -272,6 +276,10 @@ export function getErrorSymbol() {
   return '😡';
 }
 
+export function formatString(path) {
+  return green("'" + path + "'");
+}
+
 export function formatURL(url) {
   return cyan.underline(url);
 }
@@ -288,19 +296,32 @@ export function adjustToWindowWidth(text, {leftMargin = 0, rightMargin = 0} = {}
   return sliceANSI(text, 0, windowSize.width - leftMargin - rightMargin);
 }
 
-export function createUserError(message, info) {
+export function createUserError(message, {info, type, context} = {}) {
   message = red(message);
   if (info) {
     message += ' ' + info;
   }
+  if (context) {
+    context = entries(context).map(([key, value]) => key + ': ' + value);
+    if (context.length) {
+      message += ' (' + context.join(', ') + ')';
+    }
+  }
   const err = new Error(message);
+  if (type) {
+    err.type = type;
+  }
   err.userError = true;
   return err;
 }
 
+export function throwUserError(message, opts) {
+  throw createUserError(message, opts);
+}
+
 export function showError(error) {
   if (typeof error === 'string') {
-    error = createUserError(error);
+    error = throwUserError(error);
   }
   if (error.userError) {
     const message = formatMessage(error.message, {status: 'error'});
@@ -315,16 +336,13 @@ export function showErrorAndExit(error, code = 1) {
   process.exit(code);
 }
 
-export function checkMistakes(obj, mistakes, context = {}) {
+export function checkMistakes(obj, mistakes, {context}) {
   for (const [wrong, correct] of entries(mistakes)) {
     if (wrong in obj) {
-      const message = `Wrong property name: ${formatCode(wrong)}.`;
-      let info = `Did you mean ${formatCode(correct)}?`;
-      const contextStrings = entries(context).map(([key, value]) => key + ': ' + value);
-      if (contextStrings.length) {
-        info += ' (' + contextStrings.join(', ') + ')';
-      }
-      throw createUserError(message, info);
+      throwUserError(`Wrong property name: ${formatCode(wrong)}.`, {
+        info: `Did you mean ${formatCode(correct)}?`,
+        context
+      });
     }
   }
 }

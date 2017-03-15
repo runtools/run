@@ -1,6 +1,6 @@
 import {resolve, isAbsolute} from 'path';
 import {entries, defaults, cloneDeep, defaultsDeep} from 'lodash';
-import {createUserError, checkMistakes, formatPath, formatCode} from 'run-common';
+import {throwUserError, checkMistakes, formatCode} from 'run-common';
 
 import Invocation from './invocation';
 import Alias from './alias';
@@ -13,7 +13,7 @@ export class Command {
     Object.assign(this, cmd);
   }
 
-  static create(tool, obj, defaultName) {
+  static create(tool, obj, context, defaultName) {
     if (!tool) {
       throw new Error("'tool' parameter is missing");
     }
@@ -36,51 +36,62 @@ export class Command {
 
     const name = obj.name || defaultName;
     if (!name) {
-      throw createUserError(`Command ${formatCode('name')} property is missing`);
+      throwUserError(`Command ${formatCode('name')} property is missing`, {context});
     }
 
+    context = this.extendContext(context, {name});
+
     if (!(obj.file || obj.run)) {
-      throw createUserError(
-        `Command ${formatCode('file')} or  ${formatCode('run')} property is missing`
-      );
+      throwUserError(`Command ${formatCode('file')} or  ${formatCode('run')} property is missing`, {
+        context
+      });
     }
 
     checkMistakes(obj, {alias: 'aliases', files: 'file', runs: 'run', argument: 'arguments'}, {
-      file: formatPath(tool.toolFile),
-      command: formatCode(name)
+      context
     });
 
     const cmd = new this({
       name,
-      aliases: Alias.createMany(obj.aliases),
+      aliases: Alias.createMany(obj.aliases || [], context),
       file: obj.file,
-      invocations: obj.run && Invocation.createMany(obj.run),
-      arguments: Argument.createMany(obj.arguments),
-      config: Config.create(obj.config),
-      runtime: obj.runtime && Runtime.create(obj.runtime),
+      invocations: obj.run && Invocation.createMany(obj.run, context),
+      arguments: Argument.createMany(obj.arguments || [], context),
+      config: Config.create(obj.config || {}, context),
+      runtime: obj.runtime && Runtime.create(obj.runtime, context),
       tool
     });
 
     return cmd;
   }
 
-  static createMany(tool, objs = []) {
+  static createMany(tool, objs, context) {
     if (!tool) {
       throw new Error("'tool' parameter is missing");
     }
 
-    if (Array.isArray(objs)) {
-      return objs.map(obj => this.create(tool, obj));
+    if (!objs) {
+      throw new Error("'objs' parameter is missing");
     }
 
-    return entries(objs).map(([name, obj]) => this.create(tool, obj, name));
+    if (Array.isArray(objs)) {
+      return objs.map(obj => this.create(tool, obj, context));
+    }
+
+    return entries(objs).map(([name, obj]) => this.create(tool, obj, context, name));
+  }
+
+  static extendContext(base, obj) {
+    return {...base, command: formatCode(obj.name)};
   }
 
   isMatching(name) {
     return this.name === name || this.aliases.find(alias => alias.toString() === name);
   }
 
-  async run(invocation) {
+  async run(invocation, context) {
+    context = this.constructor.extendContext(context, this);
+
     const defaultArgs = this.arguments.map(arg => arg.default);
     const [_, ...args] = invocation.arguments;
     defaults(args, defaultArgs);
@@ -91,13 +102,13 @@ export class Command {
     if (this.file) {
       const runtime = this.runtime || this.tool.runtime;
       const file = resolve(this.tool.toolDir, this.file);
-      return await runtime.run({file, arguments: args, config});
+      return await runtime.run({file, arguments: args, config, context});
     }
 
     let result;
     for (let cmdInvocation of this.invocations) {
       cmdInvocation = cmdInvocation.resolveVariables({arguments: args, config});
-      result = this.tool.run(cmdInvocation);
+      result = this.tool.run(cmdInvocation, context);
     }
     return result;
   }

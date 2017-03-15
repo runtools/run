@@ -1,13 +1,13 @@
 import {join} from 'path';
 import {existsSync} from 'fs';
-import {createUserError, formatCode, formatPath} from 'run-common';
+import {throwUserError, formatCode, formatPath} from 'run-common';
 
 export class Runtime {
   constructor(runtime) {
     Object.assign(this, runtime);
   }
 
-  static create(obj) {
+  static create(obj, context) {
     if (!obj) {
       throw new Error("'obj' property is missing");
     }
@@ -20,14 +20,14 @@ export class Runtime {
     }
 
     if (!runtime.name) {
-      throw createUserError(`Runtime ${formatCode('name')} property is missing`);
+      throwUserError(`Runtime ${formatCode('name')} property is missing`, {context});
     }
 
     if (!existsSync(join(__dirname, runtime.name + '.js'))) {
-      throw createUserError(`Runtime ${formatPath(runtime.name)} is not supported`);
+      throwUserError(`Runtime ${formatPath(runtime.name)} is not supported`, {context});
     }
 
-    return require('./' + runtime.name).default.create(runtime);
+    return require('./' + runtime.name).default.create(runtime, context);
   }
 }
 

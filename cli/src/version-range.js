@@ -8,13 +8,17 @@ export class VersionRange {
     Object.assign(this, versionRange);
   }
 
-  static create(str = '>=0.0.0') {
+  static create(str, context) {
     // '1.2.0': Exact version
     // '^1.0.0': Caret range
     // '<1.0.0':  Before range
     // '>=1.5.0':  After range
     // '>=1.0.0 <2.0.0':  Between range
     // '^1.0.0 !1.2.3': Range with an exclusion
+
+    if (!str) {
+      throw new Error("'str' parameter is missing");
+    }
 
     str = str.trim();
 
@@ -24,7 +28,7 @@ export class VersionRange {
       return new this({value: exactVersion, type: 'exact'});
     }
 
-    const error = createUserError(`Version range '${str}' is invalid`);
+    const error = createUserError(`Version range '${str}' is invalid`, {context});
 
     const parts = [];
     const exclusions = [];
