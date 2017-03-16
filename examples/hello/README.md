@@ -1,4 +1,4 @@
-# ⚡run tool example
+# ⚡run hello example
 
 ```javascript
 // TODO: documentation!

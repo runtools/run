@@ -1,6 +1,6 @@
 {
-  name: 'tool-example',
-  version: '0.1.0',
+  name: 'hello-example',
+  version: '1.0.0',
   authors: 'Manuel Vila <mvila@3base.com>',
   license: 'MIT',
   repository: {
@@ -8,11 +8,6 @@
     url: 'git://github.com/runtools/run'
   },
   commands: {
-    // 'deploy': 'babel transpile, rollup --verbose',
-    // info: {
-    //   run: 'pkg info',
-    //   aliases: 'i'
-    // },
     'hello': {
       aliases: ['hi'],
       file: './commands/hello',
@@ -23,18 +18,15 @@
         color: 'white'
       }
     },
-    'run-hello': {
-      run: 'hello, hello $0 --color=${config.color}',
+    'hello-universe': {
+      run: 'hello $0 --color=${config.color}',
       arguments: {
-        name: 'Forest'
+        name: 'Universe'
       },
       config: {
-        color: 'blue'
+        color: 'yellow'
       }
     }
-  },
-  config: {
-    verbose: true
   },
   runtime: {
     name: 'node',

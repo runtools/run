@@ -1,5 +1,5 @@
 {
-  "name": "tool-example",
+  "name": "hello-example",
   "version": "1.0.0",
   "main": "./commands/hello.js",
   "dependencies": {
