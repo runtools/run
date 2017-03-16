@@ -9,8 +9,8 @@
   },
   commands: {
     'hello': {
+      file: './hello',
       aliases: ['hi'],
-      file: './commands/hello',
       arguments: {
         name: 'World'
       },
