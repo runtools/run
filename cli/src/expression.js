@@ -82,6 +82,15 @@ export class Expression {
     return this.arguments[0];
   }
 
+  pullCommandName() {
+    const commandName = this.arguments[0];
+    const expression = new this.constructor({
+      arguments: this.arguments.slice(1),
+      config: this.config
+    });
+    return {commandName, expression};
+  }
+
   resolveVariables({arguments: args, config}) {
     const getter = name => {
       const num = Number(name);

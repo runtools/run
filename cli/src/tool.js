@@ -1,5 +1,6 @@
 import {existsSync} from 'fs';
-import {join, dirname, basename, isAbsolute} from 'path';
+import {join, resolve, dirname, basename, isAbsolute} from 'path';
+import {entries} from 'lodash';
 import {
   readFile,
   writeFile,
@@ -10,6 +11,7 @@ import {
   formatCode
 } from 'run-common';
 
+import Alias from './alias';
 import Version from './version';
 import Command from './command';
 import Config from './config';
@@ -36,10 +38,21 @@ export class Tool {
 
     context = this.extendContext(context, obj);
 
-    checkMistakes(obj, {author: 'authors', command: 'commands'}, {context});
+    checkMistakes(
+      obj,
+      {
+        alias: 'aliases',
+        author: 'authors',
+        command: 'commands',
+        imports: 'import',
+        exports: 'export'
+      },
+      {context}
+    );
 
     const tool = new this({
       name: obj.name && this.normalizeName(obj.name, context),
+      aliases: Alias.createMany(obj.aliases || [], context),
       version: obj.version && Version.create(obj.version, context),
       description: obj.description,
       authors: obj.authors,
@@ -51,6 +64,8 @@ export class Tool {
     });
 
     tool.commands = Command.createMany(tool, obj.commands || [], context);
+
+    tool.subtools = await this.importMany(tool, obj.import || [], context);
 
     return tool;
   }
@@ -99,28 +114,117 @@ export class Tool {
     return undefined;
   }
 
+  static async import(parent, ref, context, defaultName) {
+    if (!parent) {
+      throw new Error("'parent' parameter is missing");
+    }
+
+    if (!ref) {
+      throw new Error("'ref' parameter is missing");
+    }
+
+    if (typeof ref === 'string') {
+      if (ref.startsWith('.') || isAbsolute(ref)) {
+        ref = {dir: ref};
+      } else {
+        const [name, version] = ref.split('@');
+        ref = {name, version};
+      }
+    }
+
+    if (!ref.dir) {
+      if (!ref.name) {
+        ref.name = defaultName;
+      }
+
+      if (!ref.name) {
+        throwUserError(
+          `Tool import ${formatCode('name')} or ${formatCode('dir')} property is missing`,
+          {
+            context
+          }
+        );
+      }
+    }
+
+    if (ref.name) {
+      throw new Error('TODO: import tool from the registry');
+    }
+
+    const dir = resolve(parent.toolDir, ref.dir);
+
+    const file = this.searchFile(dir);
+    if (!file) {
+      throwUserError(`Tool import not found: ${formatPath(dir)}`, {
+        context
+      });
+    }
+
+    let obj = readFile(file, {parse: true});
+
+    obj = {
+      name: obj.name,
+      aliases: obj.aliases,
+      version: obj.version,
+      description: obj.description,
+      authors: obj.authors,
+      license: obj.license,
+      ...obj.export,
+      toolFile: file
+    };
+
+    return await this.create(obj);
+  }
+
+  static async importMany(parent, refs, context) {
+    if (!parent) {
+      throw new Error("'parent' parameter is missing");
+    }
+
+    if (!refs) {
+      throw new Error("'refs' parameter is missing");
+    }
+
+    if (Array.isArray(refs)) {
+      return await Promise.all(refs.map(ref => this.import(parent, ref, context)));
+    }
+
+    return await Promise.all(
+      entries(refs).map(([name, ref]) => {
+        if (typeof ref === 'string') {
+          ref = {version: ref};
+        }
+        return this.import(parent, ref, context, name);
+      })
+    );
+  }
+
   canRun(expression) {
     const cmdName = expression.getCommandName();
-    return !cmdName || Boolean(this.findCommand(cmdName));
+    return !cmdName || Boolean(this.findCommand(cmdName)) || Boolean(this.findSubtool(cmdName));
   }
 
   async run(expression, context) {
     context = this.constructor.extendContext(context, this);
 
-    const cmdName = expression.getCommandName();
+    const {commandName, expression: newExpression} = expression.pullCommandName();
 
-    if (!cmdName) {
+    if (!commandName) {
       console.log('TODO: display tool help');
       return;
     }
 
-    const cmd = this.findCommand(cmdName);
-
-    if (!cmd) {
-      throwUserError(`Command ${formatCode(cmdName)} not found`, {context});
+    const cmd = this.findCommand(commandName);
+    if (cmd) {
+      return await cmd.run(newExpression, context);
     }
 
-    return await cmd.run(expression, context);
+    const subtool = this.findSubtool(commandName);
+    if (subtool) {
+      return await subtool.run(newExpression, context);
+    }
+
+    throwUserError(`Command ${formatCode(commandName)} not found`, {context});
   }
 
   findCommand(name) {
@@ -133,6 +237,19 @@ export class Tool {
       }
     }
     return undefined;
+  }
+
+  findSubtool(name) {
+    for (const subtool of this.subtools) {
+      if (subtool.isMatching(name)) {
+        return subtool;
+      }
+    }
+    return undefined;
+  }
+
+  isMatching(name) {
+    return this.name === name || this.aliases.find(alias => alias.toString() === name);
   }
 
   getNameUniverse() {

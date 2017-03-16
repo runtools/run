@@ -42,14 +42,18 @@ export class Command {
     context = this.extendContext(context, {name});
 
     if (!(obj.file || obj.run)) {
-      throwUserError(`Command ${formatCode('file')} or  ${formatCode('run')} property is missing`, {
+      throwUserError(`Command ${formatCode('file')} or ${formatCode('run')} property is missing`, {
         context
       });
     }
 
-    checkMistakes(obj, {alias: 'aliases', files: 'file', runs: 'run', argument: 'arguments'}, {
-      context
-    });
+    checkMistakes(
+      obj,
+      {alias: 'aliases', files: 'file', runs: 'run', argument: 'arguments'},
+      {
+        context
+      }
+    );
 
     const cmd = new this({
       name,
@@ -93,7 +97,7 @@ export class Command {
     context = this.constructor.extendContext(context, this);
 
     const defaultArgs = this.arguments.map(arg => arg.default);
-    const [_, ...args] = expression.arguments;
+    const [...args] = expression.arguments;
     defaults(args, defaultArgs);
 
     const config = cloneDeep(expression.config);
