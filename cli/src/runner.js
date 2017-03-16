@@ -3,18 +3,18 @@ import {formatCode, throwUserError} from 'run-common';
 
 import Tool from './tool';
 
-export async function run(dir, invocation) {
+export async function run(dir, expression) {
   const tool = await Tool.load(dir);
-  if (tool && tool.canRun(invocation)) {
-    return await tool.run(invocation);
+  if (tool && tool.canRun(expression)) {
+    return await tool.run(expression);
   }
 
   const parentDir = join(dir, '..');
   if (parentDir !== dir) {
-    return await run(parentDir, invocation);
+    return await run(parentDir, expression);
   }
 
-  const cmdName = invocation.getCommandName();
+  const cmdName = expression.getCommandName();
 
   if (!cmdName) {
     console.log('TODO: display general help');

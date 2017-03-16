@@ -3,9 +3,9 @@ import minimist from 'minimist';
 import {parse} from 'shell-quote';
 import {throwUserError, formatCode} from 'run-common';
 
-export class Invocation {
-  constructor(invocation) {
-    Object.assign(this, invocation);
+export class Expression {
+  constructor(expression) {
+    Object.assign(this, expression);
   }
 
   static create(array, context) {
@@ -15,11 +15,11 @@ export class Invocation {
       throw new Error("'array' parameter is missing");
     }
 
-    let invocation = array;
+    let expression = array;
 
-    if (typeof invocation === 'string') {
-      invocation = parse(invocation, name => ({__var__: name}));
-      invocation = invocation.map(part => {
+    if (typeof expression === 'string') {
+      expression = parse(expression, name => ({__var__: name}));
+      expression = expression.map(part => {
         // Fix '--option=${config.option}' parsing by removing '=' at the end of '--option='
         if (typeof part === 'string' && part.endsWith('=')) {
           part = part.slice(0, -1);
@@ -28,23 +28,23 @@ export class Invocation {
       });
     }
 
-    if (!Array.isArray(invocation)) {
+    if (!Array.isArray(expression)) {
       throwUserError(`${formatCode('run')} item should be a string or an array`, {context});
     }
 
-    invocation = minimist(invocation);
+    expression = minimist(expression);
 
-    const args = invocation._;
+    const args = expression._;
 
-    const originalConfig = omit(invocation, '_');
+    const originalConfig = omit(expression, '_');
     let config = {};
     for (const [key, value] of entries(originalConfig)) {
       config[camelCase(key)] = value;
     }
 
-    invocation = {arguments: args, config};
+    expression = {arguments: args, config};
 
-    return new this(invocation);
+    return new this(expression);
   }
 
   static createMany(arrays, context) {
@@ -92,12 +92,12 @@ export class Invocation {
       return undefined;
     };
 
-    const resolvedInvocation = {
+    const resolvedExpression = {
       arguments: resolveVars(this.arguments, getter),
       config: resolveVars(this.config, getter)
     };
 
-    return new this.constructor(resolvedInvocation);
+    return new this.constructor(resolvedExpression);
   }
 }
 
@@ -118,4 +118,4 @@ function resolveVars(value, getter) {
   return value;
 }
 
-export default Invocation;
+export default Expression;

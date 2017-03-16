@@ -5,7 +5,7 @@ import updateNotifier from 'update-notifier';
 import {showErrorAndExit} from 'run-common';
 
 import Tool from '../tool';
-import Invocation from '../invocation';
+import Expression from '../expression';
 import {run} from '../runner';
 
 if (nodeVersion.major < 4) {
@@ -16,13 +16,13 @@ const pkg = require('../../package');
 updateNotifier({pkg}).notify();
 
 async function cli(dir, args) {
-  const invocation = Invocation.create(args);
-  const cmdName = invocation.getCommandName();
+  const expression = Expression.create(args);
+  const cmdName = expression.getCommandName();
   if (cmdName === 'initialize' || cmdName === 'init') {
-    const tool = await Tool.ensure(dir, invocation.config);
+    const tool = await Tool.ensure(dir, expression.config);
     console.dir(tool, {depth: 10});
   } else {
-    await run(dir, invocation);
+    await run(dir, expression);
   }
 }
 

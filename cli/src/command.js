@@ -2,7 +2,7 @@ import {resolve, isAbsolute} from 'path';
 import {entries, defaults, cloneDeep, defaultsDeep} from 'lodash';
 import {throwUserError, checkMistakes, formatCode} from 'run-common';
 
-import Invocation from './invocation';
+import Expression from './expression';
 import Alias from './alias';
 import Argument from './argument';
 import Config from './config';
@@ -55,7 +55,7 @@ export class Command {
       name,
       aliases: Alias.createMany(obj.aliases || [], context),
       file: obj.file,
-      invocations: obj.run && Invocation.createMany(obj.run, context),
+      expressions: obj.run && Expression.createMany(obj.run, context),
       arguments: Argument.createMany(obj.arguments || [], context),
       config: Config.create(obj.config || {}, context),
       runtime: obj.runtime && Runtime.create(obj.runtime, context),
@@ -89,14 +89,14 @@ export class Command {
     return this.name === name || this.aliases.find(alias => alias.toString() === name);
   }
 
-  async run(invocation, context) {
+  async run(expression, context) {
     context = this.constructor.extendContext(context, this);
 
     const defaultArgs = this.arguments.map(arg => arg.default);
-    const [_, ...args] = invocation.arguments;
+    const [_, ...args] = expression.arguments;
     defaults(args, defaultArgs);
 
-    const config = cloneDeep(invocation.config);
+    const config = cloneDeep(expression.config);
     defaultsDeep(config, this.config.getDefaults(), this.tool.config.getDefaults());
 
     if (this.file) {
@@ -106,9 +106,9 @@ export class Command {
     }
 
     let result;
-    for (let cmdInvocation of this.invocations) {
-      cmdInvocation = cmdInvocation.resolveVariables({arguments: args, config});
-      result = this.tool.run(cmdInvocation, context);
+    for (let cmdExpression of this.expressions) {
+      cmdExpression = cmdExpression.resolveVariables({arguments: args, config});
+      result = this.tool.run(cmdExpression, context);
     }
     return result;
   }

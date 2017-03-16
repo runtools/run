@@ -99,15 +99,15 @@ export class Tool {
     return undefined;
   }
 
-  canRun(invocation) {
-    const cmdName = invocation.getCommandName();
+  canRun(expression) {
+    const cmdName = expression.getCommandName();
     return !cmdName || Boolean(this.findCommand(cmdName));
   }
 
-  async run(invocation, context) {
+  async run(expression, context) {
     context = this.constructor.extendContext(context, this);
 
-    const cmdName = invocation.getCommandName();
+    const cmdName = expression.getCommandName();
 
     if (!cmdName) {
       console.log('TODO: display tool help');
@@ -120,7 +120,7 @@ export class Tool {
       throwUserError(`Command ${formatCode(cmdName)} not found`, {context});
     }
 
-    return await cmd.run(invocation, context);
+    return await cmd.run(expression, context);
   }
 
   findCommand(name) {
