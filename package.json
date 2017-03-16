@@ -7,7 +7,8 @@
     "url": "git://github.com/runtools/run"
   },
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "precommit": "npm run lint"
   },
   "devDependencies": {
     "eslint": "^3.16.1",
