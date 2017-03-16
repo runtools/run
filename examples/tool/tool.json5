@@ -8,11 +8,11 @@
     url: 'git://github.com/runtools/run'
   },
   commands: {
-    'deploy': ['babel transpile', 'rollup --verbose'],
-    info: {
-      run: 'pkg info',
-      aliases: 'i'
-    },
+    // 'deploy': 'babel transpile, rollup --verbose',
+    // info: {
+    //   run: 'pkg info',
+    //   aliases: 'i'
+    // },
     'hello': {
       aliases: ['hi'],
       file: './commands/hello',
@@ -24,7 +24,7 @@
       }
     },
     'run-hello': {
-      run: 'hello $0 --color=${config.color}',
+      run: 'hello, hello $0 --color=${config.color}',
       arguments: {
         name: 'Forest'
       },

@@ -15,24 +15,11 @@ export class Expression {
       throw new Error("'array' parameter is missing");
     }
 
-    let expression = array;
-
-    if (typeof expression === 'string') {
-      expression = parse(expression, name => ({__var__: name}));
-      expression = expression.map(part => {
-        // Fix '--option=${config.option}' parsing by removing '=' at the end of '--option='
-        if (typeof part === 'string' && part.endsWith('=')) {
-          part = part.slice(0, -1);
-        }
-        return part;
-      });
+    if (!Array.isArray(array)) {
+      throwUserError(`A ${formatCode('run')} item should be a an array`, {context});
     }
 
-    if (!Array.isArray(expression)) {
-      throwUserError(`${formatCode('run')} item should be a string or an array`, {context});
-    }
-
-    expression = minimist(expression);
+    let expression = minimist(array);
 
     const args = expression._;
 
@@ -50,7 +37,15 @@ export class Expression {
   static createMany(arrays, context) {
     if (typeof arrays === 'string') {
       const str = arrays;
-      return [this.create(str, context)];
+      let args = parse(str, name => ({__var__: name}));
+      args = args.map(part => {
+        // Fix '--option=${config.option}' parsing by removing '=' at the end of '--option='
+        if (typeof part === 'string' && part.endsWith('=')) {
+          part = part.slice(0, -1);
+        }
+        return part;
+      });
+      return this.createManyFromShell(args, context);
     }
 
     if (Array.isArray(arrays)) {
@@ -58,6 +53,29 @@ export class Expression {
     }
 
     throwUserError(`${formatCode('run')} property should be a string or an array`, {context});
+  }
+
+  static createManyFromShell(args, context) {
+    if (!args) {
+      throw new Error("'args' parameter is missing");
+    }
+
+    const arrays = [];
+
+    let newArray = true;
+    for (let arg of args) {
+      if (newArray) {
+        arrays.push([]);
+        newArray = false;
+      }
+      if (typeof arg === 'string' && arg.endsWith(',')) {
+        arg = arg.slice(0, -1);
+        newArray = true;
+      }
+      arrays[arrays.length - 1].push(arg);
+    }
+
+    return this.createMany(arrays, context);
   }
 
   getCommandName() {

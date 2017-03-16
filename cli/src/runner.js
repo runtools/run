@@ -3,7 +3,7 @@ import {formatCode, throwUserError} from 'run-common';
 
 import Tool from './tool';
 
-export async function run(dir, expression) {
+async function run(dir, expression) {
   const tool = await Tool.load(dir);
   if (tool && tool.canRun(expression)) {
     return await tool.run(expression);
@@ -22,4 +22,16 @@ export async function run(dir, expression) {
   }
 
   throwUserError(`Command ${formatCode(cmdName)} not found`);
+}
+
+export async function runMany(dir, expressions) {
+  if (!expressions) {
+    throw new Error("'expressions' parameter is missing");
+  }
+
+  let result;
+  for (const expression of expressions) {
+    result = await run(dir, expression);
+  }
+  return result;
 }
