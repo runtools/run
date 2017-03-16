@@ -18,12 +18,6 @@ updateNotifier({pkg}).notify();
 async function cli(dir, args) {
   const expressions = Expression.createManyFromShell(args);
   await runMany(dir, expressions);
-
-  // const cmdName = expression.getCommandName();
-  // if (cmdName === 'initialize' || cmdName === 'init') {
-  //   const tool = await Tool.ensure(dir, expression.config);
-  //   console.dir(tool, {depth: 10});
-  // }
 }
 
 cli(process.cwd(), process.argv.slice(2)).catch(showErrorAndExit);

@@ -4,6 +4,14 @@ import {formatCode, throwUserError} from 'run-common';
 import Tool from './tool';
 
 async function run(dir, expression) {
+  const cmdName = expression.getCommandName();
+
+  if (cmdName === 'initialize' || cmdName === 'init') {
+    const tool = await Tool.ensure(dir, expression.config);
+    console.dir(tool, {depth: 10});
+    return;
+  }
+
   const tool = await Tool.load(dir);
   if (tool && tool.canRun(expression)) {
     return await tool.run(expression);
@@ -13,8 +21,6 @@ async function run(dir, expression) {
   if (parentDir !== dir) {
     return await run(parentDir, expression);
   }
-
-  const cmdName = expression.getCommandName();
 
   if (!cmdName) {
     console.log('TODO: display general help');
