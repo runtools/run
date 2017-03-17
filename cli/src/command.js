@@ -13,18 +13,14 @@ export class Command {
     Object.assign(this, cmd);
   }
 
-  static create(tool, obj, context, defaultName) {
-    if (!tool) {
-      throw new Error("'tool' parameter is missing");
-    }
-
+  static create(obj, context, defaultName) {
     if (!obj) {
       throw new Error("'obj' parameter is missing");
     }
 
     if (typeof obj === 'string') {
       if (obj.startsWith('.') || isAbsolute(obj)) {
-        obj = {file: obj};
+        obj = {source: obj};
       } else {
         obj = [obj];
       }
@@ -41,15 +37,18 @@ export class Command {
 
     context = this.extendContext(context, {name});
 
-    if (!(obj.file || obj.run)) {
-      throwUserError(`Command ${formatCode('file')} or ${formatCode('run')} property is missing`, {
-        context
-      });
+    if (!(obj.source || obj.run)) {
+      throwUserError(
+        `Command ${formatCode('source')} or ${formatCode('run')} property is missing`,
+        {
+          context
+        }
+      );
     }
 
     checkMistakes(
       obj,
-      {alias: 'aliases', files: 'file', runs: 'run', argument: 'arguments'},
+      {alias: 'aliases', src: 'source', runs: 'run', argument: 'arguments'},
       {
         context
       }
@@ -58,31 +57,26 @@ export class Command {
     const cmd = new this({
       name,
       aliases: Alias.createMany(obj.aliases || [], context),
-      file: obj.file,
+      source: obj.source,
       expressions: obj.run && Expression.createMany(obj.run, context),
       arguments: Argument.createMany(obj.arguments || [], context),
       config: Config.create(obj.config || {}, context),
-      runtime: obj.runtime && Runtime.create(obj.runtime, context),
-      tool
+      runtime: obj.runtime && Runtime.create(obj.runtime, context)
     });
 
     return cmd;
   }
 
-  static createMany(tool, objs, context) {
-    if (!tool) {
-      throw new Error("'tool' parameter is missing");
-    }
-
+  static createMany(objs, context) {
     if (!objs) {
       throw new Error("'objs' parameter is missing");
     }
 
     if (Array.isArray(objs)) {
-      return objs.map(obj => this.create(tool, obj, context));
+      return objs.map(obj => this.create(obj, context));
     }
 
-    return entries(objs).map(([name, obj]) => this.create(tool, obj, context, name));
+    return entries(objs).map(([name, obj]) => this.create(obj, context, name));
   }
 
   static extendContext(base, obj) {
@@ -93,7 +87,7 @@ export class Command {
     return this.name === name || this.aliases.find(alias => alias.toString() === name);
   }
 
-  async run(expression, context) {
+  async run(tool, expression, context) {
     context = this.constructor.extendContext(context, this);
 
     const defaultArgs = this.arguments.map(arg => arg.default);
@@ -101,18 +95,18 @@ export class Command {
     defaults(args, defaultArgs);
 
     const config = cloneDeep(expression.config);
-    defaultsDeep(config, this.config.getDefaults(), this.tool.config.getDefaults());
+    defaultsDeep(config, this.config.getDefaults(), tool.config.getDefaults());
 
-    if (this.file) {
-      const runtime = this.runtime || this.tool.runtime;
-      const file = resolve(this.tool.toolDir, this.file);
+    if (this.source) {
+      const runtime = this.runtime || tool.runtime;
+      const file = resolve(tool.toolDir, this.source);
       return await runtime.run({file, arguments: args, config, context});
     }
 
     let result;
     for (let cmdExpression of this.expressions) {
       cmdExpression = cmdExpression.resolveVariables({arguments: args, config});
-      result = this.tool.run(cmdExpression, context);
+      result = tool.run(cmdExpression, context);
     }
     return result;
   }
