@@ -1,6 +1,5 @@
 import {existsSync} from 'fs';
 import {join, resolve, dirname, basename, isAbsolute} from 'path';
-import {entries} from 'lodash';
 import {
   readFile,
   writeFile,
@@ -16,6 +15,7 @@ import Version from './version';
 import Command from './command';
 import Config from './config';
 import Runtime from './runtime';
+import Expression from './expression';
 
 const TOOL_FILE_NAME = 'tool';
 const TOOL_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
@@ -24,7 +24,6 @@ const DEFAULT_TOOL_FILE_FORMAT = 'json5';
 export class Tool {
   constructor(properties) {
     Object.assign(this, properties);
-    this.toolDir = dirname(this.toolFile);
   }
 
   static async create(obj, context) {
@@ -44,11 +43,14 @@ export class Tool {
         alias: 'aliases',
         author: 'authors',
         command: 'commands',
+        extends: 'extend',
         imports: 'import',
         exports: 'export'
       },
       {context}
     );
+
+    const toolDir = dirname(obj.toolFile);
 
     const tool = new this({
       name: obj.name && this.normalizeName(obj.name, context),
@@ -60,12 +62,13 @@ export class Tool {
       repository: obj.repository && this.normalizeRepository(obj.repository),
       config: Config.create(obj.config || {}, context),
       runtime: obj.runtime && Runtime.create(obj.runtime, context),
-      toolFile: obj.toolFile
+      toolFile: obj.toolFile,
+      toolDir
     });
 
-    tool.commands = Command.createMany(tool, obj.commands || [], context);
-
-    tool.subtools = await this.importMany(tool, obj.import || [], context);
+    // tool.basetools = await this.extendMany(tool, obj.extend || [], context);
+    tool.commands = Command.createMany(obj.commands || [], context);
+    tool.importedTools = await this.importFromExpressions(toolDir, obj.import || [], context);
 
     return tool;
   }
@@ -114,48 +117,23 @@ export class Tool {
     return undefined;
   }
 
-  static async import(parent, ref, context, defaultName) {
-    if (!parent) {
-      throw new Error("'parent' parameter is missing");
+  static async import(dir, source, config, context) {
+    if (!dir) {
+      throw new Error("'dir' parameter is missing");
     }
 
-    if (!ref) {
-      throw new Error("'ref' parameter is missing");
+    if (!source) {
+      throw new Error("'source' parameter is missing");
     }
 
-    if (typeof ref === 'string') {
-      if (ref.startsWith('.') || isAbsolute(ref)) {
-        ref = {dir: ref};
-      } else {
-        const [name, version] = ref.split('@');
-        ref = {name, version};
-      }
+    if (!config) {
+      throw new Error("'config' parameter is missing");
     }
 
-    if (!ref.dir) {
-      if (!ref.name) {
-        ref.name = defaultName;
-      }
-
-      if (!ref.name) {
-        throwUserError(
-          `Tool import ${formatCode('name')} or ${formatCode('dir')} property is missing`,
-          {
-            context
-          }
-        );
-      }
-    }
-
-    if (ref.name) {
-      throw new Error('TODO: import tool from the registry');
-    }
-
-    const dir = resolve(parent.toolDir, ref.dir);
-
-    const file = this.searchFile(dir);
+    let file = resolve(dir, source);
+    file = this.searchFile(file);
     if (!file) {
-      throwUserError(`Tool import not found: ${formatPath(dir)}`, {
+      throwUserError(`Tool import not found: ${formatPath(source)}`, {
         context
       });
     }
@@ -176,32 +154,45 @@ export class Tool {
     return await this.create(obj);
   }
 
-  static async importMany(parent, refs, context) {
-    if (!parent) {
-      throw new Error("'parent' parameter is missing");
+  static async importFromExpressions(dir, expressions, context) {
+    if (!dir) {
+      throw new Error("'dir' parameter is missing");
     }
 
-    if (!refs) {
-      throw new Error("'refs' parameter is missing");
+    if (!expressions) {
+      throw new Error("'expressions' parameter is missing");
     }
 
-    if (Array.isArray(refs)) {
-      return await Promise.all(refs.map(ref => this.import(parent, ref, context)));
+    if (Array.isArray(expressions)) {
+      expressions = expressions.join(', ');
     }
 
-    return await Promise.all(
-      entries(refs).map(([name, ref]) => {
-        if (typeof ref === 'string') {
-          ref = {version: ref};
+    if (typeof expressions !== 'string') {
+      throwUserError(`${formatCode('import')} property must be a string or an array`, {context});
+    }
+
+    expressions = Expression.createMany(expressions, context);
+
+    return Promise.all(
+      expressions.map(expression => {
+        if (expression.arguments.length !== 1) {
+          throwUserError(`Invalid ${formatCode('import')} source:`, {
+            info: formatString(expression.arguments.join(' ')),
+            context
+          });
         }
-        return this.import(parent, ref, context, name);
+        const source = expression.arguments[0];
+        const config = expression.config;
+        return this.import(dir, source, config, context);
       })
     );
   }
 
   canRun(expression) {
     const cmdName = expression.getCommandName();
-    return !cmdName || Boolean(this.findCommand(cmdName)) || Boolean(this.findSubtool(cmdName));
+    return !cmdName ||
+      Boolean(this.findCommand(cmdName)) ||
+      Boolean(this.findImportedTool(cmdName));
   }
 
   async run(expression, context) {
@@ -216,12 +207,12 @@ export class Tool {
 
     const cmd = this.findCommand(commandName);
     if (cmd) {
-      return await cmd.run(newExpression, context);
+      return await cmd.run(this, newExpression, context);
     }
 
-    const subtool = this.findSubtool(commandName);
-    if (subtool) {
-      return await subtool.run(newExpression, context);
+    const importedTool = this.findImportedTool(commandName);
+    if (importedTool) {
+      return await importedTool.run(newExpression, context);
     }
 
     throwUserError(`Command ${formatCode(commandName)} not found`, {context});
@@ -239,10 +230,10 @@ export class Tool {
     return undefined;
   }
 
-  findSubtool(name) {
-    for (const subtool of this.subtools) {
-      if (subtool.isMatching(name)) {
-        return subtool;
+  findImportedTool(name) {
+    for (const importedTool of this.importedTools) {
+      if (importedTool.isMatching(name)) {
+        return importedTool;
       }
     }
     return undefined;

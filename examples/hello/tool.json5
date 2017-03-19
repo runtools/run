@@ -9,7 +9,7 @@
   },
   commands: {
     'hello': {
-      file: './hello',
+      source: './hello',
       aliases: ['hi'],
       arguments: {
         name: 'World'

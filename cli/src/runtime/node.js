@@ -49,7 +49,7 @@ export class NodeRuntime extends Runtime {
 
       promise.childProcess.stdout.pipe(
         new stream.Writable({
-          write: function(chunk, encoding, next) {
+          write(chunk, encoding, next) {
             const str = chunk.toString();
             if (str.startsWith('{"__run__":{')) {
               // Intercept the result

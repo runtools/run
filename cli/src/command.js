@@ -1,5 +1,5 @@
 import {resolve, isAbsolute} from 'path';
-import {entries, defaults, cloneDeep, defaultsDeep} from 'lodash';
+import {entries, defaults, cloneDeep} from 'lodash';
 import {throwUserError, checkMistakes, formatCode} from 'run-common';
 
 import Expression from './expression';
@@ -95,7 +95,7 @@ export class Command {
     defaults(args, defaultArgs);
 
     const config = cloneDeep(expression.config);
-    defaultsDeep(config, this.config.getDefaults(), tool.config.getDefaults());
+    defaults(config, this.config.getDefaults(), tool.config.getDefaults());
 
     if (this.source) {
       const runtime = this.runtime || tool.runtime;

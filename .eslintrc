@@ -1,7 +1,9 @@
 {
-  "extends": ["xo-space", "prettier"],
+  "extends": ["xo/esnext", "prettier"],
   "rules": {
+    "indent": [2, 2, {"SwitchCase": 1}],
     "no-constant-condition": [2, {"checkLoops": false}],
+    "no-unused-vars": [2, {"ignoreRestSiblings": true, "argsIgnorePattern": "^_"}],
     "no-warning-comments": 0
   }
 }

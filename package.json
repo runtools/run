@@ -8,12 +8,12 @@
   },
   "scripts": {
     "lint": "eslint .",
-    "precommit": "npm run lint"
+    "prepush": "npm run lint"
   },
   "devDependencies": {
-    "eslint": "^3.16.1",
-    "eslint-config-prettier": "^1.3.0",
-    "eslint-config-xo-space": "^0.15.0",
+    "eslint": "^3.18.0",
+    "eslint-config-prettier": "^1.5.0",
+    "eslint-config-xo": "^0.17.0",
     "husky": "^0.13.2",
     "lerna": "^2.0.0-beta.36"
   }

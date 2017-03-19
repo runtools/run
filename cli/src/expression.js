@@ -24,7 +24,7 @@ export class Expression {
     const args = expression._;
 
     const originalConfig = omit(expression, '_');
-    let config = {};
+    const config = {};
     for (const [key, value] of entries(originalConfig)) {
       config[camelCase(key)] = value;
     }
@@ -72,7 +72,9 @@ export class Expression {
         arg = arg.slice(0, -1);
         newArray = true;
       }
-      arrays[arrays.length - 1].push(arg);
+      if (arg) {
+        arrays[arrays.length - 1].push(arg);
+      }
     }
 
     return this.createMany(arrays, context);

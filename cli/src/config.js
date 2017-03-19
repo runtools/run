@@ -1,18 +1,40 @@
-export class Config {
-  constructor(config) {
-    Object.assign(this, config);
+import {mapValues} from 'lodash';
+
+class Property {
+  constructor(property) {
+    Object.assign(this, property);
   }
 
-  static create(obj, context) {
-    if (!obj) {
-      throw new Error("'obj' parameter is missing");
+  static create(definition, _context) {
+    if (!definition) {
+      throw new Error("'definition' parameter is missing");
     }
 
-    return new this(obj);
+    if (typeof definition !== 'object') {
+      definition = {default: definition};
+    }
+
+    return new this(definition);
+  }
+}
+
+export class Config {
+  constructor(properties) {
+    this.properties = properties;
+  }
+
+  static create(definitions, context) {
+    if (!definitions) {
+      throw new Error("'definitions' parameter is missing");
+    }
+
+    const properties = mapValues(definitions, definition => Property.create(definition, context));
+
+    return new this(properties);
   }
 
   getDefaults() {
-    return this;
+    return mapValues(this.properties, property => property.default);
   }
 }
 

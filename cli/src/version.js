@@ -12,7 +12,7 @@ export class Version {
       throw new Error("'str' parameter is missing");
     }
 
-    let version = semver.clean(str);
+    const version = semver.clean(str);
     if (!version) {
       throwUserError(`Version '${str}' is invalid`, {context});
     }

@@ -3,11 +3,7 @@
   version: '1.0.0',
   export: {
     commands: {
-      log: {
-        source: './log',
-        aliases: 'info'
-      },
-      trace: './trace'
+      'log': './log'
     },
     runtime: {
       name: 'node',
