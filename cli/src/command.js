@@ -1,5 +1,5 @@
 import {resolve, isAbsolute} from 'path';
-import {entries, defaults, clone} from 'lodash';
+import {entries, defaults, defaultsDeep, clone} from 'lodash';
 import {throwUserError, checkMistakes, formatCode} from 'run-common';
 
 import Expression from './expression';
@@ -15,7 +15,7 @@ export class Command {
 
   static create(definition, context, defaultName) {
     if (!definition) {
-      throw new Error("'definition' parameter is missing");
+      throw new Error("'definition' argument is missing");
     }
 
     if (typeof definition === 'string') {
@@ -76,7 +76,7 @@ export class Command {
 
   static createMany(definitions, context) {
     if (!definitions) {
-      throw new Error("'definitions' parameter is missing");
+      throw new Error("'definitions' argument is missing");
     }
 
     if (Array.isArray(definitions)) {
@@ -94,26 +94,28 @@ export class Command {
     return this.name === name || this.aliases.find(alias => alias.toString() === name);
   }
 
-  async run(tool, expression, context) {
+  async run(tool, expression, globalConfig, context) {
     context = this.constructor.extendContext(context, this);
 
     const [...args] = expression.arguments;
     const defaultArgs = this.parameters.map(param => param.default);
     defaults(args, defaultArgs);
+    // TODO: omit arguments not defined in the command parameters
 
     const config = clone(expression.config);
-    defaults(config, this.getDefaultConfig(), tool.getDefaultConfig());
+    defaultsDeep(config, globalConfig, this.getDefaultConfig(), tool.getDefaultConfig());
+    // TODO: omit config properties not defined in the command options
 
     if (this.source) {
       const runtime = this.runtime || tool.runtime;
-      const file = resolve(tool.toolDir, this.source);
+      const file = resolve(tool.dir, this.source);
       return await runtime.run({file, arguments: args, config, context});
     }
 
     let result;
     for (let cmdExpression of this.expressions) {
       cmdExpression = cmdExpression.resolveVariables({arguments: args, config});
-      result = tool.run(cmdExpression, context);
+      result = tool.run(cmdExpression, globalConfig, context);
     }
     return result;
   }

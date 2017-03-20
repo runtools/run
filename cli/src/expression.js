@@ -1,7 +1,9 @@
-import {omit, entries, camelCase, mapValues, get} from 'lodash';
+import {omit, mapValues, get} from 'lodash';
 import minimist from 'minimist';
 import {parse} from 'shell-quote';
 import {throwUserError, formatCode} from 'run-common';
+
+import Config from './config';
 
 export class Expression {
   constructor(expression) {
@@ -12,7 +14,7 @@ export class Expression {
     // ['cook' 'pizza' '--salami'] => {arguments: ['cook', 'pizza'], config: {salami: true}}
 
     if (!definition) {
-      throw new Error("'definition' parameter is missing");
+      throw new Error("'definition' argument is missing");
     }
 
     if (!Array.isArray(definition)) {
@@ -23,11 +25,8 @@ export class Expression {
 
     const args = expression._;
 
-    const originalConfig = omit(expression, '_');
-    const config = {};
-    for (const [key, value] of entries(originalConfig)) {
-      config[camelCase(key)] = value;
-    }
+    let config = omit(expression, '_');
+    config = Config.normalize(config);
 
     expression = {arguments: args, config};
 
@@ -57,7 +56,7 @@ export class Expression {
 
   static createManyFromShell(args, context) {
     if (!args) {
-      throw new Error("'args' parameter is missing");
+      throw new Error("'args' argument is missing");
     }
 
     const definitions = [];

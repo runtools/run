@@ -7,8 +7,8 @@ export class Parameter {
   }
 
   static create(definition, context, defaultName) {
-    if (!definition) {
-      throw new Error("'definition' parameter is missing");
+    if (definition === undefined) {
+      throw new Error("'definition' argument is missing");
     }
 
     if (typeof definition !== 'object') {
@@ -30,7 +30,7 @@ export class Parameter {
 
   static createMany(definitions, context) {
     if (!definitions) {
-      throw new Error("'definitions' parameter is missing");
+      throw new Error("'definitions' argument is missing");
     }
 
     if (Array.isArray(definitions)) {

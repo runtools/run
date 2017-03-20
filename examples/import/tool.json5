@@ -1,7 +1,7 @@
 {
   name: 'import-example',
   version: '1.0.0',
-  import: './console',
+  import: ['./console'],
   config: {
     verbose: true
   }

@@ -1,5 +1,5 @@
 module.exports = function([msg], {verbose}) {
   if (verbose) {
-    console.trace(msg);
+    console.log('Trace: ' + msg);
   }
 };

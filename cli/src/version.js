@@ -9,7 +9,7 @@ export class Version {
 
   static create(str, context) {
     if (!str) {
-      throw new Error("'str' parameter is missing");
+      throw new Error("'str' argument is missing");
     }
 
     const version = semver.clean(str);

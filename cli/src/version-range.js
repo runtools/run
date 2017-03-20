@@ -17,7 +17,7 @@ export class VersionRange {
     // '^1.0.0 !1.2.3': Range with an exclusion
 
     if (!str) {
-      throw new Error("'str' parameter is missing");
+      throw new Error("'str' argument is missing");
     }
 
     str = str.trim();

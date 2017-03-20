@@ -19,7 +19,7 @@ export class Alias {
 
   static createMany(aliases, context) {
     if (!aliases) {
-      throw new Error("'aliases' parameter is missing");
+      throw new Error("'aliases' argument is missing");
     }
 
     if (typeof aliases === 'string') {

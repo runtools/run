@@ -1,5 +1,6 @@
 import {existsSync} from 'fs';
 import {join, resolve, dirname, basename, isAbsolute} from 'path';
+import {defaultsDeep} from 'lodash';
 import {
   readFile,
   writeFile,
@@ -15,7 +16,7 @@ import Version from './version';
 import Command from './command';
 import Option from './option';
 import Runtime from './runtime';
-import Expression from './expression';
+import Config from './config';
 
 const TOOL_FILE_NAME = 'tool';
 const TOOL_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
@@ -26,16 +27,16 @@ export class Tool {
     Object.assign(this, tool);
   }
 
-  static async create(definition, context) {
+  static async create(file, definition, context) {
+    if (!file) {
+      throw new Error("'file' argument is missing");
+    }
+
     if (!definition) {
-      throw new Error("'definition' parameter is missing");
+      throw new Error("'definition' argument is missing");
     }
 
-    if (!definition.toolFile) {
-      throw new Error(`Tool 'toolFile' property is missing`);
-    }
-
-    context = this.extendContext(context, definition);
+    context = this.extendContext(context, {file});
 
     checkMistakes(
       definition,
@@ -51,7 +52,7 @@ export class Tool {
       {context}
     );
 
-    const toolDir = dirname(definition.toolFile);
+    const dir = dirname(file);
 
     const tool = new this({
       name: definition.name && this.normalizeName(definition.name, context),
@@ -61,25 +62,19 @@ export class Tool {
       authors: definition.authors,
       license: definition.license,
       repository: definition.repository && this.normalizeRepository(definition.repository),
+      commands: Command.createMany(definition.commands || [], context),
       options: Option.createMany(definition.options || [], context),
+      importedTools: await this.importMany(dir, definition.import || [], context),
       runtime: definition.runtime && Runtime.create(definition.runtime, context),
-      toolFile: definition.toolFile,
-      toolDir
+      file,
+      dir
     });
-
-    // tool.basetools = await this.extendMany(tool, definition.extend || [], context);
-    tool.commands = Command.createMany(definition.commands || [], context);
-    tool.importedTools = await this.importFromExpressions(
-      toolDir,
-      definition.import || [],
-      context
-    );
 
     return tool;
   }
 
   static extendContext(base, obj) {
-    return {...base, tool: formatPath(obj.toolFile)};
+    return {...base, tool: formatPath(obj.file)};
   }
 
   static async load(dir) {
@@ -88,7 +83,7 @@ export class Tool {
       return undefined;
     }
     const definition = readFile(file, {parse: true});
-    return await this.create({...definition, toolFile: file});
+    return await this.create(file, definition);
   }
 
   static async ensure(dir, {toolFileFormat = DEFAULT_TOOL_FILE_FORMAT} = {}) {
@@ -101,7 +96,33 @@ export class Tool {
       definition = {name: basename(dir), version: '0.1.0-pre-alpha'};
       writeFile(file, definition, {stringify: true});
     }
-    return await this.create({...definition, toolFile: file});
+    return await this.create(file, definition);
+  }
+
+  static async loadGlobalConfig(dir, globalConfig = {}) {
+    const file = this.searchFile(dir);
+    if (file) {
+      const definition = readFile(file, {parse: true});
+      let config = definition.config;
+      if (config) {
+        config = Config.normalize(config, {file});
+        defaultsDeep(globalConfig, config);
+      }
+    }
+
+    const parentDir = join(dir, '..');
+    if (parentDir !== dir) {
+      return await this.loadGlobalConfig(parentDir, globalConfig);
+    }
+
+    return globalConfig;
+  }
+
+  static async loadConfig(file, globalConfig) {
+    let config = readFile(file, {parse: true});
+    config = Config.normalize(config, {file});
+    defaultsDeep(config, globalConfig);
+    return config;
   }
 
   static searchFile(dir, {searchInPath = false} = {}) {
@@ -122,17 +143,19 @@ export class Tool {
     return undefined;
   }
 
-  static async import(dir, source, config, context) {
+  static async import(dir, source, context) {
     if (!dir) {
-      throw new Error("'dir' parameter is missing");
+      throw new Error("'dir' argument is missing");
     }
+
+    if (typeof source !== 'string') {
+      throwUserError(`Tool import ${formatCode('source')} must be a string`, {context});
+    }
+
+    source = source.trim();
 
     if (!source) {
-      throw new Error("'source' parameter is missing");
-    }
-
-    if (!config) {
-      throw new Error("'config' parameter is missing");
+      throwUserError(`Tool import ${formatCode('source')} cannot be empty`, {context});
     }
 
     let file = resolve(dir, source);
@@ -152,43 +175,32 @@ export class Tool {
       description: definition.description,
       authors: definition.authors,
       license: definition.license,
-      ...definition.export,
-      toolFile: file
+      ...definition.export
     };
 
-    return await this.create(definition);
+    return await this.create(file, definition);
   }
 
-  static async importFromExpressions(dir, expressions, context) {
+  static async importMany(dir, sources, context) {
     if (!dir) {
-      throw new Error("'dir' parameter is missing");
+      throw new Error("'dir' argument is missing");
     }
 
-    if (!expressions) {
-      throw new Error("'expressions' parameter is missing");
+    if (!sources) {
+      throw new Error("'sources' argument is missing");
     }
 
-    if (Array.isArray(expressions)) {
-      expressions = expressions.join(', ');
+    if (typeof sources === 'string') {
+      sources = sources.split(',');
     }
 
-    if (typeof expressions !== 'string') {
+    if (!Array.isArray(sources)) {
       throwUserError(`${formatCode('import')} property must be a string or an array`, {context});
     }
 
-    expressions = Expression.createMany(expressions, context);
-
     return Promise.all(
-      expressions.map(expression => {
-        if (expression.arguments.length !== 1) {
-          throwUserError(`Invalid ${formatCode('import')} source:`, {
-            info: formatString(expression.arguments.join(' ')),
-            context
-          });
-        }
-        const source = expression.arguments[0];
-        const config = expression.config;
-        return this.import(dir, source, config, context);
+      sources.map(source => {
+        return this.import(dir, source, context);
       })
     );
   }
@@ -200,7 +212,7 @@ export class Tool {
       Boolean(this.findImportedTool(cmdName));
   }
 
-  async run(expression, context) {
+  async run(expression, globalConfig, context) {
     context = this.constructor.extendContext(context, this);
 
     const {commandName, expression: newExpression} = expression.pullCommandName();
@@ -212,12 +224,12 @@ export class Tool {
 
     const cmd = this.findCommand(commandName);
     if (cmd) {
-      return await cmd.run(this, newExpression, context);
+      return await cmd.run(this, newExpression, globalConfig, context);
     }
 
     const importedTool = this.findImportedTool(commandName);
     if (importedTool) {
-      return await importedTool.run(newExpression, context);
+      return await importedTool.run(newExpression, globalConfig, context);
     }
 
     throwUserError(`Command ${formatCode(commandName)} not found`, {context});
@@ -274,7 +286,7 @@ export class Tool {
 
   static normalizeName(name, context) {
     if (!name) {
-      throw new Error(`${formatCode('name')} parameter is missing`);
+      throw new Error("'name' argument is missing");
     }
 
     name = name.trim();

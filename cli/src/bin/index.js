@@ -4,7 +4,6 @@ import nodeVersion from 'node-version';
 import updateNotifier from 'update-notifier';
 import {showErrorAndExit} from 'run-common';
 
-// import Tool from '../tool';
 import Expression from '../expression';
 import {runMany} from '../runner';
 
