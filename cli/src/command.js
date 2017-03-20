@@ -4,7 +4,7 @@ import {throwUserError, checkMistakes, formatCode} from 'run-common';
 
 import Expression from './expression';
 import Alias from './alias';
-import Argument from './argument';
+import Parameter from './parameter';
 import Config from './config';
 import Runtime from './runtime';
 
@@ -48,7 +48,7 @@ export class Command {
 
     checkMistakes(
       obj,
-      {alias: 'aliases', src: 'source', runs: 'run', argument: 'arguments'},
+      {alias: 'aliases', src: 'source', runs: 'run', parameter: 'parameters', params: 'parameters'},
       {
         context
       }
@@ -59,7 +59,7 @@ export class Command {
       aliases: Alias.createMany(obj.aliases || [], context),
       source: obj.source,
       expressions: obj.run && Expression.createMany(obj.run, context),
-      arguments: Argument.createMany(obj.arguments || [], context),
+      parameters: Parameter.createMany(obj.parameters || [], context),
       config: Config.create(obj.config || {}, context),
       runtime: obj.runtime && Runtime.create(obj.runtime, context)
     });
@@ -90,8 +90,8 @@ export class Command {
   async run(tool, expression, context) {
     context = this.constructor.extendContext(context, this);
 
-    const defaultArgs = this.arguments.map(arg => arg.default);
     const [...args] = expression.arguments;
+    const defaultArgs = this.parameters.map(param => param.default);
     defaults(args, defaultArgs);
 
     const config = cloneDeep(expression.config);

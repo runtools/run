@@ -11,7 +11,7 @@
     'hello': {
       source: './hello',
       aliases: ['hi'],
-      arguments: {
+      parameters: {
         name: 'World'
       },
       config: {
@@ -20,7 +20,7 @@
     },
     'hello-universe': {
       run: 'hello $0 --color=${config.color}',
-      arguments: {
+      parameters: {
         name: 'Universe'
       },
       config: {

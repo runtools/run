@@ -1,4 +1,4 @@
-import {omit, entries, camelCase, mapValues, get} from 'lodash';
+import {omit, entries, camelCase, mapValues, get, dropRightWhile} from 'lodash';
 import minimist from 'minimist';
 import {parse} from 'shell-quote';
 import {throwUserError, formatCode} from 'run-common';
@@ -121,12 +121,13 @@ export class Expression {
       return undefined;
     };
 
-    const resolvedExpression = {
-      arguments: resolveVars(this.arguments, getter),
-      config: resolveVars(this.config, getter)
-    };
+    const resolvedArguments = resolveVars(this.arguments, getter);
+    const resolvedConfig = resolveVars(this.config, getter);
 
-    return new this.constructor(resolvedExpression);
+    return new this.constructor({
+      arguments: resolvedArguments,
+      config: resolvedConfig
+    });
   }
 }
 
