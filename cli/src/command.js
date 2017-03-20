@@ -1,43 +1,43 @@
 import {resolve, isAbsolute} from 'path';
-import {entries, defaults, cloneDeep} from 'lodash';
+import {entries, defaults, clone} from 'lodash';
 import {throwUserError, checkMistakes, formatCode} from 'run-common';
 
 import Expression from './expression';
 import Alias from './alias';
 import Parameter from './parameter';
-import Config from './config';
+import Option from './option';
 import Runtime from './runtime';
 
 export class Command {
-  constructor(cmd) {
-    Object.assign(this, cmd);
+  constructor(command) {
+    Object.assign(this, command);
   }
 
-  static create(obj, context, defaultName) {
-    if (!obj) {
-      throw new Error("'obj' parameter is missing");
+  static create(definition, context, defaultName) {
+    if (!definition) {
+      throw new Error("'definition' parameter is missing");
     }
 
-    if (typeof obj === 'string') {
-      if (obj.startsWith('.') || isAbsolute(obj)) {
-        obj = {source: obj};
+    if (typeof definition === 'string') {
+      if (definition.startsWith('.') || isAbsolute(definition)) {
+        definition = {source: definition};
       } else {
-        obj = [obj];
+        definition = [definition];
       }
     }
 
-    if (Array.isArray(obj)) {
-      obj = {run: obj};
+    if (Array.isArray(definition)) {
+      definition = {run: definition};
     }
 
-    const name = obj.name || defaultName;
+    const name = definition.name || defaultName;
     if (!name) {
       throwUserError(`Command ${formatCode('name')} property is missing`, {context});
     }
 
     context = this.extendContext(context, {name});
 
-    if (!(obj.source || obj.run)) {
+    if (!(definition.source || definition.run)) {
       throwUserError(
         `Command ${formatCode('source')} or ${formatCode('run')} property is missing`,
         {
@@ -47,36 +47,43 @@ export class Command {
     }
 
     checkMistakes(
-      obj,
-      {alias: 'aliases', src: 'source', runs: 'run', parameter: 'parameters', params: 'parameters'},
+      definition,
+      {
+        alias: 'aliases',
+        src: 'source',
+        runs: 'run',
+        parameter: 'parameters',
+        params: 'parameters',
+        option: 'options'
+      },
       {
         context
       }
     );
 
-    const cmd = new this({
+    const command = new this({
       name,
-      aliases: Alias.createMany(obj.aliases || [], context),
-      source: obj.source,
-      expressions: obj.run && Expression.createMany(obj.run, context),
-      parameters: Parameter.createMany(obj.parameters || [], context),
-      config: Config.create(obj.config || {}, context),
-      runtime: obj.runtime && Runtime.create(obj.runtime, context)
+      aliases: Alias.createMany(definition.aliases || [], context),
+      source: definition.source,
+      expressions: definition.run && Expression.createMany(definition.run, context),
+      parameters: Parameter.createMany(definition.parameters || [], context),
+      options: Option.createMany(definition.options || {}, context),
+      runtime: definition.runtime && Runtime.create(definition.runtime, context)
     });
 
-    return cmd;
+    return command;
   }
 
-  static createMany(objs, context) {
-    if (!objs) {
-      throw new Error("'objs' parameter is missing");
+  static createMany(definitions, context) {
+    if (!definitions) {
+      throw new Error("'definitions' parameter is missing");
     }
 
-    if (Array.isArray(objs)) {
-      return objs.map(obj => this.create(obj, context));
+    if (Array.isArray(definitions)) {
+      return definitions.map(definition => this.create(definition, context));
     }
 
-    return entries(objs).map(([name, obj]) => this.create(obj, context, name));
+    return entries(definitions).map(([name, definition]) => this.create(definition, context, name));
   }
 
   static extendContext(base, obj) {
@@ -94,8 +101,8 @@ export class Command {
     const defaultArgs = this.parameters.map(param => param.default);
     defaults(args, defaultArgs);
 
-    const config = cloneDeep(expression.config);
-    defaults(config, this.config.getDefaults(), tool.config.getDefaults());
+    const config = clone(expression.config);
+    defaults(config, this.getDefaultConfig(), tool.getDefaultConfig());
 
     if (this.source) {
       const runtime = this.runtime || tool.runtime;
@@ -109,6 +116,14 @@ export class Command {
       result = tool.run(cmdExpression, context);
     }
     return result;
+  }
+
+  getDefaultConfig() {
+    const config = {};
+    for (const option of this.options) {
+      config[option.name] = option.default;
+    }
+    return config;
   }
 }
 

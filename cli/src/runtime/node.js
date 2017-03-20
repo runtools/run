@@ -12,13 +12,13 @@ import Runtime from './';
 import VersionRange from '../version-range';
 
 export class NodeRuntime extends Runtime {
-  static create(obj, context) {
-    if (!obj) {
-      throw new Error("'obj' property is missing");
+  static create(definition, context) {
+    if (!definition) {
+      throw new Error("'definition' property is missing");
     }
     const runtime = {
-      name: obj.name,
-      version: VersionRange.create(obj.version || '>=0.0.0', context)
+      name: definition.name,
+      version: VersionRange.create(definition.version || '>=0.0.0', context)
     };
     return new this(runtime);
   }

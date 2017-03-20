@@ -1,4 +1,4 @@
-import {omit, entries, camelCase, mapValues, get, dropRightWhile} from 'lodash';
+import {omit, entries, camelCase, mapValues, get} from 'lodash';
 import minimist from 'minimist';
 import {parse} from 'shell-quote';
 import {throwUserError, formatCode} from 'run-common';
@@ -8,18 +8,18 @@ export class Expression {
     Object.assign(this, expression);
   }
 
-  static create(array, context) {
-    // 'cook pizza --salami' => {arguments: ['cook', 'pizza'], config: {salami: true}}
+  static create(definition, context) {
+    // ['cook' 'pizza' '--salami'] => {arguments: ['cook', 'pizza'], config: {salami: true}}
 
-    if (!array) {
-      throw new Error("'array' parameter is missing");
+    if (!definition) {
+      throw new Error("'definition' parameter is missing");
     }
 
-    if (!Array.isArray(array)) {
+    if (!Array.isArray(definition)) {
       throwUserError(`A ${formatCode('run')} item should be a an array`, {context});
     }
 
-    let expression = minimist(array);
+    let expression = minimist(definition);
 
     const args = expression._;
 
@@ -34,9 +34,9 @@ export class Expression {
     return new this(expression);
   }
 
-  static createMany(arrays, context) {
-    if (typeof arrays === 'string') {
-      const str = arrays;
+  static createMany(definitions, context) {
+    if (typeof definitions === 'string') {
+      const str = definitions;
       let args = parse(str, name => ({__var__: name}));
       args = args.map(part => {
         // Fix '--option=${config.option}' parsing by removing '=' at the end of '--option='
@@ -48,8 +48,8 @@ export class Expression {
       return this.createManyFromShell(args, context);
     }
 
-    if (Array.isArray(arrays)) {
-      return arrays.map(obj => this.create(obj, context));
+    if (Array.isArray(definitions)) {
+      return definitions.map(obj => this.create(obj, context));
     }
 
     throwUserError(`${formatCode('run')} property should be a string or an array`, {context});
@@ -60,12 +60,12 @@ export class Expression {
       throw new Error("'args' parameter is missing");
     }
 
-    const arrays = [];
+    const definitions = [];
 
     let newArray = true;
     for (let arg of args) {
       if (newArray) {
-        arrays.push([]);
+        definitions.push([]);
         newArray = false;
       }
       if (typeof arg === 'string' && arg.endsWith(',')) {
@@ -73,11 +73,11 @@ export class Expression {
         newArray = true;
       }
       if (arg) {
-        arrays[arrays.length - 1].push(arg);
+        definitions[definitions.length - 1].push(arg);
       }
     }
 
-    return this.createMany(arrays, context);
+    return this.createMany(definitions, context);
   }
 
   getCommandName() {

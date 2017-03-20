@@ -7,12 +7,12 @@ export class Runtime {
     Object.assign(this, runtime);
   }
 
-  static create(obj, context) {
-    if (!obj) {
-      throw new Error("'obj' property is missing");
+  static create(definition, context) {
+    if (!definition) {
+      throw new Error("'definition' property is missing");
     }
 
-    let runtime = obj;
+    let runtime = definition;
 
     if (typeof runtime === 'string') {
       const [name, version] = runtime.split('@');

@@ -14,7 +14,7 @@
       parameters: {
         name: 'World'
       },
-      config: {
+      options: {
         color: 'white'
       }
     },
@@ -23,7 +23,7 @@
       parameters: {
         name: 'Universe'
       },
-      config: {
+      options: {
         color: 'yellow'
       }
     }

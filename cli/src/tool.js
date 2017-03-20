@@ -13,7 +13,7 @@ import {
 import Alias from './alias';
 import Version from './version';
 import Command from './command';
-import Config from './config';
+import Option from './option';
 import Runtime from './runtime';
 import Expression from './expression';
 
@@ -22,27 +22,28 @@ const TOOL_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
 const DEFAULT_TOOL_FILE_FORMAT = 'json5';
 
 export class Tool {
-  constructor(properties) {
-    Object.assign(this, properties);
+  constructor(tool) {
+    Object.assign(this, tool);
   }
 
-  static async create(obj, context) {
-    if (!obj) {
-      throw new Error("'obj' parameter is missing");
+  static async create(definition, context) {
+    if (!definition) {
+      throw new Error("'definition' parameter is missing");
     }
 
-    if (!obj.toolFile) {
+    if (!definition.toolFile) {
       throw new Error(`Tool 'toolFile' property is missing`);
     }
 
-    context = this.extendContext(context, obj);
+    context = this.extendContext(context, definition);
 
     checkMistakes(
-      obj,
+      definition,
       {
         alias: 'aliases',
         author: 'authors',
         command: 'commands',
+        option: 'options',
         extends: 'extend',
         imports: 'import',
         exports: 'export'
@@ -50,25 +51,29 @@ export class Tool {
       {context}
     );
 
-    const toolDir = dirname(obj.toolFile);
+    const toolDir = dirname(definition.toolFile);
 
     const tool = new this({
-      name: obj.name && this.normalizeName(obj.name, context),
-      aliases: Alias.createMany(obj.aliases || [], context),
-      version: obj.version && Version.create(obj.version, context),
-      description: obj.description,
-      authors: obj.authors,
-      license: obj.license,
-      repository: obj.repository && this.normalizeRepository(obj.repository),
-      config: Config.create(obj.config || {}, context),
-      runtime: obj.runtime && Runtime.create(obj.runtime, context),
-      toolFile: obj.toolFile,
+      name: definition.name && this.normalizeName(definition.name, context),
+      aliases: Alias.createMany(definition.aliases || [], context),
+      version: definition.version && Version.create(definition.version, context),
+      description: definition.description,
+      authors: definition.authors,
+      license: definition.license,
+      repository: definition.repository && this.normalizeRepository(definition.repository),
+      options: Option.createMany(definition.options || [], context),
+      runtime: definition.runtime && Runtime.create(definition.runtime, context),
+      toolFile: definition.toolFile,
       toolDir
     });
 
-    // tool.basetools = await this.extendMany(tool, obj.extend || [], context);
-    tool.commands = Command.createMany(obj.commands || [], context);
-    tool.importedTools = await this.importFromExpressions(toolDir, obj.import || [], context);
+    // tool.basetools = await this.extendMany(tool, definition.extend || [], context);
+    tool.commands = Command.createMany(definition.commands || [], context);
+    tool.importedTools = await this.importFromExpressions(
+      toolDir,
+      definition.import || [],
+      context
+    );
 
     return tool;
   }
@@ -82,21 +87,21 @@ export class Tool {
     if (!file) {
       return undefined;
     }
-    const obj = readFile(file, {parse: true});
-    return await this.create({...obj, toolFile: file});
+    const definition = readFile(file, {parse: true});
+    return await this.create({...definition, toolFile: file});
   }
 
   static async ensure(dir, {toolFileFormat = DEFAULT_TOOL_FILE_FORMAT} = {}) {
     let file = this.searchFile(dir);
-    let obj;
+    let definition;
     if (file) {
-      obj = readFile(file, {parse: true});
+      definition = readFile(file, {parse: true});
     } else {
       file = join(dir, TOOL_FILE_NAME + '.' + toolFileFormat);
-      obj = {name: basename(dir), version: '0.1.0-pre-alpha'};
-      writeFile(file, obj, {stringify: true});
+      definition = {name: basename(dir), version: '0.1.0-pre-alpha'};
+      writeFile(file, definition, {stringify: true});
     }
-    return await this.create({...obj, toolFile: file});
+    return await this.create({...definition, toolFile: file});
   }
 
   static searchFile(dir, {searchInPath = false} = {}) {
@@ -138,20 +143,20 @@ export class Tool {
       });
     }
 
-    let obj = readFile(file, {parse: true});
+    let definition = readFile(file, {parse: true});
 
-    obj = {
-      name: obj.name,
-      aliases: obj.aliases,
-      version: obj.version,
-      description: obj.description,
-      authors: obj.authors,
-      license: obj.license,
-      ...obj.export,
+    definition = {
+      name: definition.name,
+      aliases: definition.aliases,
+      version: definition.version,
+      description: definition.description,
+      authors: definition.authors,
+      license: definition.license,
+      ...definition.export,
       toolFile: file
     };
 
-    return await this.create(obj);
+    return await this.create(definition);
   }
 
   static async importFromExpressions(dir, expressions, context) {
@@ -241,6 +246,14 @@ export class Tool {
 
   isMatching(name) {
     return this.name === name || this.aliases.find(alias => alias.toString() === name);
+  }
+
+  getDefaultConfig() {
+    const config = {};
+    for (const option of this.options) {
+      config[option.name] = option.default;
+    }
+    return config;
   }
 
   getNameUniverse() {

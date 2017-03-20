@@ -1,9 +1,9 @@
 import {entries} from 'lodash';
 import {throwUserError, formatCode} from 'run-common';
 
-export class Parameter {
-  constructor(param) {
-    Object.assign(this, param);
+export class Option {
+  constructor(option) {
+    Object.assign(this, option);
   }
 
   static create(definition, context, defaultName) {
@@ -17,15 +17,15 @@ export class Parameter {
 
     const name = definition.name || defaultName;
     if (!name) {
-      throwUserError(`Parameter ${formatCode('name')} property is missing`, {context});
+      throwUserError(`Option ${formatCode('name')} property is missing`, {context});
     }
 
-    const param = new this({
+    const option = new this({
       name,
       default: definition.default
     });
 
-    return param;
+    return new this(option);
   }
 
   static createMany(definitions, context) {
@@ -41,4 +41,4 @@ export class Parameter {
   }
 }
 
-export default Parameter;
+export default Option;
