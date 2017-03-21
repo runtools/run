@@ -1,0 +1,11 @@
+{
+  name: 'base',
+  version: '1.0.0',
+  commands: {
+    'task': './task'
+  },
+  engine: {
+    name: 'node',
+    version: '>=4.3.2'
+  }
+}

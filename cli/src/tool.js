@@ -5,7 +5,7 @@ import {
   readFile,
   writeFile,
   throwUserError,
-  checkMistakes,
+  avoidCommonMistakes,
   formatString,
   formatPath,
   formatCode
@@ -15,8 +15,8 @@ import Alias from './alias';
 import Version from './version';
 import Command from './command';
 import Option from './option';
-import Engine from './engine';
 import Config from './config';
+import Engine from './engine';
 
 const TOOL_FILE_NAME = 'tool';
 const TOOL_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
@@ -38,7 +38,7 @@ export class Tool {
 
     context = this.extendContext(context, {file});
 
-    checkMistakes(
+    avoidCommonMistakes(
       definition,
       {
         alias: 'aliases',
@@ -47,7 +47,8 @@ export class Tool {
         option: 'options',
         extends: 'extend',
         imports: 'import',
-        exports: 'export'
+        exports: 'export',
+        configs: 'config'
       },
       {context}
     );
@@ -64,7 +65,9 @@ export class Tool {
       repository: definition.repository && this.normalizeRepository(definition.repository),
       commands: Command.createMany(dir, definition.commands || [], context),
       options: Option.createMany(definition.options || [], context),
+      extendedTools: await this.extendMany(dir, definition.extend || [], context),
       importedTools: await this.importMany(dir, definition.import || [], context),
+      config: Config.normalize(definition.config || {}, context),
       engine: definition.engine && Engine.create(definition.engine, context),
       file
     });
@@ -99,22 +102,11 @@ export class Tool {
   }
 
   static async loadGlobals(dir, {config, engine}) {
-    const file = this.searchFile(dir);
-    if (file) {
-      const context = {file};
-
-      const toolDefinition = readFile(file, {parse: true});
-
-      let toolConfig = toolDefinition.config;
-      if (toolConfig) {
-        toolConfig = Config.normalize(toolConfig, context);
-        defaultsDeep(config, toolConfig);
-      }
-
-      let toolEngine = toolDefinition.engine;
-      if (!engine && toolEngine) {
-        toolEngine = Engine.create(toolEngine, context);
-        engine = toolEngine;
+    const tool = await this.load(dir);
+    if (tool) {
+      defaultsDeep(config, tool.getConfig());
+      if (!engine) {
+        engine = tool.getEngine();
       }
     }
 
@@ -124,12 +116,6 @@ export class Tool {
     }
 
     return {config, engine};
-  }
-
-  static async loadConfig(file) {
-    let config = readFile(file, {parse: true});
-    config = Config.normalize(config, {file});
-    return config;
   }
 
   static searchFile(dir, {searchInPath = false} = {}) {
@@ -150,7 +136,60 @@ export class Tool {
     return undefined;
   }
 
+  static async extend(dir, source, context) {
+    if (!dir) {
+      throw new Error("'dir' argument is missing");
+    }
+
+    if (typeof source !== 'string') {
+      throwUserError(`Tool extend ${formatCode('source')} must be a string`, {context});
+    }
+
+    source = source.trim();
+
+    if (!source) {
+      throwUserError(`Tool extend ${formatCode('source')} cannot be empty`, {context});
+    }
+
+    let file = resolve(dir, source);
+    file = this.searchFile(file);
+    if (!file) {
+      throwUserError(`Tool extend not found: ${formatPath(source)}`, {
+        context
+      });
+    }
+
+    const definition = readFile(file, {parse: true});
+    return await this.create(file, definition);
+  }
+
+  static async extendMany(dir, sources, context) {
+    if (!dir) {
+      throw new Error("'dir' argument is missing");
+    }
+
+    if (!sources) {
+      throw new Error("'sources' argument is missing");
+    }
+
+    if (typeof sources === 'string') {
+      sources = sources.split(',');
+    }
+
+    if (!Array.isArray(sources)) {
+      throwUserError(`${formatCode('extend')} property must be a string or an array`, {context});
+    }
+
+    return Promise.all(
+      sources.map(source => {
+        return this.extend(dir, source, context);
+      })
+    );
+  }
+
   static async import(dir, source, context) {
+    // TODO: 'export' from base tools ('extend') should be taken into consideration
+
     if (!dir) {
       throw new Error("'dir' argument is missing");
     }
@@ -242,34 +281,83 @@ export class Tool {
     throwUserError(`Command ${formatCode(commandName)} not found`, {context});
   }
 
-  findCommand(name) {
-    for (const cmd of this.commands) {
-      if (cmd.isMatching(name)) {
-        return cmd;
+  find(fn) {
+    // Breadth-first search considering a tool and its base tools
+    const tools = [this];
+    while (tools.length) {
+      const tool = tools.shift();
+      const result = fn(tool);
+      if (result !== undefined) {
+        return result;
       }
+      tools.push(...tool.extendedTools);
     }
     return undefined;
   }
 
-  findImportedTool(name) {
-    for (const importedTool of this.importedTools) {
-      if (importedTool.isMatching(name)) {
-        return importedTool;
-      }
+  reduce(fn, initialValue) {
+    // Breadth-first reduce considering a tool and its base tools
+    let accumulator = initialValue;
+    const tools = [this];
+    while (tools.length) {
+      const tool = tools.shift();
+      accumulator = fn(accumulator, tool);
+      tools.push(...tool.extendedTools);
     }
-    return undefined;
+    return accumulator;
+  }
+
+  findCommand(name) {
+    return this.find(tool => {
+      for (const cmd of tool.commands) {
+        if (cmd.isMatching(name)) {
+          return cmd;
+        }
+      }
+      return undefined;
+    });
+  }
+
+  findImportedTool(name) {
+    return this.find(tool => {
+      for (const importedTool of tool.importedTools) {
+        if (importedTool.isMatching(name)) {
+          return importedTool;
+        }
+      }
+      return undefined;
+    });
+  }
+
+  getConfig() {
+    return this.reduce(
+      (config, tool) => {
+        defaultsDeep(config, tool.config);
+        return config;
+      },
+      {}
+    );
+  }
+
+  getDefaultConfig() {
+    // Fetch default config from options
+    return this.reduce(
+      (config, tool) => {
+        for (const option of tool.options) {
+          config[option.name] = option.default;
+        }
+        return config;
+      },
+      {}
+    );
+  }
+
+  getEngine() {
+    return this.find(tool => tool.engine);
   }
 
   isMatching(name) {
     return this.name === name || this.aliases.find(alias => alias.toString() === name);
-  }
-
-  getDefaultConfig() {
-    const config = {};
-    for (const option of this.options) {
-      config[option.name] = option.default;
-    }
-    return config;
   }
 
   getNameUniverse() {

@@ -1,6 +1,6 @@
 import {resolve, isAbsolute} from 'path';
 import {entries, defaults, cloneDeep, defaultsDeep} from 'lodash';
-import {throwUserError, checkMistakes, formatPath, formatCode} from 'run-common';
+import {throwUserError, avoidCommonMistakes, formatPath, formatCode} from 'run-common';
 
 import Expression from './expression';
 import Alias from './alias';
@@ -50,7 +50,7 @@ export class Command {
       );
     }
 
-    checkMistakes(
+    avoidCommonMistakes(
       definition,
       {
         alias: 'aliases',
@@ -116,7 +116,7 @@ export class Command {
     // TODO: omit config properties not defined in the command options
 
     if (this.source) {
-      const engine = this.engine || tool.engine || runner.engine;
+      const engine = this.engine || tool.getEngine() || runner.engine;
       const file = this.source;
 
       if (!engine) {

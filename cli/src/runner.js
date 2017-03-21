@@ -3,6 +3,7 @@ import {cloneDeep, defaultsDeep} from 'lodash';
 import {formatPath, formatCode, throwUserError} from 'run-common';
 
 import Tool from './tool';
+import Config from './config';
 import Engine from './engine';
 
 export class Runner {
@@ -31,7 +32,7 @@ export class Runner {
     ({config, expression} = expression.pullConfigProperty('config'));
     if (config) {
       config = resolve(this.dir, config);
-      config = await Tool.loadConfig(config);
+      config = await Config.load(config);
       defaultsDeep(config, this.config);
     }
 

@@ -336,7 +336,7 @@ export function showErrorAndExit(error, code = 1) {
   process.exit(code);
 }
 
-export function checkMistakes(obj, mistakes, {context}) {
+export function avoidCommonMistakes(obj, mistakes, {context}) {
   for (const [wrong, correct] of entries(mistakes)) {
     if (wrong in obj) {
       throwUserError(`Wrong property name: ${formatCode(wrong)}.`, {
