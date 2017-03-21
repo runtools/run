@@ -1,6 +1,6 @@
 import {resolve, isAbsolute} from 'path';
-import {entries, defaults, defaultsDeep, clone} from 'lodash';
-import {throwUserError, checkMistakes, formatCode} from 'run-common';
+import {entries, defaults, cloneDeep, defaultsDeep} from 'lodash';
+import {throwUserError, checkMistakes, formatPath, formatCode} from 'run-common';
 
 import Expression from './expression';
 import Alias from './alias';
@@ -13,7 +13,11 @@ export class Command {
     Object.assign(this, command);
   }
 
-  static create(definition, context, defaultName) {
+  static create(dir, definition, context, defaultName) {
+    if (!dir) {
+      throw new Error("'dir' argument is missing");
+    }
+
     if (!definition) {
       throw new Error("'definition' argument is missing");
     }
@@ -64,8 +68,8 @@ export class Command {
     const command = new this({
       name,
       aliases: Alias.createMany(definition.aliases || [], context),
-      source: definition.source,
-      expressions: definition.run && Expression.createMany(definition.run, context),
+      source: definition.source && resolve(dir, definition.source),
+      expressions: definition.run && Expression.createMany(dir, definition.run, context),
       parameters: Parameter.createMany(definition.parameters || [], context),
       options: Option.createMany(definition.options || {}, context),
       engine: definition.engine && Engine.create(definition.engine, context)
@@ -74,16 +78,21 @@ export class Command {
     return command;
   }
 
-  static createMany(definitions, context) {
+  static createMany(dir, definitions, context) {
+    if (!dir) {
+      throw new Error("'dir' argument is missing");
+    }
+
     if (!definitions) {
       throw new Error("'definitions' argument is missing");
     }
 
     if (Array.isArray(definitions)) {
-      return definitions.map(definition => this.create(definition, context));
+      return definitions.map(definition => this.create(dir, definition, context));
     }
 
-    return entries(definitions).map(([name, definition]) => this.create(definition, context, name));
+    return entries(definitions).map(([name, definition]) =>
+      this.create(dir, definition, context, name));
   }
 
   static extendContext(base, obj) {
@@ -94,7 +103,7 @@ export class Command {
     return this.name === name || this.aliases.find(alias => alias.toString() === name);
   }
 
-  async run(tool, expression, globalConfig, context) {
+  async run(runner, tool, expression, context) {
     context = this.constructor.extendContext(context, this);
 
     const [...args] = expression.arguments;
@@ -102,20 +111,27 @@ export class Command {
     defaults(args, defaultArgs);
     // TODO: omit arguments not defined in the command parameters
 
-    const config = clone(expression.config);
-    defaultsDeep(config, globalConfig, this.getDefaultConfig(), tool.getDefaultConfig());
+    const config = cloneDeep(expression.config);
+    defaultsDeep(config, runner.config, this.getDefaultConfig(), tool.getDefaultConfig());
     // TODO: omit config properties not defined in the command options
 
     if (this.source) {
-      const engine = this.engine || tool.engine;
-      const file = resolve(tool.dir, this.source);
+      const engine = this.engine || tool.engine || runner.engine;
+      const file = this.source;
+
+      if (!engine) {
+        throwUserError('Cannot run a file without an engine', {
+          context: {...context, file: formatPath(file)}
+        });
+      }
+
       return await engine.run({file, arguments: args, config, context});
     }
 
     let result;
     for (let cmdExpression of this.expressions) {
       cmdExpression = cmdExpression.resolveVariables({arguments: args, config});
-      result = tool.run(cmdExpression, globalConfig, context);
+      result = await runner.run(cmdExpression, context);
     }
     return result;
   }

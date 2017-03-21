@@ -1,5 +1,5 @@
 import {existsSync} from 'fs';
-import {join, resolve, dirname, basename, isAbsolute} from 'path';
+import {join, resolve, dirname, basename} from 'path';
 import {defaultsDeep} from 'lodash';
 import {
   readFile,
@@ -62,12 +62,11 @@ export class Tool {
       authors: definition.authors,
       license: definition.license,
       repository: definition.repository && this.normalizeRepository(definition.repository),
-      commands: Command.createMany(definition.commands || [], context),
+      commands: Command.createMany(dir, definition.commands || [], context),
       options: Option.createMany(definition.options || [], context),
       importedTools: await this.importMany(dir, definition.import || [], context),
       engine: definition.engine && Engine.create(definition.engine, context),
-      file,
-      dir
+      file
     });
 
     return tool;
@@ -99,29 +98,37 @@ export class Tool {
     return await this.create(file, definition);
   }
 
-  static async loadGlobalConfig(dir, globalConfig = {}) {
+  static async loadGlobals(dir, {config, engine}) {
     const file = this.searchFile(dir);
     if (file) {
-      const definition = readFile(file, {parse: true});
-      let config = definition.config;
-      if (config) {
-        config = Config.normalize(config, {file});
-        defaultsDeep(globalConfig, config);
+      const context = {file};
+
+      const toolDefinition = readFile(file, {parse: true});
+
+      let toolConfig = toolDefinition.config;
+      if (toolConfig) {
+        toolConfig = Config.normalize(toolConfig, context);
+        defaultsDeep(config, toolConfig);
+      }
+
+      let toolEngine = toolDefinition.engine;
+      if (!engine && toolEngine) {
+        toolEngine = Engine.create(toolEngine, context);
+        engine = toolEngine;
       }
     }
 
     const parentDir = join(dir, '..');
     if (parentDir !== dir) {
-      return await this.loadGlobalConfig(parentDir, globalConfig);
+      return await this.loadGlobals(parentDir, {config, engine});
     }
 
-    return globalConfig;
+    return {config, engine};
   }
 
-  static async loadConfig(file, globalConfig) {
+  static async loadConfig(file) {
     let config = readFile(file, {parse: true});
     config = Config.normalize(config, {file});
-    defaultsDeep(config, globalConfig);
     return config;
   }
 
@@ -212,7 +219,7 @@ export class Tool {
       Boolean(this.findImportedTool(cmdName));
   }
 
-  async run(expression, globalConfig, context) {
+  async run(runner, expression, context) {
     context = this.constructor.extendContext(context, this);
 
     const {commandName, expression: newExpression} = expression.pullCommandName();
@@ -224,21 +231,18 @@ export class Tool {
 
     const cmd = this.findCommand(commandName);
     if (cmd) {
-      return await cmd.run(this, newExpression, globalConfig, context);
+      return await cmd.run(runner, this, newExpression, context);
     }
 
     const importedTool = this.findImportedTool(commandName);
     if (importedTool) {
-      return await importedTool.run(newExpression, globalConfig, context);
+      return await importedTool.run(runner, newExpression, context);
     }
 
     throwUserError(`Command ${formatCode(commandName)} not found`, {context});
   }
 
   findCommand(name) {
-    if (name.startsWith('.') || isAbsolute(name)) {
-      return undefined; // Little optimization
-    }
     for (const cmd of this.commands) {
       if (cmd.isMatching(name)) {
         return cmd;

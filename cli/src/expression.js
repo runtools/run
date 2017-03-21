@@ -1,3 +1,4 @@
+import {resolve} from 'path';
 import {omit, mapValues, get} from 'lodash';
 import minimist from 'minimist';
 import {parse} from 'shell-quote';
@@ -10,7 +11,7 @@ export class Expression {
     Object.assign(this, expression);
   }
 
-  static create(definition, context) {
+  static create(dir, definition, context) {
     // ['cook' 'pizza' '--salami'] => {arguments: ['cook', 'pizza'], config: {salami: true}}
 
     if (!definition) {
@@ -25,6 +26,16 @@ export class Expression {
 
     const args = expression._;
 
+    let commandName = args[0];
+    if (!commandName) {
+      throwUserError(`An expression must contain a command name`, {context});
+    }
+
+    if (commandName.startsWith('.')) {
+      commandName = resolve(dir, commandName);
+      args[0] = commandName;
+    }
+
     let config = omit(expression, '_');
     config = Config.normalize(config);
 
@@ -33,7 +44,7 @@ export class Expression {
     return new this(expression);
   }
 
-  static createMany(definitions, context) {
+  static createMany(dir, definitions, context) {
     if (typeof definitions === 'string') {
       const str = definitions;
       let args = parse(str, name => ({__var__: name}));
@@ -44,17 +55,17 @@ export class Expression {
         }
         return part;
       });
-      return this.createManyFromShell(args, context);
+      return this.createManyFromShell(dir, args, context);
     }
 
     if (Array.isArray(definitions)) {
-      return definitions.map(obj => this.create(obj, context));
+      return definitions.map(definition => this.create(dir, definition, context));
     }
 
     throwUserError(`${formatCode('run')} property should be a string or an array`, {context});
   }
 
-  static createManyFromShell(args, context) {
+  static createManyFromShell(dir, args, context) {
     if (!args) {
       throw new Error("'args' argument is missing");
     }
@@ -76,7 +87,7 @@ export class Expression {
       }
     }
 
-    return this.createMany(definitions, context);
+    return this.createMany(dir, definitions, context);
   }
 
   getCommandName() {
@@ -84,12 +95,20 @@ export class Expression {
   }
 
   pullCommandName() {
-    const commandName = this.arguments[0];
-    const expression = new this.constructor({
-      arguments: this.arguments.slice(1),
-      config: this.config
-    });
+    const [commandName, ...args] = this.arguments;
+    const expression = new this.constructor({arguments: args, config: this.config});
     return {commandName, expression};
+  }
+
+  pullConfigProperty(name) {
+    if (!(name in this.config)) {
+      return {expression: this};
+    }
+
+    const value = this.config[name];
+    const config = omit(this.config, name);
+    const expression = new this.constructor({arguments: this.arguments, config});
+    return {[name]: value, expression};
   }
 
   resolveVariables({arguments: args, config}) {

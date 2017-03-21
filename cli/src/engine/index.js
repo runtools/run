@@ -24,7 +24,7 @@ export class Engine {
     }
 
     if (!existsSync(join(__dirname, engine.name + '.js'))) {
-      throwUserError(`Engine ${formatPath(engine.name)} is not supported`, {context});
+      throwUserError(`Engine not found: ${formatPath(engine.name)}`, {context});
     }
 
     return require('./' + engine.name).default.create(engine, context);
