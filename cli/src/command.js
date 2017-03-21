@@ -6,7 +6,7 @@ import Expression from './expression';
 import Alias from './alias';
 import Parameter from './parameter';
 import Option from './option';
-import Runtime from './runtime';
+import Engine from './engine';
 
 export class Command {
   constructor(command) {
@@ -68,7 +68,7 @@ export class Command {
       expressions: definition.run && Expression.createMany(definition.run, context),
       parameters: Parameter.createMany(definition.parameters || [], context),
       options: Option.createMany(definition.options || {}, context),
-      runtime: definition.runtime && Runtime.create(definition.runtime, context)
+      engine: definition.engine && Engine.create(definition.engine, context)
     });
 
     return command;
@@ -107,9 +107,9 @@ export class Command {
     // TODO: omit config properties not defined in the command options
 
     if (this.source) {
-      const runtime = this.runtime || tool.runtime;
+      const engine = this.engine || tool.engine;
       const file = resolve(tool.dir, this.source);
-      return await runtime.run({file, arguments: args, config, context});
+      return await engine.run({file, arguments: args, config, context});
     }
 
     let result;

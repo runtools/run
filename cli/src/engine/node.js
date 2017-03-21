@@ -8,25 +8,25 @@ import nodeVersion from 'node-version';
 
 import {throwUserError, formatPath, formatCode} from 'run-common';
 
-import Runtime from './';
+import Engine from './';
 import VersionRange from '../version-range';
 
-export class NodeRuntime extends Runtime {
+export class NodeEngine extends Engine {
   static create(definition, context) {
     if (!definition) {
       throw new Error("'definition' property is missing");
     }
-    const runtime = {
+    const engine = {
       name: definition.name,
       version: VersionRange.create(definition.version || '>=0.0.0', context)
     };
-    return new this(runtime);
+    return new this(engine);
   }
 
   async run({file: requestedFile, arguments: args, config, context}) {
     const file = this.searchFile(requestedFile);
     if (!file) {
-      throwUserError(`${formatCode(this.name)} runtime cannot load ${formatPath(requestedFile)}`, {
+      throwUserError(`${formatCode(this.name)} engine cannot load ${formatPath(requestedFile)}`, {
         context
       });
     }
@@ -97,4 +97,4 @@ export class NodeRuntime extends Runtime {
   }
 }
 
-export default NodeRuntime;
+export default NodeEngine;

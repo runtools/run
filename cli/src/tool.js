@@ -15,7 +15,7 @@ import Alias from './alias';
 import Version from './version';
 import Command from './command';
 import Option from './option';
-import Runtime from './runtime';
+import Engine from './engine';
 import Config from './config';
 
 const TOOL_FILE_NAME = 'tool';
@@ -65,7 +65,7 @@ export class Tool {
       commands: Command.createMany(definition.commands || [], context),
       options: Option.createMany(definition.options || [], context),
       importedTools: await this.importMany(dir, definition.import || [], context),
-      runtime: definition.runtime && Runtime.create(definition.runtime, context),
+      engine: definition.engine && Engine.create(definition.engine, context),
       file,
       dir
     });
