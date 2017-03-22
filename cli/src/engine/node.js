@@ -31,6 +31,8 @@ export class NodeEngine extends Engine {
       });
     }
 
+    context = {...context, file: formatPath(file)};
+
     let result;
 
     if (this.version.includes(nodeVersion.long)) {
@@ -44,11 +46,13 @@ export class NodeEngine extends Engine {
         fn = module; // CommonJS module
       }
       if (typeof fn !== 'function') {
-        throwUserError(`Exported function not found`, {
-          context: {...context, file: formatPath(file)}
-        });
+        throwUserError(`Exported function not found`, {context});
       }
-      result = await fn(args, config);
+      try {
+        result = {result: await fn(args, config)};
+      } catch (error) {
+        result = {error};
+      }
     } else {
       // The running node doesn't satisfy the required version
       // TODO: Install and use the required version
@@ -59,6 +63,8 @@ export class NodeEngine extends Engine {
             (${JSON.stringify(args)}, ${JSON.stringify(config)})
         ).then(function(result) {
           console.log(JSON.stringify({__run__: {result: result}}));
+        }).catch(function(err) {
+          console.log(JSON.stringify({__run__: {error: err}}));
         })`;
 
       const promise = spawn('node', ['--eval', script], {
@@ -71,7 +77,7 @@ export class NodeEngine extends Engine {
             const str = chunk.toString();
             if (str.startsWith('{"__run__":{')) {
               // Intercept the result
-              result = JSON.parse(str).__run__.result;
+              result = JSON.parse(str).__run__;
             } else {
               process.stdout.write(chunk, encoding);
             }
@@ -83,7 +89,14 @@ export class NodeEngine extends Engine {
       await promise;
     }
 
-    return result;
+    if (result.error) {
+      throwUserError(`An error occured while executing a command:`, {
+        info: result.error.message,
+        context
+      });
+    }
+
+    return result.result;
   }
 
   searchFile(file) {
