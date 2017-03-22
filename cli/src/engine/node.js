@@ -83,7 +83,6 @@ export class NodeEngine extends Engine {
       await promise;
     }
 
-    console.log(result);
     return result;
   }
 
