@@ -1,5 +1,5 @@
 import {entries, camelCase} from 'lodash';
-import {expand} from 'objnest';
+import {nest} from 'flatnest';
 import {readFile, throwUserError} from 'run-common';
 
 export const Config = {
@@ -14,10 +14,10 @@ export const Config = {
       throwUserError(`Configuration must be an object`, {context});
     }
 
-    const expandedConfig = expand(config);
+    const nestedConfig = nest(config);
 
     const normalizedConfig = {};
-    for (let [key, value] of entries(expandedConfig)) {
+    for (let [key, value] of entries(nestedConfig)) {
       if (!key.startsWith('_')) {
         key = camelCase(key);
       }
