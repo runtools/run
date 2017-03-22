@@ -36,12 +36,24 @@ export class NodeEngine extends Engine {
     if (this.version.includes(nodeVersion.long)) {
       // The running node satisfies the required version
       // Let's use it to run the file and save 100 ms
-      result = require(file)(args, config);
+
+      const module = require(file);
+
+      let fn = module.default; // ES6 module
+      if (typeof fn !== 'function') {
+        fn = module; // CommonJS module
+      }
+      if (typeof fn !== 'function') {
+        throwUserError(`Exported function not found`, {
+          context: {...context, file: formatPath(file)}
+        });
+      }
+      result = fn(args, config);
     } else {
       // The running node doesn't satisfy the required version
       // TODO: Install and use the required version
 
-      const script = `JSON.stringify({__run__: {result: require(${quote(file)})(${JSON.stringify(args)}, ${JSON.stringify(config)})}})`;
+      const script = `JSON.stringify({__run__: {result: (require(${quote(file)}).default || require(${quote(file)}))(${JSON.stringify(args)}, ${JSON.stringify(config)})}})`;
 
       const promise = spawn('node', ['--print', script], {
         stdio: [process.stdin, 'pipe', process.stderr]

@@ -61,7 +61,7 @@
     "flatnest": "^1.0.0",
     "fuse.js": "^2.6.1",
     "inquirer": "^3.0.1",
-    "inquirer-autocomplete-prompt": "^0.6.0",
+    "inquirer-autocomplete-prompt": "^0.8.0",
     "is-directory": "^0.3.1",
     "json5": "^0.5.1",
     "jsonfile": "^2.4.0",
@@ -75,9 +75,9 @@
     "update-notifier": "^2.1.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.23.0",
+    "babel-cli": "^6.24.0",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
-    "babel-preset-env": "^1.1.8",
+    "babel-preset-env": "^1.2.2",
     "prettier": "^0.22.0"
   }
 }
