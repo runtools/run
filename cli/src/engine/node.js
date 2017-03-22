@@ -48,14 +48,20 @@ export class NodeEngine extends Engine {
           context: {...context, file: formatPath(file)}
         });
       }
-      result = fn(args, config);
+      result = await fn(args, config);
     } else {
       // The running node doesn't satisfy the required version
       // TODO: Install and use the required version
 
-      const script = `JSON.stringify({__run__: {result: (require(${quote(file)}).default || require(${quote(file)}))(${JSON.stringify(args)}, ${JSON.stringify(config)})}})`;
+      const script = `
+        Promise.resolve(
+          (require(${quote(file)}).default || require(${quote(file)}))
+            (${JSON.stringify(args)}, ${JSON.stringify(config)})
+        ).then(function(result) {
+          console.log(JSON.stringify({__run__: {result: result}}));
+        })`;
 
-      const promise = spawn('node', ['--print', script], {
+      const promise = spawn('node', ['--eval', script], {
         stdio: [process.stdin, 'pipe', process.stderr]
       });
 
@@ -77,6 +83,7 @@ export class NodeEngine extends Engine {
       await promise;
     }
 
+    console.log(result);
     return result;
   }
 
