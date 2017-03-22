@@ -56,7 +56,7 @@ export class Tool {
 
     const dir = dirname(file);
 
-    const exportedDefinition = importMode ? definition.export || {} : definition;
+    const baseDefinition = importMode ? definition.export || {} : definition;
 
     const tool = new this({
       name: definition.name && this.normalizeName(definition.name, context),
@@ -66,12 +66,12 @@ export class Tool {
       authors: definition.authors,
       license: definition.license,
       repository: definition.repository && this.normalizeRepository(definition.repository),
-      extendedTools: await this.extendMany(dir, definition.extend || [], {importMode, context}),
-      commands: Command.createMany(dir, exportedDefinition.commands || [], context),
-      options: Option.createMany(exportedDefinition.options || [], context),
-      subtools: await this.importMany(dir, exportedDefinition.import || [], context),
-      config: Config.normalize(exportedDefinition.config || {}, context),
-      engine: exportedDefinition.engine && Engine.create(exportedDefinition.engine, context),
+      basetools: await this.extendMany(dir, definition.extend || [], {importMode, context}),
+      commands: Command.createMany(dir, baseDefinition.commands || [], context),
+      options: Option.createMany(baseDefinition.options || [], context),
+      subtools: await this.importMany(dir, baseDefinition.import || [], context),
+      config: Config.normalize(baseDefinition.config || {}, context),
+      engine: baseDefinition.engine && Engine.create(baseDefinition.engine, context),
       file
     });
 
@@ -283,7 +283,7 @@ export class Tool {
       if (result !== undefined) {
         return result;
       }
-      tools.push(...tool.extendedTools);
+      tools.push(...tool.basetools);
     }
     return undefined;
   }
@@ -295,7 +295,7 @@ export class Tool {
     while (tools.length) {
       const tool = tools.shift();
       accumulator = fn(accumulator, tool);
-      tools.push(...tool.extendedTools);
+      tools.push(...tool.basetools);
     }
     return accumulator;
   }
