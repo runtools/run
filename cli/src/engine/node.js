@@ -90,8 +90,7 @@ export class NodeEngine extends Engine {
     }
 
     if (result.error) {
-      throwUserError(`An error occured while executing a command:`, {
-        info: result.error.message,
+      throwUserError(result.error.message, {
         context
       });
     }

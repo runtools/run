@@ -69,7 +69,7 @@ export class Tool {
       extendedTools: await this.extendMany(dir, definition.extend || [], {importMode, context}),
       commands: Command.createMany(dir, exportedDefinition.commands || [], context),
       options: Option.createMany(exportedDefinition.options || [], context),
-      importedTools: await this.importMany(dir, exportedDefinition.import || [], context),
+      subtools: await this.importMany(dir, exportedDefinition.import || [], context),
       config: Config.normalize(exportedDefinition.config || {}, context),
       engine: exportedDefinition.engine && Engine.create(exportedDefinition.engine, context),
       file
@@ -313,7 +313,7 @@ export class Tool {
 
   findImportedTool(name) {
     return this.find(tool => {
-      for (const importedTool of tool.importedTools) {
+      for (const importedTool of tool.subtools) {
         if (importedTool.isMatching(name)) {
           return importedTool;
         }
