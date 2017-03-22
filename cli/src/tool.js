@@ -27,7 +27,7 @@ export class Tool {
     Object.assign(this, tool);
   }
 
-  static async create(file, definition, context) {
+  static async create(file, definition, {importMode, context} = {}) {
     if (!file) {
       throw new Error("'file' argument is missing");
     }
@@ -48,12 +48,15 @@ export class Tool {
         extends: 'extend',
         imports: 'import',
         exports: 'export',
-        configs: 'config'
+        configs: 'config',
+        engines: 'engine'
       },
       {context}
     );
 
     const dir = dirname(file);
+
+    const exportedDefinition = importMode ? definition.export || {} : definition;
 
     const tool = new this({
       name: definition.name && this.normalizeName(definition.name, context),
@@ -63,12 +66,12 @@ export class Tool {
       authors: definition.authors,
       license: definition.license,
       repository: definition.repository && this.normalizeRepository(definition.repository),
-      commands: Command.createMany(dir, definition.commands || [], context),
-      options: Option.createMany(definition.options || [], context),
-      extendedTools: await this.extendMany(dir, definition.extend || [], context),
-      importedTools: await this.importMany(dir, definition.import || [], context),
-      config: Config.normalize(definition.config || {}, context),
-      engine: definition.engine && Engine.create(definition.engine, context),
+      extendedTools: await this.extendMany(dir, definition.extend || [], {importMode, context}),
+      commands: Command.createMany(dir, exportedDefinition.commands || [], context),
+      options: Option.createMany(exportedDefinition.options || [], context),
+      importedTools: await this.importMany(dir, exportedDefinition.import || [], context),
+      config: Config.normalize(exportedDefinition.config || {}, context),
+      engine: exportedDefinition.engine && Engine.create(exportedDefinition.engine, context),
       file
     });
 
@@ -79,16 +82,17 @@ export class Tool {
     return {...base, tool: formatPath(obj.file)};
   }
 
-  static async load(dir) {
-    const file = this.searchFile(dir);
+  static async load(source, {importMode, context} = {}) {
+    // TODO: load tools from registry
+    const file = this.searchFile(source);
     if (!file) {
       return undefined;
     }
     const definition = readFile(file, {parse: true});
-    return await this.create(file, definition);
+    return await this.create(file, definition, {importMode, context});
   }
 
-  static async ensure(dir, {toolFileFormat = DEFAULT_TOOL_FILE_FORMAT} = {}) {
+  static async ensure(dir, {toolFileFormat = DEFAULT_TOOL_FILE_FORMAT, context} = {}) {
     let file = this.searchFile(dir);
     let definition;
     if (file) {
@@ -98,11 +102,11 @@ export class Tool {
       definition = {name: basename(dir), version: '0.1.0-pre-alpha'};
       writeFile(file, definition, {stringify: true});
     }
-    return await this.create(file, definition);
+    return await this.create(file, definition, {context});
   }
 
-  static async loadGlobals(dir, {config, engine}) {
-    const tool = await this.load(dir);
+  static async loadGlobals(dir, {config, engine, context}) {
+    const tool = await this.load(dir, {context});
     if (tool) {
       defaultsDeep(config, tool.getConfig());
       if (!engine) {
@@ -112,7 +116,7 @@ export class Tool {
 
     const parentDir = join(dir, '..');
     if (parentDir !== dir) {
-      return await this.loadGlobals(parentDir, {config, engine});
+      return await this.loadGlobals(parentDir, {config, engine, context});
     }
 
     return {config, engine};
@@ -136,7 +140,7 @@ export class Tool {
     return undefined;
   }
 
-  static async extend(dir, source, context) {
+  static async extend(dir, source, {importMode, context}) {
     if (!dir) {
       throw new Error("'dir' argument is missing");
     }
@@ -151,19 +155,20 @@ export class Tool {
       throwUserError(`Tool extend ${formatCode('source')} cannot be empty`, {context});
     }
 
-    let file = resolve(dir, source);
-    file = this.searchFile(file);
-    if (!file) {
+    if (source.startsWith('.')) {
+      source = resolve(dir, source);
+    }
+
+    const tool = await this.load(source, {importMode, context});
+    if (!tool) {
       throwUserError(`Tool extend not found: ${formatPath(source)}`, {
         context
       });
     }
-
-    const definition = readFile(file, {parse: true});
-    return await this.create(file, definition);
+    return tool;
   }
 
-  static async extendMany(dir, sources, context) {
+  static async extendMany(dir, sources, {importMode, context}) {
     if (!dir) {
       throw new Error("'dir' argument is missing");
     }
@@ -182,14 +187,12 @@ export class Tool {
 
     return Promise.all(
       sources.map(source => {
-        return this.extend(dir, source, context);
+        return this.extend(dir, source, {importMode, context});
       })
     );
   }
 
   static async import(dir, source, context) {
-    // TODO: 'export' from base tools ('extend') should be taken into consideration
-
     if (!dir) {
       throw new Error("'dir' argument is missing");
     }
@@ -204,27 +207,17 @@ export class Tool {
       throwUserError(`Tool import ${formatCode('source')} cannot be empty`, {context});
     }
 
-    let file = resolve(dir, source);
-    file = this.searchFile(file);
-    if (!file) {
+    if (source.startsWith('.')) {
+      source = resolve(dir, source);
+    }
+
+    const tool = await this.load(source, {importMode: true, context});
+    if (!tool) {
       throwUserError(`Tool import not found: ${formatPath(source)}`, {
         context
       });
     }
-
-    let definition = readFile(file, {parse: true});
-
-    definition = {
-      name: definition.name,
-      aliases: definition.aliases,
-      version: definition.version,
-      description: definition.description,
-      authors: definition.authors,
-      license: definition.license,
-      ...definition.export
-    };
-
-    return await this.create(file, definition);
+    return tool;
   }
 
   static async importMany(dir, sources, context) {
