@@ -3,8 +3,7 @@
   "packages": [
     "cli",
     "common",
-    "examples.disabled/*",
-    "tools.disabled/*"
+    "tools/js/package/package-manager"
   ],
   "version": "independent",
   "onlyExplicitUpdates": true,

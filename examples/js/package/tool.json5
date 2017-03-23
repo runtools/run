@@ -1,0 +1,5 @@
+{
+  name: 'js-package-example',
+  version: '1.0.0',
+  extend: ['../../../tools/js/package']
+}

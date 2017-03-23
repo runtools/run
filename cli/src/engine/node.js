@@ -91,7 +91,9 @@ export class NodeEngine extends Engine {
 
     if (result.error) {
       throwUserError(result.error.message, {
-        context
+        context: config.debug ? context : undefined,
+        hidden: result.error.hidden,
+        capturedStandardError: result.error.capturedStandardError
       });
     }
 

@@ -181,37 +181,73 @@ export function showCommandIntro(action, {name, stage, info} = {}) {
   console.log(message);
 }
 
-export async function task(message, successMessage, fn) {
-  if (typeof successMessage === 'function') {
-    fn = successMessage;
-    successMessage = undefined;
+export async function task(fn, {intro, outro, debug, verbose}) {
+  let progress;
+
+  if (debug || verbose) {
+    progress = {
+      outro,
+      start() {
+        return this;
+      },
+      complete() {
+        console.log(getSuccessSymbol() + '  ' + this.outro);
+        return this;
+      },
+      fail() {
+        return this;
+      },
+      setMessage(message) {
+        console.log(getRunningSymbol() + '  ' + message);
+        return this;
+      },
+      setOutro(message) {
+        this.outro = message;
+        return this;
+      }
+    };
+  } else {
+    progress = {
+      spinner: ora({
+        spinner: cliSpinners.runner
+      }),
+      outro,
+      start() {
+        this.spinner.start();
+        return this;
+      },
+      complete() {
+        this.spinner.stopAndPersist({
+          text: this.outro,
+          symbol: getSuccessSymbol() + ' '
+        });
+        return this;
+      },
+      fail() {
+        this.spinner.stopAndPersist({
+          symbol: getErrorSymbol() + ' '
+        });
+        return this;
+      },
+      setMessage(message) {
+        this.spinner.text = adjustToWindowWidth(message, {leftMargin: 3});
+        return this;
+      },
+      setOutro(message) {
+        this.outro = message;
+        return this;
+      }
+    };
   }
 
-  const spinner = ora({
-    text: adjustToWindowWidth(message, {leftMargin: 3}),
-    spinner: cliSpinners.moon
-  }).start();
-
-  const currentTask = {
-    setMessage(message) {
-      spinner.text = adjustToWindowWidth(message, {leftMargin: 3});
-    },
-    setSuccessMessage(message) {
-      successMessage = message;
-    }
-  };
+  progress.setMessage(intro).start();
 
   try {
-    const result = await fn(currentTask);
-    spinner.stopAndPersist({
-      text: successMessage,
-      symbol: getSuccessSymbol() + ' '
-    });
+    const result = await fn(progress);
+    progress.complete();
     return result;
   } catch (err) {
-    spinner.stopAndPersist({
-      symbol: getErrorSymbol() + ' '
-    });
+    progress.fail();
     throw err;
   }
 }
@@ -247,29 +283,34 @@ export function formatMessage(message, info, options) {
   return `${status}${message}${info}`;
 }
 
-const SUCCESS_SYMBOLS = [
-  '👍',
-  '👍🏻',
-  '👍🏼',
-  '👍🏽',
-  '👍🏾',
-  '👍🏿',
-  '👌',
-  '👌🏻',
-  '👌🏼',
-  '👌🏽',
-  '👌🏾',
-  '👌🏿',
-  '✌️️',
-  '✌️🏻',
-  '✌️🏼',
-  '✌️🏽',
-  '✌️🏾',
-  '✌️🏿'
-];
+// const SUCCESS_SYMBOLS = [
+//   '👍',
+//   '👍🏻',
+//   '👍🏼',
+//   '👍🏽',
+//   '👍🏾',
+//   '👍🏿',
+//   '👌',
+//   '👌🏻',
+//   '👌🏼',
+//   '👌🏽',
+//   '👌🏾',
+//   '👌🏿',
+//   '✌️️',
+//   '✌️🏻',
+//   '✌️🏼',
+//   '✌️🏽',
+//   '✌️🏾',
+//   '✌️🏿'
+// ];
+
+export function getRunningSymbol() {
+  return '🏃';
+}
 
 export function getSuccessSymbol() {
-  return SUCCESS_SYMBOLS[Math.floor(Math.random() * SUCCESS_SYMBOLS.length)];
+  // return SUCCESS_SYMBOLS[Math.floor(Math.random() * SUCCESS_SYMBOLS.length)];
+  return '⚡';
 }
 
 export function getErrorSymbol() {
@@ -296,7 +337,10 @@ export function adjustToWindowWidth(text, {leftMargin = 0, rightMargin = 0} = {}
   return sliceANSI(text, 0, windowSize.width - leftMargin - rightMargin);
 }
 
-export function createUserError(message, {info, type, context} = {}) {
+export function createUserError(
+  message,
+  {info, type, context, hidden, capturedStandardError} = {}
+) {
   message = red(message);
   if (info) {
     message += ' ' + info;
@@ -312,6 +356,12 @@ export function createUserError(message, {info, type, context} = {}) {
     err.type = type;
   }
   err.userError = true;
+  if (hidden) {
+    err.hidden = true;
+  }
+  if (capturedStandardError) {
+    err.capturedStandardError = capturedStandardError;
+  }
   return err;
 }
 
@@ -324,8 +374,14 @@ export function showError(error) {
     error = throwUserError(error);
   }
   if (error.userError) {
-    const message = formatMessage(error.message, {status: 'error'});
-    console.error(message);
+    const stdErr = error.capturedStandardError && error.capturedStandardError.trim();
+    if (stdErr) {
+      console.error(stdErr);
+    }
+    if (!error.hidden) {
+      const message = formatMessage(error.message, {status: 'error'});
+      console.error(message);
+    }
   } else {
     console.error(error);
   }

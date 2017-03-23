@@ -1,0 +1,27 @@
+{
+  name: 'dependency-manager',
+  aliases: ['dependencies', 'dependency', 'deps', 'dep'],
+  export: {
+    commands: {
+      add: {
+        source: './dist/commands/add',
+        options: {
+          peer: false,
+          optional: false
+        }
+      },
+      remove: {
+        aliases: ['rm'],
+        source: './dist/commands/remove'
+      }
+    },
+    options: {
+      debug: false,
+      packageManager: 'yarn'
+    },
+    engine: {
+      name: 'node',
+      version: '>=4.3.2'
+    }
+  }
+}

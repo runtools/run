@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "test": "^0.6.0"
+  },
+  "license": "UNLICENSED",
+  "peerDependencies": {},
+  "optionalDependencies": {}
+}

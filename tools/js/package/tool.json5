@@ -1,0 +1,10 @@
+{
+  name: 'run/js-package',
+  aliases: ['js/package'],
+  version: '0.1.0-pre-alpha',
+  import: ['./package-manager'],
+  engine: {
+    name: 'node',
+    version: '>=4.3.2'
+  }
+}
