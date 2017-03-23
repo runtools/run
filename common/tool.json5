@@ -1,0 +1,3 @@
+{
+  extend: ['../tools/js/package']
+}
