@@ -7,8 +7,8 @@ import {showErrorAndExit} from 'run-common';
 import Expression from '../expression';
 import Runner from '../runner';
 
-if (nodeVersion.major < 4) {
-  showErrorAndExit('⚡run requires at least version 4 of Node.');
+if (nodeVersion.major < 6) {
+  showErrorAndExit('⚡run requires at least version 6 of Node.');
 }
 
 const pkg = require('../../package');

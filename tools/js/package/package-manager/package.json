@@ -10,7 +10,7 @@
         "env",
         {
           "targets": {
-            "node": 4
+            "node": 6
           },
           "loose": true,
           "exclude": [
