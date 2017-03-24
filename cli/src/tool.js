@@ -1,6 +1,7 @@
 import {existsSync} from 'fs';
 import {join, resolve, dirname, basename} from 'path';
 import {defaultsDeep} from 'lodash';
+import isDirectory from 'is-directory';
 import {
   readFile,
   writeFile,
@@ -58,6 +59,8 @@ export class Tool {
 
     const baseDefinition = importMode ? definition.export || {} : definition;
 
+    const engine = baseDefinition.engine || definition.engine;
+
     const tool = new this({
       name: definition.name && this.normalizeName(definition.name, context),
       aliases: Alias.createMany(definition.aliases || [], context),
@@ -71,7 +74,7 @@ export class Tool {
       options: Option.createMany(baseDefinition.options || [], context),
       subtools: await this.importMany(dir, baseDefinition.import || [], context),
       config: Config.normalize(baseDefinition.config || {}, context),
-      engine: baseDefinition.engine && Engine.create(baseDefinition.engine, context),
+      engine: engine && Engine.create(engine, context),
       file
     });
 
@@ -84,7 +87,7 @@ export class Tool {
 
   static async load(source, {importMode, context} = {}) {
     // TODO: load tools from registry
-    const file = this.searchFile(source);
+    const file = this.searchToolFile(source);
     if (!file) {
       return undefined;
     }
@@ -93,7 +96,7 @@ export class Tool {
   }
 
   static async ensure(dir, {toolFileFormat = DEFAULT_TOOL_FILE_FORMAT, context} = {}) {
-    let file = this.searchFile(dir);
+    let file = this.searchToolFile(dir);
     let definition;
     if (file) {
       definition = readFile(file, {parse: true});
@@ -122,7 +125,23 @@ export class Tool {
     return {config, engine};
   }
 
-  static searchFile(dir, {searchInPath = false} = {}) {
+  static searchToolFile(dirOrFile, {searchInPath = false} = {}) {
+    let dir;
+
+    if (isDirectory.sync(dirOrFile)) {
+      dir = dirOrFile;
+    } else if (existsSync(dirOrFile)) {
+      const file = dirOrFile;
+      const filename = basename(file);
+      if (TOOL_FILE_FORMATS.find(format => filename === TOOL_FILE_NAME + '.' + format)) {
+        return file;
+      }
+    }
+
+    if (!dir) {
+      return undefined;
+    }
+
     for (const format of TOOL_FILE_FORMATS) {
       const file = join(dir, TOOL_FILE_NAME + '.' + format);
       if (existsSync(file)) {
@@ -133,7 +152,7 @@ export class Tool {
     if (searchInPath) {
       const parentDir = join(dir, '..');
       if (parentDir !== dir) {
-        return this.searchFile(parentDir, {searchInPath});
+        return this.searchToolFile(parentDir, {searchInPath});
       }
     }
 
@@ -213,7 +232,7 @@ export class Tool {
 
     const tool = await this.load(source, {importMode: true, context});
     if (!tool) {
-      throwUserError(`Tool import not found: ${formatPath(source)}`, {
+      throwUserError(`Tool not found: ${formatPath(source)}`, {
         context
       });
     }

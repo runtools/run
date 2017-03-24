@@ -1,0 +1,14 @@
+{
+  name: 'export-example',
+  aliases: ['date'],
+  version: '1.0.0',
+  export: {
+    commands: {
+      'show': './show'
+    }
+  },
+  engine: {
+    name: 'node',
+    version: '>=6.10.0'
+  }
+}

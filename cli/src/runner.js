@@ -51,9 +51,25 @@ export class Runner {
       return await runner.run(expression, context);
     }
 
-    const cmdName = expression.getCommandName();
+    let cmdName = expression.getCommandName();
 
-    if (cmdName.startsWith('.') || isAbsolute(cmdName)) {
+    if (cmdName.startsWith('.')) {
+      cmdName = resolve(this.dir, cmdName);
+    }
+
+    let cmdSource;
+    let toolSource;
+
+    if (isAbsolute(cmdName)) {
+      toolSource = Tool.searchToolFile(cmdName);
+      if (!toolSource) {
+        cmdSource = cmdName;
+      }
+    } else if (cmdName === 'tool' || cmdName.includes('/')) {
+      toolSource = cmdName;
+    }
+
+    if (cmdSource) {
       const {commandName: file, expression: newExpression} = expression.pullCommandName();
 
       if (!this.engine) {
@@ -63,11 +79,16 @@ export class Runner {
       }
 
       const args = newExpression.arguments;
-
       const config = cloneDeep(newExpression.config);
       defaultsDeep(config, this.config);
 
       return await this.engine.run({file, arguments: args, config, context});
+    }
+
+    if (toolSource) {
+      const {expression: newExpression} = expression.pullCommandName();
+      const tool = await Tool.import(this.dir, toolSource, context);
+      return await tool.run(this, newExpression, context);
     }
 
     const tool = await Tool.load(dir);
