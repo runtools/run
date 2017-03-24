@@ -1,8 +1,8 @@
 {
-  "name": "@runtools/js-package-manager",
+  "name": "@runtools/js-package",
   "private": true,
   "scripts": {
-    "build": "rm -rf dist dependency-manager/dist && babel src --out-dir dist && babel dependency-manager/src --out-dir dependency-manager/dist"
+    "build": "rm -rf dist && babel src --out-dir dist"
   },
   "babel": {
     "presets": [

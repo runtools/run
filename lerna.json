@@ -3,7 +3,7 @@
   "packages": [
     "cli",
     "common",
-    "tools/js/package/package-manager"
+    "tools/js/package"
   ],
   "version": "independent",
   "onlyExplicitUpdates": true,

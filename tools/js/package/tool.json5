@@ -1,8 +1,42 @@
 {
   name: 'run/js-package',
-  aliases: ['js/package'],
+  aliases: ['js/package', 'package', 'pkg'],
   version: '0.1.0-pre-alpha',
-  import: ['./package-manager'],
+  // extend: ['tool'],
+  export: {
+    commands: {
+      'initialize-package': {
+        source: './dist/commands/initialize',
+        listen: 'after:initialize-tool',
+        emit: 'js/initialize-package'
+      },
+      publish: {
+        source: './dist/commands/publish',
+        emit: 'js/publish-package'
+      }
+    },
+    subtools: {
+      dependencies: {
+        aliases: ['dependency', 'deps', 'dep'],
+        commands: {
+          add: {
+            source: './dist/dependencies/commands/add',
+            options: {
+              peer: false,
+              optional: false
+            }
+          },
+          remove: {
+            aliases: ['rm'],
+            source: './dist/dependencies/commands/remove'
+          }
+        }
+      }
+    },
+    options: {
+      packageManager: 'yarn'
+    }
+  },
   engine: {
     name: 'node',
     version: '>=6.10.0'

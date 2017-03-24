@@ -41,7 +41,7 @@ export function readFile(file, {parse = false} = {}) {
       if (err.userError) {
         throw err;
       }
-      throwUserError(`Invalid file: ${formatPath(file)}`);
+      throwUserError(`Invalid file: ${formatPath(file)}`, {info: '(' + err.message + ')'});
     }
   }
 

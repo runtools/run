@@ -16,6 +16,7 @@ import Alias from './alias';
 import Version from './version';
 import Command from './command';
 import Option from './option';
+import Subtool from './subtool';
 import Config from './config';
 import Engine from './engine';
 
@@ -69,14 +70,16 @@ export class Tool {
       authors: definition.authors,
       license: definition.license,
       repository: definition.repository && this.normalizeRepository(definition.repository),
-      basetools: await this.extendMany(dir, definition.extend || [], {importMode, context}),
+      extendedTools: await this.extendMany(dir, definition.extend || [], {importMode, context}),
       commands: Command.createMany(dir, baseDefinition.commands || [], context),
       options: Option.createMany(baseDefinition.options || [], context),
-      subtools: await this.importMany(dir, baseDefinition.import || [], context),
+      importedTools: await this.importMany(dir, baseDefinition.import || [], context),
       config: Config.normalize(baseDefinition.config || {}, context),
       engine: engine && Engine.create(engine, context),
       file
     });
+
+    tool.subtools = Subtool.createMany(tool, baseDefinition.subtools || [], context);
 
     return tool;
   }
@@ -267,6 +270,7 @@ export class Tool {
     const cmdName = expression.getCommandName();
     return !cmdName ||
       Boolean(this.findCommand(cmdName)) ||
+      Boolean(this.findSubtool(cmdName)) ||
       Boolean(this.findImportedTool(cmdName));
   }
 
@@ -283,6 +287,11 @@ export class Tool {
     const cmd = this.findCommand(commandName);
     if (cmd) {
       return await cmd.run(runner, this, newExpression, context);
+    }
+
+    const subtool = this.findSubtool(commandName);
+    if (subtool) {
+      return await subtool.run(runner, newExpression, context);
     }
 
     const importedTool = this.findImportedTool(commandName);
@@ -302,7 +311,7 @@ export class Tool {
       if (result !== undefined) {
         return result;
       }
-      tools.push(...tool.basetools);
+      tools.push(...tool.extendedTools);
     }
     return undefined;
   }
@@ -314,7 +323,7 @@ export class Tool {
     while (tools.length) {
       const tool = tools.shift();
       accumulator = fn(accumulator, tool);
-      tools.push(...tool.basetools);
+      tools.push(...tool.extendedTools);
     }
     return accumulator;
   }
@@ -330,9 +339,20 @@ export class Tool {
     });
   }
 
+  findSubtool(name) {
+    return this.find(tool => {
+      for (const subtool of tool.subtools) {
+        if (subtool.isMatching(name)) {
+          return subtool;
+        }
+      }
+      return undefined;
+    });
+  }
+
   findImportedTool(name) {
     return this.find(tool => {
-      for (const importedTool of tool.subtools) {
+      for (const importedTool of tool.importedTools) {
         if (importedTool.isMatching(name)) {
           return importedTool;
         }
