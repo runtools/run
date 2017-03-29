@@ -28,8 +28,5 @@
       }
     }
   },
-  engine: {
-    name: 'node',
-    version: '>=6.10.0'
-  }
+  engine: 'node@>=6.10.0'
 }

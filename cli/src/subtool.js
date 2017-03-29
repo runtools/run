@@ -75,7 +75,7 @@ export class Subtool {
   }
 
   static extendContext(base, obj) {
-    return {...base, subtool: formatCode(obj.name)};
+    return {...base, subtool: obj.name};
   }
 
   async run(runner, expression, context) {

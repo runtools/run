@@ -1,6 +1,6 @@
 import {join, resolve, isAbsolute} from 'path';
 import {cloneDeep, defaultsDeep} from 'lodash';
-import {formatPath, formatCode, throwUserError} from 'run-common';
+import {formatCode, throwUserError} from 'run-common';
 
 import Tool from './tool';
 import Config from './config';
@@ -74,7 +74,7 @@ export class Runner {
 
       if (!this.engine) {
         throwUserError('Cannot run a file without an engine', {
-          context: {...context, file: formatPath(file)}
+          context: {...context, file}
         });
       }
 
@@ -92,8 +92,14 @@ export class Runner {
     }
 
     const tool = await Tool.load(dir);
-    if (tool && tool.canRun(expression)) {
-      return await tool.run(this, expression, context);
+    if (tool) {
+      if (!(context && context.userTool)) {
+        context = {...context, userTool: tool.file};
+      }
+
+      if (tool.canRun(expression)) {
+        return await tool.run(this, expression, context);
+      }
     }
 
     const parentDir = join(dir, '..');

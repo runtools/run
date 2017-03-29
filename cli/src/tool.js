@@ -85,7 +85,7 @@ export class Tool {
   }
 
   static extendContext(base, obj) {
-    return {...base, tool: formatPath(obj.file)};
+    return {...base, tool: obj.file};
   }
 
   static async load(source, {importMode, context} = {}) {

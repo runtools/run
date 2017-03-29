@@ -1,6 +1,6 @@
 import {resolve, isAbsolute} from 'path';
 import {entries, defaults, cloneDeep, defaultsDeep} from 'lodash';
-import {throwUserError, avoidCommonMistakes, formatPath, formatCode} from 'run-common';
+import {throwUserError, avoidCommonMistakes, formatCode} from 'run-common';
 
 import Expression from './expression';
 import Alias from './alias';
@@ -96,7 +96,7 @@ export class Command {
   }
 
   static extendContext(base, obj) {
-    return {...base, command: formatCode(obj.name)};
+    return {...base, command: obj.name};
   }
 
   isMatching(name) {
@@ -121,7 +121,7 @@ export class Command {
 
       if (!engine) {
         throwUserError('Cannot run a file without an engine', {
-          context: {...context, file: formatPath(file)}
+          context: {...context, file}
         });
       }
 

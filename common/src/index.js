@@ -34,7 +34,7 @@ export function readFile(file, {parse = false} = {}) {
         data = YAML.safeLoad(data);
       } else {
         throwUserError(`Unsupported file format: ${formatPath(ext)}`, {
-          context: {file: formatPath(file)}
+          context: {file}
         });
       }
     } catch (err) {
@@ -59,7 +59,7 @@ export function writeFile(file, data, {stringify = false} = {}) {
       data = YAML.safeDump(data);
     } else {
       throwUserError(`Unsupported file format: ${formatPath(ext)}`, {
-        context: {file: formatPath(file)}
+        context: {file}
       });
     }
   }
@@ -318,7 +318,7 @@ export function getErrorSymbol() {
 }
 
 export function formatString(path) {
-  return green("'" + path + "'");
+  return gray("'" + path + "'");
 }
 
 export function formatURL(url) {
@@ -346,7 +346,7 @@ export function createUserError(
     message += ' ' + info;
   }
   if (context) {
-    context = entries(context).map(([key, value]) => key + ': ' + value);
+    context = entries(context).map(([key, value]) => key + ': ' + formatString(value));
     if (context.length) {
       message += ' (' + context.join(', ') + ')';
     }

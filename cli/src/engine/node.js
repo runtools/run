@@ -31,7 +31,7 @@ export class NodeEngine extends Engine {
       });
     }
 
-    context = {...context, file: formatPath(file)};
+    context = {...context, file};
 
     let result;
 
@@ -49,7 +49,7 @@ export class NodeEngine extends Engine {
         throwUserError(`Exported function not found`, {context});
       }
       try {
-        result = {result: await fn(args, config)};
+        result = {result: await fn(args, config, context)};
       } catch (error) {
         result = {error};
       }
@@ -60,7 +60,7 @@ export class NodeEngine extends Engine {
       const script = `
         Promise.resolve(
           (require(${quote(file)}).default || require(${quote(file)}))
-            (${JSON.stringify(args)}, ${JSON.stringify(config)})
+            (${JSON.stringify(args)}, ${JSON.stringify(config)}, ${JSON.stringify(context)})
         ).then(function(result) {
           console.log(JSON.stringify({__run__: {result: result}}));
         }).catch(function(err) {
