@@ -1,3 +1,3 @@
 module.exports = function() {
-  console.log(new Date());
+  console.log('bar');
 };

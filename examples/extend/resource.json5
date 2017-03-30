@@ -1,5 +1,5 @@
 {
   name: 'extend-example',
   version: '1.0.0',
-  extend: './base'
+  is: './base'
 }

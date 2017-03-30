@@ -7,9 +7,10 @@
     type: 'git',
     url: 'git://github.com/runtools/run'
   },
+  is: ['js/tool'],
   commands: {
     'hello': {
-      source: './hello',
+      implementation: './hello',
       aliases: ['hi'],
       parameters: {
         name: 'World'
@@ -27,6 +28,5 @@
         color: 'yellow'
       }
     }
-  },
-  engine: 'node@>=6.10.0'
+  }
 }

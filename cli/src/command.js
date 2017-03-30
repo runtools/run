@@ -24,7 +24,7 @@ export class Command {
 
     if (typeof definition === 'string') {
       if (definition.startsWith('.') || isAbsolute(definition)) {
-        definition = {source: definition};
+        definition = {implementation: definition};
       } else {
         definition = [definition];
       }
@@ -36,14 +36,14 @@ export class Command {
 
     const name = definition.name || defaultName;
     if (!name) {
-      throwUserError(`Command ${formatCode('name')} property is missing`, {context});
+      throwUserError(`Command ${formatCode('name')} attribute is missing`, {context});
     }
 
     context = this.extendContext(context, {name});
 
-    if (!(definition.source || definition.run)) {
+    if (!(definition.implementation || definition.run)) {
       throwUserError(
-        `Command ${formatCode('source')} or ${formatCode('run')} property is missing`,
+        `Command ${formatCode('implementation')} or ${formatCode('run')} attribute is missing`,
         {
           context
         }
@@ -54,7 +54,6 @@ export class Command {
       definition,
       {
         alias: 'aliases',
-        src: 'source',
         runs: 'run',
         parameter: 'parameters',
         params: 'parameters',
@@ -68,7 +67,7 @@ export class Command {
     const command = new this({
       name,
       aliases: Alias.createMany(definition.aliases || [], context),
-      source: definition.source && resolve(dir, definition.source),
+      implementation: definition.implementation && resolve(dir, definition.implementation),
       expressions: definition.run && Expression.createMany(dir, definition.run, context),
       parameters: Parameter.createMany(definition.parameters || [], context),
       options: Option.createMany(definition.options || {}, context),
@@ -95,8 +94,8 @@ export class Command {
       this.create(dir, definition, context, name));
   }
 
-  static extendContext(base, obj) {
-    return {...base, command: obj.name};
+  static extendContext(base, command) {
+    return {...base, command: command.name};
   }
 
   isMatching(name) {
@@ -112,12 +111,13 @@ export class Command {
     // TODO: omit arguments not defined in the command parameters
 
     const config = cloneDeep(expression.config);
-    defaultsDeep(config, runner.config, this.getDefaultConfig(), tool.getDefaultConfig());
+    defaultsDeep(config, runner.getUserConfig(), this.getDefaultConfig(), tool.getDefaultConfig());
     // TODO: omit config properties not defined in the command options
 
-    if (this.source) {
-      const engine = this.engine || tool.getEngine() || runner.engine;
-      const file = this.source;
+    if (this.implementation) {
+      const engine = this.engine || tool.getEngine() || runner.getUserEngine();
+
+      const file = this.implementation;
 
       if (!engine) {
         throwUserError('Cannot run a file without an engine', {

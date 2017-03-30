@@ -1,8 +1,0 @@
-{
-  name: 'import-example',
-  version: '1.0.0',
-  import: ['./console'],
-  config: {
-    verbose: true
-  }
-}

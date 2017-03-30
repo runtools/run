@@ -1,8 +1,8 @@
 {
   name: 'base',
   version: '1.0.0',
+  is: ['js/tool'],
   commands: {
     'task': './task'
-  },
-  engine: 'node@>=6.10.0'
+  }
 }

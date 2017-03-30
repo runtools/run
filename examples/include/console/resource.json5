@@ -1,0 +1,15 @@
+{
+  name: 'console',
+  version: '1.0.0',
+  is: ['js/tool'],
+  commands: {
+    log: {
+      implementation: './log',
+      aliases: 'info'
+    },
+    trace: './trace'
+  },
+  options: {
+    verbose: false
+  }
+}

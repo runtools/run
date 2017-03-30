@@ -1,0 +1,14 @@
+{
+  name: 'sub-resource',
+  aliases: ['sub'],
+  version: '1.1.0',
+  description: 'This is a sub resource',
+  authors: ['sub@resdir.org'],
+  license: 'Apache-2.0',
+  repository: 'git://github.com/runtools/run',
+  properties: {
+    bar: 0
+  },
+  foo: 'xyz',
+  bar: 123
+}

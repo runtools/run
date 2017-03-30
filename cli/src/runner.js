@@ -1,8 +1,8 @@
-import {join, resolve, isAbsolute} from 'path';
+import {resolve, isAbsolute} from 'path';
 import {cloneDeep, defaultsDeep} from 'lodash';
 import {formatCode, throwUserError} from 'run-common';
 
-import Tool from './tool';
+import Resource from './resource';
 import Config from './config';
 import Engine from './engine';
 
@@ -11,103 +11,103 @@ export class Runner {
     Object.assign(this, runner);
   }
 
-  static async create(dir, {config = {}, engine} = {}) {
+  static async create(dir) {
     if (!dir) {
       throw new Error("'dir' argument is missing");
     }
 
-    ({config, engine} = await Tool.loadGlobals(dir, {config, engine}));
+    const userResource = await Resource.loadUserResource(dir);
 
-    const runner = new this({dir, config, engine});
+    const runner = new this({dir, userResource});
 
     return runner;
   }
 
-  async run(expression, context, dir = this.dir) {
+  async run(expression, context) {
     if (!expression) {
       throw new Error("'expression' argument is missing");
     }
 
-    let config;
-    ({config, expression} = expression.pullConfigProperty('config'));
-    if (config) {
-      config = resolve(this.dir, config);
-      config = await Config.load(config);
-      defaultsDeep(config, this.config);
-    }
+    if (this.userResource) {
+      context = {...context, userResource: this.userResource.resourceFile};
 
-    let engine;
-    ({engine, expression} = expression.pullConfigProperty('engine'));
-    if (engine) {
-      engine = Engine.create(engine, context);
-    }
+      let userResource = this.userResource;
 
-    if (config || engine) {
-      const runner = new this.constructor({
-        dir: this.dir,
-        config: config || this.config,
-        engine: engine || this.engine
-      });
-      return await runner.run(expression, context);
-    }
-
-    let cmdName = expression.getCommandName();
-
-    if (cmdName.startsWith('.')) {
-      cmdName = resolve(this.dir, cmdName);
-    }
-
-    let cmdSource;
-    let toolSource;
-
-    if (isAbsolute(cmdName)) {
-      toolSource = Tool.searchToolFile(cmdName);
-      if (!toolSource) {
-        cmdSource = cmdName;
+      let config;
+      ({config, expression} = expression.pullConfigProperty('config'));
+      if (config) {
+        config = resolve(this.dir, config);
+        config = await Config.load(config);
+        defaultsDeep(config, userResource.config);
+        userResource = new userResource.constructor({...userResource, config});
       }
-    } else if (cmdName === 'tool' || cmdName.includes('/')) {
-      toolSource = cmdName;
+
+      let engine;
+      ({engine, expression} = expression.pullConfigProperty('engine'));
+      if (engine) {
+        engine = Engine.create(engine, context);
+        userResource = new userResource.constructor({...userResource, engine});
+      }
+
+      if (userResource !== this.userResource) {
+        const runner = new this.constructor({...this, userResource});
+        return await runner.run(expression, context);
+      }
     }
 
-    if (cmdSource) {
-      const {commandName: file, expression: newExpression} = expression.pullCommandName();
+    let commandName = expression.getCommandName();
 
-      if (!this.engine) {
+    if (commandName.startsWith('.')) {
+      commandName = resolve(this.dir, commandName);
+    }
+
+    let implementation;
+    let resource;
+
+    if (isAbsolute(commandName)) {
+      resource = Resource.searchResourceFile(commandName);
+      if (!resource) {
+        implementation = commandName;
+      }
+    } else if (commandName.includes('/')) {
+      resource = commandName;
+    }
+
+    if (implementation) {
+      const {expression: newExpression} = expression.pullCommandName();
+
+      const engine = this.getUserEngine();
+      if (!engine) {
         throwUserError('Cannot run a file without an engine', {
-          context: {...context, file}
+          context: {...context, file: implementation}
         });
       }
 
       const args = newExpression.arguments;
       const config = cloneDeep(newExpression.config);
-      defaultsDeep(config, this.config);
+      defaultsDeep(config, this.getUserConfig());
 
-      return await this.engine.run({file, arguments: args, config, context});
+      return await engine.run({file: implementation, arguments: args, config, context});
     }
 
-    if (toolSource) {
+    if (resource) {
       const {expression: newExpression} = expression.pullCommandName();
-      const tool = await Tool.import(this.dir, toolSource, context);
-      return await tool.run(this, newExpression, context);
+      resource = await Resource.load(resource, {context});
+      return await resource.run(this, newExpression, context);
     }
 
-    const tool = await Tool.load(dir);
-    if (tool) {
-      if (!(context && context.userTool)) {
-        context = {...context, userTool: tool.file};
-      }
-
-      if (tool.canRun(expression)) {
-        return await tool.run(this, expression, context);
-      }
+    if (this.userResource && this.userResource.canRun && this.userResource.canRun(expression)) {
+      return await this.userResource.run(this, expression, context);
     }
 
-    const parentDir = join(dir, '..');
-    if (parentDir !== dir) {
-      return await this.run(expression, context, parentDir);
+    const includedResource = this.userResource &&
+      this.userResource.findIncludedResource(commandName);
+    if (includedResource) {
+      const {expression: newExpression} = expression.pullCommandName();
+      return await includedResource.run(this, newExpression, context);
     }
 
-    throwUserError(`Command ${formatCode(cmdName)} not found`, {context});
+    throwUserError(`Command ${formatCode(commandName)} not found`, {context});
   }
 
   async runMany(expressions) {
@@ -125,6 +125,14 @@ export class Runner {
       result = await this.run(expression);
     }
     return result;
+  }
+
+  getUserConfig() {
+    return this.userResource && this.userResource.getConfig && this.userResource.getConfig();
+  }
+
+  getUserEngine() {
+    return this.userResource && this.userResource.getEngine && this.userResource.getEngine();
   }
 }
 

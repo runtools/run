@@ -1,0 +1,12 @@
+{
+  name: 'base-resource',
+  aliases: ['base'],
+  version: '1.0.0',
+  description: 'This is a base resource',
+  authors: ['base@resdir.org'],
+  license: 'MIT',
+  repository: 'git://github.com/runtools/run',
+  properties: {
+    foo: 'default'
+  }
+}
