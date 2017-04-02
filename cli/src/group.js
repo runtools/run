@@ -13,7 +13,8 @@ export class Group extends Entity {
 
     const group = await Entity.create.call(this, definition, {parent, defaultName, context});
 
-    await Executable.assign(group, definition, context);
+    const executable = await Executable.create(definition, {entity: group, context});
+    Object.assign(group, executable);
 
     return group;
   }

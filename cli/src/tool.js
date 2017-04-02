@@ -21,7 +21,8 @@ export class Tool extends Resource {
       engine: definition.engine && Engine.create(definition.engine, context)
     });
 
-    await Executable.assign(tool, definition, context);
+    const executable = await Executable.create(definition, {entity: tool, context});
+    Object.assign(tool, executable);
 
     return tool;
   }

@@ -14,11 +14,7 @@ export class Executable {
     }
   }
 
-  static async assign(toolOrGroup, definition, context) {
-    if (!toolOrGroup) {
-      throw new Error("'toolOrGroup' argument is missing");
-    }
-
+  static async create(definition, {entity, context}) {
     if (!definition) {
       throw new Error("'definition' argument is missing");
     }
@@ -31,16 +27,18 @@ export class Executable {
 
     const {Group} = require('./group'); // Use late 'require' to avoid a circular referencing issue
 
-    Object.assign(toolOrGroup, {
-      commands: await Command.createMany(definition.commands || [], {parent: toolOrGroup, context}),
+    const executable = {
+      commands: await Command.createMany(definition.commands || [], {parent: entity, context}),
       options: Option.createMany(definition.options || {}, context),
-      groups: await Group.createMany(definition.groups || [], {parent: toolOrGroup, context})
-    });
+      groups: await Group.createMany(definition.groups || [], {parent: entity, context})
+    };
+
+    return executable;
   }
 
   findCommand(name) {
-    return this.find(toolOrGroup => {
-      for (const command of toolOrGroup.commands) {
+    return this.find(entity => {
+      for (const command of entity.commands) {
         if (command.isMatching(name)) {
           return command;
         }
@@ -50,8 +48,8 @@ export class Executable {
   }
 
   findGroup(name) {
-    return this.find(toolOrGroup => {
-      for (const group of toolOrGroup.groups) {
+    return this.find(entity => {
+      for (const group of entity.groups) {
         if (group.isMatching(name)) {
           return group;
         }
@@ -62,8 +60,8 @@ export class Executable {
 
   getDefaultConfig() {
     return this.reduce(
-      (config, toolOrGroup) => {
-        for (const option of toolOrGroup.options) {
+      (config, entity) => {
+        for (const option of entity.options) {
           config[option.name] = option.default;
         }
         return config;
@@ -73,11 +71,7 @@ export class Executable {
   }
 
   getEngine() {
-    return this.find(toolOrGroup => toolOrGroup.engine);
-  }
-
-  isMatching(name) {
-    return this.name === name || this.aliases.find(alias => alias.toString() === name);
+    return this.find(entity => entity.engine);
   }
 }
 
