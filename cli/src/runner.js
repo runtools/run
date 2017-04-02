@@ -31,34 +31,11 @@ export class Runner {
       commandName = resolve(this.dir, commandName);
     }
 
-    let implementation;
     let resource;
-
     if (isAbsolute(commandName)) {
       resource = Resource.searchResourceFile(commandName);
-      if (!resource) {
-        implementation = commandName;
-      }
     } else if (commandName.includes('/')) {
       resource = commandName;
-    }
-
-    if (implementation) {
-      const {expression: newExpression} = expression.pullCommandName();
-
-      const engine = this.getUserEngine();
-      if (!engine) {
-        throwUserError('Cannot run a file without an engine', {
-          context: {...context, file: implementation}
-        });
-      }
-
-      return await engine.run({
-        file: implementation,
-        arguments: newExpression.arguments,
-        config: newExpression.config,
-        context
-      });
     }
 
     if (resource) {
