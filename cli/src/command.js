@@ -73,16 +73,11 @@ export class Command extends Entity {
     // TODO: omit arguments not defined in the command parameters
 
     const config = cloneDeep(expression.config);
-    defaultsDeep(
-      config,
-      runner.getUserConfig(),
-      this.getDefaultConfig(),
-      entity.getDefaultConfig()
-    );
+    defaultsDeep(config, this.getDefaultConfig(), entity.getDefaultConfig());
     // TODO: omit config properties not defined in the command options
 
     if (this.implementation) {
-      const engine = this.engine || entity.getEngine() || runner.getUserEngine();
+      const engine = this.engine || entity.getEngine();
 
       const file = this.implementation;
 
