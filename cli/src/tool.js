@@ -7,24 +7,22 @@ import Config from './config';
 import Engine from './engine';
 
 export class Tool extends Resource {
-  static async create(baseResource, definition, {context} = {}) {
-    if (!baseResource) {
-      throw new Error("'baseResource' argument is missing");
+  static async create(file, definition, {resource, context} = {}) {
+    if (!resource) {
+      resource = await Resource.create(file, definition, {context});
     }
 
-    if (!definition) {
-      throw new Error("'definition' argument is missing");
-    }
+    context = this.extendContext(context, resource);
 
     avoidCommonMistakes(definition, {configs: 'config', engines: 'engine'}, {context});
 
     const tool = new this({
-      ...baseResource,
+      ...resource,
       config: Config.normalize(definition.config || {}, context),
       engine: definition.engine && Engine.create(definition.engine, context)
     });
 
-    Executable.assign(tool, definition, context);
+    await Executable.assign(tool, definition, context);
 
     return tool;
   }

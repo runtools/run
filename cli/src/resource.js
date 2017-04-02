@@ -6,13 +6,12 @@ import {
   writeFile,
   throwUserError,
   avoidCommonMistakes,
-  formatString,
   formatPath,
   formatCode
 } from 'run-common';
 
+import Entity from './entity';
 import Property from './property';
-import Alias from './alias';
 import Version from './version';
 
 const RESOURCE_FILE_NAME = 'resource';
@@ -31,38 +30,21 @@ const BUIT_IN_RESOURCES = [
   }
 ];
 
-export class Resource {
-  constructor(resource) {
-    Object.assign(this, resource);
-  }
-
+export class Resource extends Entity {
   static async create(file, definition, {context} = {}) {
     if (!file) {
       throw new Error("'file' argument is missing");
     }
 
-    if (!definition) {
-      throw new Error("'definition' argument is missing");
-    }
-
     context = this.extendContext(context, {resourceFile: file});
 
-    avoidCommonMistakes(
-      definition,
-      {
-        alias: 'aliases',
-        author: 'authors',
-        property: 'properties',
-        have: 'has'
-      },
-      {context}
-    );
+    avoidCommonMistakes(definition, {author: 'authors'}, {context});
+
+    const resource = await Entity.create.call(this, definition, {context});
 
     const dir = dirname(file);
 
-    const resource = new this({
-      name: definition.name && this.normalizeName(definition.name, context),
-      aliases: Alias.createMany(definition.aliases || [], context),
+    Object.assign(resource, {
       version: definition.version && Version.create(definition.version, context),
       description: definition.description,
       authors: definition.authors,
@@ -76,7 +58,7 @@ export class Resource {
 
     if (resource.name === 'res/tool' || resource.findExtendedResource('res/tool')) {
       const {Tool} = require('./tool'); // Use late 'require' to avoid a circular referencing issue
-      return await Tool.create(resource, definition, {context});
+      return await Tool.create(file, definition, {resource, context});
     }
 
     return resource;
@@ -135,9 +117,9 @@ export class Resource {
     dir = dirname(resource.resourceFile);
     const parentDir = join(dir, '..');
     if (parentDir !== dir) {
-      const extendedResource = await this.loadUserResource(parentDir, {context});
-      if (extendedResource) {
-        resource.extendedResources.push(extendedResource);
+      const parentEntity = await this.loadUserResource(parentDir, {context});
+      if (parentEntity) {
+        resource.parentEntity = parentEntity;
       }
     }
 
@@ -206,7 +188,7 @@ export class Resource {
     return resource;
   }
 
-  static async extendMany(dir, sources, context) {
+  static extendMany(dir, sources, context) {
     if (!dir) {
       throw new Error("'dir' argument is missing");
     }
@@ -258,7 +240,7 @@ export class Resource {
     return resource;
   }
 
-  static async includeMany(dir, sources, context) {
+  static includeMany(dir, sources, context) {
     if (!dir) {
       throw new Error("'dir' argument is missing");
     }
@@ -283,7 +265,7 @@ export class Resource {
   }
 
   find(fn) {
-    // Breadth-first search considering a resource and its base resources
+    // Breadth-first with extended resources
     const resources = [this];
     while (resources.length) {
       const resource = resources.shift();
@@ -293,11 +275,17 @@ export class Resource {
       }
       resources.push(...resource.extendedResources);
     }
+
+    // Depth-first with parent entities
+    if (this.parentEntity) {
+      return this.parentEntity.find(fn);
+    }
+
     return undefined;
   }
 
   reduce(fn, initialValue) {
-    // Breadth-first reduce considering a resource and its base resources
+    // Breadth-first with extended resources
     let accumulator = initialValue;
     const resources = [this];
     while (resources.length) {
@@ -305,6 +293,12 @@ export class Resource {
       accumulator = fn(accumulator, resource);
       resources.push(...resource.extendedResources);
     }
+
+    // Depth-first with parent entities
+    if (this.parentEntity) {
+      return this.parentEntity.reduce(fn, accumulator);
+    }
+
     return accumulator;
   }
 
@@ -330,10 +324,6 @@ export class Resource {
     });
   }
 
-  isMatching(name) {
-    return this.name === name || this.aliases.find(alias => alias.toString() === name);
-  }
-
   getNameUniverse() {
     const [universe, identifier] = this.name.split('/');
     if (!identifier) {
@@ -348,20 +338,6 @@ export class Resource {
       return universe;
     }
     return identifier;
-  }
-
-  static normalizeName(name, context) {
-    if (!name) {
-      throw new Error("'name' argument is missing");
-    }
-
-    name = name.trim();
-
-    if (!this.validateName(name)) {
-      throwUserError(`Resource name ${formatString(name)} is invalid`, {context});
-    }
-
-    return name;
   }
 
   static validateName(name) {
@@ -381,22 +357,6 @@ export class Resource {
     }
 
     if (rest) {
-      return false;
-    }
-
-    return true;
-  }
-
-  static validateNamePart(part) {
-    if (!part) {
-      return false;
-    }
-
-    if (/[^a-z0-9._-]/i.test(part)) {
-      return false;
-    }
-
-    if (/[^a-z0-9]/i.test(part[0] + part[part.length - 1])) {
       return false;
     }
 

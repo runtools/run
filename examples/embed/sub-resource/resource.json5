@@ -6,9 +6,19 @@
   authors: ['sub@resdir.org'],
   license: 'Apache-2.0',
   repository: 'git://github.com/runtools/run',
+  is: ['js/tool'],
   properties: {
     bar: 0
   },
   foo: 'xyz',
-  bar: 123
+  bar: 123,
+  commands: {
+    bar: {
+      aliases: ['b'],
+      implementation: './bar'
+    },
+    'call-foo': {
+      run: 'foo'
+    }
+  }
 }

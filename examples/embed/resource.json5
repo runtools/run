@@ -6,7 +6,14 @@
   authors: ['base@resdir.org'],
   license: 'MIT',
   repository: 'git://github.com/runtools/run',
+  is: ['js/tool'],
   properties: {
     foo: 'default'
+  },
+  commands: {
+    foo: {
+      aliases: ['f'],
+      implementation: './foo'
+    }
   }
 }

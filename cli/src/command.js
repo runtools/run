@@ -1,25 +1,17 @@
-import {resolve, isAbsolute} from 'path';
-import {entries, defaults, cloneDeep, defaultsDeep} from 'lodash';
+import {resolve, isAbsolute, dirname} from 'path';
+import {defaults, cloneDeep, defaultsDeep} from 'lodash';
 import {throwUserError, avoidCommonMistakes, formatCode} from 'run-common';
 
+import Entity from './entity';
 import Expression from './expression';
-import Alias from './alias';
 import Parameter from './parameter';
 import Option from './option';
 import Engine from './engine';
 
-export class Command {
-  constructor(command) {
-    Object.assign(this, command);
-  }
-
-  static create(dir, definition, context, defaultName) {
-    if (!dir) {
-      throw new Error("'dir' argument is missing");
-    }
-
-    if (!definition) {
-      throw new Error("'definition' argument is missing");
+export class Command extends Entity {
+  static async create(definition, {parent, defaultName, context}) {
+    if (!parent) {
+      throw new Error("'parent' argument is missing");
     }
 
     if (typeof definition === 'string') {
@@ -35,9 +27,6 @@ export class Command {
     }
 
     const name = definition.name || defaultName;
-    if (!name) {
-      throwUserError(`Command ${formatCode('name')} attribute is missing`, {context});
-    }
 
     context = this.extendContext(context, {name});
 
@@ -52,21 +41,15 @@ export class Command {
 
     avoidCommonMistakes(
       definition,
-      {
-        alias: 'aliases',
-        runs: 'run',
-        parameter: 'parameters',
-        params: 'parameters',
-        option: 'options'
-      },
-      {
-        context
-      }
+      {runs: 'run', parameter: 'parameters', params: 'parameters', option: 'options'},
+      {context}
     );
 
-    const command = new this({
-      name,
-      aliases: Alias.createMany(definition.aliases || [], context),
+    const command = await Entity.create.call(this, definition, {parent, defaultName, context});
+
+    const dir = dirname(command.find(entity => entity.resourceFile));
+
+    Object.assign(command, {
       implementation: definition.implementation && resolve(dir, definition.implementation),
       expressions: definition.run && Expression.createMany(dir, definition.run, context),
       parameters: Parameter.createMany(definition.parameters || [], context),
@@ -77,32 +60,11 @@ export class Command {
     return command;
   }
 
-  static createMany(dir, definitions, context) {
-    if (!dir) {
-      throw new Error("'dir' argument is missing");
-    }
-
-    if (!definitions) {
-      throw new Error("'definitions' argument is missing");
-    }
-
-    if (Array.isArray(definitions)) {
-      return definitions.map(definition => this.create(dir, definition, context));
-    }
-
-    return entries(definitions).map(([name, definition]) =>
-      this.create(dir, definition, context, name));
-  }
-
   static extendContext(base, command) {
     return {...base, command: command.name};
   }
 
-  isMatching(name) {
-    return this.name === name || this.aliases.find(alias => alias.toString() === name);
-  }
-
-  async run(runner, tool, expression, context) {
+  async run(runner, entity, expression, context) {
     context = this.constructor.extendContext(context, this);
 
     const [...args] = expression.arguments;
@@ -111,11 +73,16 @@ export class Command {
     // TODO: omit arguments not defined in the command parameters
 
     const config = cloneDeep(expression.config);
-    defaultsDeep(config, runner.getUserConfig(), this.getDefaultConfig(), tool.getDefaultConfig());
+    defaultsDeep(
+      config,
+      runner.getUserConfig(),
+      this.getDefaultConfig(),
+      entity.getDefaultConfig()
+    );
     // TODO: omit config properties not defined in the command options
 
     if (this.implementation) {
-      const engine = this.engine || tool.getEngine() || runner.getUserEngine();
+      const engine = this.engine || entity.getEngine() || runner.getUserEngine();
 
       const file = this.implementation;
 
@@ -131,7 +98,7 @@ export class Command {
     let result;
     for (let cmdExpression of this.expressions) {
       cmdExpression = cmdExpression.resolveVariables({arguments: args, config});
-      result = await runner.run(cmdExpression, context);
+      result = await entity.run(runner, cmdExpression, context);
     }
     return result;
   }

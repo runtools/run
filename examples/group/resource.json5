@@ -4,11 +4,17 @@
   is: ['js/tool'],
   groups: {
     foo: {
-      aliases: ['f'],
       commands: {
-        bar: {
-          aliases: ['b'],
-          implementation: './foo/bar'
+        bar: './foo/bar'
+      },
+      groups: {
+        baz: {
+          commands: {
+            qux: './foo/baz/qux',
+            'call-bar': {
+              run: 'bar'
+            }
+          }
         }
       }
     }

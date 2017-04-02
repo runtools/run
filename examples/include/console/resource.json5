@@ -3,10 +3,10 @@
   version: '1.0.0',
   is: ['js/tool'],
   commands: {
-    log: {
-      implementation: './log',
-      aliases: 'info'
+    info: {
+      run: 'log $0'
     },
+    log: './log',
     trace: './trace'
   },
   options: {

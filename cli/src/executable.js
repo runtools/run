@@ -1,5 +1,4 @@
-import {dirname} from 'path';
-import {throwUserError, avoidCommonMistakes, formatCode} from 'run-common';
+import {avoidCommonMistakes} from 'run-common';
 
 import Command from './command';
 import Option from './option';
@@ -15,7 +14,7 @@ export class Executable {
     }
   }
 
-  static assign(toolOrGroup, definition, context) {
+  static async assign(toolOrGroup, definition, context) {
     if (!toolOrGroup) {
       throw new Error("'toolOrGroup' argument is missing");
     }
@@ -30,45 +29,20 @@ export class Executable {
       {context}
     );
 
-    const dir = dirname(toolOrGroup.resourceFile);
-
     const {Group} = require('./group'); // Use late 'require' to avoid a circular referencing issue
 
     Object.assign(toolOrGroup, {
-      commands: Command.createMany(dir, definition.commands || [], context),
+      commands: await Command.createMany(definition.commands || [], {parent: toolOrGroup, context}),
       options: Option.createMany(definition.options || {}, context),
-      groups: Group.createMany(toolOrGroup, definition.groups || [], context)
+      groups: await Group.createMany(definition.groups || [], {parent: toolOrGroup, context})
     });
-  }
-
-  async run(runner, expression, context) {
-    context = this.constructor.extendContext(context, this);
-
-    const {commandName, expression: newExpression} = expression.pullCommandName();
-
-    if (!commandName) {
-      console.log('TODO: display group help');
-      return;
-    }
-
-    const cmd = this.findCommand(commandName);
-    if (cmd) {
-      return await cmd.run(runner, this, newExpression, context);
-    }
-
-    const group = this.findGroup(commandName);
-    if (group) {
-      return await group.run(runner, newExpression, context);
-    }
-
-    throwUserError(`Command ${formatCode(commandName)} not found`, {context});
   }
 
   findCommand(name) {
     return this.find(toolOrGroup => {
-      for (const cmd of toolOrGroup.commands) {
-        if (cmd.isMatching(name)) {
-          return cmd;
+      for (const command of toolOrGroup.commands) {
+        if (command.isMatching(name)) {
+          return command;
         }
       }
       return undefined;

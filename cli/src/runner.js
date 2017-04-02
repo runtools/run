@@ -96,15 +96,8 @@ export class Runner {
       return await resource.run(this, newExpression, context);
     }
 
-    if (this.userResource && this.userResource.canRun && this.userResource.canRun(expression)) {
+    if (this.userResource) {
       return await this.userResource.run(this, expression, context);
-    }
-
-    const includedResource = this.userResource &&
-      this.userResource.findIncludedResource(commandName);
-    if (includedResource) {
-      const {expression: newExpression} = expression.pullCommandName();
-      return await includedResource.run(this, newExpression, context);
     }
 
     throwUserError(`Command ${formatCode(commandName)} not found`, {context});
