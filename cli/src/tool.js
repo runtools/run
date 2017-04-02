@@ -1,4 +1,3 @@
-import {defaultsDeep} from 'lodash';
 import {avoidCommonMistakes} from 'run-common';
 
 import Resource from './resource';
@@ -25,21 +24,6 @@ export class Tool extends Resource {
     await Executable.assign(tool, definition, context);
 
     return tool;
-  }
-
-  canRun(expression) {
-    const cmdName = expression.getCommandName();
-    return !cmdName || Boolean(this.findCommand(cmdName)) || Boolean(this.findGroup(cmdName));
-  }
-
-  getConfig() {
-    return this.reduce(
-      (config, tool) => {
-        defaultsDeep(config, tool.config);
-        return config;
-      },
-      {}
-    );
   }
 }
 

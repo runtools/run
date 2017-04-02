@@ -72,7 +72,7 @@ export class Entity {
     return accumulator;
   }
 
-  async run(runner, expression, context) {
+  async run(expression, {context}) {
     context = this.constructor.extendContext(context, this);
 
     const {commandName, expression: newExpression} = expression.pullCommandName();
@@ -84,17 +84,17 @@ export class Entity {
 
     const command = this.findCommand && this.findCommand(commandName);
     if (command) {
-      return await command.run(runner, this, newExpression, context);
+      return await command.run(this, newExpression, {context});
     }
 
     const group = this.findGroup && this.findGroup(commandName);
     if (group) {
-      return await group.run(runner, newExpression, context);
+      return await group.run(newExpression, {context});
     }
 
     const includedResource = this.findIncludedResource(commandName);
     if (includedResource) {
-      return await includedResource.run(runner, newExpression, context);
+      return await includedResource.run(newExpression, {context});
     }
 
     throwUserError(`Command ${formatCode(commandName)} not found`, {context});

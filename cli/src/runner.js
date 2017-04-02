@@ -20,7 +20,7 @@ export class Runner {
     return runner;
   }
 
-  async run(expression, context) {
+  async run(expression, {context}) {
     if (!expression) {
       throw new Error("'expression' argument is missing");
     }
@@ -41,17 +41,17 @@ export class Runner {
     if (resource) {
       const {expression: newExpression} = expression.pullCommandName();
       resource = await Resource.load(resource, {context});
-      return await resource.run(this, newExpression, context);
+      return await resource.run(newExpression, {context});
     }
 
     if (this.userResource) {
-      return await this.userResource.run(this, expression, context);
+      return await this.userResource.run(expression, {context});
     }
 
     throwUserError(`Command ${formatCode(commandName)} not found`, {context});
   }
 
-  async runMany(expressions) {
+  async runMany(expressions, {context} = {}) {
     if (!expressions) {
       throw new Error("'expressions' argument is missing");
     }
@@ -63,7 +63,7 @@ export class Runner {
 
     let result;
     for (const expression of expressions) {
-      result = await this.run(expression);
+      result = await this.run(expression, {context});
     }
     return result;
   }

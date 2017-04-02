@@ -64,7 +64,7 @@ export class Command extends Entity {
     return {...base, command: command.name};
   }
 
-  async run(runner, entity, expression, context) {
+  async run(entity, expression, {context}) {
     context = this.constructor.extendContext(context, this);
 
     const [...args] = expression.arguments;
@@ -93,7 +93,7 @@ export class Command extends Entity {
     let result;
     for (let cmdExpression of this.expressions) {
       cmdExpression = cmdExpression.resolveVariables({arguments: args, config});
-      result = await entity.run(runner, cmdExpression, context);
+      result = await entity.run(cmdExpression, {context});
     }
     return result;
   }
