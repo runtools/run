@@ -54,7 +54,8 @@
     ],
     "plugins": [
       "transform-object-rest-spread"
-    ]
+    ],
+    "sourceMaps": "inline"
   },
   "dependencies": {
     "child-process-promise": "^2.2.0",
@@ -72,6 +73,7 @@
     "run-common": "^0.5.8",
     "semver": "^5.3.0",
     "shell-quote": "^1.6.1",
+    "source-map-support": "^0.4.14",
     "update-notifier": "^2.1.0"
   },
   "devDependencies": {

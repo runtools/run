@@ -7,7 +7,8 @@ import {
   throwUserError,
   avoidCommonMistakes,
   formatPath,
-  formatCode
+  formatCode,
+  callSuper
 } from 'run-common';
 
 import Entity from './entity';
@@ -270,7 +271,7 @@ export class Resource extends Entity {
     const {commandName, expression: newExpression} = expression.pullCommandName();
 
     if (!commandName) {
-      console.log('TODO: display entity help');
+      console.log('TODO: display resource help');
       return;
     }
 
@@ -279,7 +280,7 @@ export class Resource extends Entity {
       return await includedResource.run(newExpression, {context});
     }
 
-    throwUserError(`Command ${formatCode(commandName)} not found`, {context});
+    return await callSuper(Resource.prototype.run, this, expression, {context});
   }
 
   find(fn) {

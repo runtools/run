@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import 'source-map-support/register';
 import nodeVersion from 'node-version';
 import updateNotifier from 'update-notifier';
 import {showErrorAndExit} from 'run-common';

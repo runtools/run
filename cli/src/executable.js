@@ -1,4 +1,4 @@
-import {avoidCommonMistakes} from 'run-common';
+import {avoidCommonMistakes, callSuper} from 'run-common';
 
 import Command from './command';
 import Option from './option';
@@ -58,8 +58,7 @@ export class Executable {
       return await group.run(newExpression, {context});
     }
 
-    const superRun = Object.getPrototypeOf(this.constructor).prototype.run;
-    return await superRun.call(this, expression, {context});
+    return await callSuper(Executable.prototype.run, this, expression, {context});
   }
 
   findCommand(name) {

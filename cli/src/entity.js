@@ -1,5 +1,5 @@
 import {entries} from 'lodash';
-import {throwUserError, avoidCommonMistakes, formatString} from 'run-common';
+import {throwUserError, avoidCommonMistakes, formatString, formatCode} from 'run-common';
 
 import Alias from './alias';
 
@@ -47,6 +47,17 @@ export class Entity {
       entries(definitions).map(([name, definition]) =>
         this.create(definition, {parent, defaultName: name, context}))
     );
+  }
+
+  async run(expression, {context}) {
+    const commandName = expression.getCommandName();
+
+    if (!commandName) {
+      console.log('TODO: display entity help');
+      return;
+    }
+
+    throwUserError(`Command ${formatCode(commandName)} not found`, {context});
   }
 
   isMatching(name) {
