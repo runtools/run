@@ -1,7 +1,7 @@
 {
   "name": "run-cli",
   "displayName": "⚡run",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "One tool to run them all",
   "keywords": [
     "node",
