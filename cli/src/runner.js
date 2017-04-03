@@ -1,5 +1,5 @@
 import {resolve, isAbsolute} from 'path';
-import {formatCode, throwUserError} from 'run-common';
+import {formatString, formatCode, throwUserError} from 'run-common';
 
 import Resource from './resource';
 
@@ -31,16 +31,19 @@ export class Runner {
       commandName = resolve(this.dir, commandName);
     }
 
-    let resource;
+    let resourceName;
     if (isAbsolute(commandName)) {
-      resource = Resource.searchResourceFile(commandName);
+      resourceName = Resource.searchResourceFile(commandName);
     } else if (commandName.includes('/')) {
-      resource = commandName;
+      resourceName = commandName;
     }
 
-    if (resource) {
+    if (resourceName) {
+      const resource = await Resource.load(resourceName, {context});
+      if (!resource) {
+        throwUserError(`Resource ${formatString(resourceName)} not found`, {context});
+      }
       const {expression: newExpression} = expression.pullCommandName();
-      resource = await Resource.load(resource, {context});
       return await resource.run(newExpression, {context});
     }
 

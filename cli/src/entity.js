@@ -1,5 +1,5 @@
 import {entries} from 'lodash';
-import {throwUserError, avoidCommonMistakes, formatString, formatCode} from 'run-common';
+import {throwUserError, avoidCommonMistakes, formatString} from 'run-common';
 
 import Alias from './alias';
 
@@ -70,34 +70,6 @@ export class Entity {
       return this.parentEntity.reduce(fn, accumulator);
     }
     return accumulator;
-  }
-
-  async run(expression, {context}) {
-    context = this.constructor.extendContext(context, this);
-
-    const {commandName, expression: newExpression} = expression.pullCommandName();
-
-    if (!commandName) {
-      console.log('TODO: display entity help');
-      return;
-    }
-
-    const command = this.findCommand && this.findCommand(commandName);
-    if (command) {
-      return await command.run(this, newExpression, {context});
-    }
-
-    const group = this.findGroup && this.findGroup(commandName);
-    if (group) {
-      return await group.run(newExpression, {context});
-    }
-
-    const includedResource = this.findIncludedResource(commandName);
-    if (includedResource) {
-      return await includedResource.run(newExpression, {context});
-    }
-
-    throwUserError(`Command ${formatCode(commandName)} not found`, {context});
   }
 
   static normalizeName(name, context) {

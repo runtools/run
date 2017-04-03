@@ -19,8 +19,8 @@ export class Group extends Entity {
     return group;
   }
 
-  static extendContext(base, obj) {
-    return {...base, group: obj.name};
+  static extendContext(base, group) {
+    return {...base, group: group.name};
   }
 }
 

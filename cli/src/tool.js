@@ -1,9 +1,5 @@
-import {avoidCommonMistakes} from 'run-common';
-
 import Resource from './resource';
 import Executable from './executable';
-import Config from './config';
-import Engine from './engine';
 
 export class Tool extends Resource {
   static async create(file, definition, {resource, context} = {}) {
@@ -11,20 +7,18 @@ export class Tool extends Resource {
       resource = await Resource.create(file, definition, {context});
     }
 
-    context = this.extendContext(context, resource);
+    const tool = new this({...resource});
 
-    avoidCommonMistakes(definition, {configs: 'config', engines: 'engine'}, {context});
-
-    const tool = new this({
-      ...resource,
-      config: Config.normalize(definition.config || {}, context),
-      engine: definition.engine && Engine.create(definition.engine, context)
-    });
+    context = this.extendContext(context, tool);
 
     const executable = await Executable.create(definition, {entity: tool, context});
     Object.assign(tool, executable);
 
     return tool;
+  }
+
+  static extendContext(base, tool) {
+    return {...base, tool: tool.resourceFile};
   }
 }
 

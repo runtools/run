@@ -2,6 +2,7 @@ import {avoidCommonMistakes} from 'run-common';
 
 import Command from './command';
 import Option from './option';
+import Engine from './engine';
 
 export class Executable {
   static extend(klass) {
@@ -21,7 +22,7 @@ export class Executable {
 
     avoidCommonMistakes(
       definition,
-      {command: 'commands', option: 'options', group: 'groups'},
+      {command: 'commands', option: 'options', group: 'groups', engines: 'engine'},
       {context}
     );
 
@@ -30,10 +31,35 @@ export class Executable {
     const executable = {
       commands: await Command.createMany(definition.commands || [], {parent: entity, context}),
       options: Option.createMany(definition.options || {}, context),
-      groups: await Group.createMany(definition.groups || [], {parent: entity, context})
+      groups: await Group.createMany(definition.groups || [], {parent: entity, context}),
+      engine: definition.engine && Engine.create(definition.engine, context)
     };
 
     return executable;
+  }
+
+  async run(expression, {context}) {
+    context = this.constructor.extendContext(context, this);
+
+    const {commandName, expression: newExpression} = expression.pullCommandName();
+
+    if (!commandName) {
+      console.log('TODO: display executable help');
+      return;
+    }
+
+    const command = this.findCommand(commandName);
+    if (command) {
+      return await command.run(this, newExpression, {context});
+    }
+
+    const group = this.findGroup(commandName);
+    if (group) {
+      return await group.run(newExpression, {context});
+    }
+
+    const superRun = Object.getPrototypeOf(this.constructor).prototype.run;
+    return await superRun.call(this, expression, {context});
   }
 
   findCommand(name) {
