@@ -489,3 +489,19 @@ export async function fetchJSON(url, options = {}) {
 
   return result;
 }
+
+export function callSuper(method, context, ...args) {
+  const methodName = method.name;
+  let proto = context;
+  while (true) {
+    const superProto = Object.getPrototypeOf(proto);
+    if (superProto === null) {
+      throw new Error(`Super method '${methodName}' not found`);
+    }
+    if (Object.prototype.hasOwnProperty.call(proto, methodName) && proto[methodName] === method) {
+      const superMethod = superProto[methodName];
+      return superMethod.apply(context, args);
+    }
+    proto = superProto;
+  }
+}
