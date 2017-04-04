@@ -2,9 +2,9 @@ import Resource from './resource';
 import Executable from './executable';
 
 export class Tool extends Resource {
-  static async create(file, definition, {resource, context} = {}) {
+  static async create(definition, {resource, source, file, context} = {}) {
     if (!resource) {
-      resource = await Resource.create(file, definition, {context});
+      resource = await Resource.create(definition, {source, file, context});
     }
 
     const tool = new this({...resource});
@@ -18,7 +18,7 @@ export class Tool extends Resource {
   }
 
   static extendContext(base, tool) {
-    return {...base, tool: tool.resourceFile};
+    return {...base, tool: tool.__file__};
   }
 }
 

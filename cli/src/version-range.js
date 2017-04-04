@@ -8,7 +8,8 @@ export class VersionRange {
     Object.assign(this, versionRange);
   }
 
-  static create(str, context) {
+  static create(str, {context}) {
+    // '': All versions
     // '1.2.0': Exact version
     // '^1.0.0': Caret range
     // '<1.0.0':  Before range
@@ -16,11 +17,15 @@ export class VersionRange {
     // '>=1.0.0 <2.0.0':  Between range
     // '^1.0.0 !1.2.3': Range with an exclusion
 
-    if (!str) {
-      throw new Error("'str' argument is missing");
+    if (typeof str !== 'string') {
+      throw new Error("'str' argument must be a string");
     }
 
     str = str.trim();
+
+    if (str === '') {
+      return new this({type: 'any'});
+    }
 
     const exactVersion = semver.clean(str);
     if (exactVersion) {
@@ -86,8 +91,18 @@ export class VersionRange {
     return new this({value, type, exclusions});
   }
 
+  toJSON() {
+    return this.toString();
+  }
+
   toString() {
+    if (this.type === 'any') {
+      return '';
+    }
     let str = this.value;
+    if (this.type === 'exact') {
+      return str;
+    }
     for (const exclusion of this.exclusions) {
       str += ' !' + exclusion;
     }
@@ -98,6 +113,10 @@ export class VersionRange {
     version = semver.clean(version);
     if (!version) {
       throw new Error(`Version '${version}' is invalid`);
+    }
+
+    if (this.type === 'any') {
+      return true;
     }
 
     if (!semver.satisfies(version, this.value)) {

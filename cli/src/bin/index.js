@@ -23,7 +23,7 @@ async function cli(dir, args) {
   // }
 
   const runner = await Runner.create(dir);
-  const expressions = Expression.createManyFromShell(dir, args);
+  const expressions = Expression.createManyFromShell(args, {dir});
   await runner.runMany(expressions);
 }
 

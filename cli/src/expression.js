@@ -11,7 +11,7 @@ export class Expression {
     Object.assign(this, expression);
   }
 
-  static create(dir, definition, context) {
+  static create(definition, {dir, context}) {
     // ['cook' 'pizza' '--salami'] => {arguments: ['cook', 'pizza'], config: {salami: true}}
 
     if (!definition) {
@@ -19,7 +19,7 @@ export class Expression {
     }
 
     if (!Array.isArray(definition)) {
-      throwUserError(`A ${formatCode('run')} item should be a an array`, {context});
+      throwUserError(`An expression must be a an array`, {context});
     }
 
     let expression = minimist(definition);
@@ -37,14 +37,14 @@ export class Expression {
     }
 
     let config = omit(expression, '_');
-    config = Config.normalize(config);
+    config = Config.normalize(config, {context});
 
     expression = {arguments: args, config};
 
     return new this(expression);
   }
 
-  static createMany(dir, definitions, context) {
+  static createMany(definitions, {dir, context}) {
     if (typeof definitions === 'string') {
       const str = definitions;
       let args = parse(str, name => ({__var__: name}));
@@ -55,17 +55,17 @@ export class Expression {
         }
         return part;
       });
-      return this.createManyFromShell(dir, args, context);
+      return this.createManyFromShell(args, {dir, context});
     }
 
     if (Array.isArray(definitions)) {
-      return definitions.map(definition => this.create(dir, definition, context));
+      return definitions.map(definition => this.create(definition, {dir, context}));
     }
 
     throwUserError(`${formatCode('run')} property should be a string or an array`, {context});
   }
 
-  static createManyFromShell(dir, args, context) {
+  static createManyFromShell(args, {dir, context}) {
     if (!args) {
       throw new Error("'args' argument is missing");
     }
@@ -87,7 +87,7 @@ export class Expression {
       }
     }
 
-    return this.createMany(dir, definitions, context);
+    return this.createMany(definitions, {dir, context});
   }
 
   getCommandName() {

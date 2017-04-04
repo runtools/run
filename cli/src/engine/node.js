@@ -12,13 +12,13 @@ import Engine from './';
 import VersionRange from '../version-range';
 
 export class NodeEngine extends Engine {
-  static create(definition, context) {
+  static create(definition, {context}) {
     if (!definition) {
       throw new Error("'definition' property is missing");
     }
     const engine = {
       name: definition.name,
-      version: VersionRange.create(definition.version || '>=0.0.0', context)
+      version: VersionRange.create(definition.version || '', {context})
     };
     return new this(engine);
   }

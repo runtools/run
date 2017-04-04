@@ -7,7 +7,7 @@ export class Engine {
     Object.assign(this, engine);
   }
 
-  static create(definition, context) {
+  static create(definition, {context}) {
     if (!definition) {
       throw new Error("'definition' property is missing");
     }
@@ -27,7 +27,16 @@ export class Engine {
       throwUserError(`Engine not found: ${formatPath(engine.name)}`, {context});
     }
 
-    return require('./' + engine.name).default.create(engine, context);
+    return require('./' + engine.name).default.create(engine, {context});
+  }
+
+  toJSON() {
+    let engine = this.name;
+    const version = this.version.toString();
+    if (version) {
+      engine += '@' + version;
+    }
+    return engine;
   }
 }
 

@@ -1,15 +1,9 @@
 import {entries, camelCase} from 'lodash';
 import {nest} from 'flatnest';
-import {readFile, throwUserError} from 'run-common';
+import {throwUserError} from 'run-common';
 
 export const Config = {
-  async load(file) {
-    let config = readFile(file, {parse: true});
-    config = this.normalize(config, {file});
-    return config;
-  },
-
-  normalize(config, context) {
+  normalize(config, {context}) {
     if (!(config !== null && typeof config === 'object')) {
       throwUserError(`Configuration must be an object`, {context});
     }
@@ -22,7 +16,7 @@ export const Config = {
         key = camelCase(key);
       }
       if (value !== null && typeof value === 'object') {
-        value = this.normalize(value);
+        value = this.normalize(value, {context});
       }
       normalizedConfig[key] = value;
     }

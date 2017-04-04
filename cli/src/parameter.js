@@ -1,18 +1,22 @@
 import {entries} from 'lodash';
-import {throwUserError, formatCode} from 'run-common';
+import {compactObject, throwUserError, formatCode} from 'run-common';
 
 export class Parameter {
   constructor(param) {
     Object.assign(this, param);
   }
 
-  static create(definition, context, defaultName) {
+  static create(definition, {defaultName, context}) {
     if (definition === undefined) {
       throw new Error("'definition' argument is missing");
     }
 
+    if (typeof definition === 'string') {
+      definition = {name: definition};
+    }
+
     if (typeof definition !== 'object') {
-      definition = {default: definition};
+      throwUserError(`Parameter definition must be a string or an object`, {context});
     }
 
     const name = definition.name || defaultName;
@@ -28,16 +32,30 @@ export class Parameter {
     return param;
   }
 
-  static createMany(definitions, context) {
+  toJSON() {
+    let json = compactObject(this);
+    if (Object.keys(json).length === 1) {
+      // If there is only one property, it must be the name and we can simplify the JSON
+      json = json.name;
+    }
+    return json;
+  }
+
+  static createMany(definitions, {context}) {
     if (!definitions) {
       throw new Error("'definitions' argument is missing");
     }
 
     if (Array.isArray(definitions)) {
-      return definitions.map(definition => this.create(definition, context));
+      return definitions.map(definition => this.create(definition, {context}));
     }
 
-    return entries(definitions).map(([name, definition]) => this.create(definition, context, name));
+    return entries(definitions).map(([name, definition]) => {
+      if (definition !== null && typeof definition !== 'object') {
+        definition = {default: definition};
+      }
+      return this.create(definition, {defaultName: name, context});
+    });
   }
 }
 

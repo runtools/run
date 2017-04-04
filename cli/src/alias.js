@@ -5,7 +5,7 @@ export class Alias {
     this.value = value;
   }
 
-  static create(alias, context) {
+  static create(alias, {context}) {
     if (!alias) {
       throw new Error("'alias' property is missing");
     }
@@ -17,20 +17,24 @@ export class Alias {
     return new this(alias);
   }
 
-  static createMany(aliases, context) {
+  static createMany(aliases, {context}) {
     if (!aliases) {
       throw new Error("'aliases' argument is missing");
     }
 
     if (typeof aliases === 'string') {
-      return [this.create(aliases, context)];
+      return [this.create(aliases, {context})];
     }
 
     if (Array.isArray(aliases)) {
-      return aliases.map(alias => this.create(alias, context));
+      return aliases.map(alias => this.create(alias, {context}));
     }
 
     throwUserError(`${formatCode('aliases')} property should be a string or an array`, {context});
+  }
+
+  toJSON() {
+    return this.toString();
   }
 
   toString() {

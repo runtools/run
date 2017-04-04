@@ -18,12 +18,8 @@ export class Command extends Entity {
       if (definition.startsWith('.') || isAbsolute(definition)) {
         definition = {implementation: definition};
       } else {
-        definition = [definition];
+        definition = {run: definition};
       }
-    }
-
-    if (Array.isArray(definition)) {
-      definition = {run: definition};
     }
 
     const name = definition.name || defaultName;
@@ -47,17 +43,30 @@ export class Command extends Entity {
 
     const command = await Entity.create.call(this, definition, {parent, defaultName, context});
 
-    const dir = dirname(command.find(entity => entity.resourceFile));
+    const dir = dirname(command.find(entity => entity.__file__));
 
     Object.assign(command, {
       implementation: definition.implementation && resolve(dir, definition.implementation),
-      expressions: definition.run && Expression.createMany(dir, definition.run, context),
-      parameters: Parameter.createMany(definition.parameters || [], context),
-      options: Option.createMany(definition.options || {}, context),
-      engine: definition.engine && Engine.create(definition.engine, context)
+      __implementation__: definition.implementation,
+      expressions: definition.run && Expression.createMany(definition.run, {dir, context}),
+      __expressions__: definition.run,
+      parameters: Parameter.createMany(definition.parameters || [], {context}),
+      options: Option.createMany(definition.options || {}, {context}),
+      engine: definition.engine && Engine.create(definition.engine, {context})
     });
 
     return command;
+  }
+
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      implementation: this.__implementation__,
+      run: this.__expressions__,
+      parameters: this.parameters.length ? this.parameters : undefined,
+      options: this.options.length ? this.options : undefined,
+      engine: this.engine
+    };
   }
 
   static extendContext(base, command) {

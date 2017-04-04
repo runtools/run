@@ -24,7 +24,7 @@ export class Entity {
     const entity = new this({
       parentEntity: parent,
       name: name && this.normalizeName(name, context),
-      aliases: Alias.createMany(definition.aliases || [], context)
+      aliases: Alias.createMany(definition.aliases || [], {context})
     });
 
     return entity;
@@ -47,6 +47,13 @@ export class Entity {
       entries(definitions).map(([name, definition]) =>
         this.create(definition, {parent, defaultName: name, context}))
     );
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      aliases: this.aliases.length ? this.aliases : undefined
+    };
   }
 
   async run(expression, {context}) {

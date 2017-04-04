@@ -32,55 +32,101 @@ const BUIT_IN_RESOURCES = [
 ];
 
 export class Resource extends Entity {
-  static async create(file, definition, {context} = {}) {
+  static async create(definition, {source, file, context} = {}) {
+    if (!source) {
+      throw new Error("'source' argument is missing");
+    }
+
     if (!file) {
       throw new Error("'file' argument is missing");
     }
 
-    context = this.extendContext(context, {resourceFile: file});
+    context = this.extendContext(context, {__file__: file});
 
     avoidCommonMistakes(definition, {author: 'authors'}, {context});
 
-    const resource = await Entity.create.call(this, definition, {context});
+    let resource = await Entity.create.call(this, definition, {context});
 
     const dir = dirname(file);
 
     Object.assign(resource, {
-      version: definition.version && Version.create(definition.version, context),
+      version: definition.version && Version.create(definition.version, {context}),
       description: definition.description,
-      authors: definition.authors,
+      authors: this.normalizeAuthors(definition.authors || [], {context}),
+      extendedResources: await this.extendMany(definition.is || [], {dir, context}),
+      includedResources: await this.includeMany(definition.has || [], {dir, context}),
+      properties: Property.createMany(definition.properties || [], {context}),
+      repository: definition.repository &&
+        this.normalizeRepository(definition.repository, {context}),
       license: definition.license,
-      repository: definition.repository && this.normalizeRepository(definition.repository),
-      properties: Property.createMany(definition.properties || [], context),
-      extendedResources: await this.extendMany(dir, definition.is || [], context),
-      includedResources: await this.includeMany(dir, definition.has || [], context),
-      resourceFile: file
+      __source__: source,
+      __file__: file
     });
 
     if (resource.name === 'res/tool' || resource.findExtendedResource('res/tool')) {
       const {Tool} = require('./tool'); // Use late 'require' to avoid a circular referencing issue
-      return await Tool.create(file, definition, {resource, context});
+      resource = await Tool.create(definition, {resource, context});
+    }
+
+    for (const property of resource.getProperties()) {
+      resource[property.name] = definition[property.name];
     }
 
     return resource;
   }
 
-  static extendContext(base, resource) {
-    return {...base, resource: resource.resourceFile};
+  toJSON() {
+    let extendedResources = this.extendedResources.map(extendedResource => {
+      return extendedResource.__source__;
+    });
+    if (!extendedResources.length) {
+      extendedResources = undefined;
+    } else if (extendedResources.length === 1) {
+      extendedResources = extendedResources[0];
+    }
+
+    let includedResources = this.includedResources.map(includedResourcesResource => {
+      return includedResourcesResource.__source__;
+    });
+    if (!includedResources.length) {
+      includedResources = undefined;
+    } else if (includedResources.length === 1) {
+      includedResources = includedResources[0];
+    }
+
+    return {
+      ...super.toJSON(),
+      version: this.version,
+      description: this.description,
+      authors: this.authors.length ? this.authors : undefined,
+      is: extendedResources,
+      has: includedResources,
+      license: this.license,
+      repository: this.repository,
+      properties: this.properties.length ? this.properties : undefined
+    };
   }
 
-  static async load(source, {searchInPath, context} = {}) {
-    const result = await this._load(source, {searchInPath, context});
+  static extendContext(base, resource) {
+    return {...base, resource: resource.__file__};
+  }
+
+  static async load(source, {dir, searchInPath, context} = {}) {
+    const result = await this._load(source, {dir, searchInPath, context});
     if (!result) {
       return undefined;
     }
 
     const {file, definition} = result;
-    return await this.create(file, definition, {context});
+    return await this.create(definition, {source, file, context});
   }
 
-  static async _load(source, {searchInPath}) {
+  static async _load(source, {dir, searchInPath}) {
     // TODO: load resources from resdir
+
+    if (source.startsWith('.')) {
+      source = resolve(dir, source);
+    }
 
     const definition = BUIT_IN_RESOURCES.find(resource => resource.name === source);
     if (definition) {
@@ -106,7 +152,7 @@ export class Resource extends Entity {
       definition = {name: basename(dir), version: '0.1.0-pre-alpha'};
       writeFile(file, definition, {stringify: true});
     }
-    return await this.create(file, definition, {context});
+    return await this.create(definition, {file, context});
   }
 
   static async loadUserResource(dir, {context} = {}) {
@@ -115,7 +161,7 @@ export class Resource extends Entity {
       return undefined;
     }
 
-    dir = dirname(resource.resourceFile);
+    dir = dirname(resource.__file__);
     const parentDir = join(dir, '..');
     if (parentDir !== dir) {
       const parentEntity = await this.loadUserResource(parentDir, {context});
@@ -161,7 +207,7 @@ export class Resource extends Entity {
     return undefined;
   }
 
-  static async extend(dir, source, context) {
+  static async extend(source, {dir, context}) {
     if (!dir) {
       throw new Error("'dir' argument is missing");
     }
@@ -170,17 +216,11 @@ export class Resource extends Entity {
       throwUserError(`Base resource ${formatCode('source')} must be a string`, {context});
     }
 
-    source = source.trim();
-
     if (!source) {
       throwUserError(`Base resource ${formatCode('source')} cannot be empty`, {context});
     }
 
-    if (source.startsWith('.')) {
-      source = resolve(dir, source);
-    }
-
-    const resource = await this.load(source, context);
+    const resource = await this.load(source, {dir, context});
     if (!resource) {
       throwUserError(`Base resource not found: ${formatPath(source)}`, {
         context
@@ -189,7 +229,7 @@ export class Resource extends Entity {
     return resource;
   }
 
-  static extendMany(dir, sources, context) {
+  static extendMany(sources, {dir, context}) {
     if (!dir) {
       throw new Error("'dir' argument is missing");
     }
@@ -199,7 +239,7 @@ export class Resource extends Entity {
     }
 
     if (typeof sources === 'string') {
-      sources = sources.split(',');
+      sources = [sources];
     }
 
     if (!Array.isArray(sources)) {
@@ -208,12 +248,12 @@ export class Resource extends Entity {
 
     return Promise.all(
       sources.map(source => {
-        return this.extend(dir, source, context);
+        return this.extend(source, {dir, context});
       })
     );
   }
 
-  static async include(dir, source, context) {
+  static async include(source, {dir, context}) {
     if (!dir) {
       throw new Error("'dir' argument is missing");
     }
@@ -221,8 +261,6 @@ export class Resource extends Entity {
     if (typeof source !== 'string') {
       throwUserError(`Resource ${formatCode('source')} must be a string`, {context});
     }
-
-    source = source.trim();
 
     if (!source) {
       throwUserError(`Resource ${formatCode('source')} cannot be empty`, {context});
@@ -241,7 +279,7 @@ export class Resource extends Entity {
     return resource;
   }
 
-  static includeMany(dir, sources, context) {
+  static includeMany(sources, {dir, context}) {
     if (!dir) {
       throw new Error("'dir' argument is missing");
     }
@@ -251,7 +289,7 @@ export class Resource extends Entity {
     }
 
     if (typeof sources === 'string') {
-      sources = sources.split(',');
+      sources = [sources];
     }
 
     if (!Array.isArray(sources)) {
@@ -260,7 +298,7 @@ export class Resource extends Entity {
 
     return Promise.all(
       sources.map(source => {
-        return this.include(dir, source, context);
+        return this.include(source, {dir, context});
       })
     );
   }
@@ -319,6 +357,20 @@ export class Resource extends Entity {
     }
 
     return accumulator;
+  }
+
+  getProperties() {
+    return this.reduce(
+      (properties, resource) => {
+        for (const property of resource.properties) {
+          if (!properties.find(prop => prop.name === property.name)) {
+            properties.push(property);
+          }
+        }
+        return properties;
+      },
+      []
+    );
   }
 
   findExtendedResource(name) {
@@ -382,10 +434,30 @@ export class Resource extends Entity {
     return true;
   }
 
-  static normalizeRepository(repository) {
-    // TODO: more normalizations...
-    // We should not assume that the repository type is always Git
-    return repository.url || repository;
+  static normalizeAuthors(authors, {context}) {
+    if (!authors) {
+      throw new Error("'authors' argument is missing");
+    }
+
+    if (typeof authors === 'string') {
+      authors = [authors];
+    }
+
+    if (!Array.isArray(authors)) {
+      throwUserError(`${formatCode('authors')} property must be a string or an array`, {context});
+    }
+
+    return authors;
+  }
+
+  static normalizeRepository(repository, {_context}) {
+    // TODO
+
+    if (!repository) {
+      throw new Error("'repository' argument is missing");
+    }
+
+    return repository;
   }
 }
 

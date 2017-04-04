@@ -30,12 +30,22 @@ export class Executable {
 
     const executable = {
       commands: await Command.createMany(definition.commands || [], {parent: entity, context}),
-      options: Option.createMany(definition.options || {}, context),
+      options: Option.createMany(definition.options || {}, {context}),
       groups: await Group.createMany(definition.groups || [], {parent: entity, context}),
       engine: definition.engine && Engine.create(definition.engine, context)
     };
 
     return executable;
+  }
+
+  toJSON() {
+    return {
+      ...callSuper(Executable.prototype.toJSON, this),
+      commands: this.commands.length ? this.commands : undefined,
+      options: this.options.length ? this.options : undefined,
+      groups: this.groups.length ? this.groups : undefined,
+      engine: this.engine
+    };
   }
 
   async run(expression, {context}) {

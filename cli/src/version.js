@@ -7,7 +7,7 @@ export class Version {
     this.value = value;
   }
 
-  static create(str, context) {
+  static create(str, {context}) {
     if (!str) {
       throw new Error("'str' argument is missing");
     }
@@ -18,6 +18,10 @@ export class Version {
     }
 
     return new this(version);
+  }
+
+  toJSON() {
+    return this.toString();
   }
 
   toString() {
