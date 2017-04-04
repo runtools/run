@@ -505,3 +505,13 @@ export function callSuper(method, context, ...args) {
     proto = superProto;
   }
 }
+
+export function compactObject(obj) {
+  const result = {};
+  for (const [key, value] of entries(obj)) {
+    if (value !== undefined) {
+      result[key] = value;
+    }
+  }
+  return result;
+}
