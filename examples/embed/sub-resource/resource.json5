@@ -7,9 +7,9 @@
   license: 'Apache-2.0',
   repository: 'git://github.com/runtools/run',
   is: ['js/tool'],
-  properties: {
-    bar: 0
-  },
+  properties: [
+    {name: 'bar', default: 0}
+  ],
   foo: 'xyz',
   bar: 123,
   commands: {

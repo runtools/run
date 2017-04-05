@@ -18,7 +18,7 @@ export class Tool extends Resource {
   }
 
   static extendContext(base, tool) {
-    return {...base, tool: tool.__file__};
+    return {...base, tool: tool.getResourceFile()};
   }
 }
 

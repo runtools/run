@@ -7,9 +7,9 @@
   license: 'MIT',
   repository: 'git://github.com/runtools/run',
   is: ['js/tool'],
-  properties: {
-    foo: 'default'
-  },
+  properties: [
+    {name: 'foo', default: 'default'}
+  ],
   commands: {
     foo: {
       aliases: ['f'],

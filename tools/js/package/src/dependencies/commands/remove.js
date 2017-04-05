@@ -1,23 +1,27 @@
-import {formatString, task, throwUserError} from 'run-common';
+import {formatString, task} from 'run-common';
 
-import {ensurePackageFile, execYarn} from '../common';
+import {JSPackage} from '../../js-package';
 
-export default (async function(names, {packageManager, debug}) {
-  await task(
-    async () => {
-      await ensurePackageFile();
-      if (packageManager === 'yarn') {
-        await execYarn(['remove', ...names], {debug});
-      } else {
-        throwUserError(`Unsupported package manager: ${formatString(packageManager)}`);
-      }
-    },
-    {
-      intro: `Removing ${names.length > 1 ? 'dependencies' : 'dependency'}...`,
-      outro: `${names.length > 1 ? 'Dependencies' : 'Dependency'} removed: ${names
-        .map(name => formatString(name))
-        .join(', ')}`,
-      debug
-    }
-  );
+export default (async function(args, config, context) {
+  // TODO: The resource should come from the engine
+  const resource = await JSPackage.load(context.userResource);
+  return remove.call(resource, args, config, context);
 });
+
+async function remove(names, {debug}, context) {
+  for (const name of names) {
+    await task(
+      async () => {
+        await this.removeDependency(name, {context});
+        await this.updateDependencies({debug, context});
+      },
+      {
+        intro: `Removing ${formatString(name)} dependency...`,
+        outro: `Dependency ${formatString(name)} removed`,
+        debug
+      }
+    );
+
+    await this.save({context});
+  }
+}

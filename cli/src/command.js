@@ -43,7 +43,7 @@ export class Command extends Entity {
 
     const command = await Entity.create.call(this, definition, {parent, defaultName, context});
 
-    const dir = dirname(command.find(entity => entity.__file__));
+    const dir = dirname(command.find(entity => entity.getResourceFile && entity.getResourceFile()));
 
     Object.assign(command, {
       implementation: definition.implementation && resolve(dir, definition.implementation),

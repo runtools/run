@@ -1,0 +1,54 @@
+{
+  name: 'js/package',
+  aliases: ['package', 'pkg'],
+  version: '0.1.0-pre-alpha',
+  is: ['js/tool'],
+  properties: [
+    {
+      name: 'dependencies',
+      type: 'array'
+    },
+    {
+      name: 'npmName',
+      type: 'string'
+    }
+  ],
+  commands: {
+    'initialize-package': {
+      implementation: './dist/commands/initialize',
+      listen: 'after:initialize-resource',
+      emit: 'js/initialize-package'
+    },
+  },
+  groups: {
+    package: {
+      aliases: ['pkg'],
+      commands: {
+        publish: {
+          implementation: './dist/commands/publish',
+          emit: 'js/publish-package'
+        }
+      }
+    },
+    dependencies: {
+      aliases: ['dependency', 'deps', 'dep'],
+      commands: {
+        add: {
+          implementation: './dist/dependencies/commands/add',
+          options: {
+            peer: false,
+            optional: false,
+            dev: false
+          }
+        },
+        remove: {
+          aliases: ['rm'],
+          implementation: './dist/dependencies/commands/remove'
+        }
+      }
+    }
+  },
+  options: {
+    packageManager: 'yarn'
+  }
+}

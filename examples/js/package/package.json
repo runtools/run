@@ -1,8 +1,8 @@
 {
+  "name": "@runtools/js-package-example",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
   "dependencies": {
     "test": "^0.6.0"
-  },
-  "license": "UNLICENSED",
-  "peerDependencies": {},
-  "optionalDependencies": {}
+  }
 }

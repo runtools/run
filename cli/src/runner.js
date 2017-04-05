@@ -23,7 +23,7 @@ export class Runner {
   static extendContext(base, runner) {
     const context = {...base};
     if (runner.userResource) {
-      context.userResource = runner.userResource.__file__;
+      context.userResource = runner.userResource.getResourceFile();
     }
     return context;
   }

@@ -41,7 +41,7 @@ export class Resource extends Entity {
       throw new Error("'file' argument is missing");
     }
 
-    context = this.extendContext(context, {__file__: file});
+    context = this.extendContext(context, {getResourceFile: () => file});
 
     avoidCommonMistakes(definition, {author: 'authors'}, {context});
 
@@ -58,10 +58,11 @@ export class Resource extends Entity {
       properties: Property.createMany(definition.properties || [], {context}),
       repository: definition.repository &&
         this.normalizeRepository(definition.repository, {context}),
-      license: definition.license,
-      __source__: source,
-      __file__: file
+      license: definition.license
     });
+
+    resource.setResourceSource(source);
+    resource.setResourceFile(file);
 
     if (resource.name === 'res/tool' || resource.findExtendedResource('res/tool')) {
       const {Tool} = require('./tool'); // Use late 'require' to avoid a circular referencing issue
@@ -77,7 +78,7 @@ export class Resource extends Entity {
 
   toJSON() {
     let extendedResources = this.extendedResources.map(extendedResource => {
-      return extendedResource.__source__;
+      return extendedResource.getResourceSource();
     });
     if (!extendedResources.length) {
       extendedResources = undefined;
@@ -86,7 +87,7 @@ export class Resource extends Entity {
     }
 
     let includedResources = this.includedResources.map(includedResourcesResource => {
-      return includedResourcesResource.__source__;
+      return includedResourcesResource.getResourceSource();
     });
     if (!includedResources.length) {
       includedResources = undefined;
@@ -108,7 +109,7 @@ export class Resource extends Entity {
   }
 
   static extendContext(base, resource) {
-    return {...base, resource: resource.__file__};
+    return {...base, resource: resource.getResourceFile()};
   }
 
   static async load(source, {dir, searchInPath, context} = {}) {
@@ -155,13 +156,20 @@ export class Resource extends Entity {
     return await this.create(definition, {file, context});
   }
 
+  async save({destination = this.getResourceFile(), _context}) {
+    if (!destination) {
+      throw new Error("'destination' argument is missing");
+    }
+    writeFile(destination, this, {stringify: true});
+  }
+
   static async loadUserResource(dir, {context} = {}) {
     const resource = await this.load(dir, {searchInPath: true, context});
     if (!resource) {
       return undefined;
     }
 
-    dir = dirname(resource.__file__);
+    dir = dirname(resource.getResourceFile());
     const parentDir = join(dir, '..');
     if (parentDir !== dir) {
       const parentEntity = await this.loadUserResource(parentDir, {context});
@@ -301,6 +309,22 @@ export class Resource extends Entity {
         return this.include(source, {dir, context});
       })
     );
+  }
+
+  getResourceSource() {
+    return this.__source__;
+  }
+
+  setResourceSource(source) {
+    this.__source__ = source;
+  }
+
+  getResourceFile() {
+    return this.__file__;
+  }
+
+  setResourceFile(file) {
+    this.__file__ = file;
   }
 
   async run(expression, {context}) {

@@ -318,7 +318,7 @@ export function getErrorSymbol() {
 }
 
 export function formatString(path) {
-  return gray("'" + path + "'");
+  return yellow("'" + path + "'");
 }
 
 export function formatURL(url) {
@@ -474,7 +474,7 @@ export async function fetchJSON(url, options = {}) {
   const opts = {
     headers: {Accept: 'application/json'}
   };
-  Object.assign(opts, pick(options, ['method', 'timeout']));
+  Object.assign(opts, pick(options, ['method', 'headers', 'timeout']));
 
   const response = await fetch(url, opts);
   if (response.status !== 200) {
