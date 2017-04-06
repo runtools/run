@@ -1,4 +1,4 @@
-import {join, extname} from 'path';
+import {join, resolve, extname} from 'path';
 import {existsSync, mkdirSync, readFileSync, writeFileSync, statSync} from 'fs';
 import {outputFile} from 'fs-promise';
 import {homedir, tmpdir} from 'os';
@@ -513,5 +513,97 @@ export function compactObject(obj) {
       result[key] = value;
     }
   }
+  return result;
+}
+
+export function convertStringToType(string, type, {dir, context}) {
+  if (!string) {
+    throw new Error("'string' argument is missing");
+  }
+
+  if (typeof string !== 'string') {
+    throw new Error("'string' argument must be a string");
+  }
+
+  if (type === undefined) {
+    throw new Error("'type' argument is missing");
+  }
+
+  let result;
+
+  if (type === 'boolean') {
+    if (string === '1' || string === 'true' || string === 'yes' || string === 'on') {
+      result = true;
+    } else if (string === '0' || string === 'false' || string === 'no' || string === 'off') {
+      result = false;
+    } else {
+      throwUserError(`Cannot convert this string to a boolean: ${formatString(string)}`, {context});
+    }
+  } else if (type === 'number') {
+    result = Number(string);
+    if (isNaN(result)) {
+      throwUserError(`Cannot convert this string to a number: ${formatString(string)}`, {context});
+    }
+  } else if (type === 'string') {
+    result = string;
+  } else if (type === 'path') {
+    if (!dir) {
+      throw new Error("'dir' argument is missing");
+    }
+    result = resolve(dir, string);
+  } else {
+    throwUserError(`Unsupported type: ${formatCode(type)}`, {context});
+  }
+
+  return result;
+}
+
+export function parseCommandLineArguments(argumentsAndOptions, {context}) {
+  if (!argumentsAndOptions) {
+    throw new Error("'argumentsAndOptions' argument is missing");
+  }
+
+  if (!Array.isArray(argumentsAndOptions)) {
+    throw new Error("'argumentsAndOptions' argument must be an array");
+  }
+
+  const result = {arguments: [], options: {}};
+
+  for (const argumentOrOption of argumentsAndOptions) {
+    if (argumentOrOption.startsWith('--')) {
+      let option = argumentOrOption.slice(2);
+      let value;
+      const index = option.indexOf('=');
+      if (index !== -1) {
+        value = option.slice(index + 1);
+        option = option.slice(0, index);
+      }
+      if (value === undefined) {
+        if (option.startsWith('no-')) {
+          value = 'false';
+          option = option.slice(3);
+        } else if (option.startsWith('non-')) {
+          value = 'false';
+          option = option.slice(4);
+        } else {
+          value = 'true';
+        }
+      }
+      result.options[option] = value;
+    } else if (argumentOrOption.startsWith('-')) {
+      const options = argumentOrOption.slice(1);
+      for (let i = 0; i < options.length; i++) {
+        const option = options[i];
+        if (!/[\w\d]/.test(option)) {
+          throwUserError(`Invalid command line option: ${formatCode(argumentOrOption)}`, {context});
+        }
+        result.options[option] = 'true';
+      }
+    } else {
+      const argument = argumentOrOption;
+      result.arguments.push(argument);
+    }
+  }
+
   return result;
 }
