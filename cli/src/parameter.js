@@ -24,8 +24,18 @@ export class Parameter {
       throwUserError(`Parameter ${formatCode('name')} property is missing`, {context});
     }
 
+    let type = definition.type || 'string';
+    let itemType;
+    if (type.startsWith('array')) {
+      const matches = type.match(/^Array<(\w+)>$/i);
+      itemType = (matches && matches[1]) || 'string';
+      type = 'array';
+    }
+
     const param = new this({
       name,
+      type,
+      itemType,
       default: definition.default
     });
 
@@ -33,7 +43,17 @@ export class Parameter {
   }
 
   toJSON() {
-    let json = compactObject(this);
+    let json = {...this};
+    if (json.type === 'string') {
+      json.type = undefined;
+    }
+    if (json.itemType) {
+      if (json.itemType !== 'string') {
+        json.type += '<' + json.itemType + '>';
+      }
+      json.itemType = undefined;
+    }
+    json = compactObject(json);
     if (Object.keys(json).length === 1) {
       // If there is only one property, it must be the name and we can simplify the JSON
       json = json.name;

@@ -15,7 +15,7 @@ export class Runner {
 
     const userResource = await Resource.loadUserResource(dir);
 
-    const runner = new this({dir, userResource});
+    const runner = new this({userResource});
 
     return runner;
   }
@@ -38,7 +38,7 @@ export class Runner {
     let commandName = expression.getCommandName();
 
     if (commandName.startsWith('.')) {
-      commandName = resolve(this.dir, commandName);
+      commandName = resolve(expression.dir, commandName);
     }
 
     if (commandName.includes('/') || isAbsolute(commandName)) {

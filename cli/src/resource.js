@@ -327,6 +327,10 @@ export class Resource extends Entity {
     this.__file__ = file;
   }
 
+  getResourceDir() {
+    return dirname(this.getResourceFile());
+  }
+
   async run(expression, {context}) {
     context = this.constructor.extendContext(context, this);
 
@@ -381,6 +385,20 @@ export class Resource extends Entity {
     }
 
     return accumulator;
+  }
+
+  getPropertyValue(name) {
+    const value = this[name];
+    return value === undefined ? this.getProperty(name).default : value;
+  }
+
+  getProperty(name) {
+    const property = this.find(resource =>
+      resource.properties.find(property => property.name === name));
+    if (!property) {
+      throw new Error(`Property ${formatCode(name)} not found`);
+    }
+    return property;
   }
 
   getProperties() {

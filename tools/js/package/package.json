@@ -1,6 +1,11 @@
 {
   "name": "@runtools/js-package",
+  "version": "0.1.0",
   "private": true,
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.js",
   "scripts": {
     "build": "rm -rf dist && babel src --out-dir dist"
   },

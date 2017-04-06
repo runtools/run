@@ -1,6 +1,6 @@
 import {resolve, isAbsolute, dirname} from 'path';
-import {defaults, cloneDeep, defaultsDeep} from 'lodash';
-import {throwUserError, avoidCommonMistakes, formatCode} from 'run-common';
+import {cloneDeep, defaultsDeep} from 'lodash';
+import {convertStringToType, throwUserError, avoidCommonMistakes, formatCode} from 'run-common';
 
 import Entity from './entity';
 import Expression from './expression';
@@ -76,14 +76,11 @@ export class Command extends Entity {
   async run(entity, expression, {context}) {
     context = this.constructor.extendContext(context, this);
 
-    const [...args] = expression.arguments;
-    const defaultArgs = this.parameters.map(param => param.default);
-    defaults(args, defaultArgs);
-    // TODO: omit arguments not defined in the command parameters
+    const args = this.normalizeArguments(expression, {context});
 
+    // TODO: Implement normalizeOptions()
     const config = cloneDeep(expression.config);
     defaultsDeep(config, this.getDefaultConfig(), entity.getDefaultConfig());
-    // TODO: omit config properties not defined in the command options
 
     if (this.implementation) {
       const engine = this.engine || entity.getEngine();
@@ -103,6 +100,31 @@ export class Command extends Entity {
     for (let cmdExpression of this.expressions) {
       cmdExpression = cmdExpression.resolveVariables({arguments: args, config});
       result = await entity.run(cmdExpression, {context});
+    }
+    return result;
+  }
+
+  normalizeArguments(expression, {context}) {
+    const args = [...expression.arguments];
+    const result = [];
+    for (const parameter of this.parameters) {
+      if (parameter.type === 'array') {
+        const array = [];
+        while (args.length) {
+          let arg = args.shift();
+          arg = convertStringToType(arg, parameter.itemType, {dir: expression.dir, context});
+          array.push(arg);
+        }
+        result.push(array);
+      } else {
+        let arg = args.shift();
+        if (arg === undefined) {
+          arg = parameter.default;
+        } else {
+          arg = convertStringToType(arg, parameter.type, {dir: expression.dir, context});
+        }
+        result.push(arg);
+      }
     }
     return result;
   }

@@ -1,6 +1,6 @@
 import {formatString, task} from 'run-common';
 
-import JSPackage from '../../js-package';
+import JSPackage from '../..';
 import Dependency from '../../dependency';
 
 export default (async function(args, config, context) {

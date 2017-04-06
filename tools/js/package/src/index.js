@@ -9,15 +9,10 @@ import Dependency from './dependency';
 
 export class JSPackage extends Tool {
   static async load(file, {context} = {}) {
-    const tool = await Tool.load(file, {context});
-
-    const jsPackage = new this({...tool});
-
-    context = this.extendContext(context, jsPackage);
-
-    jsPackage.dependencies = Dependency.createMany(jsPackage.dependencies || [], {context});
-
-    return jsPackage;
+    const pkg = await Tool.load.call(this, file, {context});
+    context = this.extendContext(context, pkg);
+    pkg.dependencies = Dependency.createMany(pkg.dependencies || [], {context});
+    return pkg;
   }
 
   toJSON() {

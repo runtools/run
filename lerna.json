@@ -3,7 +3,8 @@
   "packages": [
     "cli",
     "common",
-    "tools/js/package"
+    "tools/js/package",
+    "tools/js/esnext-package"
   ],
   "version": "independent",
   "onlyExplicitUpdates": true,

@@ -67,7 +67,6 @@
     "json5": "^0.5.1",
     "jsonfile": "^2.4.0",
     "lodash": "^4.17.4",
-    "minimist": "^1.2.0",
     "node-version": "^1.0.0",
     "quote-unquote": "^1.0.0",
     "run-common": "^0.5.8",

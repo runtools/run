@@ -1,6 +1,6 @@
 import {formatString, task} from 'run-common';
 
-import {JSPackage} from '../../js-package';
+import {JSPackage} from '../..';
 
 export default (async function(args, config, context) {
   // TODO: The resource should come from the engine

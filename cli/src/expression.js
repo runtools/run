@@ -1,8 +1,6 @@
-import {resolve} from 'path';
 import {omit, mapValues, get} from 'lodash';
-import minimist from 'minimist';
 import {parse} from 'shell-quote';
-import {throwUserError, formatCode} from 'run-common';
+import {parseCommandLineArguments, throwUserError, formatCode} from 'run-common';
 
 import Config from './config';
 
@@ -22,26 +20,15 @@ export class Expression {
       throwUserError(`An expression must be a an array`, {context});
     }
 
-    let expression = minimist(definition);
+    let {arguments: args, options: config} = parseCommandLineArguments(definition, {context});
 
-    const args = expression._;
-
-    let commandName = args[0];
-    if (!commandName) {
-      throwUserError(`An expression must contain a command name`, {context});
+    if (!args.length) {
+      throwUserError(`An expression must contain at least one argument`, {context});
     }
 
-    if (commandName.startsWith('.')) {
-      commandName = resolve(dir, commandName);
-      args[0] = commandName;
-    }
-
-    let config = omit(expression, '_');
     config = Config.normalize(config, {context});
 
-    expression = {arguments: args, config};
-
-    return new this(expression);
+    return new this({arguments: args, config, dir});
   }
 
   static createMany(definitions, {dir, context}) {
@@ -96,7 +83,7 @@ export class Expression {
 
   pullCommandName() {
     const [commandName, ...args] = this.arguments;
-    const expression = new this.constructor({arguments: args, config: this.config});
+    const expression = new this.constructor({...this, arguments: args});
     return {commandName, expression};
   }
 
@@ -107,7 +94,7 @@ export class Expression {
 
     const value = this.config[name];
     const config = omit(this.config, name);
-    const expression = new this.constructor({arguments: this.arguments, config});
+    const expression = new this.constructor({...this, config});
     return {[name]: value, expression};
   }
 
@@ -142,10 +129,7 @@ export class Expression {
     const resolvedArguments = resolveVars(this.arguments, getter);
     const resolvedConfig = resolveVars(this.config, getter);
 
-    return new this.constructor({
-      arguments: resolvedArguments,
-      config: resolvedConfig
-    });
+    return new this.constructor({...this, arguments: resolvedArguments, config: resolvedConfig});
   }
 }
 

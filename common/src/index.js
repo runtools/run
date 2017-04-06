@@ -532,9 +532,10 @@ export function convertStringToType(string, type, {dir, context}) {
   let result;
 
   if (type === 'boolean') {
-    if (string === '1' || string === 'true' || string === 'yes' || string === 'on') {
+    const str = string.toLowerCase();
+    if (str === '1' || str === 'true' || str === 'yes' || str === 'on') {
       result = true;
-    } else if (string === '0' || string === 'false' || string === 'no' || string === 'off') {
+    } else if (str === '0' || str === 'false' || str === 'no' || str === 'off') {
       result = false;
     } else {
       throwUserError(`Cannot convert this string to a boolean: ${formatString(string)}`, {context});

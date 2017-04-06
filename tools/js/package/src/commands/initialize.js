@@ -1,3 +1,3 @@
 export default function() {
-  console.log('initialize');
+  console.log('initialize package');
 }

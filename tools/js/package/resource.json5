@@ -19,6 +19,11 @@
       listen: 'after:initialize-resource',
       emit: 'js/initialize-package'
     },
+    'build-package': {
+      implementation: './dist/commands/build',
+      listen: 'after:build-resource',
+      emit: 'js/build-package'
+    }
   },
   groups: {
     package: {
