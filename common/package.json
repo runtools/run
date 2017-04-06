@@ -1,6 +1,6 @@
 {
   "name": "run-common",
-  "version": "0.5.8",
+  "version": "0.5.9",
   "description": "Miscellaneous functions used by ⚡run",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
