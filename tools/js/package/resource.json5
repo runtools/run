@@ -40,6 +40,9 @@
       commands: {
         add: {
           implementation: './dist/dependencies/commands/add',
+          parameters: {
+            packages: []
+          },
           options: {
             peer: false,
             optional: false,
@@ -48,7 +51,10 @@
         },
         remove: {
           aliases: ['rm'],
-          implementation: './dist/dependencies/commands/remove'
+          implementation: './dist/dependencies/commands/remove',
+          parameters: {
+            names: []
+          }
         }
       }
     }

@@ -8,7 +8,7 @@ export default (async function(args, config, context) {
   return remove.call(resource, args, config, context);
 });
 
-async function remove(names, {debug}, context) {
+async function remove([names], {debug}, context) {
   for (const name of names) {
     await task(
       async () => {

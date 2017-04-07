@@ -4,10 +4,23 @@
   is: ['js/tool'],
   commands: {
     info: {
-      run: 'log $0'
+      run: 'log $0',
+      parameters: {
+        message: ''
+      }
     },
-    log: './log',
-    trace: './trace'
+    log: {
+      implementation: './log',
+      parameters: {
+        message: ''
+      }
+    },
+    trace: {
+      implementation: './trace',
+      parameters: {
+        message: ''
+      }
+    }
   },
   options: {
     verbose: false

@@ -1,4 +1,4 @@
-import {join, resolve, extname} from 'path';
+import {join, extname} from 'path';
 import {existsSync, mkdirSync, readFileSync, writeFileSync, statSync} from 'fs';
 import {outputFile} from 'fs-promise';
 import {homedir, tmpdir} from 'os';
@@ -516,94 +516,70 @@ export function compactObject(obj) {
   return result;
 }
 
-export function convertStringToType(string, type, {dir, context}) {
-  if (!string) {
-    throw new Error("'string' argument is missing");
+export function parseCommandLineArguments(argsAndOpts, {context}) {
+  if (!argsAndOpts) {
+    throw new Error("'argsAndOpts' argument is missing");
   }
 
-  if (typeof string !== 'string') {
-    throw new Error("'string' argument must be a string");
-  }
-
-  if (type === undefined) {
-    throw new Error("'type' argument is missing");
-  }
-
-  let result;
-
-  if (type === 'boolean') {
-    const str = string.toLowerCase();
-    if (str === '1' || str === 'true' || str === 'yes' || str === 'on') {
-      result = true;
-    } else if (str === '0' || str === 'false' || str === 'no' || str === 'off') {
-      result = false;
-    } else {
-      throwUserError(`Cannot convert this string to a boolean: ${formatString(string)}`, {context});
-    }
-  } else if (type === 'number') {
-    result = Number(string);
-    if (isNaN(result)) {
-      throwUserError(`Cannot convert this string to a number: ${formatString(string)}`, {context});
-    }
-  } else if (type === 'string') {
-    result = string;
-  } else if (type === 'path') {
-    if (!dir) {
-      throw new Error("'dir' argument is missing");
-    }
-    result = resolve(dir, string);
-  } else {
-    throwUserError(`Unsupported type: ${formatCode(type)}`, {context});
-  }
-
-  return result;
-}
-
-export function parseCommandLineArguments(argumentsAndOptions, {context}) {
-  if (!argumentsAndOptions) {
-    throw new Error("'argumentsAndOptions' argument is missing");
-  }
-
-  if (!Array.isArray(argumentsAndOptions)) {
-    throw new Error("'argumentsAndOptions' argument must be an array");
+  if (!Array.isArray(argsAndOpts)) {
+    throw new Error("'argsAndOpts' argument must be an array");
   }
 
   const result = {arguments: [], options: {}};
 
-  for (const argumentOrOption of argumentsAndOptions) {
-    if (argumentOrOption.startsWith('--')) {
-      let option = argumentOrOption.slice(2);
-      let value;
-      const index = option.indexOf('=');
+  for (let i = 0; i < argsAndOpts.length; i++) {
+    const argOrOpt = argsAndOpts[i];
+
+    if (typeof argOrOpt === 'string' && argOrOpt.startsWith('--')) {
+      let opt = argOrOpt.slice(2);
+      let val;
+
+      const index = opt.indexOf('=');
       if (index !== -1) {
-        value = option.slice(index + 1);
-        option = option.slice(0, index);
+        val = opt.slice(index + 1);
+        opt = opt.slice(0, index);
       }
-      if (value === undefined) {
-        if (option.startsWith('no-')) {
-          value = 'false';
-          option = option.slice(3);
-        } else if (option.startsWith('non-')) {
-          value = 'false';
-          option = option.slice(4);
-        } else {
-          value = 'true';
+
+      if (val === undefined) {
+        if (opt.startsWith('no-')) {
+          val = 'false';
+          opt = opt.slice(3);
+        } else if (opt.startsWith('non-')) {
+          val = 'false';
+          opt = opt.slice(4);
         }
       }
-      result.options[option] = value;
-    } else if (argumentOrOption.startsWith('-')) {
-      const options = argumentOrOption.slice(1);
-      for (let i = 0; i < options.length; i++) {
-        const option = options[i];
-        if (!/[\w\d]/.test(option)) {
-          throwUserError(`Invalid command line option: ${formatCode(argumentOrOption)}`, {context});
+
+      if (val === undefined && i + 1 < argsAndOpts.length) {
+        const nextArgOrOpt = argsAndOpts[i + 1];
+        if (typeof nextArgOrOpt !== 'string' || !nextArgOrOpt.startsWith('-')) {
+          val = nextArgOrOpt;
+          i++;
         }
-        result.options[option] = 'true';
       }
-    } else {
-      const argument = argumentOrOption;
-      result.arguments.push(argument);
+
+      if (val === undefined) {
+        val = 'true';
+      }
+
+      result.options[opt] = val;
+      continue;
     }
+
+    if (typeof argOrOpt === 'string' && argOrOpt.startsWith('-')) {
+      const opts = argOrOpt.slice(1);
+      for (let i = 0; i < opts.length; i++) {
+        const opt = opts[i];
+        if (!/[\w\d]/.test(opt)) {
+          throwUserError(`Invalid command line option: ${formatCode(argOrOpt)}`, {context});
+        }
+        result.options[opt] = 'true';
+      }
+      continue;
+    }
+
+    const argument = argOrOpt;
+    result.arguments.push(argument);
   }
 
   return result;

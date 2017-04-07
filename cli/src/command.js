@@ -1,6 +1,6 @@
 import {resolve, isAbsolute, dirname} from 'path';
 import {cloneDeep, defaultsDeep} from 'lodash';
-import {convertStringToType, throwUserError, avoidCommonMistakes, formatCode} from 'run-common';
+import {throwUserError, avoidCommonMistakes, formatCode} from 'run-common';
 
 import Entity from './entity';
 import Expression from './expression';
@@ -106,27 +106,25 @@ export class Command extends Entity {
 
   normalizeArguments(expression, {context}) {
     const args = [...expression.arguments];
-    const result = [];
-    for (const parameter of this.parameters) {
-      if (parameter.type === 'array') {
-        const array = [];
-        while (args.length) {
-          let arg = args.shift();
-          arg = convertStringToType(arg, parameter.itemType, {dir: expression.dir, context});
-          array.push(arg);
+    return this.parameters.map(parameter => {
+      let arg;
+      if (parameter.type.isArray()) {
+        arg = [...args];
+        args.length = 0;
+        arg = parameter.type.convert(arg, {dir: expression.dir, context});
+        if (parameter.default) {
+          arg = [...arg, ...parameter.default.slice(arg.length)];
         }
-        result.push(array);
       } else {
-        let arg = args.shift();
-        if (arg === undefined) {
-          arg = parameter.default;
+        arg = args.shift();
+        if (arg !== undefined) {
+          arg = parameter.type.convert(arg, {dir: expression.dir, context});
         } else {
-          arg = convertStringToType(arg, parameter.type, {dir: expression.dir, context});
+          arg = parameter.default;
         }
-        result.push(arg);
       }
-    }
-    return result;
+      return arg;
+    });
   }
 
   getDefaultConfig() {

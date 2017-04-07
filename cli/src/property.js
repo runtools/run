@@ -1,4 +1,4 @@
-import {entries} from 'lodash';
+import {entries, isPlainObject} from 'lodash';
 import {compactObject, throwUserError, formatCode} from 'run-common';
 
 export class Property {
@@ -51,7 +51,7 @@ export class Property {
     }
 
     return entries(definitions).map(([name, definition]) => {
-      if (definition !== null && typeof definition !== 'object') {
+      if (!isPlainObject(definition)) {
         definition = {default: definition};
       }
       return this.create(definition, {defaultName: name, context});

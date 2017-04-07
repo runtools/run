@@ -3,6 +3,7 @@
   "rules": {
     "indent": [2, 2, {"SwitchCase": 1}],
     "no-constant-condition": [2, {"checkLoops": false}],
+    "no-negated-condition": 0,
     "no-unused-vars": [2, {"ignoreRestSiblings": true, "argsIgnorePattern": "^_"}],
     "no-warning-comments": 0
   }
