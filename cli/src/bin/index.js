@@ -15,7 +15,7 @@ if (nodeVersion.major < 6) {
 const pkg = require('../../package');
 updateNotifier({pkg}).notify();
 
-async function cli(dir, args) {
+async function cli(dir: string, args) {
   // if (cmdName === 'initialize' || cmdName === 'init') {
   //   const tool = await Tool.ensure(dir, expression.config);
   //   console.dir(tool, {depth: 10});

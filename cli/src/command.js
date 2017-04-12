@@ -1,6 +1,6 @@
 import {resolve, isAbsolute, dirname} from 'path';
 import {cloneDeep, defaultsDeep} from 'lodash';
-import {throwUserError, avoidCommonMistakes, formatCode} from 'run-common';
+import {throwUserError, avoidCommonMistakes} from 'run-common';
 
 import Entity from './entity';
 import Expression from './expression';
@@ -9,11 +9,10 @@ import Option from './option';
 import Engine from './engine';
 
 export class Command extends Entity {
-  static async create(definition, {parent, defaultName, context}) {
-    if (!parent) {
-      throw new Error("'parent' argument is missing");
-    }
-
+  static async create(
+    definition: {implementation: string} | {run: string} | string,
+    {parent, defaultName, context}: {parent: Entity}
+  ) {
     if (typeof definition === 'string') {
       if (definition.startsWith('.') || isAbsolute(definition)) {
         definition = {implementation: definition};
@@ -25,15 +24,6 @@ export class Command extends Entity {
     const name = definition.name || defaultName;
 
     context = this.extendContext(context, {name});
-
-    if (!(definition.implementation || definition.run)) {
-      throwUserError(
-        `Command ${formatCode('implementation')} or ${formatCode('run')} attribute is missing`,
-        {
-          context
-        }
-      );
-    }
 
     avoidCommonMistakes(
       definition,

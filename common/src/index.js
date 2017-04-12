@@ -15,7 +15,7 @@ import strictUriEncode from 'strict-uri-encode';
 import JSON5 from 'json5';
 import YAML from 'js-yaml';
 
-export function readFile(file, {parse = false} = {}) {
+export function readFile(file: string, {parse = false} = {}) {
   let data;
   try {
     data = readFileSync(file, 'utf8');
@@ -48,7 +48,7 @@ export function readFile(file, {parse = false} = {}) {
   return data;
 }
 
-export function writeFile(file, data, {stringify = false} = {}) {
+export function writeFile(file: string, data, {stringify = false} = {}) {
   if (stringify) {
     const ext = extname(file);
     if (ext === '.json5') {
@@ -136,7 +136,7 @@ export function generateDeploymentName({name, version, stage, key, maxLength}) {
   return deploymentName;
 }
 
-function createCompatibleVersionRange(version) {
+function createCompatibleVersionRange(version: string) {
   const major = semver.major(version);
   if (major >= 1) {
     return `${major}.x.x`;
@@ -181,7 +181,7 @@ export function showCommandIntro(action, {name, stage, info} = {}) {
   console.log(message);
 }
 
-export async function task(fn, {intro, outro, debug, verbose}) {
+export async function task(fn: () => mixed, {intro, outro, debug, verbose}) {
   let progress;
 
   if (debug || verbose) {
@@ -252,14 +252,7 @@ export async function task(fn, {intro, outro, debug, verbose}) {
   }
 }
 
-export function formatMessage(message, info, options) {
-  if (info !== null && typeof info === 'object') {
-    options = info;
-    info = undefined;
-  }
-
-  let {status} = options || {};
-
+export function formatMessage(message: string, {info, status} = {}) {
   if (info) {
     info = ` ${gray(`(${info})`)}`;
   } else {
@@ -317,28 +310,28 @@ export function getErrorSymbol() {
   return '😡';
 }
 
-export function formatString(path) {
-  return yellow("'" + path + "'");
+export function formatString(string: string) {
+  return yellow("'" + string + "'");
 }
 
-export function formatURL(url) {
+export function formatURL(url: string) {
   return cyan.underline(url);
 }
 
-export function formatPath(path) {
+export function formatPath(path: string) {
   return yellow("'" + path + "'");
 }
 
-export function formatCode(path) {
-  return cyan('`' + path + '`');
+export function formatCode(code: string) {
+  return cyan('`' + code + '`');
 }
 
-export function adjustToWindowWidth(text, {leftMargin = 0, rightMargin = 0} = {}) {
+export function adjustToWindowWidth(text: string, {leftMargin = 0, rightMargin = 0} = {}) {
   return sliceANSI(text, 0, windowSize.width - leftMargin - rightMargin);
 }
 
 export function createUserError(
-  message,
+  message: string,
   {info, type, context, hidden, capturedStandardError} = {}
 ) {
   message = red(message);
@@ -365,7 +358,7 @@ export function createUserError(
   return err;
 }
 
-export function throwUserError(message, opts) {
+export function throwUserError(message: string, opts) {
   throw createUserError(message, opts);
 }
 
@@ -452,7 +445,7 @@ export function generateHash(data, algorithm = 'sha256') {
   return hash.digest('hex');
 }
 
-export async function fetchJSON(url, options = {}) {
+export async function fetchJSON(url: string, options = {}) {
   let cacheFile;
 
   if (options.cacheTime) {
@@ -490,6 +483,26 @@ export async function fetchJSON(url, options = {}) {
   return result;
 }
 
+export function addContext(contextGetter) {
+  return function(_target, _key, descriptor) {
+    const oldFn = descriptor.value;
+    const newFn = function() {
+      try {
+        return oldFn.apply(this, arguments);
+      } catch (err) {
+        const context = contextGetter.apply(this, arguments);
+        if (!err.contexts) {
+          err.contexts = [];
+        }
+        err.contexts.push(context);
+        throw err;
+      }
+    };
+    descriptor.value = newFn;
+    return descriptor;
+  };
+}
+
 export function callSuper(method, context, ...args) {
   const methodName = method.name;
   let proto = context;
@@ -516,15 +529,7 @@ export function compactObject(obj) {
   return result;
 }
 
-export function parseCommandLineArguments(argsAndOpts, {context}) {
-  if (!argsAndOpts) {
-    throw new Error("'argsAndOpts' argument is missing");
-  }
-
-  if (!Array.isArray(argsAndOpts)) {
-    throw new Error("'argsAndOpts' argument must be an array");
-  }
-
+export function parseCommandLineArguments(argsAndOpts: Array, {context}) {
   const result = {arguments: [], options: {}};
 
   for (let i = 0; i < argsAndOpts.length; i++) {

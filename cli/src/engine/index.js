@@ -1,33 +1,23 @@
 import {join} from 'path';
 import {existsSync} from 'fs';
-import {throwUserError, formatCode, formatPath} from 'run-common';
+import {throwUserError, formatPath} from 'run-common';
 
 export class Engine {
   constructor(engine) {
     Object.assign(this, engine);
   }
 
-  static create(definition, {context}) {
-    if (!definition) {
-      throw new Error("'definition' property is missing");
+  static create(definition: {name: string} | string, {context}) {
+    if (typeof definition === 'string') {
+      const [name, version] = definition.split('@');
+      definition = {name, version};
     }
 
-    let engine = definition;
-
-    if (typeof engine === 'string') {
-      const [name, version] = engine.split('@');
-      engine = {name, version};
+    if (!existsSync(join(__dirname, definition.name + '.js'))) {
+      throwUserError(`Engine not found: ${formatPath(definition.name)}`, {context});
     }
 
-    if (!engine.name) {
-      throwUserError(`Engine ${formatCode('name')} property is missing`, {context});
-    }
-
-    if (!existsSync(join(__dirname, engine.name + '.js'))) {
-      throwUserError(`Engine not found: ${formatPath(engine.name)}`, {context});
-    }
-
-    return require('./' + engine.name).default.create(engine, {context});
+    return require('./' + definition.name).default.create(definition, {context});
   }
 
   toJSON() {

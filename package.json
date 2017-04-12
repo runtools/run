@@ -11,10 +11,10 @@
     "prepush": "npm run lint"
   },
   "devDependencies": {
-    "eslint": "^3.18.0",
-    "eslint-config-prettier": "^1.5.0",
-    "eslint-config-xo": "^0.17.0",
-    "husky": "^0.13.2",
-    "lerna": "^2.0.0-beta.36"
+    "babel-eslint": "^7.2.1",
+    "eslint": "^3.19.0",
+    "eslint-config-prettier": "^1.6.0",
+    "eslint-config-xo": "^0.18.1",
+    "husky": "^0.13.3"
   }
 }

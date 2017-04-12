@@ -32,15 +32,7 @@ const BUIT_IN_RESOURCES = [
 ];
 
 export class Resource extends Entity {
-  static async create(definition, {source, file, context} = {}) {
-    if (!source) {
-      throw new Error("'source' argument is missing");
-    }
-
-    if (!file) {
-      throw new Error("'file' argument is missing");
-    }
-
+  static async create(definition, {source, file, context}: {source: string, file: string} = {}) {
     context = this.extendContext(context, {getResourceFile: () => file});
 
     avoidCommonMistakes(definition, {author: 'authors'}, {context});
@@ -156,10 +148,7 @@ export class Resource extends Entity {
     return await this.create(definition, {file, context});
   }
 
-  async save({destination = this.getResourceFile(), _context}) {
-    if (!destination) {
-      throw new Error("'destination' argument is missing");
-    }
+  async save({destination = this.getResourceFile(), _context}: {destination: string}) {
     writeFile(destination, this, {stringify: true});
   }
 
@@ -215,15 +204,7 @@ export class Resource extends Entity {
     return undefined;
   }
 
-  static async extend(source, {dir, context}) {
-    if (!dir) {
-      throw new Error("'dir' argument is missing");
-    }
-
-    if (typeof source !== 'string') {
-      throwUserError(`Base resource ${formatCode('source')} must be a string`, {context});
-    }
-
+  static async extend(source: string, {dir, context}: {dir: string}) {
     if (!source) {
       throwUserError(`Base resource ${formatCode('source')} cannot be empty`, {context});
     }
@@ -237,21 +218,9 @@ export class Resource extends Entity {
     return resource;
   }
 
-  static extendMany(sources, {dir, context}) {
-    if (!dir) {
-      throw new Error("'dir' argument is missing");
-    }
-
-    if (!sources) {
-      throw new Error("'sources' argument is missing");
-    }
-
+  static extendMany(sources: Array | string, {dir, context}: {dir: string}) {
     if (typeof sources === 'string') {
       sources = [sources];
-    }
-
-    if (!Array.isArray(sources)) {
-      throwUserError(`${formatCode('extend')} property must be a string or an array`, {context});
     }
 
     return Promise.all(
@@ -261,15 +230,7 @@ export class Resource extends Entity {
     );
   }
 
-  static async include(source, {dir, context}) {
-    if (!dir) {
-      throw new Error("'dir' argument is missing");
-    }
-
-    if (typeof source !== 'string') {
-      throwUserError(`Resource ${formatCode('source')} must be a string`, {context});
-    }
-
+  static async include(source: string, {dir, context}: {dir: string}) {
     if (!source) {
       throwUserError(`Resource ${formatCode('source')} cannot be empty`, {context});
     }
@@ -287,21 +248,9 @@ export class Resource extends Entity {
     return resource;
   }
 
-  static includeMany(sources, {dir, context}) {
-    if (!dir) {
-      throw new Error("'dir' argument is missing");
-    }
-
-    if (!sources) {
-      throw new Error("'sources' argument is missing");
-    }
-
+  static includeMany(sources: Array | string, {dir, context}: {dir: string}) {
     if (typeof sources === 'string') {
       sources = [sources];
-    }
-
-    if (!Array.isArray(sources)) {
-      throwUserError(`${formatCode('has')} property must be a string or an array`, {context});
     }
 
     return Promise.all(
@@ -476,29 +425,16 @@ export class Resource extends Entity {
     return true;
   }
 
-  static normalizeAuthors(authors, {context}) {
-    if (!authors) {
-      throw new Error("'authors' argument is missing");
-    }
-
+  static normalizeAuthors(authors: Array | string, {_context}) {
     if (typeof authors === 'string') {
       authors = [authors];
-    }
-
-    if (!Array.isArray(authors)) {
-      throwUserError(`${formatCode('authors')} property must be a string or an array`, {context});
     }
 
     return authors;
   }
 
-  static normalizeRepository(repository, {_context}) {
+  static normalizeRepository(repository: string, {_context}) {
     // TODO
-
-    if (!repository) {
-      throw new Error("'repository' argument is missing");
-    }
-
     return repository;
   }
 }

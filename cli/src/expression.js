@@ -1,6 +1,6 @@
 import {omit, mapValues, get} from 'lodash';
 import {parse} from 'shell-quote';
-import {parseCommandLineArguments, throwUserError, formatCode} from 'run-common';
+import {parseCommandLineArguments, throwUserError} from 'run-common';
 
 import Config from './config';
 
@@ -9,16 +9,8 @@ export class Expression {
     Object.assign(this, expression);
   }
 
-  static create(definition, {dir, context}) {
+  static create(definition: Array, {dir, context}) {
     // ['cook' 'pizza' '--salami'] => {arguments: ['cook', 'pizza'], config: {salami: true}}
-
-    if (!definition) {
-      throw new Error("'definition' argument is missing");
-    }
-
-    if (!Array.isArray(definition)) {
-      throwUserError(`An expression must be a an array`, {context});
-    }
 
     let {arguments: args, options: config} = parseCommandLineArguments(definition, {context});
 
@@ -31,7 +23,7 @@ export class Expression {
     return new this({arguments: args, config, dir});
   }
 
-  static createMany(definitions, {dir, context}) {
+  static createMany(definitions: Array | string, {dir, context}) {
     if (typeof definitions === 'string') {
       const str = definitions;
       let args = parse(str, name => ({__var__: name}));
@@ -45,18 +37,10 @@ export class Expression {
       return this.createManyFromShell(args, {dir, context});
     }
 
-    if (Array.isArray(definitions)) {
-      return definitions.map(definition => this.create(definition, {dir, context}));
-    }
-
-    throwUserError(`${formatCode('run')} property should be a string or an array`, {context});
+    return definitions.map(definition => this.create(definition, {dir, context}));
   }
 
-  static createManyFromShell(args, {dir, context}) {
-    if (!args) {
-      throw new Error("'args' argument is missing");
-    }
-
+  static createManyFromShell(args: Array, {dir, context}) {
     const definitions = [];
 
     let newArray = true;

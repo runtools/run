@@ -3,10 +3,7 @@
   version: '1.0.0',
   authors: 'Manuel Vila <mvila@3base.com>',
   license: 'MIT',
-  repository: {
-    type: 'git',
-    url: 'git://github.com/runtools/run'
-  },
+  repository: 'git://github.com/runtools/run',
   is: ['js/tool'],
   commands: {
     'hello': {

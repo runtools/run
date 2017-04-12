@@ -15,11 +15,7 @@ export class Executable {
     }
   }
 
-  static async create(definition, {entity, context}) {
-    if (!definition) {
-      throw new Error("'definition' argument is missing");
-    }
-
+  static async create(definition: Object, {entity, context}) {
     avoidCommonMistakes(
       definition,
       {command: 'commands', option: 'options', group: 'groups', engines: 'engine'},

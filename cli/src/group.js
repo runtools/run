@@ -2,11 +2,7 @@ import Entity from './entity';
 import Executable from './executable';
 
 export class Group extends Entity {
-  static async create(definition, {parent, defaultName, context}) {
-    if (!parent) {
-      throw new Error("'parent' argument is missing");
-    }
-
+  static async create(definition: Object, {parent, defaultName, context}: {parent: Entity}) {
     const name = definition.name || defaultName;
 
     context = this.extendContext(context, {name});

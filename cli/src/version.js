@@ -7,11 +7,7 @@ export class Version {
     this.value = value;
   }
 
-  static create(str, {context}) {
-    if (!str) {
-      throw new Error("'str' argument is missing");
-    }
-
+  static create(str: string, {context}) {
     const version = semver.clean(str);
     if (!version) {
       throwUserError(`Version '${str}' is invalid`, {context});

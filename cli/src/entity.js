@@ -8,15 +8,7 @@ export class Entity {
     Object.assign(this, entity);
   }
 
-  static async create(definition, {parent, defaultName, context}) {
-    if (!definition) {
-      throw new Error("'definition' argument is missing");
-    }
-
-    if (!(definition !== null && typeof definition === 'object')) {
-      throwUserError(`Entity definition must be an object`, {context});
-    }
-
+  static async create(definition: {}, {parent, defaultName, context}) {
     avoidCommonMistakes(definition, {alias: 'aliases'}, {context});
 
     const name = definition.name || defaultName;
@@ -30,15 +22,7 @@ export class Entity {
     return entity;
   }
 
-  static createMany(definitions, {parent, context}) {
-    if (!parent) {
-      throw new Error("'parent' argument is missing");
-    }
-
-    if (!definitions) {
-      throw new Error("'definitions' argument is missing");
-    }
-
+  static createMany(definitions: Array | Object, {parent, context}: {parent: Entity}) {
     if (Array.isArray(definitions)) {
       return Promise.all(definitions.map(definition => this.create(definition, {parent, context})));
     }
@@ -90,11 +74,7 @@ export class Entity {
     return accumulator;
   }
 
-  static normalizeName(name, context) {
-    if (!name) {
-      throw new Error("'name' argument is missing");
-    }
-
+  static normalizeName(name: string, context) {
     name = name.trim();
 
     if (!this.validateName(name)) {

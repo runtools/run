@@ -8,19 +8,9 @@ export class Option {
     Object.assign(this, option);
   }
 
-  static create(definition, {defaultName, context}) {
-    if (definition === undefined) {
-      throw new Error("'definition' argument is missing");
-    }
-
+  static create(definition: Object | string, {defaultName, context}) {
     if (typeof definition === 'string') {
       definition = {name: definition};
-    }
-
-    if (typeof definition !== 'object') {
-      throwUserError(`Option ${formatCode('definition')} must be a string or an object`, {
-        context
-      });
     }
 
     const name = definition.name || defaultName;
@@ -62,11 +52,7 @@ export class Option {
     return json;
   }
 
-  static createMany(definitions, {context}) {
-    if (!definitions) {
-      throw new Error("'definitions' argument is missing");
-    }
-
+  static createMany(definitions: Array | Object, {context}) {
     if (Array.isArray(definitions)) {
       return definitions.map(definition => this.create(definition, {context}));
     }
