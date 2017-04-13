@@ -154,7 +154,7 @@ export class Resource extends Entity {
     return await this.create(definition, {file, context});
   }
 
-  async save({destination = this.getResourceFile(), _context}: {destination: string}) {
+  async save({destination = this.getResourceFile(), _context}: {destination: ?string}) {
     writeFile(destination, this, {stringify: true});
   }
 

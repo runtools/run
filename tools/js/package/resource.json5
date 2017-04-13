@@ -23,43 +23,27 @@
       implementation: './dist/commands/build',
       listen: 'after:build-resource',
       emit: 'js/build-package'
-    }
-  },
-  groups: {
-    package: {
-      aliases: ['pkg'],
-      commands: {
-        publish: {
-          implementation: './dist/commands/publish',
-          emit: 'js/publish-package'
-        }
+    },
+    'publish-package': {
+      implementation: './dist/commands/publish',
+      emit: 'js/publish-package'
+    },
+    'add-dependency': {
+      implementation: './dist/commands/add-dependency',
+      parameters: {
+        packages: []
+      },
+      options: {
+        peer: false,
+        optional: false,
+        dev: false
       }
     },
-    dependencies: {
-      aliases: ['dependency', 'deps', 'dep'],
-      commands: {
-        add: {
-          implementation: './dist/dependencies/commands/add',
-          parameters: {
-            packages: []
-          },
-          options: {
-            peer: false,
-            optional: false,
-            dev: false
-          }
-        },
-        remove: {
-          aliases: ['rm'],
-          implementation: './dist/dependencies/commands/remove',
-          parameters: {
-            names: []
-          }
-        }
+    'remove-dependency': {
+      implementation: './dist/commands/remove-dependency',
+      parameters: {
+        names: []
       }
     }
-  },
-  options: {
-    packageManager: 'yarn'
   }
 }
