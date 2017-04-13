@@ -363,21 +363,50 @@ export function throwUserError(message: string, opts) {
 }
 
 export function showError(error) {
-  if (typeof error === 'string') {
-    error = throwUserError(error);
-  }
-  if (error.userError) {
-    const stdErr = error.capturedStandardError && error.capturedStandardError.trim();
+  let stdErr = error.capturedStandardError;
+  if (stdErr) {
+    stdErr = stdErr.trim();
     if (stdErr) {
       console.error(stdErr);
     }
-    if (!error.hidden) {
-      const message = formatMessage(error.message, {status: 'error'});
-      console.error(message);
-    }
-  } else {
-    console.error(error);
   }
+
+  if (process.env.RUN_DEBUG) {
+    console.error(error);
+    return;
+  }
+
+  if (error.hidden) {
+    return;
+  }
+
+  console.error(error.message);
+
+  if (error.contextStack) {
+    for (const context of error.contextStack) {
+      let identifier = gray((context.constructor && context.constructor.name) || 'Object');
+      if (context.toIdentifier) {
+        identifier += gray(': ') + formatString(context.toIdentifier());
+      }
+      console.error('  ' + identifier);
+    }
+  }
+
+  // if (typeof error === 'string') {
+  //   error = throwUserError(error);
+  // }
+  // if (error.userError) {
+  //   const stdErr = error.capturedStandardError && error.capturedStandardError.trim();
+  //   if (stdErr) {
+  //     console.error(stdErr);
+  //   }
+  //   if (!error.hidden) {
+  //     const message = formatMessage(error.message, {status: 'error'});
+  //     console.error(message);
+  //   }
+  // } else {
+  //   console.error(error);
+  // }
 }
 
 export function showErrorAndExit(error, code = 1) {
@@ -385,13 +414,12 @@ export function showErrorAndExit(error, code = 1) {
   process.exit(code);
 }
 
-export function avoidCommonMistakes(obj, mistakes, {context}) {
+export function avoidCommonMistakes(obj, mistakes) {
   for (const [wrong, correct] of entries(mistakes)) {
     if (wrong in obj) {
-      throwUserError(`Wrong property name: ${formatCode(wrong)}.`, {
-        info: `Did you mean ${formatCode(correct)}?`,
-        context
-      });
+      throw new Error(
+        `Wrong property name: ${formatCode(wrong)}. Did you mean ${formatCode(correct)}?`
+      );
     }
   }
 }
@@ -483,21 +511,40 @@ export async function fetchJSON(url: string, options = {}) {
   return result;
 }
 
-export function addContext(contextGetter) {
+export function addContextToErrors(contextOrContextGetter) {
   return function(_target, _key, descriptor) {
     const oldFn = descriptor.value;
-    const newFn = function() {
-      try {
-        return oldFn.apply(this, arguments);
-      } catch (err) {
-        const context = contextGetter.apply(this, arguments);
-        if (!err.contexts) {
-          err.contexts = [];
+
+    const newFn = function(...args) {
+      const rethrow = err => {
+        let context;
+        if (contextOrContextGetter) {
+          context = contextOrContextGetter;
+          if (typeof context === 'function') {
+            context = context.apply(this, args);
+          }
+        } else {
+          context = this;
         }
-        err.contexts.push(context);
+        if (!err.contextStack) {
+          err.contextStack = [];
+        }
+        err.contextStack.push(context);
         throw err;
+      };
+
+      try {
+        let result = oldFn.apply(this, args);
+        if (result && typeof result.then === 'function') {
+          result = result.catch(rethrow);
+        }
+        return result;
+      } catch (err) {
+        rethrow(err);
       }
     };
+
+    Object.defineProperty(newFn, 'name', {value: oldFn.name, configurable: true});
     descriptor.value = newFn;
     return descriptor;
   };

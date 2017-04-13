@@ -1,4 +1,4 @@
-import {avoidCommonMistakes, callSuper} from 'run-common';
+import {avoidCommonMistakes, addContextToErrors, callSuper} from 'run-common';
 
 import Command from './command';
 import Option from './option';
@@ -44,6 +44,7 @@ export class Executable {
     };
   }
 
+  @addContextToErrors()
   async run(expression, {context}) {
     context = this.constructor.extendContext(context, this);
 

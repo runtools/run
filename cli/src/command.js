@@ -1,6 +1,6 @@
 import {resolve, isAbsolute, dirname} from 'path';
 import {cloneDeep, defaultsDeep} from 'lodash';
-import {throwUserError, avoidCommonMistakes} from 'run-common';
+import {throwUserError, avoidCommonMistakes, addContextToErrors} from 'run-common';
 
 import Entity from './entity';
 import Expression from './expression';
@@ -9,10 +9,17 @@ import Option from './option';
 import Engine from './engine';
 
 export class Command extends Entity {
+  @addContextToErrors(function({name} = {}, {defaultName} = {}) {
+    // !!! À déplacer dans Entity.create()
+    return new this({name: name || defaultName});
+  })
   static async create(
     definition: {implementation: string} | {run: string} | string,
     {parent, defaultName, context}: {parent: Entity}
   ) {
+    // !!! Ne pas utiliser flow-runtime pour checker tous les parameters
+    // Invoquer le assert manuellement dans une method d'instance ?
+
     if (typeof definition === 'string') {
       if (definition.startsWith('.') || isAbsolute(definition)) {
         definition = {implementation: definition};
@@ -63,6 +70,7 @@ export class Command extends Entity {
     return {...base, command: command.name};
   }
 
+  @addContextToErrors()
   async run(entity, expression, {context}) {
     context = this.constructor.extendContext(context, this);
 

@@ -40,7 +40,11 @@ export class Entity {
     };
   }
 
-  async run(expression, {context}) {
+  toIdentifier() {
+    return this.name;
+  }
+
+  async run(expression, {_context}) {
     const commandName = expression.getCommandName();
 
     if (!commandName) {
@@ -48,7 +52,7 @@ export class Entity {
       return;
     }
 
-    throwUserError(`Command ${formatCode(commandName)} not found`, {context});
+    throw new Error(`Command ${formatCode(commandName)} not found`);
   }
 
   isMatching(name) {

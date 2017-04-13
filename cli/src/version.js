@@ -1,16 +1,14 @@
 import semver from 'semver';
 
-import {throwUserError} from 'run-common';
-
 export class Version {
   constructor(value) {
     this.value = value;
   }
 
-  static create(str: string, {context}) {
+  static create(str: string) {
     const version = semver.clean(str);
     if (!version) {
-      throwUserError(`Version '${str}' is invalid`, {context});
+      throw new Error(`Version '${str}' is invalid`);
     }
 
     return new this(version);

@@ -6,6 +6,7 @@ import {
   writeFile,
   throwUserError,
   avoidCommonMistakes,
+  addContextToErrors,
   formatPath,
   formatCode,
   callSuper
@@ -32,9 +33,14 @@ const BUIT_IN_RESOURCES = [
 ];
 
 export class Resource extends Entity {
+  @addContextToErrors(function(_, {file} = {}) {
+    const resource = new this();
+    if (file) {
+      resource.setResourceFile(file);
+    }
+    return resource;
+  })
   static async create(definition, {source, file, context}: {source: string, file: string} = {}) {
-    context = this.extendContext(context, {getResourceFile: () => file});
-
     avoidCommonMistakes(definition, {author: 'authors'}, {context});
 
     let resource = await Entity.create.call(this, definition, {context});
@@ -100,8 +106,8 @@ export class Resource extends Entity {
     };
   }
 
-  static extendContext(base, resource) {
-    return {...base, resource: resource.getResourceFile()};
+  toIdentifier() {
+    return this.getResourceFile();
   }
 
   static async load(source, {dir, searchInPath, context} = {}) {
@@ -281,8 +287,6 @@ export class Resource extends Entity {
   }
 
   async run(expression, {context}) {
-    context = this.constructor.extendContext(context, this);
-
     const {commandName, expression: newExpression} = expression.pullCommandName();
 
     if (!commandName) {
