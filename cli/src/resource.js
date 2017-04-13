@@ -167,10 +167,10 @@ export class Resource extends Entity {
     dir = dirname(resource.getResourceFile());
     const parentDir = join(dir, '..');
     if (parentDir !== dir) {
-      const parentEntity = await this.loadUserResource(parentDir, {context});
-      if (parentEntity) {
-        resource.parentEntity = parentEntity;
-      }
+      /* const parentEntity = */ await this.loadUserResource(parentDir, {context});
+      // if (parentEntity) {
+      //   resource.parentEntity = parentEntity;
+      // }
     }
 
     return resource;
@@ -314,10 +314,10 @@ export class Resource extends Entity {
       resources.push(...resource.extendedResources);
     }
 
-    // Depth-first with parent entities
-    if (this.parentEntity) {
-      return this.parentEntity.find(fn);
-    }
+    // // Depth-first with parent entities
+    // if (this.parentEntity) {
+    //   return this.parentEntity.find(fn);
+    // }
 
     return undefined;
   }
@@ -332,10 +332,10 @@ export class Resource extends Entity {
       resources.push(...resource.extendedResources);
     }
 
-    // Depth-first with parent entities
-    if (this.parentEntity) {
-      return this.parentEntity.reduce(fn, accumulator);
-    }
+    // // Depth-first with parent entities
+    // if (this.parentEntity) {
+    //   return this.parentEntity.reduce(fn, accumulator);
+    // }
 
     return accumulator;
   }

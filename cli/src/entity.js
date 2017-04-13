@@ -8,13 +8,12 @@ export class Entity {
     Object.assign(this, entity);
   }
 
-  static async create(definition: {}, {parent, defaultName, context}) {
+  static async create(definition: {}, {defaultName, context}) {
     avoidCommonMistakes(definition, {alias: 'aliases'}, {context});
 
     const name = definition.name || defaultName;
 
     const entity = new this({
-      parentEntity: parent,
       name: name && this.normalizeName(name, context),
       aliases: Alias.createMany(definition.aliases || [], {context})
     });
@@ -22,14 +21,14 @@ export class Entity {
     return entity;
   }
 
-  static createMany(definitions: Array | Object, {parent, context}: {parent: Entity}) {
+  static createMany(definitions: Array | Object, options) {
     if (Array.isArray(definitions)) {
-      return Promise.all(definitions.map(definition => this.create(definition, {parent, context})));
+      return Promise.all(definitions.map(definition => this.create(definition, options)));
     }
 
     return Promise.all(
       entries(definitions).map(([name, definition]) =>
-        this.create(definition, {parent, defaultName: name, context}))
+        this.create(definition, {...options, defaultName: name}))
     );
   }
 
@@ -59,24 +58,24 @@ export class Entity {
     return this.name === name || this.aliases.find(alias => alias.toString() === name);
   }
 
-  find(fn) {
-    const result = fn(this);
-    if (result !== undefined) {
-      return result;
-    }
-    if (this.parentEntity) {
-      return this.parentEntity.find(fn);
-    }
-    return undefined;
-  }
-
-  reduce(fn, accumulator) {
-    fn(accumulator, this);
-    if (this.parentEntity) {
-      return this.parentEntity.reduce(fn, accumulator);
-    }
-    return accumulator;
-  }
+  // find(fn) {
+  //   const result = fn(this);
+  //   if (result !== undefined) {
+  //     return result;
+  //   }
+  //   if (this.parentEntity) {
+  //     return this.parentEntity.find(fn);
+  //   }
+  //   return undefined;
+  // }
+  //
+  // reduce(fn, accumulator) {
+  //   fn(accumulator, this);
+  //   if (this.parentEntity) {
+  //     return this.parentEntity.reduce(fn, accumulator);
+  //   }
+  //   return accumulator;
+  // }
 
   static normalizeName(name: string, context) {
     name = name.trim();

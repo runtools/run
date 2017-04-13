@@ -1,3 +1,4 @@
+import {dirname} from 'path';
 import {avoidCommonMistakes, addContextToErrors, callSuper} from 'run-common';
 
 import Resource from './resource';
@@ -21,8 +22,10 @@ export class Tool extends Resource {
 
     context = this.extendContext(context, tool);
 
+    const dir = dirname(tool.getResourceFile());
+
     Object.assign(tool, {
-      commands: await Command.createMany(definition.commands || [], {parent: tool, context}),
+      commands: await Command.createMany(definition.commands || [], {dir, context}),
       options: Option.createMany(definition.options || {}, {context}),
       engine: definition.engine && Engine.create(definition.engine, context)
     });

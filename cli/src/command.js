@@ -1,4 +1,4 @@
-import {resolve, isAbsolute, dirname} from 'path';
+import {resolve, isAbsolute} from 'path';
 import {cloneDeep, defaultsDeep} from 'lodash';
 import {throwUserError, avoidCommonMistakes, addContextToErrors} from 'run-common';
 
@@ -15,7 +15,7 @@ export class Command extends Entity {
   })
   static async create(
     definition: {implementation: string} | {run: string} | string,
-    {parent, defaultName, context}: {parent: Entity}
+    {dir, defaultName, context}: {dir: string}
   ) {
     // !!! Ne pas utiliser flow-runtime pour checker tous les parameters
     // Invoquer le assert manuellement dans une method d'instance ?
@@ -38,9 +38,7 @@ export class Command extends Entity {
       {context}
     );
 
-    const command = await Entity.create.call(this, definition, {parent, defaultName, context});
-
-    const dir = dirname(command.find(entity => entity.getResourceFile && entity.getResourceFile()));
+    const command = await Entity.create.call(this, definition, {defaultName, context});
 
     Object.assign(command, {
       implementation: definition.implementation && resolve(dir, definition.implementation),
