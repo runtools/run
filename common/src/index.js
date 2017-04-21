@@ -4,7 +4,7 @@ import {outputFile} from 'fs-promise';
 import {homedir, tmpdir} from 'os';
 import crypto from 'crypto';
 import semver from 'semver';
-import {pick, entries} from 'lodash';
+import {pick, entries, cloneDeepWith} from 'lodash';
 import {green, red, gray, cyan, yellow, bold} from 'chalk';
 import ora from 'ora';
 import cliSpinners from 'cli-spinners';
@@ -14,6 +14,7 @@ import fetch from 'node-fetch';
 import strictUriEncode from 'strict-uri-encode';
 import JSON5 from 'json5';
 import YAML from 'js-yaml';
+import t from 'flow-runtime';
 
 export function readFile(file: string, {parse = false} = {}) {
   let data;
@@ -511,42 +512,39 @@ export async function fetchJSON(url: string, options = {}) {
   return result;
 }
 
-export function addContextToErrors(contextOrContextGetter) {
-  return function(_target, _key, descriptor) {
-    const oldFn = descriptor.value;
+export function addContextToErrors(targetOrFn, _key, descriptor) {
+  if (typeof targetOrFn === 'function') {
+    // A function is passed
+    return _addContextToErrors(targetOrFn);
+  }
 
-    const newFn = function(...args) {
-      const rethrow = err => {
-        let context;
-        if (contextOrContextGetter) {
-          context = contextOrContextGetter;
-          if (typeof context === 'function') {
-            context = context.apply(this, args);
-          }
-        } else {
-          context = this;
-        }
-        if (!err.contextStack) {
-          err.contextStack = [];
-        }
-        err.contextStack.push(context);
-        throw err;
-      };
+  // Decorator
+  const oldFn = descriptor.value;
+  const newFn = _addContextToErrors(oldFn);
+  Object.defineProperty(newFn, 'name', {value: oldFn.name, configurable: true});
+  descriptor.value = newFn;
+  return descriptor;
+}
 
-      try {
-        let result = oldFn.apply(this, args);
-        if (result && typeof result.then === 'function') {
-          result = result.catch(rethrow);
-        }
-        return result;
-      } catch (err) {
-        rethrow(err);
+function _addContextToErrors(fn) {
+  return function(...args) {
+    const rethrow = err => {
+      if (!err.contextStack) {
+        err.contextStack = [];
       }
+      err.contextStack.push(this);
+      throw err;
     };
 
-    Object.defineProperty(newFn, 'name', {value: oldFn.name, configurable: true});
-    descriptor.value = newFn;
-    return descriptor;
+    try {
+      let result = fn.apply(this, args);
+      if (result && typeof result.then === 'function') {
+        result = result.catch(rethrow);
+      }
+      return result;
+    } catch (err) {
+      rethrow(err);
+    }
   };
 }
 
@@ -576,7 +574,21 @@ export function compactObject(obj) {
   return result;
 }
 
-export function parseCommandLineArguments(argsAndOpts: Array, {context}) {
+export function cloneDeepWithMethod(obj, method) {
+  return cloneDeepWith(obj, value => {
+    if (typeof value === 'object' && value !== null && method in value) {
+      value = value.toJSON();
+      value = cloneDeepWithMethod(value, method);
+      return value;
+    }
+  });
+}
+
+export function toJSONDeep(obj) {
+  return cloneDeepWithMethod(obj, 'toJSON');
+}
+
+export function parseCommandLineArguments(argsAndOpts: Array) {
   const result = {arguments: [], options: {}};
 
   for (let i = 0; i < argsAndOpts.length; i++) {
@@ -623,7 +635,7 @@ export function parseCommandLineArguments(argsAndOpts: Array, {context}) {
       for (let i = 0; i < opts.length; i++) {
         const opt = opts[i];
         if (!/[\w\d]/.test(opt)) {
-          throwUserError(`Invalid command line option: ${formatCode(argOrOpt)}`, {context});
+          throw new Error(`Invalid command line option: ${formatCode(argOrOpt)}`);
         }
         result.options[opt] = 'true';
       }
@@ -636,3 +648,10 @@ export function parseCommandLineArguments(argsAndOpts: Array, {context}) {
 
   return result;
 }
+
+export const NotEmptyStringType = t.refinement(t.string(), str => {
+  console.log(`'${str}'`);
+  if (str.length === 0) {
+    return 'cannot be empty';
+  }
+});

@@ -5,6 +5,11 @@
     "command": "./node_modules/.bin/prettier --print-width=100 --single-quote --no-bracket-spacing ${srcFile} > /tmp/prettier.output && cp /tmp/prettier.output ${srcFile}"
   },
   {
+    "srcDir": "tests",
+    "files": "**/*.js",
+    "command": "./node_modules/.bin/prettier --print-width=100 --single-quote --no-bracket-spacing ${srcFile} > /tmp/prettier.output && cp /tmp/prettier.output ${srcFile}"
+  },
+  {
     "srcDir": "src",
     "destDir": "dist",
     "files": "**/*.js",

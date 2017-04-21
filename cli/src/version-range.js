@@ -1,39 +1,35 @@
 import {compact} from 'lodash';
 import semver from 'semver';
 
-import {createUserError} from 'run-common';
+import {formatString} from 'run-common';
 
 export class VersionRange {
-  constructor(versionRange) {
-    Object.assign(this, versionRange);
-  }
-
-  static create(str, {context}) {
+  constructor(str: string = '') {
     // '': All versions
     // '1.2.0': Exact version
     // '^1.0.0': Caret range
+    // '~1.0.0': Tilde range
     // '<1.0.0':  Before range
     // '>=1.5.0':  After range
     // '>=1.0.0 <2.0.0':  Between range
     // '^1.0.0 !1.2.3': Range with an exclusion
 
-    if (typeof str !== 'string') {
-      throw new Error("'str' argument must be a string");
-    }
-
     str = str.trim();
 
     if (str === '') {
-      return new this({type: 'any'});
+      this.type = 'any';
+      return;
     }
 
     const exactVersion = semver.clean(str);
     if (exactVersion) {
       // '0.3.2', '2.3.1-beta',...
-      return new this({value: exactVersion, type: 'exact'});
+      this.type = 'exact';
+      this.value = exactVersion;
+      return;
     }
 
-    const error = createUserError(`Version range '${str}' is invalid`, {context});
+    const error = new Error(`Version range ${formatString(str)} is invalid`);
 
     const parts = [];
     const exclusions = [];
@@ -88,11 +84,9 @@ export class VersionRange {
       throw error;
     }
 
-    return new this({value, type, exclusions});
-  }
-
-  toJSON() {
-    return this.toString();
+    this.type = type;
+    this.value = value;
+    this.exclusions = exclusions;
   }
 
   toString() {
@@ -109,10 +103,15 @@ export class VersionRange {
     return str;
   }
 
-  includes(version) {
+  toJSON() {
+    const str = this.toString();
+    return str ? str : undefined;
+  }
+
+  includes(version: string) {
     version = semver.clean(version);
     if (!version) {
-      throw new Error(`Version '${version}' is invalid`);
+      throw new Error(`Version ${formatString(version)} is invalid`);
     }
 
     if (this.type === 'any') {
@@ -123,10 +122,8 @@ export class VersionRange {
       return false;
     }
 
-    for (const exclusion of this.exclusions) {
-      if (version === exclusion) {
-        return false;
-      }
+    if (this.exclusions && this.exclusions.includes(version)) {
+      return false;
     }
 
     return true;

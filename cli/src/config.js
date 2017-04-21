@@ -1,13 +1,8 @@
 import {entries, camelCase} from 'lodash';
 import {nest} from 'flatnest';
-import {throwUserError} from 'run-common';
 
 export const Config = {
-  normalize(config, {context}) {
-    if (!(config !== null && typeof config === 'object')) {
-      throwUserError(`Configuration must be an object`, {context});
-    }
-
+  normalize(config: Object) {
     const nestedConfig = nest(config);
 
     const normalizedConfig = {};
@@ -16,7 +11,7 @@ export const Config = {
         key = camelCase(key);
       }
       if (value !== null && typeof value === 'object') {
-        value = this.normalize(value, {context});
+        value = this.normalize(value);
       }
       normalizedConfig[key] = value;
     }

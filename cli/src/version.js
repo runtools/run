@@ -1,17 +1,13 @@
 import semver from 'semver';
+import {formatString} from 'run-common';
 
 export class Version {
-  constructor(value) {
-    this.value = value;
-  }
-
-  static create(str: string) {
-    const version = semver.clean(str);
-    if (!version) {
-      throw new Error(`Version '${str}' is invalid`);
+  constructor(str: string) {
+    const value = semver.clean(str);
+    if (!value) {
+      throw new Error(`Version ${formatString(str)} is invalid`);
     }
-
-    return new this(version);
+    this.value = value;
   }
 
   toJSON() {

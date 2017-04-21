@@ -1,48 +1,79 @@
 import {omit, mapValues, get} from 'lodash';
 import {parse} from 'shell-quote';
-import {parseCommandLineArguments, throwUserError} from 'run-common';
+import {parseCommandLineArguments} from 'run-common';
 
 import Config from './config';
 
 export class Expression {
-  constructor(expression) {
-    Object.assign(this, expression);
-  }
+  constructor(definition: Array | Expression, {currentDir} = {}) {
+    let def = definition;
 
-  static create(definition: Array, {dir, context}) {
-    // ['cook' 'pizza' '--salami'] => {arguments: ['cook', 'pizza'], config: {salami: true}}
-
-    let {arguments: args, options: config} = parseCommandLineArguments(definition, {context});
-
-    if (!args.length) {
-      throwUserError(`An expression must contain at least one argument`, {context});
+    if (Array.isArray(def)) {
+      const {arguments: args, options} = parseCommandLineArguments(def);
+      def = {arguments: args, config: Config.normalize(options)};
+    } else {
+      currentDir = definition.getCurrentDir();
     }
 
-    config = Config.normalize(config, {context});
+    this.setCurrentDir(currentDir);
 
-    return new this({arguments: args, config, dir});
+    this.arguments = def.arguments;
+    this.config = def.config;
   }
 
-  static createMany(definitions: Array | string, {dir, context}) {
-    if (typeof definitions === 'string') {
-      const str = definitions;
-      let args = parse(str, name => ({__var__: name}));
-      args = args.map(part => {
-        // Fix '--option=${config.option}' parsing by removing '=' at the end of '--option='
-        if (typeof part === 'string' && part.endsWith('=')) {
-          part = part.slice(0, -1);
-        }
-        return part;
-      });
-      return this.createManyFromShell(args, {dir, context});
+  clone() {
+    return new this.constructor(this);
+  }
+
+  getCurrentDir() {
+    return this.__currentDir__;
+  }
+
+  setCurrentDir(dir) {
+    this.__currentDir__ = dir;
+  }
+
+  getFirstArgument() {
+    return this.arguments[0];
+  }
+
+  pullFirstArgument() {
+    const [firstArgument, ...args] = this.arguments;
+    const expression = this.clone();
+    expression.arguments = args;
+    return {firstArgument, expression};
+  }
+
+  pullConfigProperty(name) {
+    if (!(name in this.config)) {
+      return {expression: this};
     }
-
-    return definitions.map(definition => this.create(definition, {dir, context}));
+    const value = this.config[name];
+    const config = omit(this.config, name);
+    const expression = this.clone();
+    expression.config = config;
+    return {[name]: value, expression};
   }
 
-  static createManyFromShell(args: Array, {dir, context}) {
+  static createMany(definitions: Array = [], {currentDir} = {}) {
+    return definitions.map(definition => new this(definition, {currentDir}));
+  }
+
+  static parse(args: Array | string = []) {
     const definitions = [];
 
+    if (typeof args === 'string') {
+      args = parse(args, name => ({__var__: name}));
+      args = args.map(arg => {
+        // Fix '--option=${config.option}' parsing by removing '=' at the end of '--option='
+        if (typeof arg === 'string' && arg.endsWith('=')) {
+          arg = arg.slice(0, -1);
+        }
+        return arg;
+      });
+    }
+
+    // Extract expressions by finding commas at the end of args
     let newArray = true;
     for (let arg of args) {
       if (newArray) {
@@ -58,31 +89,12 @@ export class Expression {
       }
     }
 
-    return this.createMany(definitions, {dir, context});
-  }
-
-  getCommandName() {
-    return this.arguments[0];
-  }
-
-  pullCommandName() {
-    const [commandName, ...args] = this.arguments;
-    const expression = new this.constructor({...this, arguments: args});
-    return {commandName, expression};
-  }
-
-  pullConfigProperty(name) {
-    if (!(name in this.config)) {
-      return {expression: this};
-    }
-
-    const value = this.config[name];
-    const config = omit(this.config, name);
-    const expression = new this.constructor({...this, config});
-    return {[name]: value, expression};
+    return definitions;
   }
 
   resolveVariables({arguments: args, config}) {
+    // TODO
+
     const getter = name => {
       const num = Number(name);
       if (num.toString() === name) {
@@ -118,6 +130,8 @@ export class Expression {
 }
 
 function resolveVars(value, getter) {
+  // TODO
+
   if (Array.isArray(value)) {
     const array = value;
     return array.map(value => resolveVars(value, getter));

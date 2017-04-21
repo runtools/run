@@ -1,18 +1,10 @@
 import {resolve} from 'path';
-import {throwUserError, formatString, formatCode} from 'run-common';
+import {formatString, formatCode} from 'run-common';
 
 const SUPPORTED_TYPES = ['boolean', 'number', 'string', 'path', 'array'];
 
 export class Type {
-  constructor(param) {
-    Object.assign(this, param);
-  }
-
-  static create(definition, {context}) {
-    if (definition === undefined) {
-      throw new Error("'definition' argument is missing");
-    }
-
+  constructor(definition: ?Object | ?string = 'string') {
     if (typeof definition === 'string') {
       let name = definition;
       let contentTypeName;
@@ -24,28 +16,51 @@ export class Type {
       definition = {name, contentTypeName};
     }
 
-    if (typeof definition !== 'object') {
-      throwUserError(`Type definition must be a string or an object`, {context});
-    }
-
-    const {name, contentTypeName} = definition;
-    this.validateName(name, {context});
-    if (contentTypeName) {
-      this.validateName(contentTypeName, {context});
-    }
-
-    return new this({name, contentTypeName});
+    this.name = definition.name;
+    this.contentTypeName = definition.contentTypeName;
   }
 
-  static validateName(name, {context}) {
+  get name() {
+    return this._name;
+  }
+
+  set name(name: string) {
+    name = name.trim();
+    this.rejectInvalidNames(name);
+    this._name = name;
+  }
+
+  get contentTypeName() {
+    return this._contentTypeName;
+  }
+
+  set contentTypeName(name: ?string) {
+    if (name !== undefined) {
+      name = name.trim();
+      this.rejectInvalidNames(name);
+    }
+    this._contentTypeName = name;
+  }
+
+  toJSON() {
+    if (this.name === 'string') {
+      return undefined;
+    }
+    if (this.contentTypeName && this.contentTypeName !== 'string') {
+      return this.name + '<' + this.contentTypeName + '>';
+    }
+    return this.name;
+  }
+
+  rejectInvalidNames(name: string) {
     if (!SUPPORTED_TYPES.includes(name)) {
-      throwUserError(`Unsupported type: ${formatString(name)}`, {context});
+      throw new Error(`Unsupported type: ${formatString(name)}`);
     }
   }
 
-  static infer(value, {context}) {
+  static infer(value) {
     if (value === undefined) {
-      throw new Error("'value' argument is missing");
+      return 'string';
     }
 
     const type = typeof value;
@@ -57,7 +72,7 @@ export class Type {
       const array = value;
       let type = 'array';
       if (array.length) {
-        const contentType = this.infer(array[0], {context});
+        const contentType = this.infer(array[0]);
         if (contentType) {
           type += '<' + contentType + '>';
         }
@@ -65,50 +80,25 @@ export class Type {
       return type;
     }
 
-    throwUserError(`Cannot infer type from value: ${formatCode(value)}`, {context});
+    throw new Error(`Cannot infer type from value: ${formatCode(value)}`);
   }
 
-  toJSON() {
-    if (this.name === 'string') {
-      return undefined;
-    }
-
-    if (this.contentTypeName && this.contentTypeName !== 'string') {
-      return this.name + '<' + this.contentTypeName + '>';
-    }
-
-    return this.name;
-  }
-
-  convert(stringOrArray, {dir, context}) {
+  convert(value: string | Array<string>, {dir} = {}) {
     let result;
 
     if (this.name === 'array') {
-      if (!Array.isArray(stringOrArray)) {
-        throwUserError('Cannot convert a value to an array', {context});
+      if (!Array.isArray(value)) {
+        throw new Error('Cannot convert a value to an array');
       }
-      result = stringOrArray.map(string =>
-        this._convert(string, this.contentTypeName, {dir, context}));
+      result = value.map(string => this._convert(string, this.contentTypeName, {dir}));
     } else {
-      result = this._convert(stringOrArray, this.name, {dir, context});
+      result = this._convert(value, this.name, {dir});
     }
 
     return result;
   }
 
-  _convert(string, typeName, {dir, context}) {
-    if (!string) {
-      throw new Error("'string' argument is missing");
-    }
-
-    if (typeof string !== 'string') {
-      throw new Error("'string' argument must be a string");
-    }
-
-    if (!typeName) {
-      throw new Error("'typeName' argument is missing");
-    }
-
+  _convert(string: string, typeName: string, {dir}) {
     let result;
 
     if (typeName === 'boolean') {
@@ -118,16 +108,12 @@ export class Type {
       } else if (str === '0' || str === 'false' || str === 'no' || str === 'off') {
         result = false;
       } else {
-        throwUserError(`Cannot convert a string to a boolean: ${formatString(string)}`, {
-          context
-        });
+        throw new Error(`Cannot convert a string to a boolean: ${formatString(string)}`);
       }
     } else if (typeName === 'number') {
       result = Number(string);
       if (isNaN(result)) {
-        throwUserError(`Cannot convert a string to a number: ${formatString(string)}`, {
-          context
-        });
+        throw new Error(`Cannot convert a string to a number: ${formatString(string)}`);
       }
     } else if (typeName === 'string') {
       result = string;
@@ -137,7 +123,7 @@ export class Type {
       }
       result = resolve(dir, string);
     } else {
-      throwUserError(`Unimplemented type: ${formatCode(typeName)}`, {context});
+      throw new Error(`Unimplemented type: ${formatCode(typeName)}`);
     }
 
     return result;

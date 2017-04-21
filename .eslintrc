@@ -1,9 +1,13 @@
 {
   "parser": "babel-eslint",
   "extends": ["xo/esnext", "prettier"],
+  "env": {
+    "jest": true
+  },
   "rules": {
     "capitalized-comments": 0,
     "indent": [2, 2, {"SwitchCase": 1}],
+    "new-cap": [2, {"capIsNewExceptionPattern": "^.+Mixin$"}],
     "no-await-in-loop": 0,
     "no-constant-condition": [2, {"checkLoops": false}],
     "no-negated-condition": 0,
