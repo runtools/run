@@ -14,7 +14,7 @@ import fetch from 'node-fetch';
 import strictUriEncode from 'strict-uri-encode';
 import JSON5 from 'json5';
 import YAML from 'js-yaml';
-import t from 'flow-runtime';
+// import t from 'flow-runtime';
 
 export function readFile(file: string, {parse = false} = {}) {
   let data;
@@ -415,6 +415,42 @@ export function showErrorAndExit(error, code = 1) {
   process.exit(code);
 }
 
+export function getProperty(obj, names) {
+  if (!Array.isArray(names)) {
+    names = [names];
+  }
+  let result;
+  let previousName;
+  for (const name of names) {
+    if (name in obj) {
+      if (previousName) {
+        throw new Error(
+          `Can't have both ${formatCode(previousName)} and ${formatCode(name)} properties in the same object`
+        );
+      }
+      result = obj[name];
+      previousName = name;
+    }
+  }
+  return result;
+}
+
+export function setProperty(target, source, name, aliases = []) {
+  const keys = [name, ...aliases];
+  let previousKey;
+  for (const key of keys) {
+    if (key in source) {
+      if (previousKey) {
+        throw new Error(
+          `Can't have both ${formatCode(previousKey)} and ${formatCode(key)} properties in the same object`
+        );
+      }
+      target[name] = source[key];
+      previousKey = key;
+    }
+  }
+}
+
 export function avoidCommonMistakes(obj, mistakes) {
   for (const [wrong, correct] of entries(mistakes)) {
     if (wrong in obj) {
@@ -433,9 +469,8 @@ export function getAWSConfig(defaults, env, config, argv) {
     );
   }
 
-  const secretAccessKey = argv['aws-secret-access-key'] ||
-    config.secretAccessKey ||
-    env.AWS_SECRET_ACCESS_KEY;
+  const secretAccessKey =
+    argv['aws-secret-access-key'] || config.secretAccessKey || env.AWS_SECRET_ACCESS_KEY;
   if (!secretAccessKey) {
     showErrorAndExit(
       "'aws-secret-access-key' parameter or 'AWS_SECRET_ACCESS_KEY' environment variable is missing"
@@ -548,6 +583,14 @@ function _addContextToErrors(fn) {
   };
 }
 
+export async function catchError(promise) {
+  try {
+    await promise;
+  } catch (err) {
+    return err;
+  }
+}
+
 export function callSuper(method, context, ...args) {
   const methodName = method.name;
   let proto = context;
@@ -564,7 +607,7 @@ export function callSuper(method, context, ...args) {
   }
 }
 
-export function compactObject(obj) {
+export function compactObject(obj: Object) {
   const result = {};
   for (const [key, value] of entries(obj)) {
     if (value !== undefined) {
@@ -649,9 +692,9 @@ export function parseCommandLineArguments(argsAndOpts: Array) {
   return result;
 }
 
-export const NotEmptyStringType = t.refinement(t.string(), str => {
-  console.log(`'${str}'`);
-  if (str.length === 0) {
-    return 'cannot be empty';
-  }
-});
+// export const NotEmptyStringType = t.refinement(t.string(), str => {
+//   console.log(`'${str}'`);
+//   if (str.length === 0) {
+//     return 'cannot be empty';
+//   }
+// });
