@@ -1,4 +1,4 @@
-import ArrayResource from '../../src/resource/array';
+import ArrayResource from '../../src/resources/array';
 
 describe('ArrayResource', () => {
   test('can have an array value', () => {

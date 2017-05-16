@@ -1,6 +1,6 @@
 import {join, extname} from 'path';
-import {existsSync, mkdirSync, readFileSync, writeFileSync, statSync} from 'fs';
-import {outputFile} from 'fs-promise';
+import {existsSync, mkdirSync, readFileSync, statSync} from 'fs';
+import {readFile, writeFile, outputFile} from 'fs-extra';
 import {homedir, tmpdir} from 'os';
 import crypto from 'crypto';
 import semver from 'semver';
@@ -16,40 +16,39 @@ import JSON5 from 'json5';
 import YAML from 'js-yaml';
 // import t from 'flow-runtime';
 
-export function readFile(file: string, {parse = false} = {}) {
+export async function loadFile(file: string, {parse = false} = {}) {
   let data;
+
   try {
-    data = readFileSync(file, 'utf8');
+    data = await readFile(file, 'utf8');
   } catch (_) {
-    throwUserError(`File not found: ${formatPath(file)}`);
+    throw new Error(`File not found: ${formatPath(file)}`);
   }
 
   if (parse) {
+    let parser;
+    const ext = extname(file);
+    if (ext === '.json5') {
+      parser = data => JSON5.parse(data);
+    } else if (ext === '.json') {
+      parser = data => JSON.parse(data);
+    } else if (ext === '.yaml' || ext === '.yml') {
+      parser = data => YAML.safeLoad(data);
+    } else {
+      throw new Error(`Unsupported file format: ${formatPath(file)}`);
+    }
+
     try {
-      const ext = extname(file);
-      if (ext === '.json5') {
-        data = JSON5.parse(data);
-      } else if (ext === '.json') {
-        data = JSON.parse(data);
-      } else if (ext === '.yaml' || ext === '.yml') {
-        data = YAML.safeLoad(data);
-      } else {
-        throwUserError(`Unsupported file format: ${formatPath(ext)}`, {
-          context: {file}
-        });
-      }
+      data = parser(data);
     } catch (err) {
-      if (err.userError) {
-        throw err;
-      }
-      throwUserError(`Invalid file: ${formatPath(file)}`, {info: '(' + err.message + ')'});
+      throw new Error(`Invalid file: ${formatPath(file)} (${err.message})`);
     }
   }
 
   return data;
 }
 
-export function writeFile(file: string, data, {stringify = false} = {}) {
+export async function saveFile(file: string, data, {stringify = false} = {}) {
   if (stringify) {
     const ext = extname(file);
     if (ext === '.json5') {
@@ -65,7 +64,7 @@ export function writeFile(file: string, data, {stringify = false} = {}) {
     }
   }
 
-  writeFileSync(file, data);
+  await writeFile(file, data);
 }
 
 let _runDir;

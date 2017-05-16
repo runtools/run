@@ -1,4 +1,4 @@
-import NumberResource from '../../src/resource/number';
+import NumberResource from '../../src/resources/number';
 
 describe('NumberResource', () => {
   test('can have a number value', () => {

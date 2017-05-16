@@ -1,4 +1,4 @@
-import StringResource from '../../src/resource/string';
+import StringResource from '../../src/resources/string';
 
 describe('StringResource', () => {
   test('can have a string value', () => {

@@ -1,9 +1,9 @@
-import Resource from '../../src/resource';
-import BooleanResource from '../../src/resource/boolean';
-import NumberResource from '../../src/resource/number';
-import StringResource from '../../src/resource/string';
-import ArrayResource from '../../src/resource/array';
-import ObjectResource from '../../src/resource/object';
+import Resource from '../../src/resources';
+import BooleanResource from '../../src/resources/boolean';
+import NumberResource from '../../src/resources/number';
+import StringResource from '../../src/resources/string';
+import ArrayResource from '../../src/resources/array';
+import ObjectResource from '../../src/resources/object';
 
 describe('Resource factory ($create)', () => {
   test('can create Resource', async () => {

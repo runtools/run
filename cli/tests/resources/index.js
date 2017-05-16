@@ -1,4 +1,4 @@
-import Resource from '../../src/resource';
+import Resource from '../../src/resources';
 
 describe('Resource', () => {
   test('can be empty', () => {
@@ -8,12 +8,12 @@ describe('Resource', () => {
     expect(res.$hasAlias('hi')).toBe(false);
   });
 
-  test('can have parents', () => {
+  test('can inherit from parents', () => {
     const parent1 = new Resource({$id: 'parent1'});
     const parent2 = new Resource({$id: 'parent2'});
     const res = new Resource();
-    res.$addParent(parent1);
-    res.$addParent(parent2);
+    res.$inherit(parent1);
+    res.$inherit(parent2);
     const parents = [];
     res.$forEachParent(parent => parents.push(parent));
     expect(parents).toEqual([parent1, parent2]);

@@ -1,10 +1,37 @@
-import {dirname} from 'path';
+import {join, resolve, dirname, basename, isAbsolute} from 'path';
+import {existsSync} from 'fs';
 import {isPlainObject, isEmpty} from 'lodash';
-import {addContextToErrors, getProperty, setProperty, formatString, formatCode} from 'run-common';
+import isDirectory from 'is-directory';
+import {
+  loadFile,
+  addContextToErrors,
+  getProperty,
+  setProperty,
+  formatString,
+  formatPath,
+  formatCode
+} from 'run-common';
 
 import Version from '../version';
 
+const RESOURCE_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
+const RESOURCE_FILE_NAME = 'resource';
+
 export class Resource {
+  constructor(definition: {} = {}, {directory, file} = {}) {
+    addContextToErrors(() => {
+      if (directory !== undefined) this.$setDirectory(directory);
+      if (file !== undefined) this.$setFile(file);
+      setProperty(this, definition, '$id');
+      setProperty(this, definition, '$aliases', ['$alias']);
+      setProperty(this, definition, '$version');
+      setProperty(this, definition, '$description');
+      setProperty(this, definition, '$authors', ['$author']);
+      setProperty(this, definition, '$repository');
+      setProperty(this, definition, '$license');
+    }).call(this);
+  }
+
   static async $create(definition = {}, options = {}) {
     if (typeof definition === 'boolean') {
       definition = {$type: '$boolean', $value: definition};
@@ -32,6 +59,62 @@ export class Resource {
     }
 
     return resource;
+  }
+
+  static async $load(specifier: string, {directory} = {}) {
+    let file;
+
+    if (specifier.startsWith('.')) {
+      file = resolve(directory, specifier);
+    } else if (isAbsolute(specifier)) {
+      file = specifier;
+    } else {
+      throw new Error('Loading from Resdir is not yet implemented');
+    }
+
+    file = this.$searchResourceFile(file);
+    if (!file) {
+      throw new Error(`Resource not found: ${formatPath(specifier)}`);
+    }
+
+    const definition = await loadFile(file, {parse: true});
+
+    return await this.$create(definition, {file});
+  }
+
+  static $searchResourceFile(directoryOrFile, {searchInParentDirectories = false} = {}) {
+    let directory;
+
+    if (isDirectory.sync(directoryOrFile)) {
+      directory = directoryOrFile;
+    }
+
+    if (!directory) {
+      if (existsSync(directoryOrFile)) {
+        const file = directoryOrFile;
+        const filename = basename(file);
+        if (RESOURCE_FILE_FORMATS.find(format => filename === RESOURCE_FILE_NAME + '.' + format)) {
+          return file;
+        }
+      }
+      return undefined;
+    }
+
+    for (const format of RESOURCE_FILE_FORMATS) {
+      const file = join(directory, RESOURCE_FILE_NAME + '.' + format);
+      if (existsSync(file)) {
+        return file;
+      }
+    }
+
+    if (searchInParentDirectories) {
+      const parentDirectory = join(directory, '..');
+      if (parentDirectory !== directory) {
+        return this.$searchResourceFile(parentDirectory, {searchInParentDirectories});
+      }
+    }
+
+    return undefined;
   }
 
   static $getResourceClass(types) {
@@ -71,28 +154,18 @@ export class Resource {
     return types;
   }
 
-  constructor(definition: {} = {}, {file} = {}) {
-    addContextToErrors(() => {
-      if (file !== undefined) this.$setFile(file);
-      setProperty(this, definition, '$id');
-      setProperty(this, definition, '$aliases', ['$alias']);
-      setProperty(this, definition, '$version');
-      setProperty(this, definition, '$description');
-      setProperty(this, definition, '$authors', ['$author']);
-      setProperty(this, definition, '$repository');
-      setProperty(this, definition, '$license');
-    }).call(this);
-  }
-
-  $instantiate() {
+  $instantiate(value) {
     const instance = new this.constructor();
-    instance.$addParent(this);
+    instance.$inherit(this);
+    if (arguments.length) {
+      instance.$set(value);
+    }
     return instance;
   }
 
   _parents = [];
 
-  $addParent(parent: Resource) {
+  $inherit(parent) {
     this._parents.push(parent);
   }
 
@@ -149,15 +222,19 @@ export class Resource {
   }
 
   $getFile() {
-    return this.__file__;
+    return this.__file;
   }
 
   $setFile(file) {
-    this.__file__ = file;
+    this.__file = file;
   }
 
   $getDirectory() {
-    return dirname(this.$getFile());
+    return this.__directory || (this.$getFile() && dirname(this.$getFile()));
+  }
+
+  $setDirectory(directory) {
+    this.__directory = directory;
   }
 
   get $id() {

@@ -1,4 +1,4 @@
-import BooleanResource from '../../src/resource/boolean';
+import BooleanResource from '../../src/resources/boolean';
 
 describe('BooleanResource', () => {
   test('can have a string value', () => {

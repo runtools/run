@@ -1,6 +1,6 @@
-import ObjectResource from '../../src/resource/object';
-import StringResource from '../../src/resource/string';
-import NumberResource from '../../src/resource/number';
+import ObjectResource from '../../src/resources/object';
+import StringResource from '../../src/resources/string';
+import NumberResource from '../../src/resources/number';
 
 describe('ObjectResource', () => {
   test('can define simple properties', async () => {

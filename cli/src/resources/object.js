@@ -14,19 +14,9 @@ export class ObjectResource extends Resource {
         for (const type of this.$types) {
           const parent = await this._createParent(type);
           if (!parent) continue;
-          this.$addParent(parent);
+          this.$inherit(parent);
         }
       }
-
-      this.$forEachParent(parent => {
-        parent.$forEachProperty(property => {
-          if (this.$getProperty(property.$id, {ignoreAliases: true})) {
-            // Ignore duplicated properties
-            return;
-          }
-          this.$addProperty(property.$instantiate());
-        });
-      });
 
       for (const id of Object.keys(definition)) {
         if (id.startsWith('$')) continue;
@@ -37,11 +27,22 @@ export class ObjectResource extends Resource {
           property.$set(value);
         } else {
           // Property definition
-          property = await this.constructor.$create(value, {id});
+          property = await this.constructor.$create(value, {id, directory: this.$getDirectory()});
           this.$addProperty(property);
         }
       }
     }).call(this);
+  }
+
+  $inherit(parent) {
+    parent.$forEachProperty(property => {
+      if (this.$getProperty(property.$id, {ignoreAliases: true})) {
+        // Ignore duplicated properties
+        return;
+      }
+      this.$addProperty(property.$instantiate());
+    });
+    super.$inherit(parent);
   }
 
   $get() {
@@ -76,13 +77,13 @@ export class ObjectResource extends Resource {
           `An ${formatCode('ObjectResource')} cannot inherit from a ${formatString(type)} type`
         );
       }
-      throw new Error('Loading types from files or Resdir is not yet implemented');
+      const specifier = type;
+      return await this.constructor.$load(specifier, {directory: this.$getDirectory()});
     } else if (isPlainObject(type)) {
       const definition = type;
-      return await this.constructor.$create(definition);
-    } else {
-      throw new Error(`Invalid ${formatCode('$type')} value`);
+      return await this.constructor.$create(definition, {directory: this.$getDirectory()});
     }
+    throw new Error(`Invalid ${formatCode('$type')} value`);
   }
 
   _properties = [];
