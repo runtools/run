@@ -34,13 +34,13 @@ export class Resource {
 
   static async $create(definition = {}, options = {}) {
     if (typeof definition === 'boolean') {
-      definition = {$type: '$boolean', $value: definition};
+      definition = {$type: 'boolean', $value: definition};
     } else if (typeof definition === 'number') {
-      definition = {$type: '$number', $value: definition};
+      definition = {$type: 'number', $value: definition};
     } else if (typeof definition === 'string') {
-      definition = {$type: '$string', $value: definition};
+      definition = {$type: 'string', $value: definition};
     } else if (Array.isArray(definition)) {
-      definition = {$type: '$array', $value: definition};
+      definition = {$type: 'array', $value: definition};
     } else if (!isPlainObject(definition)) {
       throw new Error("'definition' argument is invalid");
     }
@@ -120,22 +120,21 @@ export class Resource {
   static $getResourceClass(types) {
     if (types.length === 1) {
       const type = types[0];
-      if (typeof type === 'string' && type.startsWith('$')) {
+      if (typeof type === 'string') {
         switch (type) {
-          case '$resource':
+          case 'resource':
             return Resource;
-          case '$boolean':
+          case 'boolean':
             return require('./boolean').default;
-          case '$number':
+          case 'number':
             return require('./number').default;
-          case '$string':
+          case 'string':
             return require('./string').default;
-          case '$array':
+          case 'array':
             return require('./array').default;
-          case '$object':
+          case 'object':
             return require('./object').default;
-          default:
-            throw new Error(`Unsupported ${formatCode('$type')}: ${formatString(type)}`);
+          default: // NOOP
         }
       }
     }

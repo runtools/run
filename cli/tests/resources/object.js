@@ -6,7 +6,7 @@ describe('ObjectResource', () => {
   test('can define simple properties', async () => {
     const person = await ObjectResource.$create({
       name: {
-        $type: '$string',
+        $type: 'string',
         $value: 'Manu'
       }
     });
@@ -32,7 +32,7 @@ describe('ObjectResource', () => {
     const person = await ObjectResource.$create({
       address: {
         $type: {
-          city: {$type: '$string'}
+          city: {$type: 'string'}
         }
       }
     });
@@ -52,7 +52,7 @@ describe('ObjectResource', () => {
 
   test('can inherit properties', async () => {
     const person = await ObjectResource.$create({
-      $type: {$id: 'person', name: {$type: '$string', $value: 'anonymous'}}
+      $type: {$id: 'person', name: {$type: 'string', $value: 'anonymous'}}
     });
     const parent = person.$findParent(() => true);
     expect(parent.name).toBe('anonymous');
@@ -66,7 +66,7 @@ describe('ObjectResource', () => {
 
   test('can set value of inherited properties', async () => {
     const person = await ObjectResource.$create({
-      $type: {$id: 'person', name: {$type: '$string', $value: 'anonymous'}},
+      $type: {$id: 'person', name: {$type: 'string', $value: 'anonymous'}},
       name: 'Manu'
     });
     const parent = person.$findParent(() => true);
@@ -84,7 +84,7 @@ describe('ObjectResource', () => {
     await testSerialization(undefined);
     await testSerialization({color: 'green'});
     await testSerialization({name: 'Manu', address: {city: 'Tokyo'}});
-    await testSerialization({$type: '$object'});
+    await testSerialization({$type: 'object'});
     await testSerialization({$type: {$id: 'person', name: 'anonymous'}});
     await testSerialization({$type: {$id: 'person', name: 'anonymous'}, name: 'Manu'});
   });

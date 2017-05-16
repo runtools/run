@@ -1,6 +1,6 @@
 {
   $id: 'person',
   $version: '1.0.0',
-  name: {$type: '$string'},
-  age: {$type: '$number'}
+  name: {$type: 'string'},
+  age: {$type: 'number'}
 }

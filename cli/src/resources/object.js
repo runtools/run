@@ -70,13 +70,7 @@ export class ObjectResource extends Resource {
 
   async _createParent(type) {
     if (typeof type === 'string') {
-      if (type === '$object') {
-        return;
-      } else if (type.startsWith('$')) {
-        throw new Error(
-          `An ${formatCode('ObjectResource')} cannot inherit from a ${formatString(type)} type`
-        );
-      }
+      if (type === 'object') return;
       const specifier = type;
       return await this.constructor.$load(specifier, {directory: this.$getDirectory()});
     } else if (isPlainObject(type)) {

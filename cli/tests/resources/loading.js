@@ -34,7 +34,7 @@ describe('Resource loading ($load)', () => {
 
   test('can load a resource referenced from a property type', async () => {
     const Company = await ObjectResource.$create(
-      {name: {$type: '$string'}, boss: {$type: './fixtures/person'}},
+      {name: {$type: 'string'}, boss: {$type: './fixtures/person'}},
       {directory: __dirname}
     );
     const company = Company.$instantiate({name: 'Resource Inc.', boss: {name: 'Manu', age: 44}});
