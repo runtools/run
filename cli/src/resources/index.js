@@ -13,6 +13,7 @@ import {
 } from 'run-common';
 
 import Version from '../version';
+import Runtime from '../runtimes';
 
 const RESOURCE_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
 const RESOURCE_FILE_NAME = 'resource';
@@ -29,6 +30,8 @@ export class Resource {
       setProperty(this, definition, '$authors', ['$author']);
       setProperty(this, definition, '$repository');
       setProperty(this, definition, '$license');
+      setProperty(this, definition, '$implementation');
+      setProperty(this, definition, '$runtime');
     }).call(this);
   }
 
@@ -347,6 +350,25 @@ export class Resource {
     this._license = license;
   }
 
+  get $implementation() {
+    return this._getProperty('_implementation');
+  }
+
+  set $implementation(implementation: ?string) {
+    this._implementation = implementation;
+  }
+
+  get $runtime() {
+    return this._getProperty('_runtime');
+  }
+
+  set $runtime(runtime: ?(string | Runtime)) {
+    if (typeof runtime === 'string') {
+      runtime = Runtime.create(runtime);
+    }
+    this._runtime = runtime;
+  }
+
   $serialize({omitId} = {}) {
     let result = {};
 
@@ -387,6 +409,14 @@ export class Resource {
 
     if (this._license !== undefined) {
       result.$license = this._license;
+    }
+
+    if (this._implementation !== undefined) {
+      result.$implementation = this._implementation;
+    }
+
+    if (this._runtime !== undefined) {
+      result.$runtime = this._runtime.toJSON();
     }
 
     if (isEmpty(result)) {

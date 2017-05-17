@@ -1,5 +1,5 @@
 import {isPlainObject, isEmpty} from 'lodash';
-import {setProperty, addContextToErrors, formatString, formatCode} from 'run-common';
+import {setProperty, addContextToErrors, formatCode} from 'run-common';
 
 import Resource from './';
 

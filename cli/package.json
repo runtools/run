@@ -74,6 +74,7 @@
     ],
     "testPathIgnorePatterns": [
       "/node_modules/",
+      "/fixtures/",
       "/old/"
     ]
   },
