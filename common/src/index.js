@@ -414,39 +414,33 @@ export function showErrorAndExit(error, code = 1) {
   process.exit(code);
 }
 
-export function getProperty(obj, names) {
-  if (!Array.isArray(names)) {
-    names = [names];
-  }
+function _getProperty(source, name, aliases = []) {
   let result;
-  let previousName;
-  for (const name of names) {
-    if (name in obj) {
-      if (previousName) {
+  const keys = [name, ...aliases];
+  let foundKey;
+  for (const key of keys) {
+    if (key in source) {
+      if (foundKey) {
         throw new Error(
-          `Can't have both ${formatCode(previousName)} and ${formatCode(name)} properties in the same object`
+          `Can't have both ${formatCode(foundKey)} and ${formatCode(key)} properties in the same object`
         );
       }
-      result = obj[name];
-      previousName = name;
+      result = {value: source[key]};
+      foundKey = key;
     }
   }
   return result;
 }
 
-export function setProperty(target, source, name, aliases = []) {
-  const keys = [name, ...aliases];
-  let previousKey;
-  for (const key of keys) {
-    if (key in source) {
-      if (previousKey) {
-        throw new Error(
-          `Can't have both ${formatCode(previousKey)} and ${formatCode(key)} properties in the same object`
-        );
-      }
-      target[name] = source[key];
-      previousKey = key;
-    }
+export function getProperty(source, name, aliases) {
+  const result = _getProperty(source, name, aliases);
+  return result && result.value;
+}
+
+export function setProperty(target, source, name, aliases) {
+  const result = _getProperty(source, name, aliases);
+  if (result) {
+    target[name] = result.value;
   }
 }
 

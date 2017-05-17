@@ -77,9 +77,33 @@ describe('ObjectResource', () => {
     expect(parent.name).toBe('anonymous');
   });
 
+  test('can have a runtime', async () => {
+    expect((await ObjectResource.$create()).$runtime).toBeUndefined();
+    expect((await ObjectResource.$create({$runtime: 'node@>=6.10.0'})).$runtime.toJSON()).toBe(
+      'node@>=6.10.0'
+    );
+    await expect(ObjectResource.$create({$runtime: 'invalid'})).rejects.toBeInstanceOf(Error);
+  });
+
+  test('can have an implementation', async () => {
+    expect((await ObjectResource.$create()).$implementation).toBeUndefined();
+    expect(
+      (await ObjectResource.$create(
+        {$implementation: './fixtures/person/index.js', $runtime: 'node'},
+        {directory: __dirname}
+      )).$implementation
+    ).toBe('./fixtures/person/index.js');
+    await expect(
+      ObjectResource.$create(
+        {$implementation: './fixtures/person/index.js'},
+        {directory: __dirname}
+      )
+    ).rejects.toBeInstanceOf(Error);
+  });
+
   test('is serializable', async () => {
-    async function testSerialization(definition, expected = definition) {
-      expect((await ObjectResource.$create(definition)).$serialize()).toEqual(expected);
+    async function testSerialization(definition, options, expected = definition) {
+      expect((await ObjectResource.$create(definition, options)).$serialize()).toEqual(expected);
     }
     await testSerialization(undefined);
     await testSerialization({color: 'green'});
@@ -87,5 +111,9 @@ describe('ObjectResource', () => {
     await testSerialization({$type: 'object'});
     await testSerialization({$type: {$id: 'person', name: 'anonymous'}});
     await testSerialization({$type: {$id: 'person', name: 'anonymous'}, name: 'Manu'});
+    await testSerialization(
+      {$implementation: './fixtures/person/index.js', $runtime: 'node@>=6.10.0'},
+      {directory: __dirname}
+    );
   });
 });

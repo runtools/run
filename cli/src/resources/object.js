@@ -1,7 +1,8 @@
 import {isPlainObject, isEmpty} from 'lodash';
-import {setProperty, addContextToErrors, formatCode} from 'run-common';
+import {getProperty, setProperty, addContextToErrors, formatCode} from 'run-common';
 
 import Resource from './';
+import Runtime from '../runtimes';
 
 export class ObjectResource extends Resource {
   constructor(definition = {}, options) {
@@ -9,6 +10,8 @@ export class ObjectResource extends Resource {
 
     this.$initialization = addContextToErrors(async () => {
       setProperty(this, definition, '$types', ['$type']);
+      setProperty(this, definition, '$implementation');
+      setProperty(this, definition, '$runtime');
 
       if (this.$types) {
         for (const type of this.$types) {
@@ -32,6 +35,18 @@ export class ObjectResource extends Resource {
         }
       }
     }).call(this);
+  }
+
+  static $getImplementationClass(definition, {directory} = {}) {
+    const implementation = getProperty(definition, '$implementation');
+    if (!implementation) return this;
+    let runtime = getProperty(definition, '$runtime');
+    if (!runtime) {
+      throw new Error('An $implementation requires a $runtime');
+    }
+    runtime = Runtime.create(runtime);
+    const classBuilder = runtime.require(implementation, {directory});
+    return classBuilder(this);
   }
 
   $inherit(parent) {
@@ -66,6 +81,25 @@ export class ObjectResource extends Resource {
       types = this.constructor.$normalizeTypes(types);
     }
     this._types = types;
+  }
+
+  get $implementation() {
+    return this._implementation;
+  }
+
+  set $implementation(implementation: ?string) {
+    this._implementation = implementation;
+  }
+
+  get $runtime() {
+    return this._getProperty('_runtime');
+  }
+
+  set $runtime(runtime: ?(string | Runtime)) {
+    if (typeof runtime === 'string') {
+      runtime = Runtime.create(runtime);
+    }
+    this._runtime = runtime;
   }
 
   async _createParent(type) {
@@ -127,6 +161,14 @@ export class ObjectResource extends Resource {
       } else if (types.length > 1) {
         result.$types = types;
       }
+    }
+
+    if (this._implementation !== undefined) {
+      result.$implementation = this._implementation;
+    }
+
+    if (this._runtime !== undefined) {
+      result.$runtime = this._runtime.toJSON();
     }
 
     this.$forEachProperty(property => {

@@ -13,7 +13,6 @@ import {
 } from 'run-common';
 
 import Version from '../version';
-import Runtime from '../runtimes';
 
 const RESOURCE_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
 const RESOURCE_FILE_NAME = 'resource';
@@ -30,12 +29,10 @@ export class Resource {
       setProperty(this, definition, '$authors', ['$author']);
       setProperty(this, definition, '$repository');
       setProperty(this, definition, '$license');
-      setProperty(this, definition, '$implementation');
-      setProperty(this, definition, '$runtime');
     }).call(this);
   }
 
-  static async $create(definition = {}, options = {}) {
+  static async $create(definition = {}, {id, directory, file} = {}) {
     if (typeof definition === 'boolean') {
       definition = {$type: 'boolean', $value: definition};
     } else if (typeof definition === 'number') {
@@ -48,15 +45,18 @@ export class Resource {
       throw new Error("'definition' argument is invalid");
     }
 
-    if ('id' in options) {
-      definition = {...definition, $id: options.id};
+    if (id) {
+      definition = {...definition, $id: id};
     }
 
-    let types = getProperty(definition, ['$types', '$type']);
+    let types = getProperty(definition, '$types', ['$type']);
     types = this.$normalizeTypes(types);
     const ResourceClass = this.$getResourceClass(types);
 
-    const resource = new ResourceClass(definition, options);
+    const dir = directory || (file && dirname(file));
+    const ImplementationClass = ResourceClass.$getImplementationClass(definition, {directory: dir});
+
+    const resource = new ImplementationClass(definition, {directory, file});
     if (resource.$initialization) {
       await resource.$initialization;
     }
@@ -143,6 +143,10 @@ export class Resource {
     }
 
     return require('./object').default;
+  }
+
+  static $getImplementationClass(_definition, _options) {
+    return this;
   }
 
   static $normalizeTypes(types) {
@@ -350,25 +354,6 @@ export class Resource {
     this._license = license;
   }
 
-  get $implementation() {
-    return this._getProperty('_implementation');
-  }
-
-  set $implementation(implementation: ?string) {
-    this._implementation = implementation;
-  }
-
-  get $runtime() {
-    return this._getProperty('_runtime');
-  }
-
-  set $runtime(runtime: ?(string | Runtime)) {
-    if (typeof runtime === 'string') {
-      runtime = Runtime.create(runtime);
-    }
-    this._runtime = runtime;
-  }
-
   $serialize({omitId} = {}) {
     let result = {};
 
@@ -409,14 +394,6 @@ export class Resource {
 
     if (this._license !== undefined) {
       result.$license = this._license;
-    }
-
-    if (this._implementation !== undefined) {
-      result.$implementation = this._implementation;
-    }
-
-    if (this._runtime !== undefined) {
-      result.$runtime = this._runtime.toJSON();
     }
 
     if (isEmpty(result)) {

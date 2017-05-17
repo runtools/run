@@ -91,17 +91,6 @@ describe('Resource', () => {
     expect(new Resource({$license: 'MIT'}).$license).toBe('MIT');
   });
 
-  test('can have an implementation', () => {
-    expect(new Resource().$implementation).toBeUndefined();
-    expect(new Resource({$implementation: './index.js'}).$implementation).toBe('./index.js');
-  });
-
-  test('can have a runtime', () => {
-    expect(new Resource().$runtime).toBeUndefined();
-    expect(new Resource({$runtime: 'node@>=6.10.0'}).$runtime.toJSON()).toBe('node@>=6.10.0');
-    expect(() => new Resource({$runtime: 'invalid'})).toThrow();
-  });
-
   test('supports both singular and plural names for some properties', () => {
     const res1 = new Resource({$author: 'Manu'});
     expect(res1.$authors).toEqual(['Manu']);
@@ -132,9 +121,7 @@ describe('Resource', () => {
       $description: 'This is a resource',
       $authors: ['Manu', 'Vince'],
       $repository: 'git://github.com/user/repo',
-      $license: 'MIT',
-      $implementation: './index.js',
-      $runtime: 'node@>=6.10.0'
+      $license: 'MIT'
     };
     const res2 = new Resource(definition);
     expect(res2.$serialize()).toEqual(definition);
