@@ -29,6 +29,7 @@ export class Resource {
       setProperty(this, definition, '$authors', ['$author']);
       setProperty(this, definition, '$repository');
       setProperty(this, definition, '$license');
+      setProperty(this, definition, '$types', ['$type']);
     }).call(this);
   }
 
@@ -135,6 +136,8 @@ export class Resource {
             return require('./string').default;
           case 'array':
             return require('./array').default;
+          case 'method':
+            return require('./method').default;
           case 'object':
             return require('./object').default;
           default: // NOOP
@@ -354,6 +357,17 @@ export class Resource {
     this._license = license;
   }
 
+  get $types() {
+    return this._types;
+  }
+
+  set $types(types) {
+    if (types !== undefined) {
+      types = this.constructor.$normalizeTypes(types);
+    }
+    this._types = types;
+  }
+
   $serialize({omitId} = {}) {
     let result = {};
 
@@ -394,6 +408,15 @@ export class Resource {
 
     if (this._license !== undefined) {
       result.$license = this._license;
+    }
+
+    const types = this._types;
+    if (types !== undefined) {
+      if (types.length === 1) {
+        result.$type = types[0];
+      } else if (types.length > 1) {
+        result.$types = types;
+      }
     }
 
     if (isEmpty(result)) {

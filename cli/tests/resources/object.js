@@ -106,6 +106,7 @@ describe('ObjectResource', () => {
       expect((await ObjectResource.$create(definition, options)).$serialize()).toEqual(expected);
     }
     await testSerialization(undefined);
+    await testSerialization({color: {$type: 'string'}});
     await testSerialization({color: 'green'});
     await testSerialization({name: 'Manu', address: {city: 'Tokyo'}});
     await testSerialization({$type: 'object'});

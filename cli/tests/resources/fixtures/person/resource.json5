@@ -4,5 +4,6 @@
   $implementation: './index.js',
   $runtime: 'node@>=6.10.0',
   name: {$type: 'string'},
-  age: {$type: 'number'}
+  age: {$type: 'number'},
+  getGreeting: {$type: 'method'}
 }

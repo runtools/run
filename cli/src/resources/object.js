@@ -7,12 +7,10 @@ import Runtime from '../runtimes';
 export class ObjectResource extends Resource {
   constructor(definition = {}, options) {
     super(definition, options);
+    setProperty(this, definition, '$implementation');
+    setProperty(this, definition, '$runtime');
 
     this.$initialization = addContextToErrors(async () => {
-      setProperty(this, definition, '$types', ['$type']);
-      setProperty(this, definition, '$implementation');
-      setProperty(this, definition, '$runtime');
-
       if (this.$types) {
         for (const type of this.$types) {
           const parent = await this._createParent(type);
@@ -70,17 +68,6 @@ export class ObjectResource extends Resource {
       throw new Error('Invalid value assigned to an ObjectResource');
     }
     Object.assign(this, value);
-  }
-
-  get $types() {
-    return this._types;
-  }
-
-  set $types(types) {
-    if (types !== undefined) {
-      types = this.constructor.$normalizeTypes(types);
-    }
-    this._types = types;
   }
 
   get $implementation() {
@@ -152,15 +139,6 @@ export class ObjectResource extends Resource {
 
     if (result === undefined) {
       result = {};
-    }
-
-    const types = this._types;
-    if (types !== undefined) {
-      if (types.length === 1) {
-        result.$type = types[0];
-      } else if (types.length > 1) {
-        result.$types = types;
-      }
     }
 
     if (this._implementation !== undefined) {

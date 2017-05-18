@@ -50,6 +50,8 @@ export class ValueResource extends Resource {
       result = undefined;
     } else if (keys.length === 1 && keys[0] === '$value') {
       result = result.$value;
+    } else if (keys.length === 2 && keys.includes('$type') && keys.includes('$value')) {
+      result = result.$value;
     }
 
     return result;
