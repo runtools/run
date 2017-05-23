@@ -3,7 +3,7 @@ import BooleanResource from '../../src/resources/boolean';
 import NumberResource from '../../src/resources/number';
 import StringResource from '../../src/resources/string';
 import ArrayResource from '../../src/resources/array';
-import ObjectResource from '../../src/resources/object';
+import CompositeResource from '../../src/resources/composite';
 
 describe('Resource factory ($create)', () => {
   test('can create Resource', async () => {
@@ -32,13 +32,20 @@ describe('Resource factory ($create)', () => {
     expect(await Resource.$create([1])).toBeInstanceOf(ArrayResource);
   });
 
-  test('can create ObjectResource', async () => {
-    expect(await Resource.$create()).toBeInstanceOf(ObjectResource);
-    expect(await Resource.$create({})).toBeInstanceOf(ObjectResource);
-    expect(await Resource.$create({$types: []})).toBeInstanceOf(ObjectResource);
-    expect(await Resource.$create({$type: 'object'})).toBeInstanceOf(ObjectResource);
-    expect(await Resource.$create({$type: {$id: 'person', $type: 'object'}})).toBeInstanceOf(
-      ObjectResource
+  // test('can create ObjectResource', async () => {
+  //   expect(await Resource.$create()).toBeInstanceOf(ObjectResource);
+  //   expect(await Resource.$create({})).toBeInstanceOf(ObjectResource);
+  //   expect(await Resource.$create({$types: []})).toBeInstanceOf(ObjectResource);
+  //   expect(await Resource.$create({$type: 'object'})).toBeInstanceOf(ObjectResource);
+  //   expect(await Resource.$create({$type: {$id: 'person', $type: 'object'}})).toBeInstanceOf(
+  //     ObjectResource
+  //   );
+  // });
+
+  test('can create CompositeResource', async () => {
+    expect(await Resource.$create({$type: 'composite'})).toBeInstanceOf(CompositeResource);
+    expect(await Resource.$create({$type: {$id: 'person', $type: 'composite'}})).toBeInstanceOf(
+      CompositeResource
     );
   });
 });

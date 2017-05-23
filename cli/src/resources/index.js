@@ -138,14 +138,14 @@ export class Resource {
             return require('./array').default;
           case 'method':
             return require('./method').default;
-          case 'object':
-            return require('./object').default;
+          case 'composite':
+            return require('./composite').default;
           default: // NOOP
         }
       }
     }
 
-    return require('./object').default;
+    return require('./composite').default;
   }
 
   static $getImplementationClass(_definition, _options) {

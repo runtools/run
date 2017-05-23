@@ -1,10 +1,10 @@
-import ObjectResource from '../../src/resources/object';
+import CompositeResource from '../../src/resources/composite';
 import StringResource from '../../src/resources/string';
 import NumberResource from '../../src/resources/number';
 
-describe('ObjectResource', () => {
+describe('CompositeResource', () => {
   test('can define simple properties', async () => {
-    const person = await ObjectResource.$create({
+    const person = await CompositeResource.$create({
       name: {
         $type: 'string',
         $value: 'Manu'
@@ -19,17 +19,21 @@ describe('ObjectResource', () => {
   });
 
   test('can define properties from literals', async () => {
-    const person = await ObjectResource.$create({name: 'Manu', age: 44, address: {city: 'London'}});
+    const person = await CompositeResource.$create({
+      name: 'Manu',
+      age: 44,
+      address: {city: 'London'}
+    });
     expect(person.$getProperty('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('Manu');
     expect(person.$getProperty('age')).toBeInstanceOf(NumberResource);
     expect(person.age).toBe(44);
-    expect(person.$getProperty('address')).toBeInstanceOf(ObjectResource);
+    expect(person.$getProperty('address')).toBeInstanceOf(CompositeResource);
     expect(person.address.city).toBe('London');
   });
 
   test('can define composed properties', async () => {
-    const person = await ObjectResource.$create({
+    const person = await CompositeResource.$create({
       address: {
         $type: {
           city: {$type: 'string'}
@@ -37,13 +41,13 @@ describe('ObjectResource', () => {
       }
     });
     expect(person.address).toBeDefined();
-    expect(person.address).toBeInstanceOf(ObjectResource);
+    expect(person.address).toBeInstanceOf(CompositeResource);
     expect(person.address.$getProperty('city')).toBeDefined();
     expect(person.address.city).toBeUndefined();
     person.address.city = 'Paris';
     expect(person.address.city).toBe('Paris');
     person.address = {city: 'Tokyo'};
-    expect(person.address).toBeInstanceOf(ObjectResource);
+    expect(person.address).toBeInstanceOf(CompositeResource);
     expect(person.address.city).toBe('Tokyo');
     expect(() => {
       person.address = 'New York';
@@ -51,7 +55,7 @@ describe('ObjectResource', () => {
   });
 
   test('can inherit properties', async () => {
-    const person = await ObjectResource.$create({
+    const person = await CompositeResource.$create({
       $type: {$id: 'person', name: {$type: 'string', $value: 'anonymous'}}
     });
     const parent = person.$findParent(() => true);
@@ -65,7 +69,7 @@ describe('ObjectResource', () => {
   });
 
   test('can set value of inherited properties', async () => {
-    const person = await ObjectResource.$create({
+    const person = await CompositeResource.$create({
       $type: {$id: 'person', name: {$type: 'string', $value: 'anonymous'}},
       name: 'Manu'
     });
@@ -78,23 +82,23 @@ describe('ObjectResource', () => {
   });
 
   test('can have a runtime', async () => {
-    expect((await ObjectResource.$create()).$runtime).toBeUndefined();
-    expect((await ObjectResource.$create({$runtime: 'node@>=6.10.0'})).$runtime.toJSON()).toBe(
+    expect((await CompositeResource.$create()).$runtime).toBeUndefined();
+    expect((await CompositeResource.$create({$runtime: 'node@>=6.10.0'})).$runtime.toJSON()).toBe(
       'node@>=6.10.0'
     );
-    await expect(ObjectResource.$create({$runtime: 'invalid'})).rejects.toBeInstanceOf(Error);
+    await expect(CompositeResource.$create({$runtime: 'invalid'})).rejects.toBeInstanceOf(Error);
   });
 
   test('can have an implementation', async () => {
-    expect((await ObjectResource.$create()).$implementation).toBeUndefined();
+    expect((await CompositeResource.$create()).$implementation).toBeUndefined();
     expect(
-      (await ObjectResource.$create(
+      (await CompositeResource.$create(
         {$implementation: './fixtures/person/index.js', $runtime: 'node'},
         {directory: __dirname}
       )).$implementation
     ).toBe('./fixtures/person/index.js');
     await expect(
-      ObjectResource.$create(
+      CompositeResource.$create(
         {$implementation: './fixtures/person/index.js'},
         {directory: __dirname}
       )
@@ -103,13 +107,13 @@ describe('ObjectResource', () => {
 
   test('is serializable', async () => {
     async function testSerialization(definition, options, expected = definition) {
-      expect((await ObjectResource.$create(definition, options)).$serialize()).toEqual(expected);
+      expect((await CompositeResource.$create(definition, options)).$serialize()).toEqual(expected);
     }
     await testSerialization(undefined);
     await testSerialization({color: {$type: 'string'}});
     await testSerialization({color: 'green'});
     await testSerialization({name: 'Manu', address: {city: 'Tokyo'}});
-    await testSerialization({$type: 'object'});
+    await testSerialization({$type: 'composite'});
     await testSerialization({$type: {$id: 'person', name: 'anonymous'}});
     await testSerialization({$type: {$id: 'person', name: 'anonymous'}, name: 'Manu'});
     await testSerialization(

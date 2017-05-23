@@ -4,7 +4,7 @@ import {getProperty, setProperty, addContextToErrors, formatCode} from 'run-comm
 import Resource from './';
 import Runtime from '../runtimes';
 
-export class ObjectResource extends Resource {
+export class CompositeResource extends Resource {
   constructor(definition = {}, options) {
     super(definition, options);
     setProperty(this, definition, '$implementation');
@@ -65,7 +65,7 @@ export class ObjectResource extends Resource {
   $set(value) {
     if (value === undefined) return;
     if (!isPlainObject(value)) {
-      throw new Error('Invalid value assigned to an ObjectResource');
+      throw new Error('Invalid value assigned to an CompositeResource');
     }
     Object.assign(this, value);
   }
@@ -91,7 +91,7 @@ export class ObjectResource extends Resource {
 
   async _createParent(type) {
     if (typeof type === 'string') {
-      if (type === 'object') return;
+      if (type === 'composite') return;
       const specifier = type;
       return await this.constructor.$load(specifier, {directory: this.$getDirectory()});
     } else if (isPlainObject(type)) {
@@ -164,4 +164,4 @@ export class ObjectResource extends Resource {
     return result;
   }
 }
-export default ObjectResource;
+export default CompositeResource;

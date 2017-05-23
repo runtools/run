@@ -1,9 +1,9 @@
 import Resource from '../../src/resources';
-import ObjectResource from '../../src/resources/object';
+import CompositeResource from '../../src/resources/composite';
 
 describe('MethodResource', () => {
   test('can be invoked', async () => {
-    const Person = await ObjectResource.$load('./fixtures/person', {directory: __dirname});
+    const Person = await CompositeResource.$load('./fixtures/person', {directory: __dirname});
     const person = Person.$instantiate({name: 'Manu', age: 44});
     expect(person.getGreeting()).toBe('Hi Manu!');
     person.age++;
