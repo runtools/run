@@ -10,29 +10,31 @@ export class CompositeResource extends Resource {
     setProperty(this, definition, '$implementation');
     setProperty(this, definition, '$runtime');
 
-    this.$initialization = addContextToErrors(async () => {
-      if (this.$types) {
-        for (const type of this.$types) {
-          const parent = await this._createParent(type);
-          if (!parent) continue;
-          this.$inherit(parent);
+    this._initializers.push(
+      addContextToErrors(async () => {
+        if (this.$types) {
+          for (const type of this.$types) {
+            const parent = await this._createParent(type);
+            if (!parent) continue;
+            this.$inherit(parent);
+          }
         }
-      }
 
-      for (const id of Object.keys(definition)) {
-        if (id.startsWith('$')) continue;
-        const value = definition[id];
-        let property = this.$getProperty(id, {ignoreAliases: true});
-        if (property) {
-          // Property assignment
-          property.$set(value);
-        } else {
-          // Property definition
-          property = await this.constructor.$create(value, {id, directory: this.$getDirectory()});
-          this.$addProperty(property);
+        for (const id of Object.keys(definition)) {
+          if (id.startsWith('$')) continue;
+          const value = definition[id];
+          let property = this.$getProperty(id, {ignoreAliases: true});
+          if (property) {
+            // Property assignment
+            property.$set(value);
+          } else {
+            // Property definition
+            property = await Resource.$create(value, {id, directory: this.$getDirectory()});
+            this.$addProperty(property);
+          }
         }
-      }
-    }).call(this);
+      }).call(this)
+    );
   }
 
   static $getImplementationClass(definition, {directory} = {}) {

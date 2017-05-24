@@ -1,6 +1,7 @@
 import CompositeResource from '../../src/resources/composite';
 import StringResource from '../../src/resources/string';
 import NumberResource from '../../src/resources/number';
+import ObjectResource from '../../src/resources/object';
 
 describe('CompositeResource', () => {
   test('can define simple properties', async () => {
@@ -28,7 +29,7 @@ describe('CompositeResource', () => {
     expect(person.name).toBe('Manu');
     expect(person.$getProperty('age')).toBeInstanceOf(NumberResource);
     expect(person.age).toBe(44);
-    expect(person.$getProperty('address')).toBeInstanceOf(CompositeResource);
+    expect(person.$getProperty('address')).toBeInstanceOf(ObjectResource);
     expect(person.address.city).toBe('London');
   });
 

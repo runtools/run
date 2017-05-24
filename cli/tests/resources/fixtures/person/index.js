@@ -1,7 +1,7 @@
 export default base =>
   class Person extends base {
-    getGreeting() {
-      const greeting = this.age < 45 ? 'Hi' : 'Hello';
+    getGreeting(ageLimit) {
+      const greeting = this.age < ageLimit ? 'Hi' : 'Hello';
       return `${greeting} ${this.name}!`;
     }
   };

@@ -5,5 +5,8 @@
   $runtime: 'node@>=6.10.0',
   name: {$type: 'string'},
   age: {$type: 'number'},
-  getGreeting: {$type: 'method'}
+  getGreeting: {
+    $type: 'method',
+    $parameters: [45]
+  }
 }

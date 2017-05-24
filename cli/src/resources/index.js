@@ -33,6 +33,8 @@ export class Resource {
     }).call(this);
   }
 
+  _initializers = [];
+
   static async $create(definition = {}, {id, directory, file} = {}) {
     if (typeof definition === 'boolean') {
       definition = {$type: 'boolean', $value: definition};
@@ -58,10 +60,7 @@ export class Resource {
     const ImplementationClass = ResourceClass.$getImplementationClass(definition, {directory: dir});
 
     const resource = new ImplementationClass(definition, {directory, file});
-    if (resource.$initialization) {
-      await resource.$initialization;
-    }
-
+    await Promise.all(resource._initializers);
     return resource;
   }
 
@@ -176,7 +175,7 @@ export class Resource {
   $instantiate(value) {
     const instance = new this.constructor();
     instance.$inherit(this);
-    if (arguments.length) {
+    if (value !== undefined) {
       instance.$set(value);
     }
     return instance;

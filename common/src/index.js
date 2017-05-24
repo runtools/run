@@ -415,6 +415,7 @@ export function showErrorAndExit(error, code = 1) {
 }
 
 function _getProperty(source, name, aliases = []) {
+  if (source === undefined) return;
   let result;
   const keys = [name, ...aliases];
   let foundKey;
