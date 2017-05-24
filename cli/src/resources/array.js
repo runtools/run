@@ -1,3 +1,6 @@
+import {cloneDeep} from 'lodash';
+import deepFreeze from 'deep-freeze';
+
 import ValueResource from './value';
 
 export class ArrayResource extends ValueResource {
@@ -12,10 +15,8 @@ export class ArrayResource extends ValueResource {
     if (!Array.isArray(value)) {
       throw new Error('Invalid value type');
     }
-    if (!Object.isFrozen(value)) {
-      value = [...value];
-      Object.freeze(value);
-    }
+    value = cloneDeep(value);
+    deepFreeze(value);
     return value;
   }
 }

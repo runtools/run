@@ -122,6 +122,13 @@ export class Resource {
   }
 
   static $getResourceClass(types) {
+    if (types.length === 0) {
+      if (this === Resource) {
+        return require('./object').default;
+      }
+      return this;
+    }
+
     if (types.length === 1) {
       const type = types[0];
       if (typeof type === 'string') {
@@ -136,11 +143,14 @@ export class Resource {
             return require('./string').default;
           case 'array':
             return require('./array').default;
+          case 'object':
+            return require('./object').default;
           case 'method':
             return require('./method').default;
           case 'composite':
             return require('./composite').default;
-          default: // NOOP
+          default:
+            return require('./composite').default;
         }
       }
     }

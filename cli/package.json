@@ -81,6 +81,7 @@
   "dependencies": {
     "child-process-promise": "^2.2.1",
     "core-decorators": "^0.19.0",
+    "deep-freeze": "^0.0.1",
     "flatnest": "^1.0.0",
     "flow-runtime": "^0.12.0",
     "fuse.js": "^3.0.2",
