@@ -5,8 +5,12 @@
   $runtime: 'node@>=6.10.0',
   name: {$type: 'string'},
   age: {$type: 'number'},
-  getGreeting: {
+  formatGreetingMethod: {
     $type: 'method',
-    $parameters: [45]
+    $parameters: ['Hello']
+  },
+  formatGreetingCommand: {
+    $type: 'command',
+    $options: {ageLimit: 45}
   }
 }

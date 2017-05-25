@@ -33,8 +33,6 @@ export class Resource {
     }).call(this);
   }
 
-  _initializers = [];
-
   static async $create(definition = {}, {id, directory, file} = {}) {
     if (typeof definition === 'boolean') {
       definition = {$type: 'boolean', $value: definition};
@@ -60,8 +58,21 @@ export class Resource {
     const ImplementationClass = ResourceClass.$getImplementationClass(definition, {directory: dir});
 
     const resource = new ImplementationClass(definition, {directory, file});
-    await Promise.all(resource._initializers);
+    await resource.$completeInitialization();
     return resource;
+  }
+
+  $addInitializer(initializer) {
+    if (!this._initializers) {
+      this._initializers = [];
+    }
+    this._initializers.push(initializer);
+  }
+
+  async $completeInitialization() {
+    if (this._initializers) {
+      await Promise.all(this._initializers);
+    }
   }
 
   static async $load(specifier: string, {directory} = {}) {
@@ -148,6 +159,8 @@ export class Resource {
             return require('./method').default;
           case 'composite':
             return require('./composite').default;
+          case 'command':
+            return require('./command').default;
           default:
             return require('./composite').default;
         }

@@ -10,7 +10,7 @@ export class CompositeResource extends Resource {
     setProperty(this, definition, '$implementation');
     setProperty(this, definition, '$runtime');
 
-    this._initializers.push(
+    this.$addInitializer(
       addContextToErrors(async () => {
         if (this.$types) {
           for (const type of this.$types) {

@@ -1,14 +1,14 @@
-import Resource from '../../src/resources';
+import MethodResource from '../../src/resources/method';
 import StringResource from '../../src/resources/string';
 import NumberResource from '../../src/resources/number';
 import CompositeResource from '../../src/resources/composite';
 
 describe('MethodResource', () => {
   test('can have parameters', async () => {
-    const method = await Resource.$create({
-      $type: 'method',
+    const method = await MethodResource.$create({
       $parameters: [{$id: 'name', $type: 'string'}, {$id: 'age', $type: 'number'}]
     });
+    expect(method).toBeInstanceOf(MethodResource);
     expect(method.$getParameters()).toHaveLength(2);
     expect(method.$getParameters()[0]).toBeInstanceOf(StringResource);
     expect(method.$getParameters()[0].$id).toBe('name');
@@ -18,21 +18,19 @@ describe('MethodResource', () => {
 
   test('can be invoked', async () => {
     const Person = await CompositeResource.$load('./fixtures/person', {directory: __dirname});
-    const person = Person.$instantiate({name: 'Manu', age: 44});
-    expect(person.getGreeting()).toBe('Hi Manu!');
-    person.age++;
-    expect(person.getGreeting()).toBe('Hello Manu!');
-    expect(person.getGreeting(46)).toBe('Hi Manu!');
+    const person = Person.$instantiate({name: 'Manu'});
+    expect(person.formatGreetingMethod()).toBe('Hello Manu!');
+    expect(person.formatGreetingMethod('Konnichiwa')).toBe('Konnichiwa Manu!');
+    expect(() => person.formatGreetingMethod('Konnichiwa', true)).toThrow();
   });
 
   test('is serializable', async () => {
-    expect((await Resource.$create({$type: 'method'})).$serialize()).toEqual({$type: 'method'});
-    expect((await Resource.$create({$type: 'method', $parameter: 1})).$serialize()).toEqual({
-      $type: 'method',
-      $parameter: 1
+    expect((await MethodResource.$create()).$serialize()).toEqual();
+    expect((await MethodResource.$create({$type: 'method'})).$serialize()).toEqual({
+      $type: 'method'
     });
-    expect((await Resource.$create({$type: 'method', $parameters: [1, 2]})).$serialize()).toEqual({
-      $type: 'method',
+    expect((await MethodResource.$create({$parameter: 1})).$serialize()).toEqual({$parameter: 1});
+    expect((await MethodResource.$create({$parameters: [1, 2]})).$serialize()).toEqual({
       $parameters: [1, 2]
     });
   });

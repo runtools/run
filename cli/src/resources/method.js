@@ -1,4 +1,4 @@
-import {isEmpty} from 'lodash';
+import {compact, isEmpty} from 'lodash';
 import {getProperty, addContextToErrors, formatCode} from 'run-common';
 
 import Resource from './';
@@ -6,7 +6,7 @@ import Resource from './';
 export class MethodResource extends Resource {
   constructor(definition, options) {
     super(definition, options);
-    this._initializers.push(
+    this.$addInitializer(
       addContextToErrors(async () => {
         const parameters = getProperty(definition, '$parameters', ['$parameter']);
         if (parameters !== undefined) {
@@ -45,21 +45,26 @@ export class MethodResource extends Resource {
         throw new Error(`Can't find implementation for ${formatCode(name)} method`);
       }
 
-      const parameters = methodResource.$getParameters() || [];
-      if (args.length > parameters.length) {
+      const {normalizedArguments, remainingArguments} = methodResource._normalizeArguments(args);
+      if (remainingArguments.length) {
         throw new Error(`Too many arguments passed to ${formatCode(name)} method`);
       }
-
-      const normalizedArguments = [];
-      for (let i = 0; i < parameters.length; i++) {
-        const parameter = parameters[i];
-        const argument = args[i];
-        const normalizedArgument = parameter.$instantiate(argument).$get();
-        normalizedArguments.push(normalizedArgument);
-      }
-
       return implementation.apply(this, normalizedArguments);
     };
+  }
+
+  _normalizeArguments(args) {
+    const normalizedArguments = [];
+    const remainingArguments = [...args];
+
+    const parameters = this.$getParameters() || [];
+    for (const parameter of parameters) {
+      const argument = remainingArguments.shift();
+      const normalizedArgument = parameter.$instantiate(argument).$get();
+      normalizedArguments.push(normalizedArgument);
+    }
+
+    return {normalizedArguments, remainingArguments};
   }
 
   $serialize(options) {
@@ -69,12 +74,14 @@ export class MethodResource extends Resource {
       result = {};
     }
 
-    const parameters = this._parameters;
-    if (parameters !== undefined) {
+    let parameters = this._parameters;
+    if (parameters) {
+      parameters = parameters.map(parameter => parameter.$serialize());
+      parameters = compact(parameters);
       if (parameters.length === 1) {
-        result.$parameter = parameters[0].$serialize(options);
+        result.$parameter = parameters[0];
       } else if (parameters.length > 1) {
-        result.$parameters = parameters.map(parameter => parameter.$serialize(options));
+        result.$parameters = parameters;
       }
     }
 
