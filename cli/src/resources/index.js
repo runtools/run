@@ -161,6 +161,8 @@ export class Resource {
             return require('./composite').default;
           case 'command':
             return require('./command').default;
+          case 'macro':
+            return require('./macro').default;
           default:
             return require('./composite').default;
         }
@@ -185,11 +187,11 @@ export class Resource {
     return types;
   }
 
-  $instantiate(value) {
+  $instantiate(value, {parse} = {}) {
     const instance = new this.constructor();
     instance.$inherit(this);
     if (value !== undefined) {
-      instance.$set(value);
+      instance.$set(value, {parse});
     }
     return instance;
   }

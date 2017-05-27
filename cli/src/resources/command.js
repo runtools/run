@@ -33,39 +33,38 @@ export class CommandResource extends MethodResource {
     }
   }
 
-  _normalizeArguments(args) {
-    const {normalizedArguments, remainingArguments} = super._normalizeArguments(args);
+  _normalizeArguments(args, {parse}) {
+    const {normalizedArguments, remainingArguments} = super._normalizeArguments(args, {parse});
 
-    const options = this.$getOptions();
-    if (options) {
-      let optionsArgument = remainingArguments.shift();
-      if (optionsArgument === undefined) {
-        optionsArgument = {};
-      } else if (!isPlainObject(optionsArgument)) {
-        throw new Error(
-          `Invalid argument type. The last passed argument (${formatCode('options')}) should be a plain Object.`
-        );
-      }
+    const normalizedOptions = {};
 
-      const remainingOptions = {...optionsArgument};
-      const normalizedOptions = {};
-      for (const option of options) {
-        const id = option.$id;
-        const value = remainingOptions[id];
-        delete remainingOptions[id];
-        const normalizedValue = option.$instantiate(value).$get();
-        if (normalizedValue !== undefined) {
-          normalizedOptions[id] = normalizedValue;
-        }
-      }
-
-      const remainingOptionNames = Object.keys(remainingOptions);
-      if (remainingOptionNames.length) {
-        throw new Error(`Undefined command option: ${formatCode(remainingOptionNames[0])}.`);
-      }
-
-      normalizedArguments.push(normalizedOptions);
+    let optionsArgument = remainingArguments.shift();
+    if (optionsArgument === undefined) {
+      optionsArgument = {};
+    } else if (!isPlainObject(optionsArgument)) {
+      throw new Error(
+        `Invalid argument type. The ${formatCode('options')} argument should be a plain Object.`
+      );
     }
+
+    const remainingOptions = {...optionsArgument};
+    const options = this.$getOptions() || [];
+    for (const option of options) {
+      const id = option.$id;
+      const value = remainingOptions[id];
+      delete remainingOptions[id];
+      const normalizedValue = option.$instantiate(value, {parse}).$get();
+      if (normalizedValue !== undefined) {
+        normalizedOptions[id] = normalizedValue;
+      }
+    }
+
+    const remainingOptionNames = Object.keys(remainingOptions);
+    if (remainingOptionNames.length) {
+      throw new Error(`Undefined command option: ${formatCode(remainingOptionNames[0])}.`);
+    }
+
+    normalizedArguments.push(normalizedOptions);
 
     return {normalizedArguments, remainingArguments};
   }

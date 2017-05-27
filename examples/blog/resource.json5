@@ -1,0 +1,8 @@
+{
+  $id: 'run/blog-example',
+  $version: '0.1.0',
+  $type: 'web/aws-website',
+  posts: {
+    $type: 'data/aws-dynamo-db'
+  }
+}

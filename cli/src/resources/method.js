@@ -35,32 +35,34 @@ export class MethodResource extends Resource {
     }
   }
 
-  $get() {
+  $get({parseArguments} = {}) {
     const methodResource = this;
     return function(...args) {
       const proto = Object.getPrototypeOf(this);
       const name = methodResource.$id;
       const implementation = proto[name];
       if (!implementation) {
-        throw new Error(`Can't find implementation for ${formatCode(name)} method`);
+        throw new Error(`Can't find implementation for ${formatCode(name)}`);
       }
 
-      const {normalizedArguments, remainingArguments} = methodResource._normalizeArguments(args);
+      const {normalizedArguments, remainingArguments} = methodResource._normalizeArguments(args, {
+        parse: parseArguments
+      });
       if (remainingArguments.length) {
-        throw new Error(`Too many arguments passed to ${formatCode(name)} method`);
+        throw new Error(`Too many arguments passed to ${formatCode(name)}`);
       }
       return implementation.apply(this, normalizedArguments);
     };
   }
 
-  _normalizeArguments(args) {
+  _normalizeArguments(args, {parse}) {
     const normalizedArguments = [];
     const remainingArguments = [...args];
 
     const parameters = this.$getParameters() || [];
     for (const parameter of parameters) {
       const argument = remainingArguments.shift();
-      const normalizedArgument = parameter.$instantiate(argument).$get();
+      const normalizedArgument = parameter.$instantiate(argument, {parse}).$get();
       normalizedArguments.push(normalizedArgument);
     }
 

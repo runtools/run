@@ -12,5 +12,9 @@
   formatGreetingCommand: {
     $type: 'command',
     $options: {ageLimit: 45}
+  },
+  formatGreetingMacro: {
+    $type: 'macro',
+    $expression: 'formatGreetingCommand --ageLimit=30'
   }
 }

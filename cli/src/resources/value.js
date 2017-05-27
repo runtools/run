@@ -11,20 +11,28 @@ export class ValueResource extends Resource {
   }
 
   $get() {
-    return this.$value;
+    return this.$getValue();
   }
 
-  $set(value) {
-    this.$value = value;
+  $set(value, options) {
+    this.$setValue(value, options);
   }
 
   get $value() {
-    return this._getProperty('_value');
+    return this.$getValue();
   }
 
   set $value(value) {
+    this.$setValue(value);
+  }
+
+  $getValue() {
+    return this._getProperty('_value');
+  }
+
+  $setValue(value, {parse} = {}) {
     if (value !== undefined) {
-      value = this.constructor.$normalizeValue(value);
+      value = this.constructor.$normalizeValue(value, {parse});
     }
     this._value = value;
   }
