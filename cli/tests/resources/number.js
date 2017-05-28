@@ -11,6 +11,15 @@ describe('NumberResource', () => {
     expect(() => new NumberResource('hello')).toThrow();
   });
 
+  test('can parse a string', () => {
+    expect(() => new NumberResource({$value: '123'})).toThrow();
+    expect(new NumberResource({$value: '123'}, {parse: true}).$value).toBe(123);
+    expect(new NumberResource({$value: '0.999'}, {parse: true}).$value).toBe(0.999);
+    expect(new NumberResource({$value: '-3.333'}, {parse: true}).$value).toBe(-3.333);
+    expect(() => new NumberResource({$value: ''}, {parse: true})).toThrow();
+    expect(() => new NumberResource({$value: 'two'}, {parse: true})).toThrow();
+  });
+
   test('is serializable', () => {
     expect(new NumberResource().$serialize()).toBeUndefined();
     expect(new NumberResource(123.45).$serialize()).toBe(123.45);

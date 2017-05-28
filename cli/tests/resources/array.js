@@ -10,6 +10,15 @@ describe('ArrayResource', () => {
     expect(() => new ArrayResource('hello')).toThrow();
   });
 
+  test('can parse a string', () => {
+    expect(() => new ArrayResource({$value: '[]'})).toThrow();
+    expect(new ArrayResource({$value: '[]'}, {parse: true}).$value).toEqual([]);
+    expect(new ArrayResource({$value: '[1, 2]'}, {parse: true}).$value).toEqual([1, 2]);
+    expect(() => new ArrayResource({$value: ''}, {parse: true})).toThrow();
+    expect(() => new ArrayResource({$value: '{}'}, {parse: true})).toThrow();
+    expect(() => new ArrayResource({$value: 'Invalid JSON'}, {parse: true})).toThrow();
+  });
+
   test('has an immutable value', () => {
     const array = new ArrayResource([1, 2, 3]);
     expect(array.$value).toEqual([1, 2, 3]);

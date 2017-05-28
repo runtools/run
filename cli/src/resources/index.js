@@ -33,7 +33,7 @@ export class Resource {
     }).call(this);
   }
 
-  static async $create(definition = {}, {id, directory, file} = {}) {
+  static async $create(definition = {}, {id, directory, file, parse} = {}) {
     if (typeof definition === 'boolean') {
       definition = {$type: 'boolean', $value: definition};
     } else if (typeof definition === 'number') {
@@ -57,7 +57,7 @@ export class Resource {
     const dir = directory || (file && dirname(file));
     const ImplementationClass = ResourceClass.$getImplementationClass(definition, {directory: dir});
 
-    const resource = new ImplementationClass(definition, {directory, file});
+    const resource = new ImplementationClass(definition, {directory, file, parse});
     await resource.$completeInitialization();
     return resource;
   }

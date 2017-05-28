@@ -1,4 +1,4 @@
-import {setProperty, addContextToErrors} from 'run-common';
+import {getProperty, addContextToErrors} from 'run-common';
 
 import Resource from './';
 
@@ -6,7 +6,11 @@ export class ValueResource extends Resource {
   constructor(definition, options) {
     super(definition, options);
     addContextToErrors(() => {
-      setProperty(this, definition, '$value');
+      const value = getProperty(definition, '$value');
+      if (value !== undefined) {
+        const parse = options && options.parse;
+        this.$setValue(value, {parse});
+      }
     }).call(this);
   }
 
@@ -32,6 +36,12 @@ export class ValueResource extends Resource {
 
   $setValue(value, {parse} = {}) {
     if (value !== undefined) {
+      if (typeof value === 'string' && parse) {
+        const parser = this.constructor.$parseValue;
+        if (parser) {
+          value = parser(value);
+        }
+      }
       value = this.constructor.$normalizeValue(value, {parse});
     }
     this._value = value;

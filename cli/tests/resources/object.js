@@ -14,6 +14,15 @@ describe('ObjectResource', () => {
     expect(() => new ObjectResource('hello')).toThrow();
   });
 
+  test('can parse a string', () => {
+    expect(() => new ObjectResource({$value: '{}'})).toThrow();
+    expect(new ObjectResource({$value: '{}'}, {parse: true}).$value).toEqual({});
+    expect(new ObjectResource({$value: '{a: 1}'}, {parse: true}).$value).toEqual({a: 1});
+    expect(() => new ObjectResource({$value: ''}, {parse: true})).toThrow();
+    expect(() => new ObjectResource({$value: '[]'}, {parse: true})).toThrow();
+    expect(() => new ObjectResource({$value: 'Invalid JSON'}, {parse: true})).toThrow();
+  });
+
   test('has an immutable value', () => {
     const obj = new ObjectResource({name: 'Manu'});
     expect(obj.$value).toEqual({name: 'Manu'});
