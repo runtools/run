@@ -16,7 +16,8 @@ export class NodeRuntime extends Runtime {
     if (!file) {
       throw new Error(`File not found: ${formatPath(requestedFile)}`);
     }
-    return require(file).default;
+    const result = require(file);
+    return result.default || result;
   }
 
   searchFile(file) {

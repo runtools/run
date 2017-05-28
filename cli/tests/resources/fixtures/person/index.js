@@ -1,7 +1,8 @@
-export default base =>
+module.exports = base =>
   class Person extends base {
     formatGreetingMethod(verb) {
-      return `${verb} ${this.name}!`;
+      const name = this.name || 'Anonymous';
+      return `${verb} ${name}!`;
     }
 
     formatGreetingCommand({ageLimit}) {

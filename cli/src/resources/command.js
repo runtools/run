@@ -69,6 +69,12 @@ export class CommandResource extends MethodResource {
     return {normalizedArguments, remainingArguments};
   }
 
+  async $invoke(owner, expression) {
+    const fn = this.$getFunction({parseArguments: true});
+    const args = [...expression.arguments, expression.options];
+    return await fn.apply(owner, args);
+  }
+
   $serialize(opts) {
     let result = super.$serialize(opts);
 

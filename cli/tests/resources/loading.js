@@ -11,7 +11,16 @@ describe('Resource loading ($load)', () => {
     expect(Person.$id).toBe('person');
     expect(Person.$version.toString()).toBe('1.0.0');
     expect(Person.$getProperty('name')).toBeInstanceOf(StringResource);
+    expect(Person.name).toBeUndefined();
     expect(Person.$getProperty('age')).toBeInstanceOf(NumberResource);
+    expect(Person.age).toBeUndefined();
+
+    const person = await CompositeResource.$load(join(__dirname, 'fixtures', 'person-instance'));
+    expect(person).toBeInstanceOf(CompositeResource);
+    expect(Person.$getProperty('name')).toBeInstanceOf(StringResource);
+    expect(person.name).toBe('Manu');
+    expect(Person.$getProperty('age')).toBeInstanceOf(NumberResource);
+    expect(person.age).toBe(44);
   });
 
   test('can load a resource referenced from a resource type', async () => {

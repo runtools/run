@@ -33,7 +33,7 @@ export class Resource {
     }).call(this);
   }
 
-  static async $create(definition = {}, {id, directory, file, parse} = {}) {
+  static async $create(definition = {}, {id, directory, file, parse, owner} = {}) {
     if (typeof definition === 'boolean') {
       definition = {$type: 'boolean', $value: definition};
     } else if (typeof definition === 'number') {
@@ -57,7 +57,7 @@ export class Resource {
     const dir = directory || (file && dirname(file));
     const ImplementationClass = ResourceClass.$getImplementationClass(definition, {directory: dir});
 
-    const resource = new ImplementationClass(definition, {directory, file, parse});
+    const resource = new ImplementationClass(definition, {directory, file, parse, owner});
     await resource.$completeInitialization();
     return resource;
   }
@@ -75,10 +75,16 @@ export class Resource {
     }
   }
 
-  static async $load(specifier: string, {directory} = {}) {
+  static async $load(
+    specifier: string,
+    {directory, searchInParentDirectories, throwIfNotFound = true} = {}
+  ) {
     let file;
 
     if (specifier.startsWith('.')) {
+      if (!directory) {
+        throw new Error("'directory' argument is missing");
+      }
       file = resolve(directory, specifier);
     } else if (isAbsolute(specifier)) {
       file = specifier;
@@ -86,9 +92,12 @@ export class Resource {
       throw new Error('Loading from Resdir is not yet implemented');
     }
 
-    file = this.$searchResourceFile(file);
+    file = this.$searchResourceFile(file, {searchInParentDirectories});
     if (!file) {
-      throw new Error(`Resource not found: ${formatPath(specifier)}`);
+      if (throwIfNotFound) {
+        throw new Error(`Resource not found: ${formatPath(specifier)}`);
+      }
+      return undefined;
     }
 
     const definition = await loadFile(file, {parse: true});

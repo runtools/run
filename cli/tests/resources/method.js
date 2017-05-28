@@ -18,10 +18,15 @@ describe('MethodResource', () => {
 
   test('can be invoked', async () => {
     const Person = await CompositeResource.$load('./fixtures/person', {directory: __dirname});
-    const person = Person.$instantiate({name: 'Manu'});
+    expect(Person.formatGreetingMethod()).toBe('Hello Anonymous!');
+
+    let person = Person.$instantiate({name: 'Manu'});
     expect(person.formatGreetingMethod()).toBe('Hello Manu!');
     expect(person.formatGreetingMethod('Konnichiwa')).toBe('Konnichiwa Manu!');
     expect(() => person.formatGreetingMethod('Konnichiwa', true)).toThrow();
+
+    person = await CompositeResource.$load('./fixtures/person-instance', {directory: __dirname});
+    expect(person.formatGreetingMethod()).toBe('Hello Manu!');
   });
 
   test('is serializable', async () => {

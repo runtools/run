@@ -1,6 +1,6 @@
 import {isEmpty} from 'lodash';
 import {parse} from 'shell-quote';
-import {setProperty, addContextToErrors, parseCommandLineArguments, formatCode} from 'run-common';
+import {setProperty, addContextToErrors, parseCommandLineArguments} from 'run-common';
 
 import CommandResource from './command';
 
@@ -23,18 +23,12 @@ export class MacroResource extends CommandResource {
     this._expressions = expressions;
   }
 
-  $getFunction({parseArguments} = {}) {
+  _setImplementation(_owner) {
     const macroResource = this;
-    return async function(...args) {
-      const {normalizedArguments, remainingArguments} = macroResource._normalizeArguments(args, {
-        parse: parseArguments
-      });
-      if (remainingArguments.length) {
-        throw new Error(`Too many arguments passed to ${formatCode(macroResource.$id)}`);
-      }
-      const normalizedOptions = normalizedArguments.pop();
-      const expression = {arguments: normalizedArguments, options: normalizedOptions};
-      return await macroResource.$invoke(this, expression);
+    this._implementation = function(...args) {
+      const options = args.pop();
+      const expression = {arguments: args, options};
+      return macroResource.$invoke(this, expression);
     };
   }
 

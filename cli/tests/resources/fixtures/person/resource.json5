@@ -1,6 +1,7 @@
 {
   $id: 'person',
   $version: '1.0.0',
+  $type: 'composite',
   $implementation: './index.js',
   $runtime: 'node@>=6.10.0',
   name: {$type: 'string'},

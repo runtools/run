@@ -4,14 +4,17 @@ import {getProperty, addContextToErrors, formatCode} from 'run-common';
 import Resource from './';
 
 export class MethodResource extends Resource {
-  constructor(definition, options) {
+  constructor(definition, options = {}) {
     super(definition, options);
+
     this.$addInitializer(
       addContextToErrors(async () => {
         const parameters = getProperty(definition, '$parameters', ['$parameter']);
         if (parameters !== undefined) {
           await this.$setParameters(parameters);
         }
+
+        this._setImplementation(options.owner);
       }).call(this)
     );
   }
@@ -35,26 +38,36 @@ export class MethodResource extends Resource {
     }
   }
 
+  _getImplementation() {
+    return this._getProperty('_implementation');
+  }
+
+  _setImplementation(owner) {
+    if (!owner) return;
+    const proto = Object.getPrototypeOf(owner);
+    this._implementation = proto[this.$id];
+  }
+
   $get() {
     return this.$getFunction();
   }
 
   $getFunction({parseArguments} = {}) {
     const methodResource = this;
-    return function(...args) {
-      const proto = Object.getPrototypeOf(this);
-      const name = methodResource.$id;
-      const implementation = proto[name];
-      if (!implementation) {
-        throw new Error(`Can't find implementation for ${formatCode(name)}`);
-      }
 
+    return function(...args) {
       const {normalizedArguments, remainingArguments} = methodResource._normalizeArguments(args, {
         parse: parseArguments
       });
       if (remainingArguments.length) {
-        throw new Error(`Too many arguments passed to ${formatCode(name)}`);
+        throw new Error(`Too many arguments passed to ${formatCode(methodResource.$id)}`);
       }
+
+      const implementation = methodResource._getImplementation();
+      if (!implementation) {
+        throw new Error(`Can't find implementation for ${formatCode(methodResource.$id)}`);
+      }
+
       return implementation.apply(this, normalizedArguments);
     };
   }
@@ -75,8 +88,7 @@ export class MethodResource extends Resource {
 
   async $invoke(owner, expression) {
     const fn = this.$getFunction({parseArguments: true});
-    const args = [...expression.arguments, expression.options];
-    return await fn.apply(owner, args);
+    return await fn.apply(owner, expression.arguments);
   }
 
   $serialize(options) {

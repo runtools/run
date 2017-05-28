@@ -29,7 +29,11 @@ export class CompositeResource extends Resource {
             property.$set(value);
           } else {
             // Property definition
-            property = await Resource.$create(value, {id, directory: this.$getDirectory()});
+            property = await Resource.$create(value, {
+              id,
+              directory: this.$getDirectory(),
+              owner: this
+            });
             this.$addProperty(property);
           }
         }
