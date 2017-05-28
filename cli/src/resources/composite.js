@@ -136,7 +136,7 @@ export class CompositeResource extends Resource {
     return result;
   }
 
-  async $runExpression(expression, environment) {
+  async $invoke(_owner, expression) {
     expression = {...expression, arguments: [...expression.arguments]};
     const name = expression.arguments.shift();
     if (!name) return this;
@@ -146,23 +146,7 @@ export class CompositeResource extends Resource {
       throw new Error(`Property not found: ${formatCode(name)}`);
     }
 
-    const value = property.$get({parseArguments: true});
-
-    if (value instanceof CompositeResource) {
-      return await value.$runExpression(expression, environment);
-    }
-
-    const args = [...expression.arguments, expression.options];
-
-    if (typeof value === 'function') {
-      return await value.apply(this, args);
-    }
-
-    if (args.length) {
-      throw new Error('Useless arguments found in an expression');
-    }
-
-    return value;
+    return await property.$invoke(this, expression);
   }
 
   $serialize(options) {

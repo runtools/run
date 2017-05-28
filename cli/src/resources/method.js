@@ -35,7 +35,11 @@ export class MethodResource extends Resource {
     }
   }
 
-  $get({parseArguments} = {}) {
+  $get() {
+    return this.$getFunction();
+  }
+
+  $getFunction({parseArguments} = {}) {
     const methodResource = this;
     return function(...args) {
       const proto = Object.getPrototypeOf(this);
@@ -67,6 +71,12 @@ export class MethodResource extends Resource {
     }
 
     return {normalizedArguments, remainingArguments};
+  }
+
+  async $invoke(owner, expression) {
+    const fn = this.$getFunction({parseArguments: true});
+    const args = [...expression.arguments, expression.options];
+    return await fn.apply(owner, args);
   }
 
   $serialize(options) {

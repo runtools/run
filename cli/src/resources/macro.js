@@ -23,28 +23,28 @@ export class MacroResource extends CommandResource {
     this._expressions = expressions;
   }
 
-  $get({parseArguments} = {}) {
+  $getFunction({parseArguments} = {}) {
     const macroResource = this;
     return async function(...args) {
       const {normalizedArguments, remainingArguments} = macroResource._normalizeArguments(args, {
         parse: parseArguments
       });
       if (remainingArguments.length) {
-        throw new Error(`Too many arguments passed to ${formatCode(macroResource.$id)} macro`);
+        throw new Error(`Too many arguments passed to ${formatCode(macroResource.$id)}`);
       }
       const normalizedOptions = normalizedArguments.pop();
-      const environment = {arguments: normalizedArguments, options: normalizedOptions};
-      return await macroResource.$run(this, environment);
+      const expression = {arguments: normalizedArguments, options: normalizedOptions};
+      return await macroResource.$invoke(this, expression);
     };
   }
 
-  async $run(receiver, environment) {
+  async $invoke(owner, _expression) {
     const expressions = this.$expressions || [];
     let result;
     for (let expression of expressions) {
       const args = parse(expression, variable => '$' + variable);
       expression = parseCommandLineArguments(args);
-      result = await receiver.$runExpression(expression, environment);
+      result = await owner.$invoke(undefined, expression);
     }
     return result;
   }

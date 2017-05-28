@@ -1,3 +1,4 @@
+import {isEmpty} from 'lodash';
 import {getProperty, addContextToErrors} from 'run-common';
 
 import Resource from './';
@@ -45,6 +46,13 @@ export class ValueResource extends Resource {
       value = this.constructor.$normalizeValue(value, {parse});
     }
     this._value = value;
+  }
+
+  async $invoke(_owner, expression) {
+    if (expression.arguments.length || !isEmpty(expression.options)) {
+      throw new Error('A ValueResource cannot be invoked with arguments or options');
+    }
+    return this.$getValue();
   }
 
   $serializeValue() {
