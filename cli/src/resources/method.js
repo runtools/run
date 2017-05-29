@@ -86,7 +86,7 @@ export class MethodResource extends Resource {
     return {normalizedArguments, remainingArguments};
   }
 
-  async $invoke(owner, expression) {
+  async $invoke(expression, {owner}) {
     const fn = this.$getFunction({parseArguments: true});
     return await fn.apply(owner, expression.arguments);
   }

@@ -140,7 +140,7 @@ export class CompositeResource extends Resource {
     return result;
   }
 
-  async $invoke(_owner, expression) {
+  async $invoke(expression) {
     expression = {...expression, arguments: [...expression.arguments]};
     const name = expression.arguments.shift();
     if (!name) return this;
@@ -150,7 +150,7 @@ export class CompositeResource extends Resource {
       throw new Error(`Property not found: ${formatCode(name)}`);
     }
 
-    return await property.$invoke(this, expression);
+    return await property.$invoke(expression, {owner: this});
   }
 
   $serialize(options) {

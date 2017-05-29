@@ -69,7 +69,7 @@ export class CommandResource extends MethodResource {
     return {normalizedArguments, remainingArguments};
   }
 
-  async $invoke(owner, expression) {
+  async $invoke(expression, {owner}) {
     const fn = this.$getFunction({parseArguments: true});
     const args = [...expression.arguments, expression.options];
     return await fn.apply(owner, args);

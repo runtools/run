@@ -1,7 +1,9 @@
 import {isEmpty} from 'lodash';
+import {isAbsolute} from 'path';
 import {parse} from 'shell-quote';
 import {setProperty, addContextToErrors, parseCommandLineArguments} from 'run-common';
 
+import Resource from './';
 import CommandResource from './command';
 
 export class MacroResource extends CommandResource {
@@ -28,19 +30,32 @@ export class MacroResource extends CommandResource {
     this._implementation = function(...args) {
       const options = args.pop();
       const expression = {arguments: args, options};
-      return macroResource.$invoke(this, expression);
+      return macroResource.$invoke(expression, {owner: this});
     };
   }
 
-  async $invoke(owner, _expression) {
+  async $invoke(_expression, {owner} = {}) {
     const expressions = this.$expressions || [];
     let result;
     for (let expression of expressions) {
       const args = parse(expression, variable => '$' + variable);
       expression = parseCommandLineArguments(args);
-      result = await owner.$invoke(undefined, expression);
+      result = await this._invokeExpression(expression, {owner});
     }
     return result;
+  }
+
+  async _invokeExpression(expression, {owner}) {
+    const firstArgument = expression.arguments[0];
+    if (
+      firstArgument &&
+      (firstArgument.startsWith('.') || firstArgument.includes('/') || isAbsolute(firstArgument))
+    ) {
+      // The fist arguments looks like a resource identifier, let's load the resource
+      owner = await Resource.$load(firstArgument, {directory: this.$getDirectory()});
+      expression = {...expression, arguments: expression.arguments.slice(1)};
+    }
+    return await owner.$invoke(expression);
   }
 
   $serialize(opts) {

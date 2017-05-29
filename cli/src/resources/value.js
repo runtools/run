@@ -48,7 +48,7 @@ export class ValueResource extends Resource {
     this._value = value;
   }
 
-  async $invoke(_owner, expression) {
+  async $invoke(expression) {
     if (expression.arguments.length || !isEmpty(expression.options)) {
       throw new Error('A ValueResource cannot be invoked with arguments or options');
     }
