@@ -172,6 +172,8 @@ export class Resource {
             return require('./command').default;
           case 'macro':
             return require('./macro').default;
+          case 'tool':
+            return require('./tool').default;
           default:
             return require('./composite').default;
         }
