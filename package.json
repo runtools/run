@@ -13,8 +13,8 @@
   "devDependencies": {
     "babel-eslint": "^7.2.3",
     "eslint": "^3.19.0",
-    "eslint-config-prettier": "^2.1.0",
-    "eslint-config-xo": "^0.18.1",
-    "husky": "^0.13.3"
+    "eslint-config-prettier": "^2.1.1",
+    "eslint-config-xo": "^0.18.2",
+    "husky": "^0.13.4"
   }
 }

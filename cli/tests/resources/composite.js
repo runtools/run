@@ -106,6 +106,22 @@ describe('CompositeResource', () => {
     ).rejects.toBeInstanceOf(Error);
   });
 
+  test('can customize $normalize and $serialize', async () => {
+    const Person = await CompositeResource.$load('./fixtures/person', {directory: __dirname});
+    const person = Person.$instantiate({address: {city: 'Paris', country: 'France'}});
+    expect(person.address.city).toBe('Paris');
+    expect(person.address.country).toBe('France');
+    expect(person.$serialize()).toEqual({address: 'Paris, France'});
+    person.address = 'Paris, France';
+    expect(person.address.city).toBe('Paris');
+    expect(person.address.country).toBe('France');
+    expect(person.$serialize()).toEqual({address: 'Paris, France'});
+    person.address = 'Tokyo';
+    expect(person.address.city).toBe('Tokyo');
+    expect(person.address.country).toBeUndefined();
+    expect(person.$serialize()).toEqual({address: 'Tokyo'});
+  });
+
   test('is serializable', async () => {
     async function testSerialization(definition, options, expected = definition) {
       expect((await CompositeResource.$create(definition, options)).$serialize()).toEqual(expected);

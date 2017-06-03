@@ -401,62 +401,66 @@ export class Resource {
     this._types = types;
   }
 
+  static $normalize(definition, _options) {
+    return definition;
+  }
+
   $serialize({omitId} = {}) {
-    let result = {};
+    let definition = {};
 
     if (!omitId && this._id !== undefined) {
-      result.$id = this._id;
+      definition.$id = this._id;
     }
 
     let aliases = this._aliases;
     if (aliases !== undefined) {
       aliases = Array.from(aliases);
       if (aliases.length === 1) {
-        result.$alias = aliases[0];
+        definition.$alias = aliases[0];
       } else if (aliases.length > 1) {
-        result.$aliases = aliases;
+        definition.$aliases = aliases;
       }
     }
 
     if (this._version !== undefined) {
-      result.$version = this._version.toJSON();
+      definition.$version = this._version.toJSON();
     }
 
     if (this._description !== undefined) {
-      result.$description = this._description;
+      definition.$description = this._description;
     }
 
     const authors = this._authors;
     if (authors !== undefined) {
       if (authors.length === 1) {
-        result.$author = authors[0];
+        definition.$author = authors[0];
       } else if (authors.length > 1) {
-        result.$authors = authors;
+        definition.$authors = authors;
       }
     }
 
     if (this._repository !== undefined) {
-      result.$repository = this._repository;
+      definition.$repository = this._repository;
     }
 
     if (this._license !== undefined) {
-      result.$license = this._license;
+      definition.$license = this._license;
     }
 
     const types = this._types;
     if (types !== undefined) {
       if (types.length === 1) {
-        result.$type = types[0];
+        definition.$type = types[0];
       } else if (types.length > 1) {
-        result.$types = types;
+        definition.$types = types;
       }
     }
 
-    if (isEmpty(result)) {
-      result = undefined;
+    if (isEmpty(definition)) {
+      definition = undefined;
     }
 
-    return result;
+    return definition;
   }
 }
 

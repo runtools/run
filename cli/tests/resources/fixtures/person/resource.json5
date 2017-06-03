@@ -2,7 +2,7 @@
   $id: 'person',
   $version: '1.0.0',
   $type: 'composite',
-  $implementation: './index.js',
+  $implementation: './',
   $runtime: 'node@>=6.10.0',
   name: {$type: 'string'},
   age: {$type: 'number'},
@@ -17,5 +17,12 @@
   formatGreetingMacro: {
     $type: 'macro',
     $expression: 'formatGreetingCommand --ageLimit=30'
+  },
+  address: {
+    $type: 'composite',
+    $implementation: './address',
+    $runtime: 'node@>=6.10.0',
+    city: {$type: 'string'},
+    country: {$type: 'string'}
   }
 }

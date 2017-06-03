@@ -68,12 +68,13 @@ export class CompositeResource extends Resource {
     return this;
   }
 
-  $set(value) {
-    if (value === undefined) return;
-    if (!isPlainObject(value)) {
-      throw new Error('Invalid value assigned to an CompositeResource');
+  $set(definition) {
+    if (definition === undefined) return;
+    definition = this.constructor.$normalize(definition);
+    if (!isPlainObject(definition)) {
+      throw new Error('Invalid definition assigned to a CompositeResource');
     }
-    Object.assign(this, value);
+    Object.assign(this, definition);
   }
 
   get $implementation() {
@@ -154,33 +155,33 @@ export class CompositeResource extends Resource {
   }
 
   $serialize(options) {
-    let result = super.$serialize(options);
+    let definition = super.$serialize(options);
 
-    if (result === undefined) {
-      result = {};
+    if (definition === undefined) {
+      definition = {};
     }
 
     if (this._implementation !== undefined) {
-      result.$implementation = this._implementation;
+      definition.$implementation = this._implementation;
     }
 
     if (this._runtime !== undefined) {
-      result.$runtime = this._runtime.toJSON();
+      definition.$runtime = this._runtime.toJSON();
     }
 
     this.$forEachProperty(property => {
       const key = property.$id;
       const value = property.$serialize({omitId: true});
       if (value !== undefined) {
-        result[key] = value;
+        definition[key] = value;
       }
     });
 
-    if (isEmpty(result)) {
-      result = undefined;
+    if (isEmpty(definition)) {
+      definition = undefined;
     }
 
-    return result;
+    return definition;
   }
 }
 export default CompositeResource;

@@ -43,7 +43,7 @@ export class ValueResource extends Resource {
           value = parser(value);
         }
       }
-      value = this.constructor.$normalizeValue(value, {parse});
+      value = this.constructor.$normalizeValue(value);
     }
     this._value = value;
   }
