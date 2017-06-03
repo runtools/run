@@ -98,7 +98,7 @@ export class CompositeResource extends Resource {
 
   async _createParent(type) {
     if (typeof type === 'string') {
-      if (type === 'composite') return;
+      if (type === 'composite' || type === 'tool') return; // TODO: Improve this
       const specifier = type;
       return await this.constructor.$load(specifier, {directory: this.$getDirectory()});
     } else if (isPlainObject(type)) {

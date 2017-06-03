@@ -32,16 +32,27 @@ describe('Resource', () => {
   });
 
   test('can have an id', () => {
-    const res = new Resource({$id: 'hello'});
+    const res = new Resource();
+    expect(res.$id).toBeUndefined();
+    expect(res.$getScope()).toBeUndefined();
+    expect(res.$getName()).toBeUndefined();
+    res.$id = 'hello';
     expect(res.$id).toBe('hello');
-    res.$id = 'bye';
-    expect(res.$id).toBe('bye');
+    expect(res.$getScope()).toBeUndefined();
+    expect(res.$getName()).toBe('hello');
+    res.$id = 'runtools/hello';
+    expect(res.$id).toBe('runtools/hello');
+    expect(res.$getScope()).toBe('runtools');
+    expect(res.$getName()).toBe('hello');
   });
 
   test('validates id', () => {
     expect(() => new Resource({$id: 'hello'})).not.toThrow();
+    expect(() => new Resource({$id: 'runtools/hello'})).not.toThrow();
     expect(() => new Resource({$id: ''})).toThrow();
     expect(() => new Resource({$id: 'hello*'})).toThrow();
+    expect(() => new Resource({$id: 'runtools/'})).toThrow();
+    expect(() => new Resource({$id: '/hello'})).toThrow();
   });
 
   test('can have aliases', () => {

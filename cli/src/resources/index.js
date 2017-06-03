@@ -89,7 +89,7 @@ export class Resource {
     } else if (isAbsolute(specifier)) {
       file = specifier;
     } else {
-      throw new Error('Loading from Resdir is not yet implemented');
+      throw new Error(`Loading from Resdir is not yet implemented (${formatString(specifier)})`);
     }
 
     file = this.$searchResourceFile(file, {searchInParentDirectories});
@@ -294,8 +294,47 @@ export class Resource {
     this._id = id;
   }
 
+  $getScope() {
+    const id = this.$id;
+    if (!id) return undefined;
+    const [scope, name] = id.split('/');
+    if (!name) {
+      return undefined;
+    }
+    return scope;
+  }
+
+  $getName() {
+    const id = this.$id;
+    if (!id) return undefined;
+    const [scope, name] = id.split('/');
+    if (!name) {
+      return scope;
+    }
+    return name;
+  }
+
   $validateId(id: string) {
-    return this.$validateIdPart(id);
+    let [scope, name, rest] = id.split('/');
+
+    if (scope && name === undefined) {
+      name = scope;
+      scope = undefined;
+    }
+
+    if (scope !== undefined && !this.$validateIdPart(scope)) {
+      return false;
+    }
+
+    if (!this.$validateIdPart(name)) {
+      return false;
+    }
+
+    if (rest) {
+      return false;
+    }
+
+    return true;
   }
 
   $validateIdPart(part: string) {
