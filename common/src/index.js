@@ -414,19 +414,17 @@ export function showErrorAndExit(error, code = 1) {
   process.exit(code);
 }
 
-function _getProperty(source, name, aliases = []) {
+export function getPropertyKeyAndValue(source, name, aliases = []) {
   if (source === undefined) return;
   let result;
   const keys = [name, ...aliases];
   let foundKey;
   for (const key of keys) {
-    if (key in source) {
+    if (key && key in source) {
       if (foundKey) {
-        throw new Error(
-          `Can't have both ${formatCode(foundKey)} and ${formatCode(key)} properties in the same object`
-        );
+        throw new Error(`Can't have both ${formatCode(foundKey)} and ${formatCode(key)}`);
       }
-      result = {value: source[key]};
+      result = {key, value: source[key]};
       foundKey = key;
     }
   }
@@ -434,12 +432,12 @@ function _getProperty(source, name, aliases = []) {
 }
 
 export function getProperty(source, name, aliases) {
-  const result = _getProperty(source, name, aliases);
+  const result = getPropertyKeyAndValue(source, name, aliases);
   return result && result.value;
 }
 
 export function setProperty(target, source, name, aliases) {
-  const result = _getProperty(source, name, aliases);
+  const result = getPropertyKeyAndValue(source, name, aliases);
   if (result) {
     target[name] = result.value;
   }

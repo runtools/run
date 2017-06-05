@@ -50,18 +50,19 @@ export class CommandResource extends MethodResource {
     const remainingOptions = {...optionsArgument};
     const options = this.$getOptions() || [];
     for (const option of options) {
-      const name = option.$name;
-      const value = remainingOptions[name];
-      delete remainingOptions[name];
+      const {key, value} = option.$match(remainingOptions) || {};
+      if (key !== undefined) {
+        delete remainingOptions[key];
+      }
       const normalizedValue = option.$instantiate(value, {parse}).$get();
       if (normalizedValue !== undefined) {
-        normalizedOptions[name] = normalizedValue;
+        normalizedOptions[option.$name] = normalizedValue;
       }
     }
 
     const remainingOptionNames = Object.keys(remainingOptions);
     if (remainingOptionNames.length) {
-      throw new Error(`Undefined command option: ${formatCode(remainingOptionNames[0])}.`);
+      throw new Error(`Unmatched command option: ${formatCode(remainingOptionNames[0])}.`);
     }
 
     normalizedArguments.push(normalizedOptions);

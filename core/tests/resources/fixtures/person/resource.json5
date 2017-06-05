@@ -12,7 +12,7 @@
   },
   formatGreetingCommand: {
     $type: 'command',
-    $options: {ageLimit: 45}
+    $options: {ageLimit: {$alias: 'limit', $value: 45}}
   },
   formatGreetingMacro: {
     $type: 'macro',

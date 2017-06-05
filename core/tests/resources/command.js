@@ -24,6 +24,7 @@ describe('CommandResource', () => {
     person.age++;
     expect(person.formatGreetingCommand()).toBe('Hello Manu!');
     expect(person.formatGreetingCommand({ageLimit: 46})).toBe('Hi Manu!');
+    expect(person.formatGreetingCommand({limit: 46})).toBe('Hi Manu!');
     expect(() => person.formatGreetingCommand({ageLimit: 46}, true)).toThrow();
   });
 

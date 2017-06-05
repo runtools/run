@@ -1,6 +1,12 @@
 import {dirname} from 'path';
 import {isPlainObject, isEmpty} from 'lodash';
-import {addContextToErrors, setProperty, formatString, formatCode} from 'run-common';
+import {
+  addContextToErrors,
+  setProperty,
+  getPropertyKeyAndValue,
+  formatString,
+  formatCode
+} from 'run-common';
 
 import Version from '../version';
 
@@ -233,6 +239,10 @@ export class BaseResource {
 
   $isMatching(name: string, {ignoreAliases} = {}) {
     return this.$name === name || (!ignoreAliases && this.$hasAlias(name));
+  }
+
+  $match(object) {
+    return getPropertyKeyAndValue(object, this.$name, this.$aliases);
   }
 
   get $version() {
