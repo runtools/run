@@ -1,7 +1,7 @@
 import {entries, isEmpty, isPlainObject} from 'lodash';
 import {getProperty, addContextToErrors, formatCode} from 'run-common';
 
-import Resource from './';
+import {createResource} from './';
 import MethodResource from './method';
 
 export class CommandResource extends MethodResource {
@@ -25,7 +25,7 @@ export class CommandResource extends MethodResource {
     this._options = undefined;
     if (options === undefined) return;
     for (let [name, option] of entries(options)) {
-      option = await Resource.$create(option, {name, directory: this.$getDirectory()});
+      option = await createResource(option, {name, directory: this.$getDirectory()});
       if (this._options === undefined) {
         this._options = [];
       }

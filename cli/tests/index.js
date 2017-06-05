@@ -1,7 +1,6 @@
 import {join} from 'path';
 
 import {run} from '../src';
-import {CompositeResource} from 'run-core';
 
 const personInstanceDirectory = join(
   __dirname,
@@ -17,7 +16,6 @@ const personInstanceDirectory = join(
 describe('CLI', () => {
   test('can get a resource from a directory', async () => {
     const person = await run('', {directory: personInstanceDirectory});
-    expect(person).toBeInstanceOf(CompositeResource);
     expect(person.name).toBe('Manu');
   });
 

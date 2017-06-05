@@ -1,15 +1,19 @@
+import {createResource, loadResource} from '../../src/resources';
 import MacroResource from '../../src/resources/macro';
 import CompositeResource from '../../src/resources/composite';
 
 describe('MacroResource', () => {
   test('can have an expression', async () => {
-    const macro = await MacroResource.$create({$expression: 'frontend deploy --verbose'});
+    const macro = await createResource({
+      $type: 'macro',
+      $expression: 'frontend deploy --verbose'
+    });
     expect(macro).toBeInstanceOf(MacroResource);
     expect(macro.$expressions).toEqual(['frontend deploy --verbose']);
   });
 
   test('can be invoked', async () => {
-    const Person = await CompositeResource.$load('./fixtures/person', {directory: __dirname});
+    const Person = await loadResource('./fixtures/person', {directory: __dirname});
     const person = Person.$instantiate({name: 'Manu', age: 29});
     expect(await person.formatGreetingMacro()).toBe('Hi Manu!');
     person.age++;
@@ -17,8 +21,8 @@ describe('MacroResource', () => {
   });
 
   test('can load a resource', async () => {
-    const macro = await MacroResource.$create(
-      {$expression: './fixtures/person-instance'},
+    const macro = await createResource(
+      {$type: 'macro', $expression: './fixtures/person-instance'},
       {directory: __dirname}
     );
     const person = await macro.$invoke();
@@ -27,15 +31,20 @@ describe('MacroResource', () => {
   });
 
   test('is serializable', async () => {
-    expect((await MacroResource.$create()).$serialize()).toEqual();
-    expect((await MacroResource.$create({$type: 'macro'})).$serialize()).toEqual({
+    expect((await createResource({$type: 'macro'})).$serialize()).toEqual({
       $type: 'macro'
     });
     expect(
-      (await MacroResource.$create({$expression: 'frontend deploy --verbose'})).$serialize()
-    ).toEqual({$expression: 'frontend deploy --verbose'});
+      (await createResource({
+        $type: 'macro',
+        $expression: 'frontend deploy --verbose'
+      })).$serialize()
+    ).toEqual({$type: 'macro', $expression: 'frontend deploy --verbose'});
     expect(
-      (await MacroResource.$create({$expressions: ['build', 'deploy']})).$serialize()
-    ).toEqual({$expressions: ['build', 'deploy']});
+      (await createResource({
+        $type: 'macro',
+        $expressions: ['build', 'deploy']
+      })).$serialize()
+    ).toEqual({$type: 'macro', $expressions: ['build', 'deploy']});
   });
 });

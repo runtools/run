@@ -1,16 +1,16 @@
-import {Resource, MacroResource} from 'run-core';
+import {createResource, loadResource} from 'run-core';
 
 export async function run(expression = '', {directory} = {}) {
   let userResource;
 
   if (directory) {
-    userResource = await Resource.$load(directory, {
+    userResource = await loadResource(directory, {
       searchInParentDirectories: true,
       throwIfNotFound: false
     });
   }
 
-  const macro = await MacroResource.$create({$expression: expression}, {directory});
+  const macro = await createResource({$type: 'macro', $expression: expression}, {directory});
 
   return await macro.$invoke(undefined, {owner: userResource});
 }

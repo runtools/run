@@ -3,7 +3,7 @@ import {isAbsolute} from 'path';
 import {parse} from 'shell-quote';
 import {setProperty, addContextToErrors, parseCommandLineArguments} from 'run-common';
 
-import Resource from './';
+import {loadResource} from './';
 import CommandResource from './command';
 
 export class MacroResource extends CommandResource {
@@ -52,7 +52,7 @@ export class MacroResource extends CommandResource {
       (firstArgument.startsWith('.') || firstArgument.includes('/') || isAbsolute(firstArgument))
     ) {
       // The fist arguments looks like a resource name, let's load the resource
-      owner = await Resource.$load(firstArgument, {directory: this.$getDirectory()});
+      owner = await loadResource(firstArgument, {directory: this.$getDirectory()});
       expression = {...expression, arguments: expression.arguments.slice(1)};
     }
     return await owner.$invoke(expression);

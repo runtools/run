@@ -1,9 +1,10 @@
 import {compact, isEmpty} from 'lodash';
 import {getProperty, addContextToErrors, formatCode} from 'run-common';
 
-import Resource from './';
+import {createResource} from './';
+import BaseResource from './base';
 
-export class MethodResource extends Resource {
+export class MethodResource extends BaseResource {
   constructor(definition, options = {}) {
     super(definition, options);
 
@@ -30,7 +31,7 @@ export class MethodResource extends Resource {
       parameters = [parameters];
     }
     for (let parameter of parameters) {
-      parameter = await Resource.$create(parameter, {directory: this.$getDirectory()});
+      parameter = await createResource(parameter, {directory: this.$getDirectory()});
       if (this._parameters === undefined) {
         this._parameters = [];
       }

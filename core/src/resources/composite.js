@@ -1,10 +1,11 @@
 import {isPlainObject, isEmpty} from 'lodash';
 import {getProperty, setProperty, addContextToErrors, formatCode} from 'run-common';
 
-import Resource from './';
-import Runtime from '../runtimes';
+import {createResource, loadResource} from './';
+import BaseResource from './base';
+import {createRuntime} from '../runtimes';
 
-export class CompositeResource extends Resource {
+export class CompositeResource extends BaseResource {
   constructor(definition = {}, options) {
     super(definition, options);
     setProperty(this, definition, '$implementation');
@@ -29,7 +30,7 @@ export class CompositeResource extends Resource {
             property.$set(value);
           } else {
             // Property definition
-            property = await Resource.$create(value, {
+            property = await createResource(value, {
               name,
               directory: this.$getDirectory(),
               owner: this
@@ -48,7 +49,7 @@ export class CompositeResource extends Resource {
     if (!runtime) {
       throw new Error('An $implementation requires a $runtime');
     }
-    runtime = Runtime.create(runtime);
+    runtime = createRuntime(runtime);
     const classBuilder = runtime.require(implementation, {directory});
     return classBuilder(this);
   }
@@ -89,9 +90,9 @@ export class CompositeResource extends Resource {
     return this._getProperty('_runtime');
   }
 
-  set $runtime(runtime: ?(string | Runtime)) {
+  set $runtime(runtime) {
     if (typeof runtime === 'string') {
-      runtime = Runtime.create(runtime);
+      runtime = createRuntime(runtime);
     }
     this._runtime = runtime;
   }
@@ -100,17 +101,17 @@ export class CompositeResource extends Resource {
     if (typeof type === 'string') {
       if (type === 'composite' || type === 'tool') return; // TODO: Improve this
       const specifier = type;
-      return await this.constructor.$load(specifier, {directory: this.$getDirectory()});
+      return await loadResource(specifier, {directory: this.$getDirectory()});
     } else if (isPlainObject(type)) {
       const definition = type;
-      return await this.constructor.$create(definition, {directory: this.$getDirectory()});
+      return await createResource(definition, {directory: this.$getDirectory()});
     }
     throw new Error(`Invalid ${formatCode('$type')} value`);
   }
 
   _properties = [];
 
-  $addProperty(property: Resource) {
+  $addProperty(property: BaseResource) {
     this._properties.push(property);
 
     Object.defineProperty(this, property.$name, {

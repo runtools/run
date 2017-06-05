@@ -4,9 +4,9 @@ import isDirectory from 'is-directory';
 
 import {formatPath} from 'run-common';
 
-import Runtime from './';
+import BaseRuntime from './base';
 
-export class NodeRuntime extends Runtime {
+export class NodeRuntime extends BaseRuntime {
   require(requestedFile, {directory} = {}) {
     let file = requestedFile;
     if (!isAbsolute(file) && directory) {

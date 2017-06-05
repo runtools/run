@@ -1,9 +1,9 @@
 import {isEmpty} from 'lodash';
 import {getProperty, addContextToErrors} from 'run-common';
 
-import Resource from './';
+import BaseResource from './base';
 
-export class ValueResource extends Resource {
+export class ValueResource extends BaseResource {
   constructor(definition, options) {
     super(definition, options);
     addContextToErrors(() => {
