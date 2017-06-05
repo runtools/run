@@ -6,14 +6,14 @@ import CompositeResource from '../../src/resources/composite';
 describe('MethodResource', () => {
   test('can have parameters', async () => {
     const method = await MethodResource.$create({
-      $parameters: [{$id: 'name', $type: 'string'}, {$id: 'age', $type: 'number'}]
+      $parameters: [{$name: 'name', $type: 'string'}, {$name: 'age', $type: 'number'}]
     });
     expect(method).toBeInstanceOf(MethodResource);
     expect(method.$getParameters()).toHaveLength(2);
     expect(method.$getParameters()[0]).toBeInstanceOf(StringResource);
-    expect(method.$getParameters()[0].$id).toBe('name');
+    expect(method.$getParameters()[0].$name).toBe('name');
     expect(method.$getParameters()[1]).toBeInstanceOf(NumberResource);
-    expect(method.$getParameters()[1].$id).toBe('age');
+    expect(method.$getParameters()[1].$name).toBe('age');
   });
 
   test('can be invoked', async () => {

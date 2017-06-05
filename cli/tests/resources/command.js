@@ -11,9 +11,9 @@ describe('CommandResource', () => {
     expect(command).toBeInstanceOf(CommandResource);
     expect(command.$getOptions()).toHaveLength(2);
     expect(command.$getOptions()[0]).toBeInstanceOf(StringResource);
-    expect(command.$getOptions()[0].$id).toBe('name');
+    expect(command.$getOptions()[0].$name).toBe('name');
     expect(command.$getOptions()[1]).toBeInstanceOf(NumberResource);
-    expect(command.$getOptions()[1].$id).toBe('age');
+    expect(command.$getOptions()[1].$name).toBe('age');
   });
 
   test('can be invoked', async () => {

@@ -20,17 +20,17 @@ export class CompositeResource extends Resource {
           }
         }
 
-        for (const id of Object.keys(definition)) {
-          if (id.startsWith('$')) continue;
-          const value = definition[id];
-          let property = this.$getProperty(id, {ignoreAliases: true});
+        for (const name of Object.keys(definition)) {
+          if (name.startsWith('$')) continue;
+          const value = definition[name];
+          let property = this.$getProperty(name, {ignoreAliases: true});
           if (property) {
             // Property assignment
             property.$set(value);
           } else {
             // Property definition
             property = await Resource.$create(value, {
-              id,
+              name,
               directory: this.$getDirectory(),
               owner: this
             });
@@ -55,7 +55,7 @@ export class CompositeResource extends Resource {
 
   $inherit(parent) {
     parent.$forEachProperty(property => {
-      if (this.$getProperty(property.$id, {ignoreAliases: true})) {
+      if (this.$getProperty(property.$name, {ignoreAliases: true})) {
         // Ignore duplicated properties
         return;
       }
@@ -113,7 +113,7 @@ export class CompositeResource extends Resource {
   $addProperty(property: Resource) {
     this._properties.push(property);
 
-    Object.defineProperty(this, property.$id, {
+    Object.defineProperty(this, property.$name, {
       get() {
         return property.$get();
       },
@@ -170,8 +170,8 @@ export class CompositeResource extends Resource {
     }
 
     this.$forEachProperty(property => {
-      const key = property.$id;
-      const value = property.$serialize({omitId: true});
+      const key = property.$name;
+      const value = property.$serialize({omitName: true});
       if (value !== undefined) {
         definition[key] = value;
       }

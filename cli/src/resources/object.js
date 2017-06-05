@@ -10,10 +10,10 @@ export class ObjectResource extends ValueResource {
     super(definition, options);
     if (!('$value' in definition)) {
       let value;
-      for (const id of Object.keys(definition)) {
-        if (id.startsWith('$')) continue;
+      for (const name of Object.keys(definition)) {
+        if (name.startsWith('$')) continue;
         if (value === undefined) value = {};
-        value[id] = definition[id];
+        value[name] = definition[name];
       }
       if (value) {
         this.$value = value;

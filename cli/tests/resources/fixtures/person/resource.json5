@@ -1,5 +1,5 @@
 {
-  $id: 'person',
+  $name: 'person',
   $version: '1.0.0',
   $type: 'composite',
   $implementation: './',

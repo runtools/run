@@ -57,7 +57,7 @@ describe('CompositeResource', () => {
 
   test('can inherit properties', async () => {
     const person = await CompositeResource.$create({
-      $type: {$id: 'person', name: {$type: 'string', $value: 'anonymous'}}
+      $type: {$name: 'person', name: {$type: 'string', $value: 'anonymous'}}
     });
     const parent = person.$findParent(() => true);
     expect(parent.name).toBe('anonymous');
@@ -71,7 +71,7 @@ describe('CompositeResource', () => {
 
   test('can set value of inherited properties', async () => {
     const person = await CompositeResource.$create({
-      $type: {$id: 'person', name: {$type: 'string', $value: 'anonymous'}},
+      $type: {$name: 'person', name: {$type: 'string', $value: 'anonymous'}},
       name: 'Manu'
     });
     const parent = person.$findParent(() => true);
@@ -131,8 +131,8 @@ describe('CompositeResource', () => {
     await testSerialization({color: 'green'});
     await testSerialization({name: 'Manu', address: {city: 'Tokyo'}});
     await testSerialization({$type: 'composite'});
-    await testSerialization({$type: {$id: 'person', name: 'anonymous'}});
-    await testSerialization({$type: {$id: 'person', name: 'anonymous'}, name: 'Manu'});
+    await testSerialization({$type: {$name: 'person', name: 'anonymous'}});
+    await testSerialization({$type: {$name: 'person', name: 'anonymous'}, name: 'Manu'});
     await testSerialization(
       {$implementation: './fixtures/person/index.js', $runtime: 'node@>=6.10.0'},
       {directory: __dirname}

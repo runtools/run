@@ -24,8 +24,8 @@ export class CommandResource extends MethodResource {
   async $setOptions(options: ?Object) {
     this._options = undefined;
     if (options === undefined) return;
-    for (let [id, option] of entries(options)) {
-      option = await Resource.$create(option, {id, directory: this.$getDirectory()});
+    for (let [name, option] of entries(options)) {
+      option = await Resource.$create(option, {name, directory: this.$getDirectory()});
       if (this._options === undefined) {
         this._options = [];
       }
@@ -50,12 +50,12 @@ export class CommandResource extends MethodResource {
     const remainingOptions = {...optionsArgument};
     const options = this.$getOptions() || [];
     for (const option of options) {
-      const id = option.$id;
-      const value = remainingOptions[id];
-      delete remainingOptions[id];
+      const name = option.$name;
+      const value = remainingOptions[name];
+      delete remainingOptions[name];
       const normalizedValue = option.$instantiate(value, {parse}).$get();
       if (normalizedValue !== undefined) {
-        normalizedOptions[id] = normalizedValue;
+        normalizedOptions[name] = normalizedValue;
       }
     }
 
@@ -87,9 +87,9 @@ export class CommandResource extends MethodResource {
       const serializedOptions = {};
       let count = 0;
       for (const option of options) {
-        const serializedOption = option.$serialize({omitId: true});
+        const serializedOption = option.$serialize({omitName: true});
         if (serializedOption !== undefined) {
-          serializedOptions[option.$id] = serializedOption;
+          serializedOptions[option.$name] = serializedOption;
           count++;
         }
       }

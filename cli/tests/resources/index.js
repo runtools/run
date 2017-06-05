@@ -3,14 +3,14 @@ import Resource from '../../src/resources';
 describe('Resource', () => {
   test('can be empty', () => {
     const res = new Resource();
-    expect(res.$id).toBeUndefined();
+    expect(res.$name).toBeUndefined();
     expect(res.$aliases).toBeUndefined();
     expect(res.$hasAlias('hi')).toBe(false);
   });
 
   test('can inherit from parents', () => {
-    const parent1 = new Resource({$id: 'parent1'});
-    const parent2 = new Resource({$id: 'parent2'});
+    const parent1 = new Resource({$name: 'parent1'});
+    const parent2 = new Resource({$name: 'parent2'});
     const res = new Resource();
     res.$inherit(parent1);
     res.$inherit(parent2);
@@ -20,8 +20,8 @@ describe('Resource', () => {
   });
 
   test('can create instances', () => {
-    const parent1 = new Resource({$id: 'parent1'});
-    const parent2 = new Resource({$id: 'parent2'});
+    const parent1 = new Resource({$name: 'parent1'});
+    const parent2 = new Resource({$name: 'parent2'});
     const res = parent1.$instantiate();
     expect(res.$isInstanceOf(parent1)).toBe(true);
     expect(res.$isInstanceOf(parent2)).toBe(false);
@@ -31,28 +31,28 @@ describe('Resource', () => {
     expect(child.$isInstanceOf(parent2)).toBe(false);
   });
 
-  test('can have an id', () => {
+  test('can have a name', () => {
     const res = new Resource();
-    expect(res.$id).toBeUndefined();
+    expect(res.$name).toBeUndefined();
     expect(res.$getScope()).toBeUndefined();
-    expect(res.$getName()).toBeUndefined();
-    res.$id = 'hello';
-    expect(res.$id).toBe('hello');
+    expect(res.$getIdentifier()).toBeUndefined();
+    res.$name = 'hello';
+    expect(res.$name).toBe('hello');
     expect(res.$getScope()).toBeUndefined();
-    expect(res.$getName()).toBe('hello');
-    res.$id = 'runtools/hello';
-    expect(res.$id).toBe('runtools/hello');
+    expect(res.$getIdentifier()).toBe('hello');
+    res.$name = 'runtools/hello';
+    expect(res.$name).toBe('runtools/hello');
     expect(res.$getScope()).toBe('runtools');
-    expect(res.$getName()).toBe('hello');
+    expect(res.$getIdentifier()).toBe('hello');
   });
 
-  test('validates id', () => {
-    expect(() => new Resource({$id: 'hello'})).not.toThrow();
-    expect(() => new Resource({$id: 'runtools/hello'})).not.toThrow();
-    expect(() => new Resource({$id: ''})).toThrow();
-    expect(() => new Resource({$id: 'hello*'})).toThrow();
-    expect(() => new Resource({$id: 'runtools/'})).toThrow();
-    expect(() => new Resource({$id: '/hello'})).toThrow();
+  test('validates name', () => {
+    expect(() => new Resource({$name: 'hello'})).not.toThrow();
+    expect(() => new Resource({$name: 'runtools/hello'})).not.toThrow();
+    expect(() => new Resource({$name: ''})).toThrow();
+    expect(() => new Resource({$name: 'hello*'})).toThrow();
+    expect(() => new Resource({$name: 'runtools/'})).toThrow();
+    expect(() => new Resource({$name: '/hello'})).toThrow();
   });
 
   test('can have aliases', () => {
@@ -63,8 +63,8 @@ describe('Resource', () => {
     expect(res.$hasAlias('bonjour')).toBe(true);
   });
 
-  test('is matchable by id or aliases', () => {
-    const res = new Resource({$id: 'hello', $aliases: ['hi', 'bonjour']});
+  test('is matchable by name or aliases', () => {
+    const res = new Resource({$name: 'hello', $aliases: ['hi', 'bonjour']});
     expect(res.$isMatching('hello')).toBe(true);
     expect(res.$isMatching('hi')).toBe(true);
     expect(res.$isMatching('bonjour')).toBe(true);
@@ -111,7 +111,7 @@ describe('Resource', () => {
 
     let error;
     try {
-      const res3 = new Resource({$id: 'hello', $authors: 'Manu', $author: 'Manu'}); // eslint-disable-line no-unused-vars
+      const res3 = new Resource({$name: 'hello', $authors: 'Manu', $author: 'Manu'}); // eslint-disable-line no-unused-vars
     } catch (err) {
       error = err;
     }
@@ -119,14 +119,14 @@ describe('Resource', () => {
     expect(error).toBeInstanceOf(Error);
     expect(error.contextStack).toHaveLength(1);
     expect(error.contextStack[0]).toBeInstanceOf(Resource);
-    expect(error.contextStack[0].$id).toBe('hello');
+    expect(error.contextStack[0].$name).toBe('hello');
   });
 
   test('is serializable', () => {
     const res1 = new Resource({});
     expect(res1.$serialize()).toBeUndefined();
     const definition = {
-      $id: 'hello',
+      $name: 'hello',
       $aliases: ['hi', 'bonjour'],
       $version: '1.2.3',
       $description: 'This is a resource',

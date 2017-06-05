@@ -8,7 +8,7 @@ describe('Resource loading ($load)', () => {
   test('can load a resource from a file', async () => {
     const Person = await CompositeResource.$load(join(__dirname, 'fixtures', 'person'));
     expect(Person).toBeInstanceOf(CompositeResource);
-    expect(Person.$id).toBe('person');
+    expect(Person.$name).toBe('person');
     expect(Person.$version.toString()).toBe('1.0.0');
     expect(Person.$getProperty('name')).toBeInstanceOf(StringResource);
     expect(Person.name).toBeUndefined();
@@ -25,16 +25,16 @@ describe('Resource loading ($load)', () => {
 
   test('can load a resource referenced from a resource type', async () => {
     const person = await CompositeResource.$create(
-      {$id: 'manu', $type: './fixtures/person'},
+      {$name: 'manu', $type: './fixtures/person'},
       {directory: __dirname}
     );
-    expect(person.$id).toBe('manu');
+    expect(person.$name).toBe('manu');
     expect(person.$getProperty('name')).toBeInstanceOf(StringResource);
     expect(person.$getProperty('age')).toBeInstanceOf(NumberResource);
     person.name = 'Manu';
     person.age = 44;
     expect(person.$serialize()).toEqual({
-      $id: 'manu',
+      $name: 'manu',
       $type: './fixtures/person',
       name: 'Manu',
       age: 44

@@ -22,14 +22,14 @@ describe('StringResource', () => {
 
   test('is serializable', () => {
     expect(new StringResource().$serialize()).toBeUndefined();
-    expect(new StringResource({$id: 'color'}).$serialize()).toEqual({$id: 'color'});
-    expect(new StringResource({$id: 'color', $value: 'green'}).$serialize()).toEqual({
-      $id: 'color',
+    expect(new StringResource({$name: 'color'}).$serialize()).toEqual({$name: 'color'});
+    expect(new StringResource({$name: 'color', $value: 'green'}).$serialize()).toEqual({
+      $name: 'color',
       $value: 'green'
     });
     expect(new StringResource({$value: 'green'}).$serialize()).toBe('green');
     expect(
-      new StringResource({$id: 'color', $value: 'green'}).$instantiate().$serialize()
+      new StringResource({$name: 'color', $value: 'green'}).$instantiate().$serialize()
     ).toBeUndefined();
   });
 });

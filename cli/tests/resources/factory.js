@@ -42,7 +42,7 @@ describe('Resource factory ($create)', () => {
 
   test('can create CompositeResource', async () => {
     expect(await Resource.$create({$type: 'composite'})).toBeInstanceOf(CompositeResource);
-    expect(await Resource.$create({$type: {$id: 'person', $type: 'composite'}})).toBeInstanceOf(
+    expect(await Resource.$create({$type: {$name: 'person', $type: 'composite'}})).toBeInstanceOf(
       CompositeResource
     );
   });

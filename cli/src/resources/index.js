@@ -22,7 +22,7 @@ export class Resource {
     addContextToErrors(() => {
       if (directory !== undefined) this.$setDirectory(directory);
       if (file !== undefined) this.$setFile(file);
-      setProperty(this, definition, '$id');
+      setProperty(this, definition, '$name');
       setProperty(this, definition, '$aliases', ['$alias']);
       setProperty(this, definition, '$version');
       setProperty(this, definition, '$description');
@@ -33,7 +33,7 @@ export class Resource {
     }).call(this);
   }
 
-  static async $create(definition = {}, {id, directory, file, parse, owner} = {}) {
+  static async $create(definition = {}, {name, directory, file, parse, owner} = {}) {
     if (typeof definition === 'boolean') {
       definition = {$type: 'boolean', $value: definition};
     } else if (typeof definition === 'number') {
@@ -46,8 +46,8 @@ export class Resource {
       throw new Error("'definition' argument is invalid");
     }
 
-    if (id) {
-      definition = {...definition, $id: id};
+    if (name) {
+      definition = {...definition, $name: name};
     }
 
     let types = getProperty(definition, '$types', ['$type']);
@@ -281,52 +281,52 @@ export class Resource {
     this.__directory = directory;
   }
 
-  get $id() {
-    return this._getProperty('_id');
+  get $name() {
+    return this._getProperty('_name');
   }
 
-  set $id(id: ?string) {
-    if (id !== undefined) {
-      if (!this.$validateId(id)) {
-        throw new Error(`Resource id ${formatString(id)} is invalid`);
+  set $name(name: ?string) {
+    if (name !== undefined) {
+      if (!this.$validateName(name)) {
+        throw new Error(`Resource name ${formatString(name)} is invalid`);
       }
     }
-    this._id = id;
+    this._name = name;
   }
 
   $getScope() {
-    const id = this.$id;
-    if (!id) return undefined;
-    const [scope, name] = id.split('/');
-    if (!name) {
+    const name = this.$name;
+    if (!name) return undefined;
+    const [scope, identifier] = name.split('/');
+    if (!identifier) {
       return undefined;
     }
     return scope;
   }
 
-  $getName() {
-    const id = this.$id;
-    if (!id) return undefined;
-    const [scope, name] = id.split('/');
-    if (!name) {
+  $getIdentifier() {
+    const name = this.$name;
+    if (!name) return undefined;
+    const [scope, identifier] = name.split('/');
+    if (!identifier) {
       return scope;
     }
-    return name;
+    return identifier;
   }
 
-  $validateId(id: string) {
-    let [scope, name, rest] = id.split('/');
+  $validateName(name: string) {
+    let [scope, identifier, rest] = name.split('/');
 
-    if (scope && name === undefined) {
-      name = scope;
+    if (scope && identifier === undefined) {
+      identifier = scope;
       scope = undefined;
     }
 
-    if (scope !== undefined && !this.$validateIdPart(scope)) {
+    if (scope !== undefined && !this.$validateNamePart(scope)) {
       return false;
     }
 
-    if (!this.$validateIdPart(name)) {
+    if (!this.$validateNamePart(identifier)) {
       return false;
     }
 
@@ -337,7 +337,7 @@ export class Resource {
     return true;
   }
 
-  $validateIdPart(part: string) {
+  $validateNamePart(part: string) {
     if (!part) {
       return false;
     }
@@ -382,7 +382,7 @@ export class Resource {
   }
 
   $isMatching(name: string, {ignoreAliases} = {}) {
-    return this.$id === name || (!ignoreAliases && this.$hasAlias(name));
+    return this.$name === name || (!ignoreAliases && this.$hasAlias(name));
   }
 
   get $version() {
@@ -446,11 +446,11 @@ export class Resource {
     return definition;
   }
 
-  $serialize({omitId} = {}) {
+  $serialize({omitName} = {}) {
     let definition = {};
 
-    if (!omitId && this._id !== undefined) {
-      definition.$id = this._id;
+    if (!omitName && this._name !== undefined) {
+      definition.$name = this._name;
     }
 
     let aliases = this._aliases;

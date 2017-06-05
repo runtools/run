@@ -45,7 +45,7 @@ export class MethodResource extends Resource {
   _setImplementation(owner) {
     if (!owner) return;
     const proto = Object.getPrototypeOf(owner);
-    this._implementation = proto[this.$id];
+    this._implementation = proto[this.$name];
   }
 
   $get() {
@@ -60,12 +60,12 @@ export class MethodResource extends Resource {
         parse: parseArguments
       });
       if (remainingArguments.length) {
-        throw new Error(`Too many arguments passed to ${formatCode(methodResource.$id)}`);
+        throw new Error(`Too many arguments passed to ${formatCode(methodResource.$name)}`);
       }
 
       const implementation = methodResource._getImplementation();
       if (!implementation) {
-        throw new Error(`Can't find implementation for ${formatCode(methodResource.$id)}`);
+        throw new Error(`Can't find implementation for ${formatCode(methodResource.$name)}`);
       }
 
       return implementation.apply(this, normalizedArguments);

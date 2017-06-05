@@ -51,7 +51,7 @@ export class MacroResource extends CommandResource {
       firstArgument &&
       (firstArgument.startsWith('.') || firstArgument.includes('/') || isAbsolute(firstArgument))
     ) {
-      // The fist arguments looks like a resource identifier, let's load the resource
+      // The fist arguments looks like a resource name, let's load the resource
       owner = await Resource.$load(firstArgument, {directory: this.$getDirectory()});
       expression = {...expression, arguments: expression.arguments.slice(1)};
     }

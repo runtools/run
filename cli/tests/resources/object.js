@@ -6,8 +6,8 @@ describe('ObjectResource', () => {
     expect(new ObjectResource({$value: {}}).$value).toEqual({});
     expect(new ObjectResource({$value: {name: 'Manu'}}).$value).toEqual({name: 'Manu'});
     expect(new ObjectResource({name: 'Manu'}).$value).toEqual({name: 'Manu'});
-    expect(new ObjectResource({$value: {$id: 'abc', $xyz: 123}}).$value).toEqual({
-      $id: 'abc',
+    expect(new ObjectResource({$value: {$name: 'abc', $xyz: 123}}).$value).toEqual({
+      $name: 'abc',
       $xyz: 123
     });
     expect(() => new ObjectResource({$value: 'hello'})).toThrow();
