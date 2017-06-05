@@ -23,7 +23,7 @@ export async function createResource(definition = {}, {name, directory, file, pa
 
   let types = getProperty(definition, '$types', ['$type']);
   types = BaseResource.$normalizeTypes(types);
-  if (types.length === 0 && definition.$value) {
+  if (types.length === 0 && definition.$value !== undefined) {
     types = [inferType(definition.$value)];
   }
 

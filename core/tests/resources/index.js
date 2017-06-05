@@ -19,27 +19,31 @@ describe('Resource', () => {
   test('can create BooleanResource', async () => {
     expect(await createResource({$type: 'boolean'})).toBeInstanceOf(BooleanResource);
     expect(await createResource(true)).toBeInstanceOf(BooleanResource);
-    expect(await createResource({$value: true})).toBeInstanceOf(BooleanResource);
+    expect(await createResource({$value: false})).toBeInstanceOf(BooleanResource);
   });
 
   test('can create NumberResource', async () => {
     expect(await createResource({$type: 'number'})).toBeInstanceOf(NumberResource);
     expect(await createResource(123.45)).toBeInstanceOf(NumberResource);
+    expect(await createResource({$value: 0})).toBeInstanceOf(NumberResource);
   });
 
   test('can create StringResource', async () => {
     expect(await createResource({$type: 'string'})).toBeInstanceOf(StringResource);
     expect(await createResource('Hello')).toBeInstanceOf(StringResource);
+    expect(await createResource({$value: ''})).toBeInstanceOf(StringResource);
   });
 
   test('can create ArrayResource', async () => {
     expect(await createResource({$type: 'array'})).toBeInstanceOf(ArrayResource);
     expect(await createResource([1])).toBeInstanceOf(ArrayResource);
+    expect(await createResource({$value: []})).toBeInstanceOf(ArrayResource);
   });
 
   test('can create ObjectResource', async () => {
     expect(await createResource()).toBeInstanceOf(ObjectResource);
     expect(await createResource({})).toBeInstanceOf(ObjectResource);
+    expect(await createResource({$value: {}})).toBeInstanceOf(ObjectResource);
     expect(await createResource({$types: []})).toBeInstanceOf(ObjectResource);
     expect(await createResource({$type: 'object'})).toBeInstanceOf(ObjectResource);
   });
