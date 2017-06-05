@@ -1,4 +1,4 @@
-# ⚡run CLI
+# ⚡run
 
 ```javascript
 // TODO: documentation!

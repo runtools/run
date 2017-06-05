@@ -1,5 +1,4 @@
-import Resource from './resources';
-import Macro from './resources/macro';
+import {Resource, MacroResource} from 'run-core';
 
 export async function run(expression = '', {directory} = {}) {
   let userResource;
@@ -11,7 +10,7 @@ export async function run(expression = '', {directory} = {}) {
     });
   }
 
-  const macro = await Macro.$create({$expression: expression}, {directory});
+  const macro = await MacroResource.$create({$expression: expression}, {directory});
 
   return await macro.$invoke(undefined, {owner: userResource});
 }

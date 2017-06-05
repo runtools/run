@@ -5,7 +5,7 @@ import nodeVersion from 'node-version';
 import updateNotifier from 'update-notifier';
 import {showErrorAndExit} from 'run-common';
 
-import {run} from '../cli';
+import {run} from '../';
 
 if (nodeVersion.major < 6) {
   showErrorAndExit('⚡run requires at least version 6 of Node.');

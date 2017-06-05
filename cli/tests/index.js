@@ -1,9 +1,18 @@
 import {join} from 'path';
 
-import {run} from '../../src/cli';
-import CompositeResource from '../../src/resources/composite';
+import {run} from '../src';
+import {CompositeResource} from 'run-core';
 
-const personInstanceDirectory = join(__dirname, 'fixtures', 'person-instance');
+const personInstanceDirectory = join(
+  __dirname,
+  '..',
+  '..',
+  'core',
+  'tests',
+  'resources',
+  'fixtures',
+  'person-instance'
+);
 
 describe('CLI', () => {
   test('can get a resource from a directory', async () => {
