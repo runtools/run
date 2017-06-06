@@ -59,26 +59,26 @@ export class MacroResource extends CommandResource {
   }
 
   $serialize(opts) {
-    let result = super.$serialize(opts);
+    let definition = super.$serialize(opts);
 
-    if (result === undefined) {
-      result = {};
+    if (definition === undefined) {
+      definition = {};
     }
 
     const expressions = this._expressions;
     if (expressions !== undefined) {
       if (expressions.length === 1) {
-        result.$expression = expressions[0];
+        definition.$expression = expressions[0];
       } else if (expressions.length > 1) {
-        result.$expressions = expressions;
+        definition.$expressions = expressions;
       }
     }
 
-    if (isEmpty(result)) {
-      result = undefined;
+    if (isEmpty(definition)) {
+      definition = undefined;
     }
 
-    return result;
+    return definition;
   }
 }
 

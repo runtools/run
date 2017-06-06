@@ -60,27 +60,27 @@ export class ValueResource extends BaseResource {
   }
 
   $serialize(options) {
-    let result = super.$serialize(options);
+    let definition = super.$serialize(options);
 
-    if (result === undefined) {
-      result = {};
+    if (definition === undefined) {
+      definition = {};
     }
 
     const serializedValue = this.$serializeValue();
     if (serializedValue !== undefined) {
-      result.$value = serializedValue;
+      definition.$value = serializedValue;
     }
 
-    const keys = Object.keys(result);
+    const keys = Object.keys(definition);
     if (keys.length === 0) {
-      result = undefined;
+      definition = undefined;
     } else if (keys.length === 1 && keys[0] === '$value') {
-      result = result.$value;
+      definition = definition.$value;
     } else if (keys.length === 2 && keys.includes('$type') && keys.includes('$value')) {
-      result = result.$value;
+      definition = definition.$value;
     }
 
-    return result;
+    return definition;
   }
 }
 

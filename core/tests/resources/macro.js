@@ -14,10 +14,13 @@ describe('MacroResource', () => {
 
   test('can be invoked', async () => {
     const Person = await loadResource('./fixtures/person', {directory: __dirname});
-    const person = Person.$instantiate({name: 'Manu', age: 29});
+    let person = Person.$instantiate({name: 'Manu', age: 29});
     expect(await person.formatGreetingMacro()).toBe('Hi Manu!');
     person.age++;
     expect(await person.formatGreetingMacro()).toBe('Hello Manu!');
+
+    person = await loadResource('./fixtures/person-instance', {directory: __dirname});
+    expect(await person.formatWordsMacro()).toBe('blue, green.');
   });
 
   test('can load a resource', async () => {

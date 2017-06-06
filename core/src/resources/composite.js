@@ -185,4 +185,5 @@ export class CompositeResource extends BaseResource {
     return definition;
   }
 }
+
 export default CompositeResource;

@@ -1,5 +1,5 @@
 import {compact, isEmpty} from 'lodash';
-import {getProperty, addContextToErrors, formatCode} from 'run-common';
+import {getProperty, setProperty, addContextToErrors, formatCode} from 'run-common';
 
 import {createResource} from './';
 import BaseResource from './base';
@@ -10,6 +10,8 @@ export class MethodResource extends BaseResource {
 
     this.$addInitializer(
       addContextToErrors(async () => {
+        setProperty(this, definition, '$variadic');
+
         const parameters = getProperty(definition, '$parameters', ['$parameter']);
         if (parameters !== undefined) {
           await this.$setParameters(parameters);
@@ -37,6 +39,14 @@ export class MethodResource extends BaseResource {
       }
       this._parameters.push(parameter);
     }
+  }
+
+  get $variadic() {
+    return this._getProperty('_variadic');
+  }
+
+  set $variadic(variadic: ?boolean) {
+    this._variadic = variadic;
   }
 
   _getImplementation() {
@@ -78,13 +88,35 @@ export class MethodResource extends BaseResource {
     const remainingArguments = [...args];
 
     const parameters = this.$getParameters() || [];
+    const lastParameter = parameters[parameters.length - 1];
+    const variadic = this.$variadic;
     for (const parameter of parameters) {
-      const argument = remainingArguments.shift();
-      const normalizedArgument = parameter.$instantiate(argument, {parse}).$get();
+      let normalizedArgument;
+      if (variadic && parameter === lastParameter) {
+        normalizedArgument = [];
+        const lastArguments = this._shiftLastArguments(remainingArguments);
+        for (const argument of lastArguments) {
+          normalizedArgument.push(parameter.$instantiate(argument, {parse}).$get());
+        }
+      } else {
+        const argument = remainingArguments.shift();
+        normalizedArgument = parameter.$instantiate(argument, {parse}).$get();
+      }
       normalizedArguments.push(normalizedArgument);
     }
 
     return {normalizedArguments, remainingArguments};
+  }
+
+  _shiftLastArguments(args) {
+    // In the case of a MethodResource, return every arguments
+    // See CommandResource for a more useful implementation
+    const lastArguments = [];
+    while (args.length) {
+      const arg = args.shift();
+      lastArguments.push(arg);
+    }
+    return lastArguments;
   }
 
   async $invoke(expression, {owner}) {
@@ -93,10 +125,10 @@ export class MethodResource extends BaseResource {
   }
 
   $serialize(options) {
-    let result = super.$serialize(options);
+    let definition = super.$serialize(options);
 
-    if (result === undefined) {
-      result = {};
+    if (definition === undefined) {
+      definition = {};
     }
 
     let parameters = this._parameters;
@@ -104,17 +136,21 @@ export class MethodResource extends BaseResource {
       parameters = parameters.map(parameter => parameter.$serialize());
       parameters = compact(parameters);
       if (parameters.length === 1) {
-        result.$parameter = parameters[0];
+        definition.$parameter = parameters[0];
       } else if (parameters.length > 1) {
-        result.$parameters = parameters;
+        definition.$parameters = parameters;
       }
     }
 
-    if (isEmpty(result)) {
-      result = undefined;
+    if (this._variadic !== undefined) {
+      definition.$variadic = this._variadic;
     }
 
-    return result;
+    if (isEmpty(definition)) {
+      definition = undefined;
+    }
+
+    return definition;
   }
 }
 

@@ -18,6 +18,21 @@
     $type: 'macro',
     $expression: 'formatGreetingCommand --ageLimit=30'
   },
+  formatWordsMethod: {
+    $type: 'method',
+    $parameters: [{$type: 'string'}],
+    $variadic: true
+  },
+  formatWordsCommand: {
+    $type: 'command',
+    $parameters: [{$type: 'string'}],
+    $variadic: true,
+    $options: {capitalize: true}
+  },
+  formatWordsMacro: {
+    $type: 'macro',
+    $expression: 'formatWordsCommand blue green --capitalize=off'
+  },
   address: {
     $type: 'composite',
     $implementation: './address',

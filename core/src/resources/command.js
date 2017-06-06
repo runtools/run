@@ -70,6 +70,16 @@ export class CommandResource extends MethodResource {
     return {normalizedArguments, remainingArguments};
   }
 
+  _shiftLastArguments(args) {
+    // Get arguments before options
+    const lastArguments = [];
+    while (args.length) {
+      if (isPlainObject(args[0])) break;
+      lastArguments.push(args.shift());
+    }
+    return lastArguments;
+  }
+
   async $invoke(expression, {owner}) {
     const fn = this.$getFunction({parseArguments: true});
     const args = [...expression.arguments, expression.options];
@@ -77,10 +87,10 @@ export class CommandResource extends MethodResource {
   }
 
   $serialize(opts) {
-    let result = super.$serialize(opts);
+    let definition = super.$serialize(opts);
 
-    if (result === undefined) {
-      result = {};
+    if (definition === undefined) {
+      definition = {};
     }
 
     const options = this._options;
@@ -95,17 +105,17 @@ export class CommandResource extends MethodResource {
         }
       }
       if (count === 1) {
-        result.$option = serializedOptions;
+        definition.$option = serializedOptions;
       } else if (count > 1) {
-        result.$options = serializedOptions;
+        definition.$options = serializedOptions;
       }
     }
 
-    if (isEmpty(result)) {
-      result = undefined;
+    if (isEmpty(definition)) {
+      definition = undefined;
     }
 
-    return result;
+    return definition;
   }
 }
 

@@ -19,13 +19,21 @@ describe('CommandResource', () => {
 
   test('can be invoked', async () => {
     const Person = await loadResource('./fixtures/person', {directory: __dirname});
-    const person = Person.$instantiate({name: 'Manu', age: 44});
+    let person = Person.$instantiate({name: 'Manu', age: 44});
     expect(person.formatGreetingCommand()).toBe('Hi Manu!');
     person.age++;
     expect(person.formatGreetingCommand()).toBe('Hello Manu!');
     expect(person.formatGreetingCommand({ageLimit: 46})).toBe('Hi Manu!');
     expect(person.formatGreetingCommand({limit: 46})).toBe('Hi Manu!');
     expect(() => person.formatGreetingCommand({ageLimit: 46}, true)).toThrow();
+
+    person = await loadResource('./fixtures/person-instance', {directory: __dirname});
+    expect(person.formatWordsCommand()).toBe('');
+    expect(person.formatWordsCommand({capitalize: false})).toBe('');
+    expect(person.formatWordsCommand('blue')).toBe('Blue.');
+    expect(person.formatWordsCommand('blue', {capitalize: false})).toBe('blue.');
+    expect(person.formatWordsCommand('blue', 'yellow')).toBe('Blue, yellow.');
+    expect(person.formatWordsCommand('blue', 'yellow', {capitalize: false})).toBe('blue, yellow.');
   });
 
   test('is serializable', async () => {

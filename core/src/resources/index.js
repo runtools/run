@@ -17,14 +17,14 @@ export async function createResource(definition = {}, {name, directory, file, pa
     throw new Error("'definition' argument is invalid");
   }
 
-  if (name) {
-    definition = {...definition, $name: name};
-  }
-
   let types = getProperty(definition, '$types', ['$type']);
   types = BaseResource.$normalizeTypes(types);
   if (types.length === 0 && definition.$value !== undefined) {
     types = [inferType(definition.$value)];
+  }
+
+  if (name) {
+    definition = {...definition, $name: name};
   }
 
   const ResourceClass = getResourceClass(types);
