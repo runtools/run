@@ -30,7 +30,7 @@ export class Resource {
       setProperty(this, definition, '$runtime');
 
       for (const parent of parents) {
-        this.$inherit(parent);
+        this._inherit(parent);
       }
 
       for (const name of Object.keys(definition)) {
@@ -42,28 +42,11 @@ export class Resource {
 
   _parents = [];
 
-  $inherit(parent) {
+  _inherit(parent) {
     this._parents.push(parent);
     parent.$forEachProperty(property => {
       this.$setProperty(property.$name, undefined, {ignoreAliases: true});
     });
-  }
-
-  $instantiate() {
-    const instance = new this.constructor();
-    instance.$inherit(this);
-    return instance;
-  }
-
-  static $normalizeTypes(types) {
-    if (types === undefined) {
-      types = [];
-    } else if (typeof types === 'string' || isPlainObject(types)) {
-      types = [types];
-    } else if (!Array.isArray(types)) {
-      throw new Error(`Invalid ${formatCode('$type')} value`);
-    }
-    return types;
   }
 
   $forSelfAndEachParent(fn, {skipSelf, deepSearch} = {}) {
@@ -297,6 +280,17 @@ export class Resource {
       types = Resource.$normalizeTypes(types);
     }
     this._types = types;
+  }
+
+  static $normalizeTypes(types) {
+    if (types === undefined) {
+      types = [];
+    } else if (typeof types === 'string' || isPlainObject(types)) {
+      types = [types];
+    } else if (!Array.isArray(types)) {
+      throw new Error(`Invalid ${formatCode('$type')} value`);
+    }
+    return types;
   }
 
   get $implementation() {

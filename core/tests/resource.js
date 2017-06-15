@@ -11,29 +11,6 @@ describe('Resource', () => {
     expect(res.$hasAlias('hi')).toBe(false);
   });
 
-  test('$inherit', () => {
-    const parent1 = new Resource({$name: 'parent1'});
-    const parent2 = new Resource({$name: 'parent2'});
-    const res = new Resource();
-    res.$inherit(parent1);
-    res.$inherit(parent2);
-    const parents = [];
-    res.$forEachParent(parent => parents.push(parent));
-    expect(parents).toEqual([parent1, parent2]);
-  });
-
-  test('$instantiate', () => {
-    const parent1 = new Resource({$name: 'parent1'});
-    const parent2 = new Resource({$name: 'parent2'});
-    const res = parent1.$instantiate();
-    expect(res.$isInstanceOf(parent1)).toBe(true);
-    expect(res.$isInstanceOf(parent2)).toBe(false);
-    const child = res.$instantiate();
-    expect(child.$isInstanceOf(res)).toBe(true);
-    expect(child.$isInstanceOf(parent1)).toBe(true);
-    expect(child.$isInstanceOf(parent2)).toBe(false);
-  });
-
   test('name', () => {
     const res = new Resource();
     expect(res.$name).toBeUndefined();

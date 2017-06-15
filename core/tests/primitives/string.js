@@ -10,16 +10,6 @@ describe('StringResource', () => {
     expect(() => new StringResource(123)).toThrow();
   });
 
-  test('instantiation', () => {
-    const base = new StringResource('green');
-    const instance = base.$instantiate();
-    expect(instance).toBeInstanceOf(StringResource);
-    expect(instance.$value).toBe('green');
-    instance.$value = 'yellow';
-    expect(instance.$value).toBe('yellow');
-    expect(base.$value).toBe('green');
-  });
-
   test('serialization', () => {
     expect(new StringResource().$serialize()).toBeUndefined();
     expect(new StringResource({$name: 'color'}).$serialize()).toEqual({$name: 'color'});
@@ -28,8 +18,5 @@ describe('StringResource', () => {
       $value: 'green'
     });
     expect(new StringResource({$value: 'green'}).$serialize()).toBe('green');
-    expect(
-      new StringResource({$name: 'color', $value: 'green'}).$instantiate().$serialize()
-    ).toBeUndefined();
   });
 });
