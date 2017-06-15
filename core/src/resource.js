@@ -32,38 +32,21 @@ export class Resource {
       for (const parent of parents) {
         this.$inherit(parent);
       }
+
+      for (const name of Object.keys(definition)) {
+        if (name.startsWith('$')) continue;
+        let property = this.$getPropertyFromParents(name, {ignoreAliases: true});
+        const parents = property ? [property] : undefined;
+        const propertyDefinition = definition[name];
+        property = createResource(propertyDefinition, {
+          parents,
+          name,
+          directory: this.$getDirectory(),
+          owner: this
+        });
+        this.$setProperty(name, property, {ignoreAliases: true});
+      }
     }).call(this);
-
-    this.$addInitializer(
-      addContextToErrors(() => {
-        for (const name of Object.keys(definition)) {
-          if (name.startsWith('$')) continue;
-          let property = this.$getPropertyFromParents(name, {ignoreAliases: true});
-          const parents = property ? [property] : undefined;
-          const propertyDefinition = definition[name];
-          property = createResource(propertyDefinition, {
-            parents,
-            name,
-            directory: this.$getDirectory(),
-            owner: this
-          });
-          this.$setProperty(name, property, {ignoreAliases: true});
-        }
-      }).call(this)
-    );
-  }
-
-  $addInitializer(initializer) {
-    if (!this._initializers) {
-      this._initializers = [];
-    }
-    this._initializers.push(initializer);
-  }
-
-  $completeInitialization() {
-    // if (this._initializers) {
-    //   await Promise.all(this._initializers);
-    // }
   }
 
   _parents = [];

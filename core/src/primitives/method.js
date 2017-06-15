@@ -7,19 +7,16 @@ import BaseResource from './base';
 export class MethodResource extends BaseResource {
   constructor(definition, options = {}) {
     super(definition, options);
+    addContextToErrors(() => {
+      setProperty(this, definition, '$variadic');
 
-    this.$addInitializer(
-      addContextToErrors(() => {
-        setProperty(this, definition, '$variadic');
+      const parameters = getProperty(definition, '$parameters', ['$parameter']);
+      if (parameters !== undefined) {
+        this.$setParameters(parameters);
+      }
 
-        const parameters = getProperty(definition, '$parameters', ['$parameter']);
-        if (parameters !== undefined) {
-          this.$setParameters(parameters);
-        }
-
-        this._setImplementation(options.owner);
-      }).call(this)
-    );
+      this._setImplementation(options.owner);
+    }).call(this);
   }
 
   $getParameters() {

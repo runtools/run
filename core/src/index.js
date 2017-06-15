@@ -78,7 +78,7 @@ export function createResource(
     ResourceClass = classBuilder(ResourceClass);
   }
 
-  const resource = new ResourceClass(definition, {
+  return new ResourceClass(definition, {
     parents: actualParents,
     owner,
     directory,
@@ -86,8 +86,6 @@ export function createResource(
     parse,
     resourceCreator: createResource
   });
-  resource.$completeInitialization();
-  return resource;
 }
 
 export function loadResource(
