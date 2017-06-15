@@ -9,12 +9,12 @@ export class MethodResource extends BaseResource {
     super(definition, options);
 
     this.$addInitializer(
-      addContextToErrors(async () => {
+      addContextToErrors(() => {
         setProperty(this, definition, '$variadic');
 
         const parameters = getProperty(definition, '$parameters', ['$parameter']);
         if (parameters !== undefined) {
-          await this.$setParameters(parameters);
+          this.$setParameters(parameters);
         }
 
         this._setImplementation(options.owner);
@@ -26,14 +26,14 @@ export class MethodResource extends BaseResource {
     return this._getProperty('_parameters');
   }
 
-  async $setParameters(parameters) {
+  $setParameters(parameters) {
     this._parameters = undefined;
     if (parameters === undefined) return;
     if (!Array.isArray(parameters)) {
       parameters = [parameters];
     }
     for (let parameter of parameters) {
-      parameter = await createResource(parameter, {directory: this.$getDirectory()});
+      parameter = createResource(parameter, {directory: this.$getDirectory()});
       if (this._parameters === undefined) {
         this._parameters = [];
       }
@@ -119,9 +119,9 @@ export class MethodResource extends BaseResource {
     return lastArguments;
   }
 
-  async $invoke(expression, {owner}) {
+  $invoke(expression, {owner}) {
     const fn = this.$getFunction({parseArguments: true});
-    return await fn.apply(owner, expression.arguments);
+    return fn.apply(owner, expression.arguments);
   }
 
   $serialize(options) {

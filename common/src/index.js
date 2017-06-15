@@ -1,6 +1,6 @@
 import {join, extname} from 'path';
-import {existsSync, mkdirSync, readFileSync, statSync} from 'fs';
-import {readFile, writeFile, outputFile} from 'fs-extra';
+import {existsSync, mkdirSync, readFileSync, writeFileSync, statSync} from 'fs';
+import {outputFile} from 'fs-extra';
 import {homedir, tmpdir} from 'os';
 import crypto from 'crypto';
 import semver from 'semver';
@@ -16,11 +16,11 @@ import JSON5 from 'json5';
 import YAML from 'js-yaml';
 // import t from 'flow-runtime';
 
-export async function loadFile(file: string, {parse = false} = {}) {
+export function loadFile(file: string, {parse = false} = {}) {
   let data;
 
   try {
-    data = await readFile(file, 'utf8');
+    data = readFileSync(file, 'utf8');
   } catch (_) {
     throw new Error(`File not found: ${formatPath(file)}`);
   }
@@ -48,7 +48,7 @@ export async function loadFile(file: string, {parse = false} = {}) {
   return data;
 }
 
-export async function saveFile(file: string, data, {stringify = false} = {}) {
+export function saveFile(file: string, data, {stringify = false} = {}) {
   if (stringify) {
     const ext = extname(file);
     if (ext === '.json5') {
@@ -64,7 +64,7 @@ export async function saveFile(file: string, data, {stringify = false} = {}) {
     }
   }
 
-  await writeFile(file, data);
+  writeFileSync(file, data);
 }
 
 let _runDir;

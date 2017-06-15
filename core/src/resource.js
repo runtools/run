@@ -35,13 +35,13 @@ export class Resource {
     }).call(this);
 
     this.$addInitializer(
-      addContextToErrors(async () => {
+      addContextToErrors(() => {
         for (const name of Object.keys(definition)) {
           if (name.startsWith('$')) continue;
           let property = this.$getPropertyFromParents(name, {ignoreAliases: true});
           const parents = property ? [property] : undefined;
           const propertyDefinition = definition[name];
-          property = await createResource(propertyDefinition, {
+          property = createResource(propertyDefinition, {
             parents,
             name,
             directory: this.$getDirectory(),
@@ -60,10 +60,10 @@ export class Resource {
     this._initializers.push(initializer);
   }
 
-  async $completeInitialization() {
-    if (this._initializers) {
-      await Promise.all(this._initializers);
-    }
+  $completeInitialization() {
+    // if (this._initializers) {
+    //   await Promise.all(this._initializers);
+    // }
   }
 
   _parents = [];
@@ -380,7 +380,7 @@ export class Resource {
     this.$removeProperty(name, {ignoreAliases});
     this._properties.push(property);
 
-    const owner = this;
+    // const owner = this;
     Object.defineProperty(this, name, {
       get() {
         const unwrapper = property.$unwrap;

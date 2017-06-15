@@ -10,7 +10,7 @@ import {getPrimitiveResourceClass} from './primitives';
 const RESOURCE_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
 const RESOURCE_FILE_NAME = 'resource';
 
-export async function createResource(
+export function createResource(
   definition = {},
   {parents = [], owner, name, directory, file, parse} = {}
 ) {
@@ -39,11 +39,11 @@ export async function createResource(
       if (Class) {
         parentsClass.push(Class);
       } else {
-        const parent = await loadResource(type, {directory: dir});
+        const parent = loadResource(type, {directory: dir});
         actualParents.push(parent);
       }
     } else if (isPlainObject(type)) {
-      const parent = await createResource(type, {directory: dir});
+      const parent = createResource(type, {directory: dir});
       actualParents.push(parent);
     } else {
       throw new Error("A 'type' must be a string or a plain object");
@@ -86,11 +86,11 @@ export async function createResource(
     parse,
     resourceCreator: createResource
   });
-  await resource.$completeInitialization();
+  resource.$completeInitialization();
   return resource;
 }
 
-export async function loadResource(
+export function loadResource(
   specifier: string,
   {directory, searchInParentDirectories, throwIfNotFound = true} = {}
 ) {
@@ -115,9 +115,9 @@ export async function loadResource(
     return undefined;
   }
 
-  const definition = await loadFile(file, {parse: true});
+  const definition = loadFile(file, {parse: true});
 
-  return await createResource(definition, {file});
+  return createResource(definition, {file});
 }
 
 function searchResourceFile(directoryOrFile, {searchInParentDirectories = false} = {}) {

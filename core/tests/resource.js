@@ -137,8 +137,8 @@ describe('Resource', () => {
     expect(error.contextStack[0].$name).toBe('hello');
   });
 
-  test('simple property definition', async () => {
-    const person = await createResource({name: {$type: 'string', $value: 'Manu'}});
+  test('simple property definition', () => {
+    const person = createResource({name: {$type: 'string', $value: 'Manu'}});
     expect(person.$get('name')).toBeDefined();
     expect(person.$get('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('Manu');
@@ -146,8 +146,8 @@ describe('Resource', () => {
     expect(person.name).toBe('Manuel');
   });
 
-  test('properties defined from literals', async () => {
-    const person = await createResource({name: 'Manu', age: 44, address: {city: 'London'}});
+  test('properties defined from literals', () => {
+    const person = createResource({name: 'Manu', age: 44, address: {city: 'London'}});
     expect(person.$get('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('Manu');
     expect(person.$get('age')).toBeInstanceOf(NumberResource);
@@ -157,8 +157,8 @@ describe('Resource', () => {
     expect(person.address.city).toBe('London');
   });
 
-  test('composed properties', async () => {
-    const person = await createResource({address: {$type: {city: {$type: 'string'}}}});
+  test('composed properties', () => {
+    const person = createResource({address: {$type: {city: {$type: 'string'}}}});
     expect(person.address).toBeDefined();
     expect(person.address).toBeInstanceOf(Resource);
     expect(person.address.$get('city')).toBeDefined();
@@ -167,8 +167,8 @@ describe('Resource', () => {
     expect(person.address.city).toBe('Paris');
   });
 
-  test('inherited properties', async () => {
-    const person = await createResource({$type: {name: 'anonymous'}});
+  test('inherited properties', () => {
+    const person = createResource({$type: {name: 'anonymous'}});
     const parent = person.$findParent(() => true);
     expect(parent.name).toBe('anonymous');
     expect(person.$get('name')).toBeDefined();
@@ -179,8 +179,8 @@ describe('Resource', () => {
     expect(parent.name).toBe('anonymous');
   });
 
-  test('inherited properties with a value', async () => {
-    const person = await createResource({$type: {name: 'anonymous'}, name: 'Manu'});
+  test('inherited properties with a value', () => {
+    const person = createResource({$type: {name: 'anonymous'}, name: 'Manu'});
     const parent = person.$findParent(() => true);
     expect(parent.name).toBe('anonymous');
     expect(person.name).toBe('Manu');
@@ -189,8 +189,8 @@ describe('Resource', () => {
     expect(parent.name).toBe('anonymous');
   });
 
-  test('inherited composed properties', async () => {
-    const person = await createResource({$type: {address: {$type: {city: 'unknown'}}}});
+  test('inherited composed properties', () => {
+    const person = createResource({$type: {address: {$type: {city: 'unknown'}}}});
     const parent = person.$findParent(() => true);
     expect(parent.address.city).toBe('unknown');
     expect(person.address.city).toBe('unknown');
@@ -199,8 +199,8 @@ describe('Resource', () => {
     expect(parent.address.city).toBe('unknown');
   });
 
-  test('inherited composed properties with a value', async () => {
-    const person = await createResource({
+  test('inherited composed properties with a value', () => {
+    const person = createResource({
       $type: {address: {$type: {city: {$value: 'unknown', $description: 'The city'}}}},
       address: {city: 'Tokyo'}
     });
@@ -217,15 +217,16 @@ describe('Resource', () => {
     expect(parent.address.$get('city').$description).toBe('The city');
   });
 
-  test('serialization', async () => {
-    async function testSerialization(definition, options, expected) {
+  test('serialization', () => {
+    function testSerialization(definition, options, expected) {
       if (arguments.length < 3) expected = definition;
-      expect((await createResource(definition, options)).$serialize()).toEqual(expected);
+      const resource = createResource(definition, options);
+      expect(resource.$serialize()).toEqual(expected);
     }
-    await testSerialization(undefined, undefined, undefined);
-    await testSerialization({}, undefined, undefined);
-    await testSerialization({$type: 'resource'});
-    await testSerialization({
+    testSerialization(undefined, undefined, undefined);
+    testSerialization({}, undefined, undefined);
+    testSerialization({$type: 'resource'});
+    testSerialization({
       $name: 'hello',
       $aliases: ['hi', 'bonjour'],
       $version: '1.2.3',
@@ -234,13 +235,13 @@ describe('Resource', () => {
       $repository: 'git://github.com/user/repo',
       $license: 'MIT'
     });
-    await testSerialization({$author: 'Manu'});
-    await testSerialization({color: {$type: 'string'}});
-    await testSerialization({color: 'green'});
-    await testSerialization({name: 'Manu', address: {city: 'Tokyo'}});
-    await testSerialization({$type: {$name: 'person', name: 'anonymous'}});
-    await testSerialization({$type: {$name: 'person', name: 'anonymous'}, name: 'Manu'});
-    await testSerialization(
+    testSerialization({$author: 'Manu'});
+    testSerialization({color: {$type: 'string'}});
+    testSerialization({color: 'green'});
+    testSerialization({name: 'Manu', address: {city: 'Tokyo'}});
+    testSerialization({$type: {$name: 'person', name: 'anonymous'}});
+    testSerialization({$type: {$name: 'person', name: 'anonymous'}, name: 'Manu'});
+    testSerialization(
       {$implementation: './fixtures/person/index.js', $runtime: 'node@>=6.10.0'},
       {directory: __dirname}
     );
