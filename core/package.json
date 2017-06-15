@@ -23,7 +23,7 @@
         "env",
         {
           "targets": {
-            "node": 6
+            "node": 8
           },
           "loose": true,
           "exclude": [
@@ -69,12 +69,16 @@
     "is-directory": "^0.3.1",
     "json5": "^0.5.1",
     "jsonfile": "^3.0.0",
+    "koa": "^2.2.0",
+    "koa-json-body": "^5.3.0",
     "lodash": "^4.17.4",
     "quote-unquote": "^1.0.0",
     "run-common": "file:../common",
     "semver": "^5.3.0",
     "shell-quote": "^1.6.1",
-    "source-map-support": "^0.4.15"
+    "source-map-support": "^0.4.15",
+    "sync-request": "^4.1.0",
+    "then-request": "^2.2.0"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",

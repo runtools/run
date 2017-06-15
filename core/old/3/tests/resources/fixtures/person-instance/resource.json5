@@ -1,0 +1,5 @@
+{
+  $type: '../person',
+  name: 'Manu',
+  age: 44
+}

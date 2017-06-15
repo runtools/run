@@ -1,7 +1,7 @@
 import VersionRange from '../src/version-range';
 
 describe('VersionRange', () => {
-  test('validation', () => {
+  test('must be valid', () => {
     expect(() => new VersionRange()).not.toThrow();
     expect(() => new VersionRange('1.2.3')).not.toThrow();
     expect(() => new VersionRange('1.2.3.4')).toThrow();
@@ -14,7 +14,7 @@ describe('VersionRange', () => {
     expect(() => new VersionRange('1.2.3 !1.2.7')).toThrow();
   });
 
-  test("'exact' version", () => {
+  test("can represent an 'exact' version", () => {
     const range = new VersionRange('1.2.3');
     expect(range.toString()).toBe('1.2.3');
     expect(range.includes('1.2.2')).toBe(false);
@@ -23,7 +23,7 @@ describe('VersionRange', () => {
     expect(range.toJSON()).toBe('1.2.3');
   });
 
-  test("'any' range", () => {
+  test("can be a 'any' range", () => {
     const range = new VersionRange();
     expect(range.toString()).toBe('');
     expect(range.includes('0.1.2')).toBe(true);
@@ -31,7 +31,7 @@ describe('VersionRange', () => {
     expect(range.toJSON()).toBeUndefined();
   });
 
-  test("'caret' range", () => {
+  test("can be a 'caret' range", () => {
     const range = new VersionRange('^1.2.3');
     expect(range.toString()).toBe('^1.2.3');
     expect(range.includes('1.2.3')).toBe(true);
@@ -50,7 +50,7 @@ describe('VersionRange', () => {
     expect(range2.includes('0.6.0')).toBe(false);
   });
 
-  test("'tilde' range", () => {
+  test("can be a 'tilde' range", () => {
     const range = new VersionRange('~1.2.3');
     expect(range.toString()).toBe('~1.2.3');
     expect(range.includes('1.2.3')).toBe(true);
@@ -68,7 +68,7 @@ describe('VersionRange', () => {
     expect(range2.includes('0.6.0')).toBe(false);
   });
 
-  test("'before' range", () => {
+  test("can be a 'before' range", () => {
     const range = new VersionRange('<2.0.0');
     expect(range.toString()).toBe('<2.0.0');
     expect(range.includes('0.1.2')).toBe(true);
@@ -84,7 +84,7 @@ describe('VersionRange', () => {
     expect(range2.includes('2.0.1')).toBe(false);
   });
 
-  test("'after' range", () => {
+  test("can be an 'after' range", () => {
     const range = new VersionRange('>2.0.0');
     expect(range.toString()).toBe('>2.0.0');
     expect(range.includes('1.20.5')).toBe(false);
@@ -99,7 +99,7 @@ describe('VersionRange', () => {
     expect(range2.includes('3.0.0')).toBe(true);
   });
 
-  test("'between' range", () => {
+  test("can be a 'between' range", () => {
     const range = new VersionRange('>=2.0.0 <3.0.0');
     expect(range.toString()).toBe('>=2.0.0 <3.0.0');
     expect(range.includes('1.20.5')).toBe(false);
@@ -109,7 +109,7 @@ describe('VersionRange', () => {
     expect(range.includes('5.0.0')).toBe(false);
   });
 
-  test('blacklist', () => {
+  test('can exclude some versions', () => {
     const range = new VersionRange('^2.0.0 !2.6.6 !2.7.7');
     expect(range.toString()).toBe('^2.0.0 !2.6.6 !2.7.7');
     expect(range.includes('1.20.5')).toBe(false);
