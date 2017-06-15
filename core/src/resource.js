@@ -35,16 +35,7 @@ export class Resource {
 
       for (const name of Object.keys(definition)) {
         if (name.startsWith('$')) continue;
-        let property = this.$getPropertyFromParents(name, {ignoreAliases: true});
-        const parents = property ? [property] : undefined;
-        const propertyDefinition = definition[name];
-        property = createResource(propertyDefinition, {
-          parents,
-          name,
-          directory: this.$getDirectory(),
-          owner: this
-        });
-        this.$setProperty(name, property, {ignoreAliases: true});
+        this.$setProperty(name, definition[name], {ignoreAliases: true});
       }
     }).call(this);
   }
@@ -52,10 +43,10 @@ export class Resource {
   _parents = [];
 
   $inherit(parent) {
-    parent.$forEachProperty(property => {
-      this.$setProperty(property.$name, property.$instantiate(), {ignoreAliases: true});
-    });
     this._parents.push(parent);
+    parent.$forEachProperty(property => {
+      this.$setProperty(property.$name, undefined, {ignoreAliases: true});
+    });
   }
 
   $instantiate() {
@@ -359,8 +350,18 @@ export class Resource {
   }
 
   // Alias: $set
-  $setProperty(name, property, {ignoreAliases} = {}) {
+  $setProperty(name, definition, {ignoreAliases} = {}) {
     this.$removeProperty(name, {ignoreAliases});
+
+    let property = this.$getPropertyFromParents(name, {ignoreAliases});
+    const parents = property ? [property] : undefined;
+    property = createResource(definition, {
+      parents,
+      name,
+      directory: this.$getDirectory(),
+      owner: this
+    });
+
     this._properties.push(property);
 
     // const owner = this;

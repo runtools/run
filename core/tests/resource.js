@@ -157,9 +157,25 @@ describe('Resource', () => {
     expect(person.address.city).toBe('London');
   });
 
+  test('properties redefined', () => {
+    const person = createResource({name: {$type: 'string', $description: 'Name', $value: 'Manu'}});
+    expect(person.$get('name')).toBeInstanceOf(StringResource);
+    expect(person.name).toBe('Manu');
+    expect(person.$get('name').$description).toBe('Name');
+    person.$set('name', 'Manuel');
+    expect(person.$get('name')).toBeInstanceOf(StringResource);
+    expect(person.name).toBe('Manuel');
+    expect(person.$get('name').$description).toBeUndefined();
+    person.$set('name', {$value: 'mvila', $description: 'The name'});
+    expect(person.name).toBe('mvila');
+    expect(person.$get('name').$description).toBe('The name');
+    person.$set('name', 123); // Since there is no parent, we can change the type
+    expect(person.$get('name')).toBeInstanceOf(NumberResource);
+    expect(person.name).toBe(123);
+  });
+
   test('composed properties', () => {
     const person = createResource({address: {$type: {city: {$type: 'string'}}}});
-    expect(person.address).toBeDefined();
     expect(person.address).toBeInstanceOf(Resource);
     expect(person.address.$get('city')).toBeDefined();
     expect(person.address.city).toBeUndefined();
@@ -170,13 +186,24 @@ describe('Resource', () => {
   test('inherited properties', () => {
     const person = createResource({$type: {name: 'anonymous'}});
     const parent = person.$findParent(() => true);
+    expect(parent.$get('name')).toBeInstanceOf(StringResource);
     expect(parent.name).toBe('anonymous');
-    expect(person.$get('name')).toBeDefined();
     expect(person.$get('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('anonymous');
     person.name = 'Manu';
     expect(person.name).toBe('Manu');
     expect(parent.name).toBe('anonymous');
+  });
+
+  test('inherited properties redefined', () => {
+    const person = createResource({$type: {name: 'anonymous'}});
+    const parent = person.$findParent(() => true);
+    person.$set('name', 'Manuel');
+    expect(person.$get('name')).toBeInstanceOf(StringResource);
+    expect(person.name).toBe('Manuel');
+    expect(parent.name).toBe('anonymous');
+    // Setting a type incompatible with the parent type throws an error
+    expect(() => person.$set('name', 123)).toThrow();
   });
 
   test('inherited properties with a value', () => {

@@ -64,7 +64,7 @@ export function createResource(
     ) {
       // NOOP
     } else {
-      throw new Error(`Can't mix a ${Class.name} with a ${ResourceClass.name}`);
+      throw new Error(`Can't mix a ${ResourceClass.name} with a ${Class.name}`);
     }
   }
 
