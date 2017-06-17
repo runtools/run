@@ -8,7 +8,6 @@ const personInstanceDirectory = join(
   '..',
   'core',
   'tests',
-  'resources',
   'fixtures',
   'person-instance'
 );

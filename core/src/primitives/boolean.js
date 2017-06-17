@@ -3,13 +3,6 @@ import {formatString} from 'run-common';
 import ValueResource from './value';
 
 export class BooleanResource extends ValueResource {
-  constructor(definition = {}, options) {
-    if (typeof definition === 'boolean') {
-      definition = {$value: definition};
-    }
-    super(definition, options);
-  }
-
   static $normalizeValue(value) {
     if (typeof value !== 'boolean') {
       throw new Error('Invalid value type');
@@ -17,7 +10,14 @@ export class BooleanResource extends ValueResource {
     return value;
   }
 
-  static $parseValue(str) {
+  static $normalize(definition, options) {
+    if (typeof definition === 'boolean') {
+      definition = {$value: definition};
+    }
+    return super.$normalize(definition, options);
+  }
+
+  static $parse(str) {
     const originalString = str;
     str = str.toLowerCase();
     if (str === '1' || str === 'true' || str === 'yes' || str === 'on') {

@@ -2,34 +2,35 @@ import BooleanResource from '../../src/primitives/boolean';
 
 describe('BooleanResource', () => {
   test('creation', () => {
-    expect(new BooleanResource().$value).toBeUndefined();
-    expect(new BooleanResource({$value: false}).$value).toBe(false);
-    expect(new BooleanResource({$value: true}).$value).toBe(true);
-    expect(new BooleanResource(true).$value).toBe(true);
-    expect(() => new BooleanResource({$value: 1})).toThrow();
-    expect(() => new BooleanResource(1)).toThrow();
+    expect(BooleanResource.$create()).toBeInstanceOf(BooleanResource);
+    expect(BooleanResource.$create().$value).toBeUndefined();
+    expect(BooleanResource.$create({$value: false}).$value).toBe(false);
+    expect(BooleanResource.$create({$value: true}).$value).toBe(true);
+    expect(BooleanResource.$create(true).$value).toBe(true);
+    expect(() => BooleanResource.$create({$value: 1})).toThrow();
+    expect(() => BooleanResource.$create(1)).toThrow();
   });
 
   test('parsing', () => {
-    expect(() => new BooleanResource({$value: 'true'})).toThrow();
-    expect(new BooleanResource({$value: 'true'}, {parse: true}).$value).toBe(true);
-    expect(new BooleanResource({$value: 'false'}, {parse: true}).$value).toBe(false);
-    expect(new BooleanResource({$value: 'TRUE'}, {parse: true}).$value).toBe(true);
-    expect(new BooleanResource({$value: '1'}, {parse: true}).$value).toBe(true);
-    expect(new BooleanResource({$value: 'yes'}, {parse: true}).$value).toBe(true);
-    expect(new BooleanResource({$value: 'on'}, {parse: true}).$value).toBe(true);
-    expect(new BooleanResource({$value: 'FALSE'}, {parse: true}).$value).toBe(false);
-    expect(new BooleanResource({$value: '0'}, {parse: true}).$value).toBe(false);
-    expect(new BooleanResource({$value: 'no'}, {parse: true}).$value).toBe(false);
-    expect(new BooleanResource({$value: 'off'}, {parse: true}).$value).toBe(false);
-    expect(() => new BooleanResource({$value: ''}, {parse: true})).toThrow();
-    expect(() => new BooleanResource({$value: '3'}, {parse: true})).toThrow();
-    expect(() => new BooleanResource({$value: 'faux'}, {parse: true})).toThrow();
+    expect(() => BooleanResource.$create('true')).toThrow();
+    expect(BooleanResource.$create('true', {parse: true}).$value).toBe(true);
+    expect(BooleanResource.$create('false', {parse: true}).$value).toBe(false);
+    expect(BooleanResource.$create('TRUE', {parse: true}).$value).toBe(true);
+    expect(BooleanResource.$create('1', {parse: true}).$value).toBe(true);
+    expect(BooleanResource.$create('yes', {parse: true}).$value).toBe(true);
+    expect(BooleanResource.$create('on', {parse: true}).$value).toBe(true);
+    expect(BooleanResource.$create('FALSE', {parse: true}).$value).toBe(false);
+    expect(BooleanResource.$create('0', {parse: true}).$value).toBe(false);
+    expect(BooleanResource.$create('no', {parse: true}).$value).toBe(false);
+    expect(BooleanResource.$create('off', {parse: true}).$value).toBe(false);
+    expect(() => BooleanResource.$create('', {parse: true})).toThrow();
+    expect(() => BooleanResource.$create('3', {parse: true})).toThrow();
+    expect(() => BooleanResource.$create('faux', {parse: true})).toThrow();
   });
 
   test('serialization', () => {
-    expect(new BooleanResource().$serialize()).toBeUndefined();
-    expect(new BooleanResource(false).$serialize()).toBe(false);
-    expect(new BooleanResource(true).$serialize()).toBe(true);
+    expect(BooleanResource.$create().$serialize()).toBeUndefined();
+    expect(BooleanResource.$create(false).$serialize()).toBe(false);
+    expect(BooleanResource.$create(true).$serialize()).toBe(true);
   });
 });

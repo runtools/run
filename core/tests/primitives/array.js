@@ -2,25 +2,26 @@ import ArrayResource from '../../src/primitives/array';
 
 describe('ArrayResource', () => {
   test('creation', () => {
-    expect(new ArrayResource().$value).toBeUndefined();
-    expect(new ArrayResource({$value: []}).$value).toEqual([]);
-    expect(new ArrayResource({$value: [1, 'hi']}).$value).toEqual([1, 'hi']);
-    expect(new ArrayResource([true]).$value).toEqual([true]);
-    expect(() => new ArrayResource({$value: 'hello'})).toThrow();
-    expect(() => new ArrayResource('hello')).toThrow();
+    expect(ArrayResource.$create()).toBeInstanceOf(ArrayResource);
+    expect(ArrayResource.$create().$value).toBeUndefined();
+    expect(ArrayResource.$create({$value: []}).$value).toEqual([]);
+    expect(ArrayResource.$create({$value: [1, 'hi']}).$value).toEqual([1, 'hi']);
+    expect(ArrayResource.$create([true]).$value).toEqual([true]);
+    expect(() => ArrayResource.$create({$value: 'hello'})).toThrow();
+    expect(() => ArrayResource.$create('hello')).toThrow();
   });
 
   test('parsing', () => {
-    expect(() => new ArrayResource({$value: '[]'})).toThrow();
-    expect(new ArrayResource({$value: '[]'}, {parse: true}).$value).toEqual([]);
-    expect(new ArrayResource({$value: '[1, 2]'}, {parse: true}).$value).toEqual([1, 2]);
-    expect(() => new ArrayResource({$value: ''}, {parse: true})).toThrow();
-    expect(() => new ArrayResource({$value: '{}'}, {parse: true})).toThrow();
-    expect(() => new ArrayResource({$value: 'Invalid JSON'}, {parse: true})).toThrow();
+    expect(() => ArrayResource.$create('[]')).toThrow();
+    expect(ArrayResource.$create('[]', {parse: true}).$value).toEqual([]);
+    expect(ArrayResource.$create('[1, 2]', {parse: true}).$value).toEqual([1, 2]);
+    expect(() => ArrayResource.$create('', {parse: true})).toThrow();
+    expect(() => ArrayResource.$create('{}', {parse: true})).toThrow();
+    expect(() => ArrayResource.$create('Invalid JSON', {parse: true})).toThrow();
   });
 
   test('immutability', () => {
-    const array = new ArrayResource([1, 2, 3]);
+    const array = ArrayResource.$create([1, 2, 3]);
     expect(array.$value).toEqual([1, 2, 3]);
     expect(() => array.$value.push(4)).toThrow();
     expect(() => {
@@ -30,7 +31,7 @@ describe('ArrayResource', () => {
   });
 
   test('serialization', () => {
-    expect(new ArrayResource().$serialize()).toBeUndefined();
-    expect(new ArrayResource(['green', 'yellow']).$serialize()).toEqual(['green', 'yellow']);
+    expect(ArrayResource.$create().$serialize()).toBeUndefined();
+    expect(ArrayResource.$create(['green', 'yellow']).$serialize()).toEqual(['green', 'yellow']);
   });
 });

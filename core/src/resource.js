@@ -1,22 +1,32 @@
-import {dirname} from 'path';
+import {join, resolve, basename, dirname, isAbsolute} from 'path';
+import {existsSync} from 'fs';
 import {isPlainObject, isEmpty} from 'lodash';
+import isDirectory from 'is-directory';
 import {
   addContextToErrors,
+  getProperty,
   setProperty,
   getPropertyKeyAndValue,
+  loadFile,
   formatString,
+  formatPath,
   formatCode
 } from 'run-common';
 
-import {createResource, loadResource} from './';
+const RESOURCE_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
+const RESOURCE_FILE_NAME = 'resource';
+
+import {getPrimitiveResourceClass} from './primitives';
 import Version from './version';
 import Runtime from './runtime';
 
 export class Resource {
-  constructor(definition: {} = {}, {parents = [], directory, file} = {}) {
+  constructor(definition = {}, {parents = [], owner, name, directory, file} = {}) {
     addContextToErrors(() => {
+      if (owner !== undefined) this.$setOwner(owner);
       if (directory !== undefined) this.$setDirectory(directory);
       if (file !== undefined) this.$setFile(file);
+      if (name !== undefined) this.$name = name;
 
       setProperty(this, definition, '$name');
       setProperty(this, definition, '$aliases', ['$alias']);
@@ -38,6 +48,117 @@ export class Resource {
         this.$setProperty(name, definition[name], {ignoreAliases: true});
       }
     }).call(this);
+  }
+
+  static $create(definition = {}, {parents = [], owner, name, directory, file, parse} = {}) {
+    let normalizedDefinition;
+    if (isPlainObject(definition)) {
+      normalizedDefinition = definition;
+    } else {
+      normalizedDefinition = {};
+      if (definition !== undefined) {
+        normalizedDefinition.$value = definition;
+      }
+    }
+
+    let types = getProperty(normalizedDefinition, '$types', ['$type']);
+    types = Resource.$normalizeTypes(types);
+    if (
+      this === Resource &&
+      types.length === 0 &&
+      parents.length === 0 &&
+      normalizedDefinition.$value !== undefined
+    ) {
+      types = [inferType(normalizedDefinition.$value)];
+    }
+
+    const dir = directory || (file && dirname(file));
+
+    const parentsClasses = [this];
+    const actualParents = [...parents];
+
+    for (const type of types) {
+      if (typeof type === 'string') {
+        if (type === 'resource') continue;
+        const Class = getPrimitiveResourceClass(type);
+        if (Class) {
+          parentsClasses.push(Class);
+        } else {
+          const parent = Resource.$load(type, {directory: dir});
+          actualParents.push(parent);
+        }
+      } else if (isPlainObject(type)) {
+        const parent = Resource.$create(type, {directory: dir});
+        actualParents.push(parent);
+      } else {
+        throw new Error("A 'type' must be a string or a plain object");
+      }
+    }
+
+    for (const parent of actualParents) {
+      parentsClasses.push(parent.constructor);
+    }
+
+    let ResourceClass = Resource;
+    for (const Class of parentsClasses) {
+      if (Object.prototype.isPrototypeOf.call(ResourceClass, Class)) {
+        ResourceClass = Class;
+      } else if (
+        ResourceClass === Class ||
+        Object.prototype.isPrototypeOf.call(Class, ResourceClass)
+      ) {
+        // NOOP
+      } else {
+        throw new Error(`Can't mix a ${ResourceClass.name} with a ${Class.name}`);
+      }
+    }
+
+    const implementation = getProperty(normalizedDefinition, '$implementation');
+    if (implementation) {
+      const classBuilder = requireImplementation(implementation, {directory: dir});
+      ResourceClass = classBuilder(ResourceClass);
+    }
+
+    normalizedDefinition = ResourceClass.$normalize(definition, {parse});
+
+    return new ResourceClass(normalizedDefinition, {
+      parents: actualParents,
+      owner,
+      name,
+      directory,
+      file,
+      parse
+    });
+  }
+
+  static $load(
+    specifier: string,
+    {directory, searchInParentDirectories, throwIfNotFound = true} = {}
+  ) {
+    let file;
+
+    if (specifier.startsWith('.')) {
+      if (!directory) {
+        throw new Error("'directory' argument is missing");
+      }
+      file = resolve(directory, specifier);
+    } else if (isAbsolute(specifier)) {
+      file = specifier;
+    } else {
+      throw new Error(`Loading from Resdir is not yet implemented (${formatString(specifier)})`);
+    }
+
+    file = searchResourceFile(file, {searchInParentDirectories});
+    if (!file) {
+      if (throwIfNotFound) {
+        throw new Error(`Resource not found: ${formatPath(specifier)}`);
+      }
+      return undefined;
+    }
+
+    const definition = loadFile(file, {parse: true});
+
+    return this.$create(definition, {file});
   }
 
   _parents = [];
@@ -83,6 +204,10 @@ export class Resource {
     return result;
   }
 
+  $instantiate(definition, {parse} = {}) {
+    return this.constructor.$create(definition, {parents: [this], parse});
+  }
+
   $isInstanceOf(resource) {
     return Boolean(this.$findParent(parent => parent === resource));
   }
@@ -99,6 +224,14 @@ export class Resource {
       {deepSearch: true}
     );
     return result;
+  }
+
+  $getOwner() {
+    return this.__owner;
+  }
+
+  $setOwner(owner) {
+    this.__owner = owner;
   }
 
   $getFile() {
@@ -349,7 +482,7 @@ export class Resource {
 
     let property = this.$getPropertyFromParents(name, {ignoreAliases});
     const parents = property ? [property] : undefined;
-    property = createResource(definition, {
+    property = Resource.$create(definition, {
       parents,
       name,
       directory: this.$getDirectory(),
@@ -358,19 +491,12 @@ export class Resource {
 
     this._properties.push(property);
 
-    // const owner = this;
     Object.defineProperty(this, name, {
       get() {
-        const unwrapper = property.$unwrap;
-        return unwrapper ? unwrapper.call(property) : property;
+        return property.$unwrap();
       },
       set(value) {
-        const wrapper = property.$wrap;
-        if (wrapper) {
-          wrapper.call(property, value);
-        } else {
-          throw new Error('Unimplemented');
-        }
+        property.$wrap(value);
       },
       configurable: true
     });
@@ -385,7 +511,41 @@ export class Resource {
     });
   }
 
+  $unwrap() {
+    return this;
+  }
+
+  $wrap(value) {
+    const owner = this.$getOwner();
+    if (!owner) {
+      throw new Error("Can't wrap a property without an 'owner'");
+    }
+
+    const name = this.$name;
+    if (!name) {
+      throw new Error("Can't wrap a property without a '$name'");
+    }
+
+    owner.$setProperty(name, value, {ignoreAliases: true});
+  }
+
+  async $invoke(expression) {
+    expression = {...expression, arguments: [...expression.arguments]};
+    const name = expression.arguments.shift();
+    if (!name) return this;
+
+    const property = this.$getProperty(name);
+    if (!property) {
+      throw new Error(`Property not found: ${formatCode(name)}`);
+    }
+
+    return await property.$invoke(expression, {owner: this});
+  }
+
   static $normalize(definition, _options) {
+    if (definition !== undefined && !isPlainObject(definition)) {
+      throw new Error('Invalid resource definition');
+    }
     return definition;
   }
 
@@ -464,11 +624,89 @@ export class Resource {
   }
 }
 
-// Convenient reference to core functions
-Resource.core = {createResource, loadResource};
-
-// Aliases
 Resource.prototype.$get = Resource.prototype.$getProperty;
 Resource.prototype.$set = Resource.prototype.$setProperty;
+
+function searchResourceFile(directoryOrFile, {searchInParentDirectories = false} = {}) {
+  let directory;
+
+  if (isDirectory.sync(directoryOrFile)) {
+    directory = directoryOrFile;
+  }
+
+  if (!directory) {
+    if (existsSync(directoryOrFile)) {
+      const file = directoryOrFile;
+      const filename = basename(file);
+      if (RESOURCE_FILE_FORMATS.find(format => filename === RESOURCE_FILE_NAME + '.' + format)) {
+        return file;
+      }
+    }
+    return undefined;
+  }
+
+  for (const format of RESOURCE_FILE_FORMATS) {
+    const file = join(directory, RESOURCE_FILE_NAME + '.' + format);
+    if (existsSync(file)) {
+      return file;
+    }
+  }
+
+  if (searchInParentDirectories) {
+    const parentDirectory = join(directory, '..');
+    if (parentDirectory !== directory) {
+      return searchResourceFile(parentDirectory, {searchInParentDirectories});
+    }
+  }
+
+  return undefined;
+}
+
+function inferType(value) {
+  if (typeof value === 'boolean') {
+    return 'boolean';
+  } else if (typeof value === 'number') {
+    return 'number';
+  } else if (typeof value === 'string') {
+    return 'string';
+  } else if (Array.isArray(value)) {
+    return 'array';
+  } else if (isPlainObject(value)) {
+    return 'object';
+  }
+  throw new Error('Cannot infer the type from $value');
+}
+
+function requireImplementation(implementationFile, {directory} = {}) {
+  let file = implementationFile;
+  if (!isAbsolute(file) && directory) {
+    file = resolve(directory, file);
+  }
+  file = searchImplementationFile(file);
+  if (!file) {
+    throw new Error(`File not found: ${formatPath(implementationFile)}`);
+  }
+  const result = require(file);
+  return result.default || result;
+}
+
+function searchImplementationFile(file) {
+  if (isDirectory.sync(file)) {
+    const dir = file;
+    const mainFile = join(dir, 'index.js');
+    if (existsSync(mainFile)) {
+      return mainFile;
+    }
+  } else {
+    if (existsSync(file)) {
+      return file;
+    }
+    const fileWithExtension = file + '.js';
+    if (existsSync(fileWithExtension)) {
+      return fileWithExtension;
+    }
+  }
+  return undefined;
+}
 
 export default Resource;

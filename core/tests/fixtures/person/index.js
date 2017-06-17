@@ -10,11 +10,12 @@ module.exports = base =>
       return this.formatGreetingMethod(verb);
     }
 
-    formatWordsMethod(words) {
+    formatWordsMethod(...words) {
       return formatWords(words, {capitalize: true});
     }
 
-    formatWordsCommand(words, {capitalize}) {
+    formatWordsCommand(...words) {
+      const {capitalize} = words.pop();
       return formatWords(words, {capitalize});
     }
   };

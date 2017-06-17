@@ -2,26 +2,27 @@ import NumberResource from '../../src/primitives/number';
 
 describe('NumberResource', () => {
   test('creation', () => {
-    expect(new NumberResource().$value).toBeUndefined();
-    expect(new NumberResource({$value: 0}).$value).toBe(0);
-    expect(new NumberResource({$value: 1}).$value).toBe(1);
-    expect(new NumberResource({$value: 123.45}).$value).toBe(123.45);
-    expect(new NumberResource(-789).$value).toBe(-789);
-    expect(() => new NumberResource({$value: 'hello'})).toThrow();
-    expect(() => new NumberResource('hello')).toThrow();
+    expect(NumberResource.$create()).toBeInstanceOf(NumberResource);
+    expect(NumberResource.$create().$value).toBeUndefined();
+    expect(NumberResource.$create({$value: 0}).$value).toBe(0);
+    expect(NumberResource.$create({$value: 1}).$value).toBe(1);
+    expect(NumberResource.$create({$value: 123.45}).$value).toBe(123.45);
+    expect(NumberResource.$create(-789).$value).toBe(-789);
+    expect(() => NumberResource.$create({$value: 'hello'})).toThrow();
+    expect(() => NumberResource.$create('hello')).toThrow();
   });
 
   test('parsing', () => {
-    expect(() => new NumberResource({$value: '123'})).toThrow();
-    expect(new NumberResource({$value: '123'}, {parse: true}).$value).toBe(123);
-    expect(new NumberResource({$value: '0.999'}, {parse: true}).$value).toBe(0.999);
-    expect(new NumberResource({$value: '-3.333'}, {parse: true}).$value).toBe(-3.333);
-    expect(() => new NumberResource({$value: ''}, {parse: true})).toThrow();
-    expect(() => new NumberResource({$value: 'two'}, {parse: true})).toThrow();
+    expect(() => NumberResource.$create('123')).toThrow();
+    expect(NumberResource.$create('123', {parse: true}).$value).toBe(123);
+    expect(NumberResource.$create('0.999', {parse: true}).$value).toBe(0.999);
+    expect(NumberResource.$create('-3.333', {parse: true}).$value).toBe(-3.333);
+    expect(() => NumberResource.$create('', {parse: true})).toThrow();
+    expect(() => NumberResource.$create('two', {parse: true})).toThrow();
   });
 
   test('serialization', () => {
-    expect(new NumberResource().$serialize()).toBeUndefined();
-    expect(new NumberResource(123.45).$serialize()).toBe(123.45);
+    expect(NumberResource.$create().$serialize()).toBeUndefined();
+    expect(NumberResource.$create(123.45).$serialize()).toBe(123.45);
   });
 });

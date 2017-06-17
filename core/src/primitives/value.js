@@ -1,4 +1,5 @@
-import {getProperty, addContextToErrors} from 'run-common';
+import {isEmpty, isPlainObject} from 'lodash';
+import {setProperty, addContextToErrors} from 'run-common';
 
 import Resource from '../resource';
 
@@ -6,49 +7,52 @@ export class ValueResource extends Resource {
   constructor(definition, options) {
     super(definition, options);
     addContextToErrors(() => {
-      const value = getProperty(definition, '$value');
-      if (value !== undefined) {
-        const parse = options && options.parse;
-        this.$setValue(value, {parse});
-      }
+      setProperty(this, definition, '$value');
     }).call(this);
   }
 
   get $value() {
-    return this.$getValue();
-  }
-
-  set $value(value) {
-    this.$setValue(value);
-  }
-
-  $getValue() {
     return this._getProperty('_value');
   }
 
-  $setValue(value, {parse} = {}) {
+  set $value(value) {
     if (value !== undefined) {
-      if (typeof value === 'string' && parse) {
-        const parser = this.constructor.$parseValue;
-        if (parser) {
-          value = parser(value);
-        }
-      }
       value = this.constructor.$normalizeValue(value);
     }
     this._value = value;
   }
 
+  $serializeValue() {
+    return this._value;
+  }
+
   $unwrap() {
-    return this.$getValue();
+    return this.$value;
   }
 
   $wrap(value) {
-    this.$setValue(value);
+    this.$value = value;
   }
 
-  $serializeValue() {
-    return this._value;
+  async $invoke(expression) {
+    if (expression.arguments.length || !isEmpty(expression.options)) {
+      throw new Error('A ValueResource cannot be invoked with arguments or options');
+    }
+    return this.$getValue();
+  }
+
+  static $normalize(definition, options) {
+    if (definition !== undefined && !isPlainObject(definition)) {
+      if (typeof definition === 'string' && options && options.parse) {
+        definition = this.$parse(definition);
+      }
+      definition = {$value: definition};
+    }
+    return super.$normalize(definition, options);
+  }
+
+  static $parse(str) {
+    return str;
   }
 
   $serialize(options) {

@@ -1,36 +1,29 @@
 import {compact, isEmpty} from 'lodash';
-import {getProperty, setProperty, addContextToErrors, formatCode} from 'run-common';
+import {setProperty, addContextToErrors, formatCode} from 'run-common';
 
-import {createResource} from './';
-import BaseResource from './base';
+import Resource from '../resource';
 
-export class MethodResource extends BaseResource {
-  constructor(definition, options = {}) {
+export class MethodResource extends Resource {
+  constructor(definition, options) {
     super(definition, options);
     addContextToErrors(() => {
       setProperty(this, definition, '$variadic');
-
-      const parameters = getProperty(definition, '$parameters', ['$parameter']);
-      if (parameters !== undefined) {
-        this.$setParameters(parameters);
-      }
-
-      this._setImplementation(options.owner);
+      setProperty(this, definition, '$parameters', ['$parameter']);
     }).call(this);
   }
 
-  $getParameters() {
+  get $parameters() {
     return this._getProperty('_parameters');
   }
 
-  $setParameters(parameters) {
+  set $parameters(parameters) {
     this._parameters = undefined;
     if (parameters === undefined) return;
     if (!Array.isArray(parameters)) {
       parameters = [parameters];
     }
     for (let parameter of parameters) {
-      parameter = createResource(parameter, {directory: this.$getDirectory()});
+      parameter = Resource.$create(parameter, {directory: this.$getDirectory()});
       if (this._parameters === undefined) {
         this._parameters = [];
       }
@@ -46,17 +39,7 @@ export class MethodResource extends BaseResource {
     this._variadic = variadic;
   }
 
-  _getImplementation() {
-    return this._getProperty('_implementation');
-  }
-
-  _setImplementation(owner) {
-    if (!owner) return;
-    const proto = Object.getPrototypeOf(owner);
-    this._implementation = proto[this.$name];
-  }
-
-  $get() {
+  $unwrap() {
     return this.$getFunction();
   }
 
@@ -84,22 +67,21 @@ export class MethodResource extends BaseResource {
     const normalizedArguments = [];
     const remainingArguments = [...args];
 
-    const parameters = this.$getParameters() || [];
+    const parameters = this.$parameters || [];
     const lastParameter = parameters[parameters.length - 1];
     const variadic = this.$variadic;
     for (const parameter of parameters) {
-      let normalizedArgument;
       if (variadic && parameter === lastParameter) {
-        normalizedArgument = [];
         const lastArguments = this._shiftLastArguments(remainingArguments);
         for (const argument of lastArguments) {
-          normalizedArgument.push(parameter.$instantiate(argument, {parse}).$get());
+          const normalizedArgument = parameter.$instantiate(argument, {parse}).$unwrap();
+          normalizedArguments.push(normalizedArgument);
         }
       } else {
         const argument = remainingArguments.shift();
-        normalizedArgument = parameter.$instantiate(argument, {parse}).$get();
+        const normalizedArgument = parameter.$instantiate(argument, {parse}).$unwrap();
+        normalizedArguments.push(normalizedArgument);
       }
-      normalizedArguments.push(normalizedArgument);
     }
 
     return {normalizedArguments, remainingArguments};
@@ -114,6 +96,22 @@ export class MethodResource extends BaseResource {
       lastArguments.push(arg);
     }
     return lastArguments;
+  }
+
+  _getImplementation() {
+    let implementation;
+    const owner = this.$getOwner();
+    if (owner) {
+      owner.$forSelfAndEachParent(
+        resource => {
+          const proto = resource.constructor.prototype;
+          implementation = proto[this.$name];
+          if (implementation) return false;
+        },
+        {deepSearch: true}
+      );
+    }
+    return implementation;
   }
 
   $invoke(expression, {owner}) {

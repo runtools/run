@@ -6,13 +6,6 @@ import {formatString} from 'run-common';
 import ValueResource from './value';
 
 export class ArrayResource extends ValueResource {
-  constructor(definition = {}, options) {
-    if (Array.isArray(definition)) {
-      definition = {$value: definition};
-    }
-    super(definition, options);
-  }
-
   static $normalizeValue(value) {
     if (!Array.isArray(value)) {
       throw new Error('Invalid value type');
@@ -22,7 +15,14 @@ export class ArrayResource extends ValueResource {
     return value;
   }
 
-  static $parseValue(str) {
+  static $normalize(definition, options) {
+    if (Array.isArray(definition)) {
+      definition = {$value: definition};
+    }
+    return super.$normalize(definition, options);
+  }
+
+  static $parse(str) {
     let array;
     try {
       array = JSON5.parse(str);
