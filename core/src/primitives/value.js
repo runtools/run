@@ -38,7 +38,7 @@ export class ValueResource extends Resource {
     if (expression.arguments.length || !isEmpty(expression.options)) {
       throw new Error('A ValueResource cannot be invoked with arguments or options');
     }
-    return this.$getValue();
+    return this.$value;
   }
 
   static $normalize(definition, options) {
