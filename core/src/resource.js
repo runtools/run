@@ -204,7 +204,7 @@ export class Resource {
     return result;
   }
 
-  $instantiate(definition, {parse} = {}) {
+  $create(definition, {parse} = {}) {
     return this.constructor.$create(definition, {parents: [this], parse});
   }
 
@@ -227,27 +227,27 @@ export class Resource {
   }
 
   $getOwner() {
-    return this.__owner;
+    return this._owner;
   }
 
   $setOwner(owner) {
-    this.__owner = owner;
+    this._owner = owner;
   }
 
   $getFile() {
-    return this.__file;
+    return this._file;
   }
 
   $setFile(file) {
-    this.__file = file;
+    this._file = file;
   }
 
   $getDirectory() {
-    return this.__directory || (this.$getFile() && dirname(this.$getFile()));
+    return this._directory || (this.$getFile() && dirname(this.$getFile()));
   }
 
   $setDirectory(directory) {
-    this.__directory = directory;
+    this._directory = directory;
   }
 
   get $name() {

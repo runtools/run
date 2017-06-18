@@ -332,7 +332,7 @@ describe('Resource', () => {
 
   test('customized normalization and serialization', () => {
     const Person = Resource.$load('./fixtures/person', {directory: __dirname});
-    const person = Person.$instantiate({address: {city: 'Paris', country: 'France'}});
+    const person = Person.$create({address: {city: 'Paris', country: 'France'}});
     expect(person.address.city).toBe('Paris');
     expect(person.address.country).toBe('France');
     expect(person.$serialize()).toEqual({address: 'Paris, France'});

@@ -74,12 +74,12 @@ export class MethodResource extends Resource {
       if (variadic && parameter === lastParameter) {
         const lastArguments = this._shiftLastArguments(remainingArguments);
         for (const argument of lastArguments) {
-          const normalizedArgument = parameter.$instantiate(argument, {parse}).$unwrap();
+          const normalizedArgument = parameter.$create(argument, {parse}).$unwrap();
           normalizedArguments.push(normalizedArgument);
         }
       } else {
         const argument = remainingArguments.shift();
-        const normalizedArgument = parameter.$instantiate(argument, {parse}).$unwrap();
+        const normalizedArgument = parameter.$create(argument, {parse}).$unwrap();
         normalizedArguments.push(normalizedArgument);
       }
     }

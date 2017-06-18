@@ -49,7 +49,7 @@ export class CommandResource extends MethodResource {
       if (key !== undefined) {
         delete remainingOptions[key];
       }
-      const normalizedValue = option.$instantiate(value, {parse}).$unwrap();
+      const normalizedValue = option.$create(value, {parse}).$unwrap();
       if (normalizedValue !== undefined) {
         normalizedOptions[option.$name] = normalizedValue;
       }

@@ -25,7 +25,7 @@ describe('MethodResource', () => {
     const Person = Resource.$load('../fixtures/person', {directory: __dirname});
     expect(Person.formatGreetingMethod()).toBe('Hello Anonymous!');
 
-    let person = Person.$instantiate({name: 'Manu'});
+    let person = Person.$create({name: 'Manu'});
 
     expect(person.formatGreetingMethod()).toBe('Hello Manu!');
     expect(person.formatGreetingMethod('Konnichiwa')).toBe('Konnichiwa Manu!');

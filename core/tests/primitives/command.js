@@ -18,7 +18,7 @@ describe('CommandResource', () => {
 
   test('can be invoked', () => {
     const Person = Resource.$load('../fixtures/person', {directory: __dirname});
-    let person = Person.$instantiate({name: 'Manu', age: 44});
+    let person = Person.$create({name: 'Manu', age: 44});
     expect(person.formatGreetingCommand()).toBe('Hi Manu!');
     person.age++;
     expect(person.formatGreetingCommand()).toBe('Hello Manu!');

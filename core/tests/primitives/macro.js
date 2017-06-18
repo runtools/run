@@ -10,7 +10,7 @@ describe('MacroResource', () => {
 
   test('can be invoked', async () => {
     const Person = Resource.$load('../fixtures/person', {directory: __dirname});
-    let person = Person.$instantiate({name: 'Manu', age: 29});
+    let person = Person.$create({name: 'Manu', age: 29});
     expect(await person.formatGreetingMacro()).toBe('Hi Manu!');
     person.age++;
     expect(await person.formatGreetingMacro()).toBe('Hello Manu!');
