@@ -251,7 +251,7 @@ export class Resource {
   }
 
   get $name() {
-    return this._getProperty('_name');
+    return this._name;
   }
 
   set $name(name: ?string) {
@@ -359,7 +359,7 @@ export class Resource {
   }
 
   get $version() {
-    return this._getProperty('_version');
+    return this._version;
   }
 
   set $version(version: ?(string | Version)) {
@@ -378,7 +378,7 @@ export class Resource {
   }
 
   get $authors() {
-    return this._getProperty('_authors');
+    return this._authors;
   }
 
   set $authors(authors: ?(Array<string> | string)) {
@@ -389,7 +389,7 @@ export class Resource {
   }
 
   get $repository() {
-    return this._getProperty('_repository');
+    return this._repository;
   }
 
   set $repository(repository: ?string) {
@@ -397,7 +397,7 @@ export class Resource {
   }
 
   get $license() {
-    return this._getProperty('_license');
+    return this._license;
   }
 
   set $license(license: ?string) {
