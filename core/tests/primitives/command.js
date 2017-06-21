@@ -4,7 +4,7 @@ import StringResource from '../../src/primitives/string';
 import NumberResource from '../../src/primitives/number';
 
 describe('CommandResource', () => {
-  test('can have options', () => {
+  test('creation', () => {
     const command = CommandResource.$create({
       $options: {name: {$type: 'string'}, age: {$type: 'number'}}
     });
@@ -16,9 +16,11 @@ describe('CommandResource', () => {
     expect(command.$options[1].$name).toBe('age');
   });
 
-  test('can be invoked', () => {
+  test('invocation', () => {
+    // options
     const Person = Resource.$load('../fixtures/person', {directory: __dirname});
-    let person = Person.$create({name: 'Manu', age: 44});
+
+    const person = Person.$create({name: 'Manu', age: 44});
     expect(person.formatGreetingCommand()).toBe('Hi Manu!');
     person.age++;
     expect(person.formatGreetingCommand()).toBe('Hello Manu!');
@@ -26,16 +28,20 @@ describe('CommandResource', () => {
     expect(person.formatGreetingCommand({limit: 46})).toBe('Hi Manu!');
     expect(() => person.formatGreetingCommand({ageLimit: 46}, true)).toThrow();
 
-    person = Resource.$load('../fixtures/person-instance', {directory: __dirname});
-    expect(person.formatWordsCommand()).toBe('');
-    expect(person.formatWordsCommand({capitalize: false})).toBe('');
-    expect(person.formatWordsCommand('blue')).toBe('Blue.');
-    expect(person.formatWordsCommand('blue', {capitalize: false})).toBe('blue.');
-    expect(person.formatWordsCommand('blue', 'yellow')).toBe('Blue, yellow.');
-    expect(person.formatWordsCommand('blue', 'yellow', {capitalize: false})).toBe('blue, yellow.');
+    // variadic command
+    expect(Person.formatWordsCommand()).toBe('');
+    expect(Person.formatWordsCommand({capitalize: false})).toBe('');
+    expect(Person.formatWordsCommand('blue')).toBe('Blue.');
+    expect(Person.formatWordsCommand('blue', {capitalize: false})).toBe('blue.');
+    expect(Person.formatWordsCommand('blue', 'yellow')).toBe('Blue, yellow.');
+    expect(Person.formatWordsCommand('blue', 'yellow', {capitalize: false})).toBe('blue, yellow.');
+
+    // options inherited from tool
+    expect(Person.formatWordsCommand('blue', 'yellow')).toBe('Blue, yellow.');
+    expect(Person.formatWordsCommand('blue', 'yellow', {shout: true})).toBe('BLUE, YELLOW.');
   });
 
-  test('is serializable', () => {
+  test('serialization', () => {
     expect(CommandResource.$create().$serialize()).toBeUndefined();
     expect(CommandResource.$create({$type: 'command'}).$serialize()).toEqual({$type: 'command'});
     expect(CommandResource.$create({$option: {name: 'Manu'}}).$serialize()).toEqual({

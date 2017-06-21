@@ -2,13 +2,13 @@ import Resource from '../../src/resource';
 import MacroResource from '../../src/primitives/macro';
 
 describe('MacroResource', () => {
-  test('can have an expression', () => {
+  test('creation', () => {
     const macro = MacroResource.$create({$expression: 'frontend deploy --verbose'});
     expect(macro).toBeInstanceOf(MacroResource);
     expect(macro.$expressions).toEqual(['frontend deploy --verbose']);
   });
 
-  test('can be invoked', async () => {
+  test('invocation', async () => {
     const Person = Resource.$load('../fixtures/person', {directory: __dirname});
     let person = Person.$create({name: 'Manu', age: 29});
     expect(await person.formatGreetingMacro()).toBe('Hi Manu!');
@@ -19,7 +19,7 @@ describe('MacroResource', () => {
     expect(await person.formatWordsMacro()).toBe('blue, green.');
   });
 
-  test('can load a resource', async () => {
+  test('resource loading', async () => {
     const macro = MacroResource.$create(
       {$expression: '../fixtures/person-instance'},
       {directory: __dirname}
@@ -29,7 +29,7 @@ describe('MacroResource', () => {
     expect(person.name).toBe('Manu');
   });
 
-  test('is serializable', () => {
+  test('serialization', () => {
     expect(MacroResource.$create().$serialize()).toBeUndefined();
     expect(MacroResource.$create({$type: 'macro'}).$serialize()).toEqual({$type: 'macro'});
     expect(MacroResource.$create({$expression: 'frontend deploy --verbose'}).$serialize()).toEqual({

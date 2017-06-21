@@ -8,13 +8,15 @@ import {
   setProperty,
   getPropertyKeyAndValue,
   loadFile,
+  saveFile,
   formatString,
   formatPath,
   formatCode
 } from 'run-common';
 
-const RESOURCE_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
 const RESOURCE_FILE_NAME = 'resource';
+const RESOURCE_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
+const DEFAULT_RESOURCE_FILE_FORMAT = 'json5';
 
 import {getPrimitiveResourceClass} from './primitives';
 import Version from './version';
@@ -161,6 +163,22 @@ export class Resource {
     return this.$create(definition, {file});
   }
 
+  $save(directory) {
+    if (directory) {
+      this.$setDirectory(directory);
+    }
+
+    let file = this.$getFile();
+    if (!file) {
+      const directory = this.$getDirectory({throwIfUndefined: true});
+      file = join(directory, RESOURCE_FILE_NAME + '.' + DEFAULT_RESOURCE_FILE_FORMAT);
+      this.$setFile(file);
+    }
+
+    const definition = this.$serialize();
+    saveFile(file, definition, {stringify: true});
+  }
+
   _parents = [];
 
   _inherit(parent) {
@@ -204,8 +222,8 @@ export class Resource {
     return result;
   }
 
-  $create(definition, {parse} = {}) {
-    return this.constructor.$create(definition, {parents: [this], parse});
+  $create(definition, options) {
+    return this.constructor.$create(definition, {...options, parents: [this]});
   }
 
   $isInstanceOf(resource) {
@@ -242,12 +260,19 @@ export class Resource {
     this._file = file;
   }
 
-  $getDirectory() {
-    return this._directory || (this.$getFile() && dirname(this.$getFile()));
+  $getDirectory({throwIfUndefined} = {}) {
+    const directory = this._directory || (this.$getFile() && dirname(this.$getFile()));
+    if (!directory && throwIfUndefined) {
+      throw new Error("Resource's directory is undefined");
+    }
+    return directory;
   }
 
   $setDirectory(directory) {
-    this._directory = directory;
+    if (directory !== this._directory) {
+      this._directory = directory;
+      this._file = undefined;
+    }
   }
 
   get $name() {
@@ -478,7 +503,7 @@ export class Resource {
 
   // Alias: $set
   $setProperty(name, definition, {ignoreAliases} = {}) {
-    this.$removeProperty(name, {ignoreAliases});
+    const removedPropertyIndex = this.$removeProperty(name, {ignoreAliases});
 
     let property = this.$getPropertyFromParents(name, {ignoreAliases});
     const parents = property ? [property] : undefined;
@@ -489,7 +514,12 @@ export class Resource {
       owner: this
     });
 
-    this._properties.push(property);
+    if (removedPropertyIndex !== undefined) {
+      // Try to not change the order of properties
+      this._properties.splice(removedPropertyIndex, 0, property);
+    } else {
+      this._properties.push(property);
+    }
 
     Object.defineProperty(this, name, {
       get() {
@@ -503,12 +533,15 @@ export class Resource {
   }
 
   $removeProperty(name, {ignoreAliases} = {}) {
+    let result;
     this.$forEachProperty((property, index) => {
       if (property.$isMatching(name, {ignoreAliases})) {
         this._properties.splice(index, 1);
+        result = index;
         return false;
       }
     });
+    return result;
   }
 
   $unwrap() {

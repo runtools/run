@@ -17,6 +17,5 @@ updateNotifier({pkg}).notify();
 (async () => {
   const expression = process.argv.slice(2).join(' ');
   const directory = process.cwd();
-  const result = await run(expression, {directory});
-  console.log(result);
+  await run(expression, {directory});
 })().catch(showErrorAndExit);

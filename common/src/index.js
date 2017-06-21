@@ -181,7 +181,7 @@ export function showCommandIntro(action, {name, stage, info} = {}) {
   console.log(message);
 }
 
-export async function task(fn: () => mixed, {intro, outro, debug, verbose}) {
+export async function task(fn: () => mixed, {intro, outro, debug, verbose, quiet}) {
   let progress;
 
   if (debug || verbose) {
@@ -203,6 +203,24 @@ export async function task(fn: () => mixed, {intro, outro, debug, verbose}) {
       },
       setOutro(message) {
         this.outro = message;
+        return this;
+      }
+    };
+  } else if (quiet) {
+    progress = {
+      start() {
+        return this;
+      },
+      complete() {
+        return this;
+      },
+      fail() {
+        return this;
+      },
+      setMessage(_message) {
+        return this;
+      },
+      setOutro(_message) {
         return this;
       }
     };
@@ -527,7 +545,9 @@ export async function fetchJSON(url: string, options = {}) {
 
   const response = await fetch(url, opts);
   if (response.status !== 200) {
-    throw new Error(`Unexpected ${response.status} HTTP status`);
+    const error = new Error(`Unexpected ${response.status} HTTP status`);
+    error.httpStatus = response.status;
+    throw error;
   }
 
   const result = await response.json();

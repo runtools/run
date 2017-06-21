@@ -15,15 +15,17 @@ module.exports = base =>
     }
 
     formatWordsCommand(...words) {
-      const {capitalize} = words.pop();
-      return formatWords(words, {capitalize});
+      const {capitalize, shout} = words.pop();
+      return formatWords(words, {capitalize, shout});
     }
   };
 
-function formatWords(words, {capitalize}) {
+function formatWords(words, {capitalize, shout}) {
   if (!words.length) return '';
   words = words.join(', ') + '.';
-  if (capitalize) {
+  if (shout) {
+    words = words.toUpperCase();
+  } else if (capitalize) {
     words = words.slice(0, 1).toUpperCase() + words.slice(1);
   }
   return words;

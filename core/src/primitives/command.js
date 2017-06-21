@@ -1,33 +1,10 @@
-import {entries, isEmpty, isPlainObject} from 'lodash';
-import {setProperty, addContextToErrors, formatCode} from 'run-common';
+import {isPlainObject} from 'lodash';
+import {formatCode} from 'run-common';
 
-import Resource from '../resource';
 import MethodResource from './method';
+import OptionsMixin from './options-mixin';
 
-export class CommandResource extends MethodResource {
-  constructor(definition, options) {
-    super(definition, options);
-    addContextToErrors(async () => {
-      setProperty(this, definition, '$options', ['$option']);
-    }).call(this);
-  }
-
-  get $options() {
-    return this._getProperty('_options');
-  }
-
-  set $options(options) {
-    this._options = undefined;
-    if (options === undefined) return;
-    for (let [name, option] of entries(options)) {
-      option = Resource.$create(option, {name, directory: this.$getDirectory()});
-      if (this._options === undefined) {
-        this._options = [];
-      }
-      this._options.push(option);
-    }
-  }
-
+export class CommandResource extends OptionsMixin(MethodResource) {
   _normalizeArguments(args, {parse}) {
     const {normalizedArguments, remainingArguments} = super._normalizeArguments(args, {parse});
 
@@ -43,7 +20,16 @@ export class CommandResource extends MethodResource {
     }
 
     const remainingOptions = {...optionsArgument};
-    const options = this.$options || [];
+
+    let options = [];
+    let resource = this;
+    while (resource) {
+      if (resource.$options) {
+        options = [...options, ...resource.$options];
+      }
+      resource = resource.$getOwner();
+    }
+
     for (const option of options) {
       const {key, value} = option.$match(remainingOptions) || {};
       if (key !== undefined) {
@@ -79,38 +65,6 @@ export class CommandResource extends MethodResource {
     const fn = this.$getFunction({parseArguments: true});
     const args = [...expression.arguments, expression.options];
     return await fn.apply(owner, args);
-  }
-
-  $serialize(opts) {
-    let definition = super.$serialize(opts);
-
-    if (definition === undefined) {
-      definition = {};
-    }
-
-    const options = this._options;
-    if (options) {
-      const serializedOptions = {};
-      let count = 0;
-      for (const option of options) {
-        const serializedOption = option.$serialize({omitName: true});
-        if (serializedOption !== undefined) {
-          serializedOptions[option.$name] = serializedOption;
-          count++;
-        }
-      }
-      if (count === 1) {
-        definition.$option = serializedOptions;
-      } else if (count > 1) {
-        definition.$options = serializedOptions;
-      }
-    }
-
-    if (isEmpty(definition)) {
-      definition = undefined;
-    }
-
-    return definition;
   }
 }
 

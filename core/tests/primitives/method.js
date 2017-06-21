@@ -4,8 +4,8 @@ import StringResource from '../../src/primitives/string';
 import NumberResource from '../../src/primitives/number';
 
 describe('MethodResource', () => {
-  test('can have parameters', () => {
-    const method = MethodResource.$create({
+  test('creation', () => {
+    let method = MethodResource.$create({
       $parameters: [{$name: 'name', $type: 'string'}, {$name: 'age', $type: 'number'}]
     });
     expect(method).toBeInstanceOf(MethodResource);
@@ -14,14 +14,12 @@ describe('MethodResource', () => {
     expect(method.$parameters[0].$name).toBe('name');
     expect(method.$parameters[1]).toBeInstanceOf(NumberResource);
     expect(method.$parameters[1].$name).toBe('age');
-  });
 
-  test('can be variadic', () => {
-    const method = MethodResource.$create({$parameter: {$type: 'string'}, $variadic: true});
+    method = MethodResource.$create({$parameter: {$type: 'string'}, $variadic: true});
     expect(method.$variadic).toBe(true);
   });
 
-  test('can be invoked', () => {
+  test('invocation', () => {
     const Person = Resource.$load('../fixtures/person', {directory: __dirname});
     expect(Person.formatGreetingMethod()).toBe('Hello Anonymous!');
 
@@ -40,7 +38,7 @@ describe('MethodResource', () => {
     expect(person.formatWordsMethod('blue', 'yellow')).toBe('Blue, yellow.');
   });
 
-  test('is serializable', () => {
+  test('serialization', () => {
     expect(MethodResource.$create().$serialize()).toBeUndefined();
     expect(MethodResource.$create({$type: 'method'}).$serialize()).toEqual({$type: 'method'});
     expect(MethodResource.$create({$parameter: 1}).$serialize()).toEqual({$parameter: 1});

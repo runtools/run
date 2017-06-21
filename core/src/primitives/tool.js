@@ -1,7 +1,6 @@
 import Resource from '../resource';
+import OptionsMixin from './options-mixin';
 
-export class ToolResource extends Resource {
-  // TODO: implement $options property
-}
+export class ToolResource extends OptionsMixin(Resource) {}
 
 export default ToolResource;
