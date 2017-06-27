@@ -1,4 +1,4 @@
-export function getPrimitiveResourceClass(type: string) {
+export function getPrimitiveResourceClass(type) {
   switch (type) {
     case 'boolean':
       return require('./boolean').default;

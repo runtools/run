@@ -1,7 +1,7 @@
 {
-  "name": "run-core",
-  "version": "0.7.0",
-  "description": "Resdir resources runner",
+  "name": "run-common",
+  "version": "0.5.9",
+  "description": "Miscellaneous functions used by ⚡run",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
   "files": [
@@ -33,41 +33,38 @@
       ]
     ],
     "plugins": [
-      "transform-class-properties",
       "transform-object-rest-spread"
-    ],
-    "sourceMaps": "inline"
+    ]
   },
   "jest": {
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.js"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/old/"
+    ]
   },
   "dependencies": {
-    "child-process-promise": "^2.2.1",
-    "core-decorators": "^0.19.0",
-    "deep-freeze": "^0.0.1",
-    "flatnest": "^1.0.0",
-    "fuse.js": "^3.0.2",
-    "inquirer": "^3.0.1",
-    "inquirer-autocomplete-prompt": "^0.8.0",
-    "is-directory": "^0.3.1",
+    "chalk": "^1.1.3",
+    "cli-spinners": "^1.0.0",
+    "fs-extra": "^3.0.1",
+    "js-yaml": "^3.8.4",
     "json5": "^0.5.1",
-    "jsonfile": "^3.0.0",
-    "koa": "^2.2.0",
-    "koa-json-body": "^5.3.0",
     "lodash": "^4.17.4",
-    "quote-unquote": "^1.0.0",
-    "run-common": "file:../common",
+    "node-fetch": "^1.7.1",
+    "ora": "^1.3.0",
     "semver": "^5.3.0",
-    "shell-quote": "^1.6.1",
-    "source-map-support": "^0.4.15",
-    "sync-request": "^4.1.0",
-    "then-request": "^2.2.0"
+    "slice-ansi": "^0.1.0",
+    "strict-uri-encode": "^2.0.0",
+    "window-size": "^1.1.0"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
-    "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
-    "babel-preset-env": "^1.4.0",
-    "jest": "^20.0.1"
+    "babel-preset-env": "^1.5.2",
+    "jest": "^20.0.1",
+    "prettier": "^1.4.4"
   }
 }

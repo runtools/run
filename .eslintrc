@@ -1,6 +1,6 @@
 {
   "parser": "babel-eslint",
-  "extends": ["xo/esnext", "prettier"],
+  "extends": ["xo/esnext"],
   "env": {
     "jest": true
   },

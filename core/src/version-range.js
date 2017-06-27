@@ -4,7 +4,7 @@ import semver from 'semver';
 import {formatString} from 'run-common';
 
 export class VersionRange {
-  constructor(str: string = '') {
+  constructor(str = '') {
     // '': All versions
     // '1.2.0': Exact version
     // '^1.0.0': Caret range
@@ -108,7 +108,7 @@ export class VersionRange {
     return str ? str : undefined;
   }
 
-  includes(version: string) {
+  includes(version) {
     version = semver.clean(version);
     if (!version) {
       throw new Error(`Version ${formatString(version)} is invalid`);

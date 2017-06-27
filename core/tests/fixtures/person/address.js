@@ -22,7 +22,7 @@ module.exports = base =>
 
         if (rest.country !== undefined) {
           if (!string) {
-            throw new Error("Cannot have a 'country' without a 'city'");
+            throw new Error('Cannot have a \'country\' without a \'city\'');
           }
           string += ', ' + rest.country;
           delete rest.country;

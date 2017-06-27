@@ -18,7 +18,9 @@ export const OptionsMixin = base =>
 
     set $options(options) {
       this._options = undefined;
-      if (options === undefined) return;
+      if (options === undefined) {
+        return;
+      }
       for (let [name, option] of entries(options)) {
         option = Resource.$create(option, {name, directory: this.$getDirectory()});
         if (this._options === undefined) {

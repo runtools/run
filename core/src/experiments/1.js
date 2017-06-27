@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 /*
 
 this.hello(); => We search an implementation starting from the current receiver

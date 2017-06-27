@@ -25,10 +25,18 @@ import Runtime from './runtime';
 export class Resource {
   constructor(definition = {}, {parents = [], owner, name, directory, file} = {}) {
     addContextToErrors(() => {
-      if (owner !== undefined) this.$setOwner(owner);
-      if (directory !== undefined) this.$setDirectory(directory);
-      if (file !== undefined) this.$setFile(file);
-      if (name !== undefined) this.$name = name;
+      if (owner !== undefined) {
+        this.$setOwner(owner);
+      }
+      if (directory !== undefined) {
+        this.$setDirectory(directory);
+      }
+      if (file !== undefined) {
+        this.$setFile(file);
+      }
+      if (name !== undefined) {
+        this.$name = name;
+      }
 
       setProperty(this, definition, '$name');
       setProperty(this, definition, '$aliases', ['$alias']);
@@ -46,7 +54,9 @@ export class Resource {
       }
 
       for (const name of Object.keys(definition)) {
-        if (name.startsWith('$')) continue;
+        if (name.startsWith('$')) {
+          continue;
+        }
         this.$setProperty(name, definition[name], {ignoreAliases: true});
       }
     }).call(this);
@@ -81,7 +91,9 @@ export class Resource {
 
     for (const type of types) {
       if (typeof type === 'string') {
-        if (type === 'resource') continue;
+        if (type === 'resource') {
+          continue;
+        }
         const Class = getPrimitiveResourceClass(type);
         if (Class) {
           parentsClasses.push(Class);
@@ -93,7 +105,7 @@ export class Resource {
         const parent = Resource.$create(type, {directory: dir});
         actualParents.push(parent);
       } else {
-        throw new Error("A 'type' must be a string or a plain object");
+        throw new Error('A \'type\' must be a string or a plain object');
       }
     }
 
@@ -133,21 +145,19 @@ export class Resource {
     });
   }
 
-  static $load(
-    specifier: string,
-    {directory, searchInParentDirectories, throwIfNotFound = true} = {}
-  ) {
+  static $load(specifier, {directory, searchInParentDirectories, throwIfNotFound = true} = {}) {
     let file;
 
     if (specifier.startsWith('.')) {
       if (!directory) {
-        throw new Error("'directory' argument is missing");
+        throw new Error('\'directory\' argument is missing');
       }
       file = resolve(directory, specifier);
     } else if (isAbsolute(specifier)) {
       file = specifier;
     } else {
-      throw new Error(`Loading from Resdir is not yet implemented (${formatString(specifier)})`);
+      // TODO: load resources from Resdir
+      file = '/Users/mvila/Projects/official-resources/' + specifier;
     }
 
     file = searchResourceFile(file, {searchInParentDirectories});
@@ -195,7 +205,9 @@ export class Resource {
       const resource = resources.shift();
       if (!(isSelf && skipSelf)) {
         const result = fn(resource);
-        if (result === false) break;
+        if (result === false) {
+          break;
+        }
       }
       if (isSelf || deepSearch) {
         resources.push(...resource._parents);
@@ -263,7 +275,7 @@ export class Resource {
   $getDirectory({throwIfUndefined} = {}) {
     const directory = this._directory || (this.$getFile() && dirname(this.$getFile()));
     if (!directory && throwIfUndefined) {
-      throw new Error("Resource's directory is undefined");
+      throw new Error('Resource\'s directory is undefined');
     }
     return directory;
   }
@@ -279,7 +291,7 @@ export class Resource {
     return this._name;
   }
 
-  set $name(name: ?string) {
+  set $name(name) {
     if (name !== undefined) {
       if (!this.$validateName(name)) {
         throw new Error(`Resource name ${formatString(name)} is invalid`);
@@ -290,7 +302,9 @@ export class Resource {
 
   $getScope() {
     const name = this.$name;
-    if (!name) return undefined;
+    if (!name) {
+      return undefined;
+    }
     const [scope, identifier] = name.split('/');
     if (!identifier) {
       return undefined;
@@ -300,7 +314,9 @@ export class Resource {
 
   $getIdentifier() {
     const name = this.$name;
-    if (!name) return undefined;
+    if (!name) {
+      return undefined;
+    }
     const [scope, identifier] = name.split('/');
     if (!identifier) {
       return scope;
@@ -308,7 +324,7 @@ export class Resource {
     return identifier;
   }
 
-  $validateName(name: string) {
+  $validateName(name) {
     let [scope, identifier, rest] = name.split('/');
 
     if (scope && identifier === undefined) {
@@ -331,7 +347,7 @@ export class Resource {
     return true;
   }
 
-  $validateNamePart(part: string) {
+  $validateNamePart(part) {
     if (!part) {
       return false;
     }
@@ -351,7 +367,7 @@ export class Resource {
     return this._getProperty('_aliases');
   }
 
-  set $aliases(aliases: ?(Array | string)) {
+  set $aliases(aliases) {
     this._aliases = undefined;
     if (aliases) {
       if (typeof aliases === 'string') {
@@ -363,19 +379,19 @@ export class Resource {
     }
   }
 
-  $addAlias(alias: string) {
+  $addAlias(alias) {
     if (!this._aliases) {
       this._aliases = new Set();
     }
     this._aliases.add(alias);
   }
 
-  $hasAlias(alias: string) {
+  $hasAlias(alias) {
     const aliases = this.$aliases;
     return Boolean(aliases && aliases.has(alias));
   }
 
-  $isMatching(name: string, {ignoreAliases} = {}) {
+  $isMatching(name, {ignoreAliases} = {}) {
     return this.$name === name || (!ignoreAliases && this.$hasAlias(name));
   }
 
@@ -387,7 +403,7 @@ export class Resource {
     return this._version;
   }
 
-  set $version(version: ?(string | Version)) {
+  set $version(version) {
     if (typeof version === 'string') {
       version = new Version(version);
     }
@@ -398,7 +414,7 @@ export class Resource {
     return this._getProperty('_description');
   }
 
-  set $description(description: ?string) {
+  set $description(description) {
     this._description = description;
   }
 
@@ -406,7 +422,7 @@ export class Resource {
     return this._authors;
   }
 
-  set $authors(authors: ?(Array<string> | string)) {
+  set $authors(authors) {
     if (typeof authors === 'string') {
       authors = [authors];
     }
@@ -417,7 +433,7 @@ export class Resource {
     return this._repository;
   }
 
-  set $repository(repository: ?string) {
+  set $repository(repository) {
     this._repository = repository;
   }
 
@@ -425,7 +441,7 @@ export class Resource {
     return this._license;
   }
 
-  set $license(license: ?string) {
+  set $license(license) {
     this._license = license;
   }
 
@@ -455,7 +471,7 @@ export class Resource {
     return this._implementation;
   }
 
-  set $implementation(implementation: ?string) {
+  set $implementation(implementation) {
     this._implementation = implementation;
   }
 
@@ -476,7 +492,9 @@ export class Resource {
     for (let i = 0; i < this._properties.length; i++) {
       const property = this._properties[i];
       const result = fn(property, i);
-      if (result === false) break;
+      if (result === false) {
+        break;
+      }
     }
   }
 
@@ -496,7 +514,9 @@ export class Resource {
     let result;
     this.$forEachParent(parent => {
       result = parent.$getProperty(name, {ignoreAliases});
-      if (result) return false;
+      if (result) {
+        return false;
+      }
     });
     return result;
   }
@@ -551,12 +571,12 @@ export class Resource {
   $wrap(value) {
     const owner = this.$getOwner();
     if (!owner) {
-      throw new Error("Can't wrap a property without an 'owner'");
+      throw new Error('Can\'t wrap a property without an \'owner\'');
     }
 
     const name = this.$name;
     if (!name) {
-      throw new Error("Can't wrap a property without a '$name'");
+      throw new Error('Can\'t wrap a property without a \'$name\'');
     }
 
     owner.$setProperty(name, value, {ignoreAliases: true});
@@ -565,7 +585,9 @@ export class Resource {
   async $invoke(expression) {
     expression = {...expression, arguments: [...expression.arguments]};
     const name = expression.arguments.shift();
-    if (!name) return this;
+    if (!name) {
+      return this;
+    }
 
     const property = this.$getProperty(name);
     if (!property) {

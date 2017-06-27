@@ -18,7 +18,7 @@ export class MacroResource extends CommandResource {
     return this._getProperty('_expressions');
   }
 
-  set $expressions(expressions: ?(Array<string> | string)) {
+  set $expressions(expressions) {
     if (typeof expressions === 'string') {
       expressions = [expressions];
     }
@@ -27,7 +27,7 @@ export class MacroResource extends CommandResource {
 
   _getImplementation() {
     const macroResource = this;
-    return function(...args) {
+    return function (...args) {
       const options = args.pop();
       const expression = {arguments: args, options};
       return macroResource.$invoke(expression, {owner: this});

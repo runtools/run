@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import request from 'then-request';
 
 (async () => {

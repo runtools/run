@@ -14,9 +14,12 @@ import fetch from 'node-fetch';
 import strictUriEncode from 'strict-uri-encode';
 import JSON5 from 'json5';
 import YAML from 'js-yaml';
-// import t from 'flow-runtime';
 
-export function loadFile(file: string, {parse = false} = {}) {
+export function loadFile(file, {parse = false} = {}) {
+  if (typeof file !== 'string') {
+    throw new TypeError('\'file\' must be a string');
+  }
+
   let data;
 
   try {
@@ -48,7 +51,11 @@ export function loadFile(file: string, {parse = false} = {}) {
   return data;
 }
 
-export function saveFile(file: string, data, {stringify = false} = {}) {
+export function saveFile(file, data, {stringify = false} = {}) {
+  if (typeof file !== 'string') {
+    throw new TypeError('\'file\' must be a string');
+  }
+
   if (stringify) {
     const ext = extname(file);
     if (ext === '.json5') {
@@ -136,7 +143,11 @@ export function generateDeploymentName({name, version, stage, key, maxLength}) {
   return deploymentName;
 }
 
-function createCompatibleVersionRange(version: string) {
+function createCompatibleVersionRange(version) {
+  if (typeof version !== 'string') {
+    throw new TypeError('\'version\' must be a string');
+  }
+
   const major = semver.major(version);
   if (major >= 1) {
     return `${major}.x.x`;
@@ -181,7 +192,11 @@ export function showCommandIntro(action, {name, stage, info} = {}) {
   console.log(message);
 }
 
-export async function task(fn: () => mixed, {intro, outro, debug, verbose, quiet}) {
+export async function task(fn, {intro, outro, debug, verbose, quiet}) {
+  if (typeof fn !== 'function') {
+    throw new TypeError('\'fn\' must be a function');
+  }
+
   let progress;
 
   if (debug || verbose) {
@@ -270,7 +285,11 @@ export async function task(fn: () => mixed, {intro, outro, debug, verbose, quiet
   }
 }
 
-export function formatMessage(message: string, {info, status} = {}) {
+export function formatMessage(message, {info, status} = {}) {
+  if (typeof message !== 'string') {
+    throw new TypeError('\'message\' must be a string');
+  }
+
   if (info) {
     info = ` ${gray(`(${info})`)}`;
   } else {
@@ -328,30 +347,54 @@ export function getErrorSymbol() {
   return '😡';
 }
 
-export function formatString(string: string) {
-  return yellow("'" + string + "'");
+export function formatString(string) {
+  if (typeof string !== 'string') {
+    throw new TypeError('\'string\' must be a string');
+  }
+
+  return yellow('\'' + string + '\'');
 }
 
-export function formatURL(url: string) {
+export function formatURL(url) {
+  if (typeof url !== 'string') {
+    throw new TypeError('\'url\' must be a string');
+  }
+
   return cyan.underline(url);
 }
 
-export function formatPath(path: string) {
-  return yellow("'" + path + "'");
+export function formatPath(path) {
+  if (typeof path !== 'string') {
+    throw new TypeError('\'path\' must be a string');
+  }
+
+  return yellow('\'' + path + '\'');
 }
 
-export function formatCode(code: string) {
+export function formatCode(code) {
+  if (typeof code !== 'string') {
+    throw new TypeError('\'code\' must be a string');
+  }
+
   return cyan('`' + code + '`');
 }
 
-export function adjustToWindowWidth(text: string, {leftMargin = 0, rightMargin = 0} = {}) {
+export function adjustToWindowWidth(text, {leftMargin = 0, rightMargin = 0} = {}) {
+  if (typeof text !== 'string') {
+    throw new TypeError('\'text\' must be a string');
+  }
+
   return sliceANSI(text, 0, windowSize.width - leftMargin - rightMargin);
 }
 
 export function createUserError(
-  message: string,
+  message,
   {info, type, context, hidden, capturedStandardError} = {}
 ) {
+  if (typeof message !== 'string') {
+    throw new TypeError('\'message\' must be a string');
+  }
+
   message = red(message);
   if (info) {
     message += ' ' + info;
@@ -376,7 +419,11 @@ export function createUserError(
   return err;
 }
 
-export function throwUserError(message: string, opts) {
+export function throwUserError(message, opts) {
+  if (typeof message !== 'string') {
+    throw new TypeError('\'message\' must be a string');
+  }
+
   throw createUserError(message, opts);
 }
 
@@ -433,7 +480,9 @@ export function showErrorAndExit(error, code = 1) {
 }
 
 export function getPropertyKeyAndValue(source, name, aliases = []) {
-  if (source === undefined) return;
+  if (source === undefined) {
+    return;
+  }
   let result;
   const keys = [name, ...aliases];
   let foundKey;
@@ -475,7 +524,7 @@ export function getAWSConfig(defaults, env, config, argv) {
   const accessKeyId = argv['aws-access-key-id'] || config.accessKeyId || env.AWS_ACCESS_KEY_ID;
   if (!accessKeyId) {
     showErrorAndExit(
-      "'aws-access-key-id' parameter or 'AWS_ACCESS_KEY_ID' environment variable is missing"
+      '\'aws-access-key-id\' parameter or \'AWS_ACCESS_KEY_ID\' environment variable is missing'
     );
   }
 
@@ -483,7 +532,7 @@ export function getAWSConfig(defaults, env, config, argv) {
     argv['aws-secret-access-key'] || config.secretAccessKey || env.AWS_SECRET_ACCESS_KEY;
   if (!secretAccessKey) {
     showErrorAndExit(
-      "'aws-secret-access-key' parameter or 'AWS_SECRET_ACCESS_KEY' environment variable is missing"
+      '\'aws-secret-access-key\' parameter or \'AWS_SECRET_ACCESS_KEY\' environment variable is missing'
     );
   }
 
@@ -519,7 +568,11 @@ export function generateHash(data, algorithm = 'sha256') {
   return hash.digest('hex');
 }
 
-export async function fetchJSON(url: string, options = {}) {
+export async function fetchJSON(url, options = {}) {
+  if (typeof url !== 'string') {
+    throw new TypeError('\'url\' must be a string');
+  }
+
   let cacheFile;
 
   if (options.cacheTime) {
@@ -574,7 +627,7 @@ export function addContextToErrors(targetOrFn, _key, descriptor) {
 }
 
 function _addContextToErrors(fn) {
-  return function(...args) {
+  return function (...args) {
     const rethrow = err => {
       if (!err.contextStack) {
         err.contextStack = [];
@@ -619,7 +672,7 @@ export function callSuper(method, context, ...args) {
   }
 }
 
-export function compactObject(obj: Object) {
+export function compactObject(obj) {
   const result = {};
   for (const [key, value] of entries(obj)) {
     if (value !== undefined) {
@@ -643,7 +696,11 @@ export function toJSONDeep(obj) {
   return cloneDeepWithMethod(obj, 'toJSON');
 }
 
-export function parseCommandLineArguments(argsAndOpts: Array) {
+export function parseCommandLineArguments(argsAndOpts) {
+  if (!Array.isArray(argsAndOpts)) {
+    throw new TypeError('\'argsAndOpts\' must be an array');
+  }
+
   const result = {arguments: [], options: {}};
 
   for (let i = 0; i < argsAndOpts.length; i++) {
@@ -703,10 +760,3 @@ export function parseCommandLineArguments(argsAndOpts: Array) {
 
   return result;
 }
-
-// export const NotEmptyStringType = t.refinement(t.string(), str => {
-//   console.log(`'${str}'`);
-//   if (str.length === 0) {
-//     return 'cannot be empty';
-//   }
-// });

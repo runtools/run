@@ -21,7 +21,9 @@ module.exports = base =>
   };
 
 function formatWords(words, {capitalize, shout}) {
-  if (!words.length) return '';
+  if (!words.length) {
+    return '';
+  }
   words = words.join(', ') + '.';
   if (shout) {
     words = words.toUpperCase();

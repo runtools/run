@@ -55,7 +55,9 @@ export class CommandResource extends OptionsMixin(MethodResource) {
     // Get arguments before options
     const lastArguments = [];
     while (args.length) {
-      if (isPlainObject(args[0])) break;
+      if (isPlainObject(args[0])) {
+        break;
+      }
       lastArguments.push(args.shift());
     }
     return lastArguments;

@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import Koa from 'koa';
 import body from 'koa-json-body';
 

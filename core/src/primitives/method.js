@@ -18,7 +18,9 @@ export class MethodResource extends Resource {
 
   set $parameters(parameters) {
     this._parameters = undefined;
-    if (parameters === undefined) return;
+    if (parameters === undefined) {
+      return;
+    }
     if (!Array.isArray(parameters)) {
       parameters = [parameters];
     }
@@ -35,7 +37,7 @@ export class MethodResource extends Resource {
     return this._getProperty('_variadic');
   }
 
-  set $variadic(variadic: ?boolean) {
+  set $variadic(variadic) {
     this._variadic = variadic;
   }
 
@@ -46,7 +48,7 @@ export class MethodResource extends Resource {
   $getFunction({parseArguments} = {}) {
     const methodResource = this;
 
-    return function(...args) {
+    return function (...args) {
       const {normalizedArguments, remainingArguments} = methodResource._normalizeArguments(args, {
         parse: parseArguments
       });
@@ -106,7 +108,9 @@ export class MethodResource extends Resource {
         resource => {
           const proto = resource.constructor.prototype;
           implementation = proto[this.$name];
-          if (implementation) return false;
+          if (implementation) {
+            return false;
+          }
         },
         {deepSearch: true}
       );
