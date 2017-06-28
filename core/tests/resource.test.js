@@ -194,7 +194,7 @@ describe('Resource', () => {
 
   test('inherited properties', () => {
     const person = Resource.$create({$type: {name: 'anonymous'}});
-    const parent = person.$findParent(() => true);
+    const parent = person.$findBase(() => true);
     expect(parent.$get('name')).toBeInstanceOf(StringResource);
     expect(parent.name).toBe('anonymous');
     expect(person.$get('name')).toBeInstanceOf(StringResource);
@@ -206,7 +206,7 @@ describe('Resource', () => {
 
   test('inherited properties redefined', () => {
     const person = Resource.$create({$type: {name: 'anonymous'}});
-    const parent = person.$findParent(() => true);
+    const parent = person.$findBase(() => true);
     person.$set('name', 'Manuel');
     expect(person.$get('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('Manuel');
@@ -217,7 +217,7 @@ describe('Resource', () => {
 
   test('inherited properties with a value', () => {
     const person = Resource.$create({$type: {name: 'anonymous'}, name: 'Manu'});
-    const parent = person.$findParent(() => true);
+    const parent = person.$findBase(() => true);
     expect(parent.name).toBe('anonymous');
     expect(person.name).toBe('Manu');
     person.name = 'Manuel';
@@ -227,7 +227,7 @@ describe('Resource', () => {
 
   test('inherited composed properties', () => {
     const person = Resource.$create({$type: {address: {$type: {city: 'unknown'}}}});
-    const parent = person.$findParent(() => true);
+    const parent = person.$findBase(() => true);
     expect(parent.address.city).toBe('unknown');
     expect(person.address.city).toBe('unknown');
     person.address.city = 'Paris';
@@ -240,7 +240,7 @@ describe('Resource', () => {
       $type: {address: {$type: {city: {$value: 'unknown', $description: 'The city'}}}},
       address: {city: 'Tokyo'}
     });
-    const parent = person.$findParent(() => true);
+    const parent = person.$findBase(() => true);
     expect(parent.address.city).toBe('unknown');
     expect(parent.address.$get('city').$description).toBe('The city');
     expect(person.address.city).toBe('Tokyo');

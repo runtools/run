@@ -104,7 +104,7 @@ export class MethodResource extends Resource {
     let implementation;
     const owner = this.$getOwner();
     if (owner) {
-      owner.$forSelfAndEachParent(
+      owner.$forSelfAndEachBase(
         resource => {
           const proto = resource.constructor.prototype;
           implementation = proto[this.$name];

@@ -23,7 +23,7 @@ import Version from './version';
 import Runtime from './runtime';
 
 export class Resource {
-  constructor(definition = {}, {parents = [], owner, name, directory, file} = {}) {
+  constructor(definition = {}, {bases = [], owner, name, directory, file} = {}) {
     addContextToErrors(() => {
       if (owner !== undefined) {
         this.$setOwner(owner);
@@ -49,8 +49,8 @@ export class Resource {
       setProperty(this, definition, '$implementation');
       setProperty(this, definition, '$runtime');
 
-      for (const parent of parents) {
-        this._inherit(parent);
+      for (const base of bases) {
+        this._inherit(base);
       }
 
       for (const name of Object.keys(definition)) {
@@ -62,7 +62,7 @@ export class Resource {
     }).call(this);
   }
 
-  static $create(definition = {}, {parents = [], owner, name, directory, file, parse} = {}) {
+  static $create(definition = {}, {bases = [], owner, name, directory, file, parse} = {}) {
     let normalizedDefinition;
     if (isPlainObject(definition)) {
       normalizedDefinition = definition;
@@ -78,7 +78,7 @@ export class Resource {
     if (
       this === Resource &&
       types.length === 0 &&
-      parents.length === 0 &&
+      bases.length === 0 &&
       normalizedDefinition.$value !== undefined
     ) {
       types = [inferType(normalizedDefinition.$value)];
@@ -86,8 +86,8 @@ export class Resource {
 
     const dir = directory || (file && dirname(file));
 
-    const parentsClasses = [this];
-    const actualParents = [...parents];
+    const basesClasses = [this];
+    const actualBases = [...bases];
 
     for (const type of types) {
       if (typeof type === 'string') {
@@ -96,25 +96,25 @@ export class Resource {
         }
         const Class = getPrimitiveResourceClass(type);
         if (Class) {
-          parentsClasses.push(Class);
+          basesClasses.push(Class);
         } else {
-          const parent = Resource.$load(type, {directory: dir});
-          actualParents.push(parent);
+          const base = Resource.$load(type, {directory: dir});
+          actualBases.push(base);
         }
       } else if (isPlainObject(type)) {
-        const parent = Resource.$create(type, {directory: dir});
-        actualParents.push(parent);
+        const base = Resource.$create(type, {directory: dir});
+        actualBases.push(base);
       } else {
         throw new Error('A \'type\' must be a string or a plain object');
       }
     }
 
-    for (const parent of actualParents) {
-      parentsClasses.push(parent.constructor);
+    for (const base of actualBases) {
+      basesClasses.push(base.constructor);
     }
 
     let ResourceClass = Resource;
-    for (const Class of parentsClasses) {
+    for (const Class of basesClasses) {
       if (Object.prototype.isPrototypeOf.call(ResourceClass, Class)) {
         ResourceClass = Class;
       } else if (
@@ -136,7 +136,7 @@ export class Resource {
     normalizedDefinition = ResourceClass.$normalize(definition, {parse});
 
     return new ResourceClass(normalizedDefinition, {
-      parents: actualParents,
+      bases: actualBases,
       owner,
       name,
       directory,
@@ -189,16 +189,16 @@ export class Resource {
     saveFile(file, definition, {stringify: true});
   }
 
-  _parents = [];
+  _bases = [];
 
-  _inherit(parent) {
-    this._parents.push(parent);
-    parent.$forEachProperty(property => {
+  _inherit(base) {
+    this._bases.push(base);
+    base.$forEachProperty(property => {
       this.$setProperty(property.$name, undefined, {ignoreAliases: true});
     });
   }
 
-  $forSelfAndEachParent(fn, {skipSelf, deepSearch} = {}) {
+  $forSelfAndEachBase(fn, {skipSelf, deepSearch} = {}) {
     const resources = [this];
     let isSelf = true;
     while (resources.length) {
@@ -210,23 +210,23 @@ export class Resource {
         }
       }
       if (isSelf || deepSearch) {
-        resources.push(...resource._parents);
+        resources.push(...resource._bases);
       }
       isSelf = false;
     }
   }
 
-  $forEachParent(fn, {deepSearch} = {}) {
-    this.$forSelfAndEachParent(fn, {skipSelf: true, deepSearch});
+  $forEachBase(fn, {deepSearch} = {}) {
+    this.$forSelfAndEachBase(fn, {skipSelf: true, deepSearch});
   }
 
-  $findParent(fn) {
+  $findBase(fn) {
     let result;
-    this.$forEachParent(
-      parent => {
-        if (fn(parent)) {
-          result = parent;
-          return false; // Break forEachParent loop
+    this.$forEachBase(
+      base => {
+        if (fn(base)) {
+          result = base;
+          return false; // Break forEachBase loop
         }
       },
       {deepSearch: true}
@@ -235,16 +235,16 @@ export class Resource {
   }
 
   $create(definition, options) {
-    return this.constructor.$create(definition, {...options, parents: [this]});
+    return this.constructor.$create(definition, {...options, bases: [this]});
   }
 
   $isInstanceOf(resource) {
-    return Boolean(this.$findParent(parent => parent === resource));
+    return Boolean(this.$findBase(base => base === resource));
   }
 
   _getProperty(name) {
     let result;
-    this.$forSelfAndEachParent(
+    this.$forSelfAndEachBase(
       resource => {
         if (name in resource) {
           result = resource[name];
@@ -510,10 +510,10 @@ export class Resource {
     return result;
   }
 
-  $getPropertyFromParents(name, {ignoreAliases} = {}) {
+  $getPropertyFromBases(name, {ignoreAliases} = {}) {
     let result;
-    this.$forEachParent(parent => {
-      result = parent.$getProperty(name, {ignoreAliases});
+    this.$forEachBase(base => {
+      result = base.$getProperty(name, {ignoreAliases});
       if (result) {
         return false;
       }
@@ -525,10 +525,10 @@ export class Resource {
   $setProperty(name, definition, {ignoreAliases} = {}) {
     const removedPropertyIndex = this.$removeProperty(name, {ignoreAliases});
 
-    let property = this.$getPropertyFromParents(name, {ignoreAliases});
-    const parents = property ? [property] : undefined;
+    let property = this.$getPropertyFromBases(name, {ignoreAliases});
+    const bases = property ? [property] : undefined;
     property = Resource.$create(definition, {
-      parents,
+      bases,
       name,
       directory: this.$getDirectory(),
       owner: this
