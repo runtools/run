@@ -189,7 +189,11 @@ export class Resource {
       this.$setFile(file);
     }
 
-    const definition = this.$serialize();
+    let definition = this.$serialize();
+    if (definition === undefined) {
+      definition = {};
+    }
+
     saveFile(file, definition, {stringify: true});
   }
 
@@ -505,11 +509,11 @@ export class Resource {
     this._runtime = runtime;
   }
 
-  _child = [];
+  _children = [];
 
   $forEachChild(fn) {
-    for (let i = 0; i < this._child.length; i++) {
-      const child = this._child[i];
+    for (let i = 0; i < this._children.length; i++) {
+      const child = this._children[i];
       const result = fn(child, i);
       if (result === false) {
         break;
@@ -555,9 +559,9 @@ export class Resource {
 
     if (removedChildIndex !== undefined) {
       // Try to not change the order of children
-      this._child.splice(removedChildIndex, 0, child);
+      this._children.splice(removedChildIndex, 0, child);
     } else {
-      this._child.push(child);
+      this._children.push(child);
     }
 
     Object.defineProperty(this, name, {
@@ -575,7 +579,7 @@ export class Resource {
     let result;
     this.$forEachChild((child, index) => {
       if (child.$isMatching(name, {ignoreAliases})) {
-        this._child.splice(index, 1);
+        this._children.splice(index, 1);
         result = index;
         return false;
       }

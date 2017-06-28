@@ -15,7 +15,7 @@ import strictUriEncode from 'strict-uri-encode';
 import JSON5 from 'json5';
 import YAML from 'js-yaml';
 
-export function loadFile(file, {parse = false} = {}) {
+export function loadFile(file, {throwIfNotFound = true, parse = false} = {}) {
   if (typeof file !== 'string') {
     throw new TypeError('\'file\' must be a string');
   }
@@ -25,7 +25,10 @@ export function loadFile(file, {parse = false} = {}) {
   try {
     data = readFileSync(file, 'utf8');
   } catch (_) {
-    throw new Error(`File not found: ${formatPath(file)}`);
+    if (throwIfNotFound) {
+      throw new Error(`File not found: ${formatPath(file)}`);
+    }
+    return undefined;
   }
 
   if (parse) {
