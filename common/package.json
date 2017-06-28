@@ -57,6 +57,6 @@
     "babel-cli": "^6.24.1",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "babel-preset-env": "^1.5.2",
-    "jest": "^20.0.1"
+    "jest": "^20.0.4"
   }
 }

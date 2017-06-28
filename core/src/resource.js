@@ -14,7 +14,7 @@ import {
   formatCode
 } from 'run-common';
 
-const RESOURCE_FILE_NAME = 'resource';
+const RESOURCE_FILE_NAME = '$resource';
 const RESOURCE_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json5';
 

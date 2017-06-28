@@ -7,7 +7,8 @@
     "url": "git://github.com/runtools/run"
   },
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "(cd core && npm test) && (cd cli && npm test) && (cd common && npm test)"
   },
   "devDependencies": {
     "babel-eslint": "^7.2.3",
