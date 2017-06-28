@@ -1,4 +1,4 @@
-import VersionRange from './version-range';
+import VersionRange from '@resdir/version-range';
 
 export class Runtime {
   constructor(definition) {
