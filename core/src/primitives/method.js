@@ -13,7 +13,7 @@ export class MethodResource extends Resource {
   }
 
   get $parameters() {
-    return this._getProperty('_parameters');
+    return this._getChild('_parameters');
   }
 
   set $parameters(parameters) {
@@ -34,7 +34,7 @@ export class MethodResource extends Resource {
   }
 
   get $variadic() {
-    return this._getProperty('_variadic');
+    return this._getChild('_variadic');
   }
 
   set $variadic(variadic) {

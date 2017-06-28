@@ -15,7 +15,7 @@ export class MacroResource extends CommandResource {
   }
 
   get $expressions() {
-    return this._getProperty('_expressions');
+    return this._getChild('_expressions');
   }
 
   set $expressions(expressions) {

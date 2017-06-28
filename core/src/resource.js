@@ -57,7 +57,7 @@ export class Resource {
         if (name.startsWith('$')) {
           continue;
         }
-        this.$setProperty(name, definition[name], {ignoreAliases: true});
+        this.$setChild(name, definition[name], {ignoreAliases: true});
       }
     }).call(this);
   }
@@ -193,8 +193,8 @@ export class Resource {
 
   _inherit(base) {
     this._bases.push(base);
-    base.$forEachProperty(property => {
-      this.$setProperty(property.$name, undefined, {ignoreAliases: true});
+    base.$forEachChild(child => {
+      this.$setChild(child.$name, undefined, {ignoreAliases: true});
     });
   }
 
@@ -242,7 +242,7 @@ export class Resource {
     return Boolean(this.$findBase(base => base === resource));
   }
 
-  _getProperty(name) {
+  _getChild(name) {
     let result;
     this.$forSelfAndEachBase(
       resource => {
@@ -364,7 +364,7 @@ export class Resource {
   }
 
   get $aliases() {
-    return this._getProperty('_aliases');
+    return this._getChild('_aliases');
   }
 
   set $aliases(aliases) {
@@ -411,7 +411,7 @@ export class Resource {
   }
 
   get $description() {
-    return this._getProperty('_description');
+    return this._getChild('_description');
   }
 
   set $description(description) {
@@ -476,7 +476,7 @@ export class Resource {
   }
 
   get $runtime() {
-    return this._getProperty('_runtime');
+    return this._getChild('_runtime');
   }
 
   set $runtime(runtime) {
@@ -486,12 +486,12 @@ export class Resource {
     this._runtime = runtime;
   }
 
-  _properties = [];
+  _child = [];
 
-  $forEachProperty(fn) {
-    for (let i = 0; i < this._properties.length; i++) {
-      const property = this._properties[i];
-      const result = fn(property, i);
+  $forEachChild(fn) {
+    for (let i = 0; i < this._child.length; i++) {
+      const child = this._child[i];
+      const result = fn(child, i);
       if (result === false) {
         break;
       }
@@ -499,21 +499,21 @@ export class Resource {
   }
 
   // Alias: $get
-  $getProperty(name, {ignoreAliases} = {}) {
+  $getChild(name, {ignoreAliases} = {}) {
     let result;
-    this.$forEachProperty(property => {
-      if (property.$isMatching(name, {ignoreAliases})) {
-        result = property;
+    this.$forEachChild(child => {
+      if (child.$isMatching(name, {ignoreAliases})) {
+        result = child;
         return false;
       }
     });
     return result;
   }
 
-  $getPropertyFromBases(name, {ignoreAliases} = {}) {
+  $getChildFromBases(name, {ignoreAliases} = {}) {
     let result;
     this.$forEachBase(base => {
-      result = base.$getProperty(name, {ignoreAliases});
+      result = base.$getChild(name, {ignoreAliases});
       if (result) {
         return false;
       }
@@ -522,41 +522,41 @@ export class Resource {
   }
 
   // Alias: $set
-  $setProperty(name, definition, {ignoreAliases} = {}) {
-    const removedPropertyIndex = this.$removeProperty(name, {ignoreAliases});
+  $setChild(name, definition, {ignoreAliases} = {}) {
+    const removedChildIndex = this.$removeChild(name, {ignoreAliases});
 
-    let property = this.$getPropertyFromBases(name, {ignoreAliases});
-    const bases = property ? [property] : undefined;
-    property = Resource.$create(definition, {
+    let child = this.$getChildFromBases(name, {ignoreAliases});
+    const bases = child ? [child] : undefined;
+    child = Resource.$create(definition, {
       bases,
       name,
       directory: this.$getDirectory(),
       owner: this
     });
 
-    if (removedPropertyIndex !== undefined) {
-      // Try to not change the order of properties
-      this._properties.splice(removedPropertyIndex, 0, property);
+    if (removedChildIndex !== undefined) {
+      // Try to not change the order of children
+      this._child.splice(removedChildIndex, 0, child);
     } else {
-      this._properties.push(property);
+      this._child.push(child);
     }
 
     Object.defineProperty(this, name, {
       get() {
-        return property.$unwrap();
+        return child.$unwrap();
       },
       set(value) {
-        property.$wrap(value);
+        child.$wrap(value);
       },
       configurable: true
     });
   }
 
-  $removeProperty(name, {ignoreAliases} = {}) {
+  $removeChild(name, {ignoreAliases} = {}) {
     let result;
-    this.$forEachProperty((property, index) => {
-      if (property.$isMatching(name, {ignoreAliases})) {
-        this._properties.splice(index, 1);
+    this.$forEachChild((child, index) => {
+      if (child.$isMatching(name, {ignoreAliases})) {
+        this._child.splice(index, 1);
         result = index;
         return false;
       }
@@ -571,15 +571,15 @@ export class Resource {
   $wrap(value) {
     const owner = this.$getOwner();
     if (!owner) {
-      throw new Error('Can\'t wrap a property without an \'owner\'');
+      throw new Error('Can\'t wrap a child without an \'owner\'');
     }
 
     const name = this.$name;
     if (!name) {
-      throw new Error('Can\'t wrap a property without a \'$name\'');
+      throw new Error('Can\'t wrap a child without a \'$name\'');
     }
 
-    owner.$setProperty(name, value, {ignoreAliases: true});
+    owner.$setChild(name, value, {ignoreAliases: true});
   }
 
   async $invoke(expression) {
@@ -589,12 +589,12 @@ export class Resource {
       return this;
     }
 
-    const property = this.$getProperty(name);
-    if (!property) {
-      throw new Error(`Property not found: ${formatCode(name)}`);
+    const child = this.$getChild(name);
+    if (!child) {
+      throw new Error(`Child not found: ${formatCode(name)}`);
     }
 
-    return await property.$invoke(expression, {owner: this});
+    return await child.$invoke(expression, {owner: this});
   }
 
   static $normalize(definition, _options) {
@@ -663,11 +663,11 @@ export class Resource {
       definition.$runtime = this._runtime.toJSON();
     }
 
-    this.$forEachProperty(property => {
-      const propertyDefinition = property.$serialize({omitName: true});
-      if (propertyDefinition !== undefined) {
-        const name = property.$name;
-        definition[name] = propertyDefinition;
+    this.$forEachChild(child => {
+      const childDefinition = child.$serialize({omitName: true});
+      if (childDefinition !== undefined) {
+        const name = child.$name;
+        definition[name] = childDefinition;
       }
     });
 
@@ -679,8 +679,8 @@ export class Resource {
   }
 }
 
-Resource.prototype.$get = Resource.prototype.$getProperty;
-Resource.prototype.$set = Resource.prototype.$setProperty;
+Resource.prototype.$get = Resource.prototype.$getChild;
+Resource.prototype.$set = Resource.prototype.$setChild;
 
 function searchResourceFile(directoryOrFile, {searchInParentDirectories = false} = {}) {
   let directory;
