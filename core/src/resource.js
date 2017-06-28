@@ -174,6 +174,10 @@ export class Resource {
   }
 
   $save(directory) {
+    if (!this.$isRoot()) {
+      throw new Error('Can\'t $save() a child resource');
+    }
+
     if (directory) {
       this.$setDirectory(directory);
     }
@@ -262,6 +266,21 @@ export class Resource {
 
   $setParent(parent) {
     this._parent = parent;
+  }
+
+  $getRoot() {
+    let resource = this;
+    while (true) {
+      const parent = resource.$getParent();
+      if (!parent) {
+        return resource;
+      }
+      resource = parent;
+    }
+  }
+
+  $isRoot() {
+    return !this.$getParent();
   }
 
   $getFile() {
