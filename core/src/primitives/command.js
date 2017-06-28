@@ -27,7 +27,7 @@ export class CommandResource extends OptionsMixin(MethodResource) {
       if (resource.$options) {
         options = [...options, ...resource.$options];
       }
-      resource = resource.$getOwner();
+      resource = resource.$getParent();
     }
 
     for (const option of options) {
@@ -63,10 +63,10 @@ export class CommandResource extends OptionsMixin(MethodResource) {
     return lastArguments;
   }
 
-  async $invoke(expression, {owner}) {
+  async $invoke(expression, {parent}) {
     const fn = this.$getFunction({parseArguments: true});
     const args = [...expression.arguments, expression.options];
-    return await fn.apply(owner, args);
+    return await fn.apply(parent, args);
   }
 }
 

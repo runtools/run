@@ -102,9 +102,9 @@ export class MethodResource extends Resource {
 
   _getImplementation() {
     let implementation;
-    const owner = this.$getOwner();
-    if (owner) {
-      owner.$forSelfAndEachBase(
+    const parent = this.$getParent();
+    if (parent) {
+      parent.$forSelfAndEachBase(
         resource => {
           const proto = resource.constructor.prototype;
           implementation = proto[this.$name];
@@ -118,9 +118,9 @@ export class MethodResource extends Resource {
     return implementation;
   }
 
-  $invoke(expression, {owner}) {
+  $invoke(expression, {parent}) {
     const fn = this.$getFunction({parseArguments: true});
-    return fn.apply(owner, expression.arguments);
+    return fn.apply(parent, expression.arguments);
   }
 
   $serialize(options) {

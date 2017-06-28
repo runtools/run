@@ -30,32 +30,32 @@ export class MacroResource extends CommandResource {
     return function (...args) {
       const options = args.pop();
       const expression = {arguments: args, options};
-      return macroResource.$invoke(expression, {owner: this});
+      return macroResource.$invoke(expression, {parent: this});
     };
   }
 
-  async $invoke(_expression, {owner} = {}) {
+  async $invoke(_expression, {parent} = {}) {
     const expressions = this.$expressions || [];
     let result;
     for (let expression of expressions) {
       const args = parse(expression, variable => '$' + variable);
       expression = parseCommandLineArguments(args);
-      result = await this._invokeExpression(expression, {owner});
+      result = await this._invokeExpression(expression, {parent});
     }
     return result;
   }
 
-  async _invokeExpression(expression, {owner}) {
+  async _invokeExpression(expression, {parent}) {
     const firstArgument = expression.arguments[0];
     if (
       firstArgument &&
       (firstArgument.startsWith('.') || firstArgument.includes('/') || isAbsolute(firstArgument))
     ) {
       // The fist arguments looks like a resource path
-      owner = Resource.$load(firstArgument, {directory: this.$getDirectory()});
+      parent = Resource.$load(firstArgument, {directory: this.$getDirectory()});
       expression = {...expression, arguments: expression.arguments.slice(1)};
     }
-    return await owner.$invoke(expression);
+    return await parent.$invoke(expression);
   }
 
   $serialize(opts) {

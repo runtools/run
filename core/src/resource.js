@@ -23,10 +23,10 @@ import Version from './version';
 import Runtime from './runtime';
 
 export class Resource {
-  constructor(definition = {}, {bases = [], owner, name, directory, file} = {}) {
+  constructor(definition = {}, {bases = [], parent, name, directory, file} = {}) {
     addContextToErrors(() => {
-      if (owner !== undefined) {
-        this.$setOwner(owner);
+      if (parent !== undefined) {
+        this.$setParent(parent);
       }
       if (directory !== undefined) {
         this.$setDirectory(directory);
@@ -62,7 +62,7 @@ export class Resource {
     }).call(this);
   }
 
-  static $create(definition = {}, {bases = [], owner, name, directory, file, parse} = {}) {
+  static $create(definition = {}, {bases = [], parent, name, directory, file, parse} = {}) {
     let normalizedDefinition;
     if (isPlainObject(definition)) {
       normalizedDefinition = definition;
@@ -137,7 +137,7 @@ export class Resource {
 
     return new ResourceClass(normalizedDefinition, {
       bases: actualBases,
-      owner,
+      parent,
       name,
       directory,
       file,
@@ -256,12 +256,12 @@ export class Resource {
     return result;
   }
 
-  $getOwner() {
-    return this._owner;
+  $getParent() {
+    return this._parent;
   }
 
-  $setOwner(owner) {
-    this._owner = owner;
+  $setParent(parent) {
+    this._parent = parent;
   }
 
   $getFile() {
@@ -531,7 +531,7 @@ export class Resource {
       bases,
       name,
       directory: this.$getDirectory(),
-      owner: this
+      parent: this
     });
 
     if (removedChildIndex !== undefined) {
@@ -569,9 +569,9 @@ export class Resource {
   }
 
   $wrap(value) {
-    const owner = this.$getOwner();
-    if (!owner) {
-      throw new Error('Can\'t wrap a child without an \'owner\'');
+    const parent = this.$getParent();
+    if (!parent) {
+      throw new Error('Can\'t wrap a child without a parent');
     }
 
     const name = this.$name;
@@ -579,7 +579,7 @@ export class Resource {
       throw new Error('Can\'t wrap a child without a \'$name\'');
     }
 
-    owner.$setChild(name, value, {ignoreAliases: true});
+    parent.$setChild(name, value, {ignoreAliases: true});
   }
 
   async $invoke(expression) {
@@ -594,7 +594,7 @@ export class Resource {
       throw new Error(`Child not found: ${formatCode(name)}`);
     }
 
-    return await child.$invoke(expression, {owner: this});
+    return await child.$invoke(expression, {parent: this});
   }
 
   static $normalize(definition, _options) {
