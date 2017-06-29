@@ -157,7 +157,7 @@ export class Resource {
       file = specifier;
     } else {
       // TODO: load resources from Resdir
-      file = '/Users/mvila/Projects/official-resources/' + specifier;
+      file = '/Users/mvila/Projects/resdir/public/resources/' + specifier;
     }
 
     file = searchResourceFile(file, {searchInParentDirectories});
