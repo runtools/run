@@ -5,9 +5,7 @@
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
   "preferGlobal": true,
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "main": "dist/index.js",
   "bin": {
     "run": "dist/bin/index.js"
@@ -30,16 +28,11 @@
             "node": 6
           },
           "loose": true,
-          "exclude": [
-            "transform-regenerator"
-          ]
+          "exclude": ["transform-regenerator"]
         }
       ]
     ],
-    "plugins": [
-      "transform-class-properties",
-      "transform-object-rest-spread"
-    ],
+    "plugins": ["transform-class-properties", "transform-object-rest-spread"],
     "sourceMaps": "inline"
   },
   "jest": {
@@ -47,8 +40,6 @@
   },
   "dependencies": {
     "node-version": "^1.0.0",
-    "run-common": "file:../common",
-    "run-core": "file:../core",
     "source-map-support": "^0.4.15",
     "update-notifier": "^2.1.0"
   },
