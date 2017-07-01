@@ -1,7 +1,9 @@
-import {join, resolve, basename, dirname, isAbsolute} from 'path';
+import {join, resolve, relative, basename, dirname, isAbsolute} from 'path';
 import {existsSync} from 'fs';
+import {homedir} from 'os';
 import {isPlainObject, isEmpty} from 'lodash';
 import isDirectory from 'is-directory';
+import {copy, emptyDir} from 'fs-extra';
 import {
   addContextToErrors,
   getProperty,
@@ -9,14 +11,21 @@ import {
   getPropertyKeyAndValue,
   loadFile,
   saveFile,
+  task,
   formatString,
   formatPath,
   formatCode
 } from 'run-common';
+import {installPackage, PACKAGE_FILENAME} from '@resdir/package-manager';
 
 const RESOURCE_FILE_NAME = '$resource';
 const RESOURCE_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json5';
+
+const RUN_DIRECTORY = join(homedir(), '.run');
+const PUBLISHED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'published-resources');
+// const INSTALLED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'installed-resources');
+const INSTALLED_RESOURCES_DIRECTORY = PUBLISHED_RESOURCES_DIRECTORY;
 
 import {getPrimitiveResourceClass} from './primitives';
 import Version from './version';
@@ -48,6 +57,7 @@ export class Resource {
       setProperty(this, definition, '$types', ['$type']);
       setProperty(this, definition, '$implementation');
       setProperty(this, definition, '$runtime');
+      setProperty(this, definition, '$files');
 
       for (const base of bases) {
         this._inherit(base);
@@ -157,7 +167,8 @@ export class Resource {
       file = specifier;
     } else {
       // TODO: load resources from Resdir
-      file = '/Users/mvila/Projects/resdir/public/resources/' + specifier;
+      // FIXME: Don't hardcode path separators
+      file = INSTALLED_RESOURCES_DIRECTORY + '/' + specifier;
     }
 
     file = searchResourceFile(file, {searchInParentDirectories});
@@ -509,6 +520,17 @@ export class Resource {
     this._runtime = runtime;
   }
 
+  get $files() {
+    return this._files;
+  }
+
+  set $files(files) {
+    if (typeof files === 'string') {
+      files = [files];
+    }
+    this._files = files;
+  }
+
   _children = [];
 
   $forEachChild(fn) {
@@ -612,12 +634,85 @@ export class Resource {
       return this;
     }
 
+    if (name === '$publish') {
+      return await this.$publish();
+    }
+
     const child = this.$getChild(name);
     if (!child) {
       throw new Error(`Child not found: ${formatCode(name)}`);
     }
 
     return await child.$invoke(expression, {parent: this});
+  }
+
+  async $publish() {
+    const name = this.$name;
+    if (!name) {
+      throw new Error(`Can't publish a resource without a ${formatCode('$name')} property`);
+    }
+
+    await task(
+      async () => {
+        const scope = this.$getScope();
+        if (!scope) {
+          throw new Error(`Can't publish a resource with a unscoped ${formatCode('$name')}`);
+        }
+
+        const identifier = this.$getIdentifier();
+
+        if (!this.$version) {
+          throw new Error(`Can't publish a resource without a ${formatCode('$version')} property`);
+        }
+
+        const resourceFile = this.$getFile();
+        if (!resourceFile) {
+          throw new Error(`Can't publish a resource without a ${formatPath('$resource')} file`);
+        }
+
+        const srcDirectory = this.$getDirectory({throwIfUndefined: true});
+
+        const srcFiles = [resourceFile];
+        let hasPackageFile;
+        if (this.$files) {
+          for (const file of this.$files) {
+            if (file === PACKAGE_FILENAME) {
+              hasPackageFile = true;
+            }
+            srcFiles.push(resolve(srcDirectory, file));
+          }
+        }
+
+        const destDirectory = join(PUBLISHED_RESOURCES_DIRECTORY, scope, identifier);
+
+        await emptyDir(destDirectory);
+
+        for (const srcFile of srcFiles) {
+          const relativeFile = relative(srcDirectory, srcFile);
+          if (relativeFile.startsWith('..')) {
+            throw new Error(
+              `Cannot publish a file (${formatPath(
+                srcFile
+              )}) located outside of the resource directory (${formatPath(srcDirectory)})`
+            );
+          }
+
+          const destFile = join(destDirectory, relativeFile);
+
+          await copy(srcFile, destFile);
+        }
+
+        if (hasPackageFile) {
+          // TODO: this should not be done at publication time but
+          // when the resource is installed
+          await installPackage(destDirectory, {production: true, useLockfile: false});
+        }
+      },
+      {
+        intro: `Publishing ${formatString(name)} resource...`,
+        outro: `Resource ${formatString(name)} published`
+      }
+    );
   }
 
   static $normalize(definition, _options) {
