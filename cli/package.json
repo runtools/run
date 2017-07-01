@@ -1,11 +1,13 @@
 {
   "name": "run-cli",
-  "version": "0.7.0",
+  "version": "0.8.1",
   "description": "One tool to run them all",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
   "preferGlobal": true,
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "main": "dist/index.js",
   "bin": {
     "run": "dist/bin/index.js"
@@ -28,11 +30,16 @@
             "node": 6
           },
           "loose": true,
-          "exclude": ["transform-regenerator"]
+          "exclude": [
+            "transform-regenerator"
+          ]
         }
       ]
     ],
-    "plugins": ["transform-class-properties", "transform-object-rest-spread"],
+    "plugins": [
+      "transform-class-properties",
+      "transform-object-rest-spread"
+    ],
     "sourceMaps": "inline"
   },
   "jest": {
@@ -40,6 +47,7 @@
   },
   "dependencies": {
     "node-version": "^1.0.0",
+    "run-core": "^0.8.0",
     "source-map-support": "^0.4.15",
     "update-notifier": "^2.1.0"
   },
