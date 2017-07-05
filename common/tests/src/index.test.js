@@ -1,4 +1,4 @@
-import * as common from '../src';
+import * as common from '../..';
 
 describe('Common functions', () => {
   test('compactObject()', () => {
