@@ -69,10 +69,21 @@ export class Resource {
         }
         this.$setChild(name, definition[name], {ignoreAliases: true});
       }
+
+      const exportDefinition = getProperty(definition, '$export', ['$exports']);
+      if (exportDefinition !== undefined) {
+        const resource = this.constructor.$create(exportDefinition, {
+          directory: this.$getDirectory()
+        });
+        this.$setExport(resource);
+      }
     }).call(this);
   }
 
-  static $create(definition = {}, {bases = [], parent, name, directory, file, parse} = {}) {
+  static $create(
+    definition = {},
+    {bases = [], parent, name, directory, file, importing, parse} = {}
+  ) {
     let normalizedDefinition;
     if (isPlainObject(definition)) {
       normalizedDefinition = definition;
@@ -108,11 +119,11 @@ export class Resource {
         if (Class) {
           basesClasses.push(Class);
         } else {
-          const base = Resource.$load(type, {directory: dir});
+          const base = Resource.$import(type, {directory: dir});
           actualBases.push(base);
         }
       } else if (isPlainObject(type)) {
-        const base = Resource.$create(type, {directory: dir});
+        const base = Resource.$create(type, {directory: dir, importing: true});
         actualBases.push(base);
       } else {
         throw new Error('A \'type\' must be a string or a plain object');
@@ -145,7 +156,7 @@ export class Resource {
 
     normalizedDefinition = ResourceClass.$normalize(definition, {parse});
 
-    return new ResourceClass(normalizedDefinition, {
+    let resource = new ResourceClass(normalizedDefinition, {
       bases: actualBases,
       parent,
       name,
@@ -153,9 +164,21 @@ export class Resource {
       file,
       parse
     });
+
+    if (importing) {
+      resource = resource.$getExport();
+      if (!resource) {
+        throw new Error('Can\'t import a resource without an $export property');
+      }
+    }
+
+    return resource;
   }
 
-  static $load(specifier, {directory, searchInParentDirectories, throwIfNotFound = true} = {}) {
+  static $load(
+    specifier,
+    {directory, importing, searchInParentDirectories, throwIfNotFound = true} = {}
+  ) {
     let file;
 
     if (specifier.startsWith('.')) {
@@ -181,7 +204,11 @@ export class Resource {
 
     const definition = loadFile(file, {parse: true});
 
-    return this.$create(definition, {file});
+    return this.$create(definition, {file, importing});
+  }
+
+  static $import(specifier, {directory} = {}) {
+    return this.$load(specifier, {directory, importing: true});
   }
 
   $save(directory) {
@@ -531,6 +558,14 @@ export class Resource {
     this._files = files;
   }
 
+  $getExport() {
+    return this._export;
+  }
+
+  $setExport(resource) {
+    this._export = resource;
+  }
+
   _children = [];
 
   $forEachChild(fn) {
@@ -705,7 +740,7 @@ export class Resource {
         if (hasPackageFile) {
           // TODO: this should not be done at publication time but
           // when the resource is installed
-          await installPackage(destDirectory, {production: true, useLockfile: false});
+          await installPackage(destDirectory, {production: true});
         }
       },
       {
@@ -788,6 +823,14 @@ export class Resource {
         definition[name] = childDefinition;
       }
     });
+
+    const exportResource = this.$getExport();
+    if (exportResource) {
+      const exportDefinition = exportResource.$serialize();
+      if (exportDefinition) {
+        definition.$export = exportDefinition;
+      }
+    }
 
     if (isEmpty(definition)) {
       definition = undefined;

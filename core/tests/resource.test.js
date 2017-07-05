@@ -4,6 +4,7 @@ import NumberResource from '../src/primitives/number';
 import StringResource from '../src/primitives/string';
 import ArrayResource from '../src/primitives/array';
 import ObjectResource from '../src/primitives/object';
+import ToolResource from '../src/primitives/tool';
 
 describe('Resource', () => {
   test('creation', () => {
@@ -184,7 +185,8 @@ describe('Resource', () => {
   });
 
   test('composed properties', () => {
-    const person = Resource.$create({address: {$type: {city: {$type: 'string'}}}});
+    const type = {$export: {city: {$type: 'string'}}};
+    const person = Resource.$create({address: {$type: type}});
     expect(person.address).toBeInstanceOf(Resource);
     expect(person.address.$get('city')).toBeDefined();
     expect(person.address.city).toBeUndefined();
@@ -193,7 +195,8 @@ describe('Resource', () => {
   });
 
   test('inherited properties', () => {
-    const person = Resource.$create({$type: {name: 'anonymous'}});
+    const type = {$export: {name: 'anonymous'}};
+    const person = Resource.$create({$type: type});
     const parent = person.$findBase(() => true);
     expect(parent.$get('name')).toBeInstanceOf(StringResource);
     expect(parent.name).toBe('anonymous');
@@ -205,7 +208,8 @@ describe('Resource', () => {
   });
 
   test('inherited properties redefined', () => {
-    const person = Resource.$create({$type: {name: 'anonymous'}});
+    const type = {$export: {name: 'anonymous'}};
+    const person = Resource.$create({$type: type});
     const parent = person.$findBase(() => true);
     person.$set('name', 'Manuel');
     expect(person.$get('name')).toBeInstanceOf(StringResource);
@@ -216,7 +220,8 @@ describe('Resource', () => {
   });
 
   test('inherited properties with a value', () => {
-    const person = Resource.$create({$type: {name: 'anonymous'}, name: 'Manu'});
+    const type = {$export: {name: 'anonymous'}};
+    const person = Resource.$create({$type: type, name: 'Manu'});
     const parent = person.$findBase(() => true);
     expect(parent.name).toBe('anonymous');
     expect(person.name).toBe('Manu');
@@ -226,7 +231,8 @@ describe('Resource', () => {
   });
 
   test('inherited composed properties', () => {
-    const person = Resource.$create({$type: {address: {$type: {city: 'unknown'}}}});
+    const type = {$export: {address: {$type: {$export: {city: 'unknown'}}}}};
+    const person = Resource.$create({$type: type});
     const parent = person.$findBase(() => true);
     expect(parent.address.city).toBe('unknown');
     expect(person.address.city).toBe('unknown');
@@ -236,8 +242,11 @@ describe('Resource', () => {
   });
 
   test('inherited composed properties with a value', () => {
+    const type = {
+      $export: {address: {$type: {$export: {city: {$value: 'unknown', $description: 'The city'}}}}}
+    };
     const person = Resource.$create({
-      $type: {address: {$type: {city: {$value: 'unknown', $description: 'The city'}}}},
+      $type: type,
       address: {city: 'Tokyo'}
     });
     const parent = person.$findBase(() => true);
@@ -254,24 +263,33 @@ describe('Resource', () => {
   });
 
   test('Resource loaded from a file', () => {
-    const Person = Resource.$load('./fixtures/person', {directory: __dirname});
-    expect(Person).toBeInstanceOf(Resource);
-    expect(Person.$name).toBe('person');
-    expect(Person.$version.toString()).toBe('1.0.0');
+    const PersonConstructor = Resource.$load('./fixtures/person', {directory: __dirname});
+    expect(PersonConstructor).toBeInstanceOf(Resource);
+    expect(PersonConstructor.$name).toBe('person');
+    expect(PersonConstructor.$version.toString()).toBe('1.0.0');
+    expect(PersonConstructor.$get('name')).toBeUndefined();
+    expect(PersonConstructor.$get('age')).toBeUndefined();
+
+    const person = Resource.$load('./fixtures/person-instance', {directory: __dirname});
+    expect(person).toBeInstanceOf(ToolResource);
+    expect(person.$get('name')).toBeInstanceOf(StringResource);
+    expect(person.name).toBe('Manu');
+    expect(person.$get('age')).toBeInstanceOf(NumberResource);
+    expect(person.age).toBe(44);
+  });
+
+  test('Resource imported from a file', () => {
+    const Person = Resource.$import('./fixtures/person', {directory: __dirname});
+    expect(Person).toBeInstanceOf(ToolResource);
+    expect(Person.$name).toBeUndefined();
+    expect(Person.$version).toBeUndefined();
     expect(Person.$get('name')).toBeInstanceOf(StringResource);
     expect(Person.name).toBeUndefined();
     expect(Person.$get('age')).toBeInstanceOf(NumberResource);
     expect(Person.age).toBeUndefined();
-
-    const person = Resource.$load('./fixtures/person-instance', {directory: __dirname});
-    expect(person).toBeInstanceOf(Resource);
-    expect(Person.$get('name')).toBeInstanceOf(StringResource);
-    expect(person.name).toBe('Manu');
-    expect(Person.$get('age')).toBeInstanceOf(NumberResource);
-    expect(person.age).toBe(44);
   });
 
-  test('Resource loaded from a type', () => {
+  test('Resource imported from a file via a type', () => {
     const person = Resource.$create(
       {$name: 'manu', $type: './fixtures/person'},
       {directory: __dirname}
@@ -324,8 +342,8 @@ describe('Resource', () => {
     testSerialization({color: {$type: 'string'}});
     testSerialization({color: 'green'});
     testSerialization({name: 'Manu', address: {city: 'Tokyo'}});
-    testSerialization({$type: {$name: 'person', name: 'anonymous'}});
-    testSerialization({$type: {$name: 'person', name: 'anonymous'}, name: 'Manu'});
+    testSerialization({$type: {$name: 'person', $export: {name: 'anonymous'}}});
+    testSerialization({$type: {$name: 'person', $export: {name: 'anonymous'}}, name: 'Manu'});
     testSerialization(
       {$implementation: './fixtures/person/index.js', $runtime: 'node@>=6.10.0'},
       {directory: __dirname}
@@ -333,7 +351,7 @@ describe('Resource', () => {
   });
 
   test('customized normalization and serialization', () => {
-    const Person = Resource.$load('./fixtures/person', {directory: __dirname});
+    const Person = Resource.$import('./fixtures/person', {directory: __dirname});
     const person = Person.$create({address: {city: 'Paris', country: 'France'}});
     expect(person.address.city).toBe('Paris');
     expect(person.address.country).toBe('France');

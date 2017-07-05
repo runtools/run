@@ -18,7 +18,7 @@ describe('CommandResource', () => {
 
   test('invocation', () => {
     // options
-    const Person = Resource.$load('../fixtures/person', {directory: __dirname});
+    const Person = Resource.$import('../fixtures/person', {directory: __dirname});
 
     const person = Person.$create({name: 'Manu', age: 44});
     expect(person.formatGreetingCommand()).toBe('Hi Manu!');

@@ -9,7 +9,7 @@ describe('MacroResource', () => {
   });
 
   test('invocation', async () => {
-    const Person = Resource.$load('../fixtures/person', {directory: __dirname});
+    const Person = Resource.$import('../fixtures/person', {directory: __dirname});
     let person = Person.$create({name: 'Manu', age: 29});
     expect(await person.formatGreetingMacro()).toBe('Hi Manu!');
     person.age++;

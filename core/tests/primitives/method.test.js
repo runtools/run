@@ -20,7 +20,7 @@ describe('MethodResource', () => {
   });
 
   test('invocation', () => {
-    const Person = Resource.$load('../fixtures/person', {directory: __dirname});
+    const Person = Resource.$import('../fixtures/person', {directory: __dirname});
     expect(Person.formatGreetingMethod()).toBe('Hello Anonymous!');
 
     let person = Person.$create({name: 'Manu'});
