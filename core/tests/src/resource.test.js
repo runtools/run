@@ -1,10 +1,10 @@
-import Resource from '../src/resource';
-import BooleanResource from '../src/primitives/boolean';
-import NumberResource from '../src/primitives/number';
-import StringResource from '../src/primitives/string';
-import ArrayResource from '../src/primitives/array';
-import ObjectResource from '../src/primitives/object';
-import ToolResource from '../src/primitives/tool';
+import Resource from '../../dist/resource';
+import BooleanResource from '../../dist/primitives/boolean';
+import NumberResource from '../../dist/primitives/number';
+import StringResource from '../../dist/primitives/string';
+import ArrayResource from '../../dist/primitives/array';
+import ObjectResource from '../../dist/primitives/object';
+import ToolResource from '../../dist/primitives/tool';
 
 describe('Resource', () => {
   test('creation', () => {
@@ -120,9 +120,9 @@ describe('Resource', () => {
   test('implementation', () => {
     expect(Resource.$create().$implementation).toBeUndefined();
     expect(
-      Resource.$create({$implementation: './fixtures/person/index.js'}, {directory: __dirname})
+      Resource.$create({$implementation: '../fixtures/person/index.js'}, {directory: __dirname})
         .$implementation
-    ).toBe('./fixtures/person/index.js');
+    ).toBe('../fixtures/person/index.js');
   });
 
   test('singular and plural property names', () => {
@@ -263,14 +263,14 @@ describe('Resource', () => {
   });
 
   test('Resource loaded from a file', () => {
-    const PersonConstructor = Resource.$load('./fixtures/person', {directory: __dirname});
+    const PersonConstructor = Resource.$load('../fixtures/person', {directory: __dirname});
     expect(PersonConstructor).toBeInstanceOf(Resource);
     expect(PersonConstructor.$name).toBe('person');
     expect(PersonConstructor.$version.toString()).toBe('1.0.0');
     expect(PersonConstructor.$get('name')).toBeUndefined();
     expect(PersonConstructor.$get('age')).toBeUndefined();
 
-    const person = Resource.$load('./fixtures/person-instance', {directory: __dirname});
+    const person = Resource.$load('../fixtures/person-instance', {directory: __dirname});
     expect(person).toBeInstanceOf(ToolResource);
     expect(person.$get('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('Manu');
@@ -279,7 +279,7 @@ describe('Resource', () => {
   });
 
   test('Resource imported from a file', () => {
-    const Person = Resource.$import('./fixtures/person', {directory: __dirname});
+    const Person = Resource.$import('../fixtures/person', {directory: __dirname});
     expect(Person).toBeInstanceOf(ToolResource);
     expect(Person.$name).toBeUndefined();
     expect(Person.$version).toBeUndefined();
@@ -291,7 +291,7 @@ describe('Resource', () => {
 
   test('Resource imported from a file via a type', () => {
     const person = Resource.$create(
-      {$name: 'manu', $type: './fixtures/person'},
+      {$name: 'manu', $type: '../fixtures/person'},
       {directory: __dirname}
     );
     expect(person.$name).toBe('manu');
@@ -301,7 +301,7 @@ describe('Resource', () => {
     person.age = 44;
     expect(person.$serialize()).toEqual({
       $name: 'manu',
-      $type: './fixtures/person',
+      $type: '../fixtures/person',
       name: 'Manu',
       age: 44
     });
@@ -309,7 +309,7 @@ describe('Resource', () => {
 
   test('Resource loaded from a property', () => {
     const Company = Resource.$create(
-      {name: {$type: 'string'}, boss: {$type: './fixtures/person'}},
+      {name: {$type: 'string'}, boss: {$type: '../fixtures/person'}},
       {directory: __dirname}
     );
     expect(Company.$get('name')).toBeInstanceOf(StringResource);
@@ -345,13 +345,13 @@ describe('Resource', () => {
     testSerialization({$type: {$name: 'person', $export: {name: 'anonymous'}}});
     testSerialization({$type: {$name: 'person', $export: {name: 'anonymous'}}, name: 'Manu'});
     testSerialization(
-      {$implementation: './fixtures/person/index.js', $runtime: 'node@>=6.10.0'},
+      {$implementation: '../fixtures/person/index.js', $runtime: 'node@>=6.10.0'},
       {directory: __dirname}
     );
   });
 
   test('customized normalization and serialization', () => {
-    const Person = Resource.$import('./fixtures/person', {directory: __dirname});
+    const Person = Resource.$import('../fixtures/person', {directory: __dirname});
     const person = Person.$create({address: {city: 'Paris', country: 'France'}});
     expect(person.address.city).toBe('Paris');
     expect(person.address.country).toBe('France');

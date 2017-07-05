@@ -1,39 +1,14 @@
 {
   "name": "run-core",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "Resdir resources runner",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
-  "files": ["dist"],
-  "main": "dist/index.js",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/runtools/run"
-  },
-  "scripts": {
-    "build": "rm -rf dist && babel src --out-dir dist",
-    "prepublish": "npm run build",
-    "test": "jest"
-  },
-  "babel": {
-    "presets": [
-      [
-        "env",
-        {
-          "targets": {
-            "node": 6
-          },
-          "loose": true,
-          "exclude": ["transform-regenerator"]
-        }
-      ]
-    ],
-    "plugins": ["transform-class-properties", "transform-object-rest-spread"],
-    "sourceMaps": "inline"
-  },
-  "jest": {
-    "testEnvironment": "node"
-  },
+  "repository": "https://github.com/resdir/resdir.git",
+  "files": [
+    "dist"
+  ],
+  "main": "dist",
   "dependencies": {
     "@resdir/package-manager": "^0.1.0",
     "@resdir/version-range": "^0.1.0",
@@ -58,11 +33,24 @@
     "sync-request": "^4.1.0",
     "then-request": "^2.2.0"
   },
-  "devDependencies": {
-    "babel-cli": "^6.24.1",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-object-rest-spread": "^6.23.0",
-    "babel-preset-env": "^1.4.0",
-    "jest": "^20.0.1"
+  "$managed": {
+    "warning": "This file contains properties managed by a Resource. You should not modify them directly or use a command such as `npm install <name>`.",
+    "properties": [
+      "name",
+      "version",
+      "description",
+      "author",
+      "contributors",
+      "license",
+      "repository",
+      "files",
+      "main",
+      "bin",
+      "preferGlobal",
+      "dependencies",
+      "peerDependencies",
+      "optionalDependencies",
+      "devDependencies"
+    ]
   }
 }

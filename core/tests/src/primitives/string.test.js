@@ -1,4 +1,4 @@
-import StringResource from '../../src/primitives/string';
+import StringResource from '../../../dist/primitives/string';
 
 describe('StringResource', () => {
   test('creation', () => {

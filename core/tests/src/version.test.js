@@ -1,4 +1,4 @@
-import Version from '../src/version';
+import Version from '../../dist/version';
 
 describe('Version', () => {
   test('emptiness', () => {

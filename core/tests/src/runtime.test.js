@@ -1,4 +1,4 @@
-import Runtime from '../src/runtime';
+import Runtime from '../../dist/runtime';
 
 describe('Runtime', () => {
   test('instantiation', () => {

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "lint": "eslint .",
-    "test": "run ./common/tests run && (cd core && npm test) && run ./cli/tests run"
+    "test": "run ./common/tests run && run ./core/tests run && run ./cli/tests run"
   },
   "devDependencies": {
     "babel-eslint": "^7.2.3",

@@ -1,7 +1,7 @@
-import Resource from '../../src/resource';
-import CommandResource from '../../src/primitives/command';
-import StringResource from '../../src/primitives/string';
-import NumberResource from '../../src/primitives/number';
+import Resource from '../../../dist/resource';
+import CommandResource from '../../../dist/primitives/command';
+import StringResource from '../../../dist/primitives/string';
+import NumberResource from '../../../dist/primitives/number';
 
 describe('CommandResource', () => {
   test('creation', () => {
@@ -18,7 +18,7 @@ describe('CommandResource', () => {
 
   test('invocation', () => {
     // options
-    const Person = Resource.$import('../fixtures/person', {directory: __dirname});
+    const Person = Resource.$import('../../fixtures/person', {directory: __dirname});
 
     const person = Person.$create({name: 'Manu', age: 44});
     expect(person.formatGreetingCommand()).toBe('Hi Manu!');

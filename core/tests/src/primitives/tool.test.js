@@ -1,6 +1,6 @@
-import ToolResource from '../../src/primitives/tool';
-import StringResource from '../../src/primitives/string';
-import NumberResource from '../../src/primitives/number';
+import ToolResource from '../../../dist/primitives/tool';
+import StringResource from '../../../dist/primitives/string';
+import NumberResource from '../../../dist/primitives/number';
 
 describe('ToolResource', () => {
   test('creation', () => {

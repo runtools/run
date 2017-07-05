@@ -1,4 +1,4 @@
-import NumberResource from '../../src/primitives/number';
+import NumberResource from '../../../dist/primitives/number';
 
 describe('NumberResource', () => {
   test('creation', () => {

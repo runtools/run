@@ -1,5 +1,5 @@
-import Resource from '../../src/resource';
-import MacroResource from '../../src/primitives/macro';
+import Resource from '../../../dist/resource';
+import MacroResource from '../../../dist/primitives/macro';
 
 describe('MacroResource', () => {
   test('creation', () => {
@@ -9,19 +9,19 @@ describe('MacroResource', () => {
   });
 
   test('invocation', async () => {
-    const Person = Resource.$import('../fixtures/person', {directory: __dirname});
+    const Person = Resource.$import('../../fixtures/person', {directory: __dirname});
     let person = Person.$create({name: 'Manu', age: 29});
     expect(await person.formatGreetingMacro()).toBe('Hi Manu!');
     person.age++;
     expect(await person.formatGreetingMacro()).toBe('Hello Manu!');
 
-    person = Resource.$load('../fixtures/person-instance', {directory: __dirname});
+    person = Resource.$load('../../fixtures/person-instance', {directory: __dirname});
     expect(await person.formatWordsMacro()).toBe('blue, green.');
   });
 
   test('resource loading', async () => {
     const macro = MacroResource.$create(
-      {$expression: '../fixtures/person-instance'},
+      {$expression: '../../fixtures/person-instance'},
       {directory: __dirname}
     );
     const person = await macro.$invoke();

@@ -1,4 +1,4 @@
-import BooleanResource from '../../src/primitives/boolean';
+import BooleanResource from '../../../dist/primitives/boolean';
 
 describe('BooleanResource', () => {
   test('creation', () => {

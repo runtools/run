@@ -1,7 +1,7 @@
-import Resource from '../../src/resource';
-import MethodResource from '../../src/primitives/method';
-import StringResource from '../../src/primitives/string';
-import NumberResource from '../../src/primitives/number';
+import Resource from '../../../dist/resource';
+import MethodResource from '../../../dist/primitives/method';
+import StringResource from '../../../dist/primitives/string';
+import NumberResource from '../../../dist/primitives/number';
 
 describe('MethodResource', () => {
   test('creation', () => {
@@ -20,7 +20,7 @@ describe('MethodResource', () => {
   });
 
   test('invocation', () => {
-    const Person = Resource.$import('../fixtures/person', {directory: __dirname});
+    const Person = Resource.$import('../../fixtures/person', {directory: __dirname});
     expect(Person.formatGreetingMethod()).toBe('Hello Anonymous!');
 
     let person = Person.$create({name: 'Manu'});
@@ -29,7 +29,7 @@ describe('MethodResource', () => {
     expect(person.formatGreetingMethod('Konnichiwa')).toBe('Konnichiwa Manu!');
     expect(() => person.formatGreetingMethod('Konnichiwa', 123)).toThrow();
 
-    person = Resource.$load('../fixtures/person-instance', {directory: __dirname});
+    person = Resource.$load('../../fixtures/person-instance', {directory: __dirname});
 
     expect(person.formatGreetingMethod()).toBe('Hello Manu!');
 
