@@ -1,50 +1,18 @@
 {
   "name": "run-cli",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "One tool to run them all",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
-  "preferGlobal": true,
+  "repository": "https://github.com/resdir/resdir.git",
   "files": [
     "dist"
   ],
-  "main": "dist/index.js",
+  "main": "dist",
   "bin": {
     "run": "dist/bin/index.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/runtools/run"
-  },
-  "scripts": {
-    "build": "rm -rf dist && babel src --out-dir dist",
-    "prepublish": "npm run build",
-    "test": "jest"
-  },
-  "babel": {
-    "presets": [
-      [
-        "env",
-        {
-          "targets": {
-            "node": 6
-          },
-          "loose": true,
-          "exclude": [
-            "transform-regenerator"
-          ]
-        }
-      ]
-    ],
-    "plugins": [
-      "transform-class-properties",
-      "transform-object-rest-spread"
-    ],
-    "sourceMaps": "inline"
-  },
-  "jest": {
-    "testEnvironment": "node"
-  },
+  "preferGlobal": true,
   "dependencies": {
     "node-version": "^1.0.0",
     "run-common": "^0.6.0",
@@ -52,11 +20,24 @@
     "source-map-support": "^0.4.15",
     "update-notifier": "^2.1.0"
   },
-  "devDependencies": {
-    "babel-cli": "^6.24.1",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-object-rest-spread": "^6.23.0",
-    "babel-preset-env": "^1.4.0",
-    "jest": "^20.0.1"
+  "$managed": {
+    "warning": "This file contains properties managed by a Resource. You should not modify them directly or use a command such as `npm install <name>`.",
+    "properties": [
+      "name",
+      "version",
+      "description",
+      "author",
+      "contributors",
+      "license",
+      "repository",
+      "files",
+      "main",
+      "bin",
+      "preferGlobal",
+      "dependencies",
+      "peerDependencies",
+      "optionalDependencies",
+      "devDependencies"
+    ]
   }
 }

@@ -13,7 +13,7 @@ module.exports = base =>
 
       if (typeof definition === 'object') {
         let string;
-        const rest = {...definition};
+        const rest = Object.assign({}, definition);
 
         if (rest.city !== undefined) {
           string = rest.city;

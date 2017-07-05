@@ -1,9 +1,10 @@
 import {join} from 'path';
 
-import {run} from '../src';
+import {run} from '../..';
 
 const personInstanceDirectory = join(
   __dirname,
+  '..',
   '..',
   '..',
   'core',
