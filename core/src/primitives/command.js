@@ -21,11 +21,15 @@ export class CommandResource extends OptionsMixin(MethodResource) {
 
     const remainingOptions = {...optionsArgument};
 
-    let options = [];
+    const options = [];
     let resource = this;
     while (resource) {
       if (resource.$options) {
-        options = [...options, ...resource.$options];
+        for (const newOption of resource.$options) {
+          if (!options.find(option => option.$name === newOption.$name)) {
+            options.push(newOption);
+          }
+        }
       }
       resource = resource.$getParent();
     }
