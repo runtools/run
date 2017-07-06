@@ -1,13 +1,11 @@
 {
   "name": "run-core",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "description": "Resdir resources runner",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
   "repository": "https://github.com/resdir/resdir.git",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "main": "dist",
   "dependencies": {
     "@resdir/package-manager": "^0.1.0",
