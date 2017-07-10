@@ -152,7 +152,9 @@ export class Resource {
     const implementation = getProperty(normalizedDefinition, '$implementation');
     if (implementation) {
       const classBuilder = requireImplementation(implementation, {directory: dir});
-      ResourceClass = classBuilder(ResourceClass);
+      if (classBuilder) {
+        ResourceClass = classBuilder(ResourceClass);
+      }
     }
 
     normalizedDefinition = ResourceClass.$normalize(definition, {parse});
@@ -418,7 +420,11 @@ export class Resource {
       return false;
     }
 
-    if (/[^a-z0-9]/i.test(part[0] + part[part.length - 1])) {
+    if (/[^a-z0-9_]/i.test(part[0])) {
+      return false;
+    }
+
+    if (/[^a-z0-9]/i.test(part[part.length - 1])) {
       return false;
     }
 
@@ -678,7 +684,9 @@ export class Resource {
       return this;
     }
 
-    if (name === '$publish') {
+    if (name === '$install') {
+      return await this.$install();
+    } else if (name === '$publish') {
       return await this.$publish();
     }
 
@@ -714,6 +722,12 @@ export class Resource {
       const fn = method.$getFunction();
       await fn.apply(this, args);
     }
+  }
+
+  async $install() {
+    await this.$emitEvent('before:$install');
+    // NOOP
+    await this.$emitEvent('after:$install');
   }
 
   async $publish() {
@@ -772,11 +786,14 @@ export class Resource {
           await copy(srcFile, destFile);
         }
 
+        // TODO: Installation should not be done at publication time but
+        // when the resource is actually installed
         if (hasPackageFile) {
-          // TODO: this should not be done at publication time but
-          // when the resource is installed
+          // Only useful for js/dependencies
           await installPackage(destDirectory, {production: true});
         }
+        const publishedResource = this.constructor.$load(destDirectory);
+        await publishedResource.$install();
       },
       {
         intro: `Publishing ${formatString(name)} resource...`,
@@ -965,8 +982,14 @@ function requireImplementation(implementationFile, {directory} = {}) {
   if (!file) {
     throw new Error(`File not found: ${formatPath(implementationFile)}`);
   }
-  const result = require(file);
-  return result.default || result;
+  try {
+    const result = require(file);
+    return result.default || result;
+  } catch (err) {
+    // console.warn(
+    //   `An error occured while loading implementation (file: ${formatPath(file)}): ${err.message}`
+    // );
+  }
 }
 
 function searchImplementationFile(file) {
