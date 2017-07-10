@@ -39,6 +39,15 @@
       $implementation: './address',
       city: {$type: 'string'},
       country: {$type: 'string'}
+    },
+    hasBeenBuilt: false,
+    build: {
+      $type: 'method',
+      $listen: 'before:publish'
+    },
+    publish: {
+      $type: 'method',
+      $emit: '*:publish'
     }
   }
 }

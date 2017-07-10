@@ -1,5 +1,5 @@
 import {compact, isEmpty} from 'lodash';
-import {setProperty, addContextToErrors, formatCode} from 'run-common';
+import {getProperty, setProperty, addContextToErrors, formatString, formatCode} from 'run-common';
 
 import Resource from '../resource';
 
@@ -9,6 +9,16 @@ export class MethodResource extends Resource {
     addContextToErrors(() => {
       setProperty(this, definition, '$variadic');
       setProperty(this, definition, '$parameters', ['$parameter']);
+
+      const listenedEvents = getProperty(definition, '$listen', ['$listens']);
+      if (listenedEvents) {
+        this.$setListenedEvents(listenedEvents);
+      }
+
+      const emittedEvents = getProperty(definition, '$emit', ['$emits']);
+      if (emittedEvents) {
+        this.$setEmittedEvents(emittedEvents);
+      }
     }).call(this);
   }
 
@@ -39,6 +49,48 @@ export class MethodResource extends Resource {
 
   set $variadic(variadic) {
     this._variadic = variadic;
+  }
+
+  $setListenedEvents(events) {
+    if (!events) {
+      throw new Error('\'events\' parameter is missing');
+    }
+
+    if (!Array.isArray(events)) {
+      events = [events];
+    }
+
+    const parent = this.$getParent();
+    if (parent) {
+      for (const event of events) {
+        this.$getParent().$listenEvent(event, this);
+      }
+    }
+
+    this._listenedEvents = events;
+  }
+
+  $setEmittedEvents(events) {
+    if (!events) {
+      throw new Error('\'events\' parameter is missing');
+    }
+
+    // TODO: handle event definition such as:
+    // { before: 'will-build' } (custom before event name and no after)
+
+    if (!events.startsWith('*:')) {
+      throw new Error(
+        `Invalid event name: ${formatString(events)}. It should be prefixed by ${formatString(
+          '*:'
+        )}.`
+      );
+    }
+
+    const event = events.slice(2);
+    this._emittedEvents = {
+      before: 'before:' + event,
+      after: 'after:' + event
+    };
   }
 
   $unwrap() {
@@ -143,6 +195,22 @@ export class MethodResource extends Resource {
 
     if (this._variadic !== undefined) {
       definition.$variadic = this._variadic;
+    }
+
+    let listenedEvents = this._listenedEvents;
+    if (listenedEvents && listenedEvents.length) {
+      if (listenedEvents.length === 1) {
+        listenedEvents = listenedEvents[0];
+      }
+      definition.$listen = listenedEvents;
+    }
+
+    const emittedEvents = this._emittedEvents;
+    if (emittedEvents) {
+      // TODO: handle custom event definitions
+      let event = emittedEvents.before;
+      event = event.slice('before:'.length);
+      definition.$emit = '*:' + event;
     }
 
     if (isEmpty(definition)) {

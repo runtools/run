@@ -690,6 +690,32 @@ export class Resource {
     return await child.$invoke(expression, {parent: this});
   }
 
+  $listenEvent(event, method) {
+    if (!this._listeners) {
+      this._listeners = {};
+    }
+    if (!this._listeners[event]) {
+      this._listeners[event] = [];
+    }
+    this._listeners[event].push(method);
+  }
+
+  async $emitEvent(event, ...args) {
+    const methods = [];
+    this.$forSelfAndEachBase(
+      resource => {
+        if (resource._listeners && resource._listeners[event]) {
+          methods.push(...resource._listeners[event]);
+        }
+      },
+      {deepSearch: true}
+    );
+    for (const method of methods) {
+      const fn = method.$getFunction();
+      await fn.apply(this, args);
+    }
+  }
+
   async $publish() {
     const name = this.$name;
     if (!name) {

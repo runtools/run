@@ -38,13 +38,34 @@ describe('MethodResource', () => {
     expect(person.formatWordsMethod('blue', 'yellow')).toBe('Blue, yellow.');
   });
 
+  test.skip('events', async () => {
+    const person = Resource.$load('../../fixtures/person-instance', {directory: __dirname});
+
+    expect(person.hasBeenBuilt).toBe(false);
+    await person.publish();
+    expect(person.hasBeenBuilt).toBe(true);
+  });
+
   test('serialization', () => {
     expect(MethodResource.$create().$serialize()).toBeUndefined();
+
     expect(MethodResource.$create({$type: 'method'}).$serialize()).toEqual({$type: 'method'});
+
     expect(MethodResource.$create({$parameter: 1}).$serialize()).toEqual({$parameter: 1});
     expect(MethodResource.$create({$parameters: [1, 2]}).$serialize()).toEqual({
       $parameters: [1, 2]
     });
+
+    expect(MethodResource.$create({$variadic: false}).$serialize()).toEqual({$variadic: false});
     expect(MethodResource.$create({$variadic: true}).$serialize()).toEqual({$variadic: true});
+
+    expect(MethodResource.$create({$listen: 'before:build'}).$serialize()).toEqual({
+      $listen: 'before:build'
+    });
+    expect(
+      MethodResource.$create({$listen: ['before:build', 'after:install']}).$serialize()
+    ).toEqual({$listen: ['before:build', 'after:install']});
+
+    expect(MethodResource.$create({$emit: '*:build'}).$serialize()).toEqual({$emit: '*:build'});
   });
 });

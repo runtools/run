@@ -18,6 +18,12 @@ module.exports = base =>
       const {capitalize, shout} = words.pop();
       return formatWords(words, {capitalize, shout});
     }
+
+    async build() {
+      this.hasBeenBuilt = true;
+    }
+
+    async publish() {}
   };
 
 function formatWords(words, {capitalize, shout}) {
