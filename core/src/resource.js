@@ -289,7 +289,7 @@ export class Resource {
     return Boolean(this.$findBase(base => base === resource));
   }
 
-  _getChild(name) {
+  _getInheritedValue(name) {
     let result;
     this.$forSelfAndEachBase(
       resource => {
@@ -350,7 +350,7 @@ export class Resource {
   }
 
   get $name() {
-    return this._getChild('_name');
+    return this._getInheritedValue('_name');
   }
 
   set $name(name) {
@@ -426,7 +426,7 @@ export class Resource {
   }
 
   get $aliases() {
-    return this._getChild('_aliases');
+    return this._getInheritedValue('_aliases');
   }
 
   set $aliases(aliases) {
@@ -462,7 +462,7 @@ export class Resource {
   }
 
   get $version() {
-    return this._getChild('_version');
+    return this._getInheritedValue('_version');
   }
 
   set $version(version) {
@@ -473,7 +473,7 @@ export class Resource {
   }
 
   get $description() {
-    return this._getChild('_description');
+    return this._getInheritedValue('_description');
   }
 
   set $description(description) {
@@ -481,7 +481,7 @@ export class Resource {
   }
 
   get $authors() {
-    return this._getChild('_authors');
+    return this._getInheritedValue('_authors');
   }
 
   set $authors(authors) {
@@ -492,7 +492,7 @@ export class Resource {
   }
 
   get $repository() {
-    return this._getChild('_repository');
+    return this._getInheritedValue('_repository');
   }
 
   set $repository(repository) {
@@ -500,7 +500,7 @@ export class Resource {
   }
 
   get $license() {
-    return this._getChild('_license');
+    return this._getInheritedValue('_license');
   }
 
   set $license(license) {
@@ -538,7 +538,7 @@ export class Resource {
   }
 
   get $runtime() {
-    return this._getChild('_runtime');
+    return this._getInheritedValue('_runtime');
   }
 
   set $runtime(runtime) {
@@ -560,7 +560,7 @@ export class Resource {
   }
 
   get $hidden() {
-    return this._getChild('_hidden');
+    return this._getInheritedValue('_hidden');
   }
 
   set $hidden(hidden) {

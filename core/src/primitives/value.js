@@ -12,7 +12,7 @@ export class ValueResource extends Resource {
   }
 
   get $value() {
-    return this._getChild('_value');
+    return this._getInheritedValue('_value');
   }
 
   set $value(value) {

@@ -23,7 +23,7 @@ export class MethodResource extends Resource {
   }
 
   get $parameters() {
-    return this._getChild('_parameters');
+    return this._getInheritedValue('_parameters');
   }
 
   set $parameters(parameters) {
@@ -44,7 +44,7 @@ export class MethodResource extends Resource {
   }
 
   get $variadic() {
-    return this._getChild('_variadic');
+    return this._getInheritedValue('_variadic');
   }
 
   set $variadic(variadic) {
@@ -52,7 +52,7 @@ export class MethodResource extends Resource {
   }
 
   $getListenedEvents() {
-    return this._getChild('_listenedEvents');
+    return this._getInheritedValue('_listenedEvents');
   }
 
   $setListenedEvents(events) {
@@ -75,7 +75,7 @@ export class MethodResource extends Resource {
   }
 
   $getEmittedEvents() {
-    return this._getChild('_emittedEvents');
+    return this._getInheritedValue('_emittedEvents');
   }
 
   $setEmittedEvents(events) {

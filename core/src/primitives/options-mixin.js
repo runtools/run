@@ -13,7 +13,7 @@ export const OptionsMixin = base =>
     }
 
     get $options() {
-      return this._getChild('_options');
+      return this._getInheritedValue('_options');
     }
 
     set $options(options) {
