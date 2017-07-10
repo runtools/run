@@ -41,7 +41,7 @@ describe('Resource', () => {
     expect(res.$hasAlias('hi')).toBe(false);
   });
 
-  test('name', () => {
+  test('$name', () => {
     const res = Resource.$create();
     expect(res.$name).toBeUndefined();
     expect(res.$getScope()).toBeUndefined();
@@ -56,7 +56,7 @@ describe('Resource', () => {
     expect(res.$getIdentifier()).toBe('hello');
   });
 
-  test('name validation', () => {
+  test('$name validation', () => {
     expect(() => Resource.$create({$name: 'hello'})).not.toThrow();
     expect(() => Resource.$create({$name: 'runtools/hello'})).not.toThrow();
     expect(() => Resource.$create({$name: ''})).toThrow();
@@ -65,7 +65,7 @@ describe('Resource', () => {
     expect(() => Resource.$create({$name: '/hello'})).toThrow();
   });
 
-  test('aliases', () => {
+  test('$aliases', () => {
     const res = Resource.$create({$aliases: ['hi']});
     expect(res.$hasAlias('hi')).toBe(true);
     expect(res.$hasAlias('bonjour')).toBe(false);
@@ -73,7 +73,7 @@ describe('Resource', () => {
     expect(res.$hasAlias('bonjour')).toBe(true);
   });
 
-  test('matching by name or aliases', () => {
+  test('matching by $name or $aliases', () => {
     const res = Resource.$create({$name: 'hello', $aliases: ['hi', 'bonjour']});
     expect(res.$isMatching('hello')).toBe(true);
     expect(res.$isMatching('hi')).toBe(true);
@@ -81,48 +81,59 @@ describe('Resource', () => {
     expect(res.$isMatching('bye')).toBe(false);
   });
 
-  test('version', () => {
+  test('$version', () => {
     expect(Resource.$create().$version).toBeUndefined();
     expect(Resource.$create({$version: '1.2.3'}).$version.toString()).toBe('1.2.3');
     expect(() => Resource.$create({$version: '1.2.3.4'})).toThrow();
   });
 
-  test('description', () => {
+  test('$description', () => {
     expect(Resource.$create().$description).toBeUndefined();
     expect(Resource.$create({$description: 'This is a resource'}).$description).toBe(
       'This is a resource'
     );
   });
 
-  test('authors', () => {
+  test('$authors', () => {
     expect(Resource.$create().$authors).toBeUndefined();
     expect(Resource.$create({$authors: 'Manu'}).$authors).toEqual(['Manu']);
     expect(Resource.$create({$authors: ['Manu', 'Paul']}).$authors).toEqual(['Manu', 'Paul']);
   });
 
-  test('repository', () => {
+  test('$repository', () => {
     expect(Resource.$create().$repository).toBeUndefined();
     expect(Resource.$create({$repository: 'git://github.com/user/repo'}).$repository).toBe(
       'git://github.com/user/repo'
     );
   });
 
-  test('license', () => {
+  test('$license', () => {
     expect(Resource.$create().$license).toBeUndefined();
     expect(Resource.$create({$license: 'MIT'}).$license).toBe('MIT');
   });
 
-  test('runtime', () => {
+  test('$runtime', () => {
     expect(Resource.$create().$runtime).toBeUndefined();
     expect(Resource.$create({$runtime: 'node@>=6.10.0'}).$runtime.toJSON()).toBe('node@>=6.10.0');
   });
 
-  test('implementation', () => {
+  test('$implementation', () => {
     expect(Resource.$create().$implementation).toBeUndefined();
     expect(
       Resource.$create({$implementation: '../fixtures/person/index.js'}, {directory: __dirname})
         .$implementation
     ).toBe('../fixtures/person/index.js');
+  });
+
+  test('$files', () => {
+    expect(Resource.$create().$files).toBeUndefined();
+    expect(Resource.$create({$files: ['./dist']}).$files).toEqual(['./dist']);
+  });
+
+  test('$hidden', () => {
+    expect(Resource.$create().$hidden).toBeUndefined();
+    expect(Resource.$create({$hidden: false}).$hidden).toBe(false);
+    expect(Resource.$create({$hidden: true}).$hidden).toBe(true);
   });
 
   test('singular and plural property names', () => {
@@ -336,7 +347,9 @@ describe('Resource', () => {
       $description: 'This is a resource',
       $authors: ['Manu', 'Vince'],
       $repository: 'git://github.com/user/repo',
-      $license: 'MIT'
+      $license: 'MIT',
+      $files: ['./dist'],
+      $hidden: true
     });
     testSerialization({$author: 'Manu'});
     testSerialization({color: {$type: 'string'}});

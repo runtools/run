@@ -58,6 +58,7 @@ export class Resource {
       setProperty(this, definition, '$implementation');
       setProperty(this, definition, '$runtime');
       setProperty(this, definition, '$files');
+      setProperty(this, definition, '$hidden');
 
       for (const base of bases) {
         this._inherit(base);
@@ -558,6 +559,14 @@ export class Resource {
     this._files = files;
   }
 
+  get $hidden() {
+    return this._hidden;
+  }
+
+  set $hidden(hidden) {
+    this._hidden = hidden;
+  }
+
   $getExport() {
     return this._export;
   }
@@ -764,15 +773,7 @@ export class Resource {
       definition.$name = this._name;
     }
 
-    let aliases = this._aliases;
-    if (aliases !== undefined) {
-      aliases = Array.from(aliases);
-      if (aliases.length === 1) {
-        definition.$alias = aliases[0];
-      } else if (aliases.length > 1) {
-        definition.$aliases = aliases;
-      }
-    }
+    this._serializeAliases(definition);
 
     if (this._version !== undefined) {
       definition.$version = this._version.toJSON();
@@ -782,14 +783,7 @@ export class Resource {
       definition.$description = this._description;
     }
 
-    const authors = this._authors;
-    if (authors !== undefined) {
-      if (authors.length === 1) {
-        definition.$author = authors[0];
-      } else if (authors.length > 1) {
-        definition.$authors = authors;
-      }
-    }
+    this._serializeAuthors(definition);
 
     if (this._repository !== undefined) {
       definition.$repository = this._repository;
@@ -799,14 +793,7 @@ export class Resource {
       definition.$license = this._license;
     }
 
-    const types = this._types;
-    if (types !== undefined) {
-      if (types.length === 1) {
-        definition.$type = types[0];
-      } else if (types.length > 1) {
-        definition.$types = types;
-      }
-    }
+    this._serializeTypes(definition);
 
     if (this._implementation !== undefined) {
       definition.$implementation = this._implementation;
@@ -816,6 +803,60 @@ export class Resource {
       definition.$runtime = this._runtime.toJSON();
     }
 
+    if (this._files !== undefined) {
+      definition.$files = this._files;
+    }
+
+    if (this._hidden !== undefined) {
+      definition.$hidden = this._hidden;
+    }
+
+    this._serializeChildren(definition);
+
+    this._serializeExport(definition);
+
+    if (isEmpty(definition)) {
+      definition = undefined;
+    }
+
+    return definition;
+  }
+
+  _serializeAliases(definition) {
+    let aliases = this._aliases;
+    if (aliases !== undefined) {
+      aliases = Array.from(aliases);
+      if (aliases.length === 1) {
+        definition.$alias = aliases[0];
+      } else if (aliases.length > 1) {
+        definition.$aliases = aliases;
+      }
+    }
+  }
+
+  _serializeAuthors(definition) {
+    const authors = this._authors;
+    if (authors !== undefined) {
+      if (authors.length === 1) {
+        definition.$author = authors[0];
+      } else if (authors.length > 1) {
+        definition.$authors = authors;
+      }
+    }
+  }
+
+  _serializeTypes(definition) {
+    const types = this._types;
+    if (types !== undefined) {
+      if (types.length === 1) {
+        definition.$type = types[0];
+      } else if (types.length > 1) {
+        definition.$types = types;
+      }
+    }
+  }
+
+  _serializeChildren(definition) {
     this.$forEachChild(child => {
       const childDefinition = child.$serialize({omitName: true});
       if (childDefinition !== undefined) {
@@ -823,7 +864,9 @@ export class Resource {
         definition[name] = childDefinition;
       }
     });
+  }
 
+  _serializeExport(definition) {
     const exportResource = this.$getExport();
     if (exportResource) {
       const exportDefinition = exportResource.$serialize();
@@ -831,12 +874,6 @@ export class Resource {
         definition.$export = exportDefinition;
       }
     }
-
-    if (isEmpty(definition)) {
-      definition = undefined;
-    }
-
-    return definition;
   }
 }
 
