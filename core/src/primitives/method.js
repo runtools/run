@@ -51,6 +51,10 @@ export class MethodResource extends Resource {
     this._variadic = variadic;
   }
 
+  $getListenedEvents() {
+    return this._getChild('_listenedEvents');
+  }
+
   $setListenedEvents(events) {
     if (!events) {
       throw new Error('\'events\' parameter is missing');
@@ -68,6 +72,10 @@ export class MethodResource extends Resource {
     }
 
     this._listenedEvents = events;
+  }
+
+  $getEmittedEvents() {
+    return this._getChild('_emittedEvents');
   }
 
   $setEmittedEvents(events) {
@@ -113,7 +121,19 @@ export class MethodResource extends Resource {
         throw new Error(`Can't find implementation for ${formatCode(methodResource.$name)}`);
       }
 
-      return await implementation.apply(this, normalizedArguments);
+      const emittedEvents = methodResource.$getEmittedEvents();
+
+      if (emittedEvents && emittedEvents.before) {
+        await this.$emitEvent(emittedEvents.before);
+      }
+
+      const result = await implementation.apply(this, normalizedArguments);
+
+      if (emittedEvents && emittedEvents.after) {
+        await this.$emitEvent(emittedEvents.after);
+      }
+
+      return result;
     };
   }
 

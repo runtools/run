@@ -38,7 +38,7 @@ describe('MethodResource', () => {
     expect(await person.formatWordsMethod('blue', 'yellow')).toBe('Blue, yellow.');
   });
 
-  test.skip('events', async () => {
+  test('events', async () => {
     const person = Resource.$load('../../fixtures/person-instance', {directory: __dirname});
 
     expect(person.hasBeenBuilt).toBe(false);
