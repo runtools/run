@@ -350,7 +350,7 @@ export class Resource {
   }
 
   get $name() {
-    return this._name;
+    return this._getChild('_name');
   }
 
   set $name(name) {
@@ -462,7 +462,7 @@ export class Resource {
   }
 
   get $version() {
-    return this._version;
+    return this._getChild('_version');
   }
 
   set $version(version) {
@@ -481,7 +481,7 @@ export class Resource {
   }
 
   get $authors() {
-    return this._authors;
+    return this._getChild('_authors');
   }
 
   set $authors(authors) {
@@ -492,7 +492,7 @@ export class Resource {
   }
 
   get $repository() {
-    return this._repository;
+    return this._getChild('_repository');
   }
 
   set $repository(repository) {
@@ -500,7 +500,7 @@ export class Resource {
   }
 
   get $license() {
-    return this._license;
+    return this._getChild('_license');
   }
 
   set $license(license) {
@@ -560,7 +560,7 @@ export class Resource {
   }
 
   get $hidden() {
-    return this._hidden;
+    return this._getChild('_hidden');
   }
 
   set $hidden(hidden) {
