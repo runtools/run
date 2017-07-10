@@ -100,7 +100,7 @@ export class MethodResource extends Resource {
   $getFunction({parseArguments} = {}) {
     const methodResource = this;
 
-    return function (...args) {
+    return async function (...args) {
       const {normalizedArguments, remainingArguments} = methodResource._normalizeArguments(args, {
         parse: parseArguments
       });
@@ -113,7 +113,7 @@ export class MethodResource extends Resource {
         throw new Error(`Can't find implementation for ${formatCode(methodResource.$name)}`);
       }
 
-      return implementation.apply(this, normalizedArguments);
+      return await implementation.apply(this, normalizedArguments);
     };
   }
 
@@ -170,9 +170,9 @@ export class MethodResource extends Resource {
     return implementation;
   }
 
-  $invoke(expression, {parent}) {
+  async $invoke(expression, {parent}) {
     const fn = this.$getFunction({parseArguments: true});
-    return fn.apply(parent, expression.arguments);
+    return await fn.apply(parent, expression.arguments);
   }
 
   $serialize(options) {

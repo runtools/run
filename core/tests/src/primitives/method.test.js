@@ -19,23 +19,23 @@ describe('MethodResource', () => {
     expect(method.$variadic).toBe(true);
   });
 
-  test('invocation', () => {
+  test('invocation', async () => {
     const Person = Resource.$import('../../fixtures/person', {directory: __dirname});
-    expect(Person.formatGreetingMethod()).toBe('Hello Anonymous!');
+    expect(await Person.formatGreetingMethod()).toBe('Hello Anonymous!');
 
     let person = Person.$create({name: 'Manu'});
 
-    expect(person.formatGreetingMethod()).toBe('Hello Manu!');
-    expect(person.formatGreetingMethod('Konnichiwa')).toBe('Konnichiwa Manu!');
-    expect(() => person.formatGreetingMethod('Konnichiwa', 123)).toThrow();
+    expect(await person.formatGreetingMethod()).toBe('Hello Manu!');
+    expect(await person.formatGreetingMethod('Konnichiwa')).toBe('Konnichiwa Manu!');
+    await expect(person.formatGreetingMethod('Konnichiwa', 123)).rejects.toBeInstanceOf(Error);
 
     person = Resource.$load('../../fixtures/person-instance', {directory: __dirname});
 
-    expect(person.formatGreetingMethod()).toBe('Hello Manu!');
+    expect(await person.formatGreetingMethod()).toBe('Hello Manu!');
 
-    expect(person.formatWordsMethod()).toBe('');
-    expect(person.formatWordsMethod('blue')).toBe('Blue.');
-    expect(person.formatWordsMethod('blue', 'yellow')).toBe('Blue, yellow.');
+    expect(await person.formatWordsMethod()).toBe('');
+    expect(await person.formatWordsMethod('blue')).toBe('Blue.');
+    expect(await person.formatWordsMethod('blue', 'yellow')).toBe('Blue, yellow.');
   });
 
   test.skip('events', async () => {

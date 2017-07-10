@@ -16,29 +16,31 @@ describe('CommandResource', () => {
     expect(command.$options[1].$name).toBe('age');
   });
 
-  test('invocation', () => {
+  test('invocation', async () => {
     // options
     const Person = Resource.$import('../../fixtures/person', {directory: __dirname});
 
     const person = Person.$create({name: 'Manu', age: 44});
-    expect(person.formatGreetingCommand()).toBe('Hi Manu!');
+    expect(await person.formatGreetingCommand()).toBe('Hi Manu!');
     person.age++;
-    expect(person.formatGreetingCommand()).toBe('Hello Manu!');
-    expect(person.formatGreetingCommand({ageLimit: 46})).toBe('Hi Manu!');
-    expect(person.formatGreetingCommand({limit: 46})).toBe('Hi Manu!');
-    expect(() => person.formatGreetingCommand({ageLimit: 46}, true)).toThrow();
+    expect(await person.formatGreetingCommand()).toBe('Hello Manu!');
+    expect(await person.formatGreetingCommand({ageLimit: 46})).toBe('Hi Manu!');
+    expect(await person.formatGreetingCommand({limit: 46})).toBe('Hi Manu!');
+    await expect(person.formatGreetingCommand({ageLimit: 46}, true)).rejects.toBeInstanceOf(Error);
 
     // variadic command
-    expect(Person.formatWordsCommand()).toBe('');
-    expect(Person.formatWordsCommand({capitalize: false})).toBe('');
-    expect(Person.formatWordsCommand('blue')).toBe('Blue.');
-    expect(Person.formatWordsCommand('blue', {capitalize: false})).toBe('blue.');
-    expect(Person.formatWordsCommand('blue', 'yellow')).toBe('Blue, yellow.');
-    expect(Person.formatWordsCommand('blue', 'yellow', {capitalize: false})).toBe('blue, yellow.');
+    expect(await Person.formatWordsCommand()).toBe('');
+    expect(await Person.formatWordsCommand({capitalize: false})).toBe('');
+    expect(await Person.formatWordsCommand('blue')).toBe('Blue.');
+    expect(await Person.formatWordsCommand('blue', {capitalize: false})).toBe('blue.');
+    expect(await Person.formatWordsCommand('blue', 'yellow')).toBe('Blue, yellow.');
+    expect(await Person.formatWordsCommand('blue', 'yellow', {capitalize: false})).toBe(
+      'blue, yellow.'
+    );
 
     // options inherited from tool
-    expect(Person.formatWordsCommand('blue', 'yellow')).toBe('Blue, yellow.');
-    expect(Person.formatWordsCommand('blue', 'yellow', {shout: true})).toBe('BLUE, YELLOW.');
+    expect(await Person.formatWordsCommand('blue', 'yellow')).toBe('Blue, yellow.');
+    expect(await Person.formatWordsCommand('blue', 'yellow', {shout: true})).toBe('BLUE, YELLOW.');
   });
 
   test('serialization', () => {
