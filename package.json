@@ -7,8 +7,7 @@
     "url": "git://github.com/runtools/run"
   },
   "scripts": {
-    "lint": "eslint .",
-    "test": "run ./common/tests run && run ./core/tests run && run ./cli/tests run"
+    "lint": "eslint ."
   },
   "devDependencies": {
     "babel-eslint": "^7.2.3",

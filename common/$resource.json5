@@ -19,5 +19,10 @@
     "slice-ansi@^0.1.0",
     "strict-uri-encode@^2.0.0",
     "window-size@^1.1.0"
-  ]
+  ],
+  test: {
+    $type: 'macro',
+    $expression: './tests run',
+    $listen: 'after:$test'
+  }
 }

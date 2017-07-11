@@ -16,5 +16,10 @@
     "run-core@^0.8.6",
     "source-map-support@^0.4.15",
     "update-notifier@^2.1.0"
-  ]
+  ],
+  test: {
+    $type: 'macro',
+    $expression: './tests run',
+    $listen: 'after:$test'
+  }
 }

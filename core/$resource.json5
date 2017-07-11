@@ -29,5 +29,10 @@
     "source-map-support@^0.4.15",
     "sync-request@^4.1.0",
     "then-request@^2.2.0"
-  ]
+  ],
+  test: {
+    $type: 'macro',
+    $expression: './tests run',
+    $listen: 'after:$test'
+  }
 }

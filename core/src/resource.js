@@ -18,6 +18,10 @@ import {
 } from 'run-common';
 import {installPackage, PACKAGE_FILENAME} from '@resdir/package-manager';
 
+import {getPrimitiveResourceClass} from './primitives';
+import Version from './version';
+import Runtime from './runtime';
+
 const RESOURCE_FILE_NAME = '$resource';
 const RESOURCE_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json5';
@@ -27,9 +31,7 @@ const PUBLISHED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'published-resources')
 // const INSTALLED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'installed-resources');
 const INSTALLED_RESOURCES_DIRECTORY = PUBLISHED_RESOURCES_DIRECTORY;
 
-import {getPrimitiveResourceClass} from './primitives';
-import Version from './version';
-import Runtime from './runtime';
+const BUILTIN_COMMANDS = ['$build', '$install', '$publish', '$test'];
 
 export class Resource {
   constructor(definition = {}, {bases = [], parent, name, directory, file} = {}) {
@@ -684,12 +686,8 @@ export class Resource {
       return this;
     }
 
-    if (name === '$build') {
-      return await this.$build();
-    } else if (name === '$install') {
-      return await this.$install();
-    } else if (name === '$publish') {
-      return await this.$publish();
+    if (BUILTIN_COMMANDS.includes(name)) {
+      return await this[name]();
     }
 
     const child = this.$getChild(name);
@@ -739,6 +737,8 @@ export class Resource {
   }
 
   async $publish() {
+    await this.$emitEvent('before:$publish');
+
     const name = this.$name;
     if (!name) {
       throw new Error(`Can't publish a resource without a ${formatCode('$name')} property`);
@@ -808,6 +808,14 @@ export class Resource {
         outro: `Resource ${formatString(name)} published`
       }
     );
+
+    await this.$emitEvent('after:$publish');
+  }
+
+  async $test() {
+    await this.$emitEvent('before:$test');
+    // NOOP
+    await this.$emitEvent('after:$test');
   }
 
   static $normalize(definition, _options) {
