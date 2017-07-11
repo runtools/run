@@ -194,7 +194,7 @@ export class Resource {
     } else {
       // TODO: load resources from Resdir
       // FIXME: Don't hardcode path separators
-      file = INSTALLED_RESOURCES_DIRECTORY + '/' + specifier;
+      file = (process.env.RESOURCES_DIRECTORY || INSTALLED_RESOURCES_DIRECTORY) + '/' + specifier;
     }
 
     file = searchResourceFile(file, {searchInParentDirectories});
@@ -684,7 +684,9 @@ export class Resource {
       return this;
     }
 
-    if (name === '$install') {
+    if (name === '$build') {
+      return await this.$build();
+    } else if (name === '$install') {
       return await this.$install();
     } else if (name === '$publish') {
       return await this.$publish();
@@ -722,6 +724,12 @@ export class Resource {
       const fn = method.$getFunction();
       await fn.apply(this, args);
     }
+  }
+
+  async $build() {
+    await this.$emitEvent('before:$build');
+    // NOOP
+    await this.$emitEvent('after:$build');
   }
 
   async $install() {
@@ -980,7 +988,7 @@ function requireImplementation(implementationFile, {directory} = {}) {
   }
   file = searchImplementationFile(file);
   if (!file) {
-    throw new Error(`File not found: ${formatPath(implementationFile)}`);
+    console.warn(`Implementation file not found: ${formatPath(implementationFile)}`);
   }
   try {
     const result = require(file);
