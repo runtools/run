@@ -14,6 +14,7 @@
   },
   "preferGlobal": true,
   "dependencies": {
+    "dotenv": "^4.0.0",
     "node-version": "^1.0.0",
     "run-common": "^0.6.0",
     "run-core": "^0.8.6",

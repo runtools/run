@@ -198,7 +198,8 @@ export class Resource {
     } else {
       // TODO: load resources from Resdir
       // FIXME: Don't hardcode path separators
-      file = (process.env.RESOURCES_DIRECTORY || INSTALLED_RESOURCES_DIRECTORY) + '/' + specifier;
+      file =
+        (process.env.RUN_RESOURCES_DIRECTORY || INSTALLED_RESOURCES_DIRECTORY) + '/' + specifier;
     }
 
     file = searchResourceFile(file, {searchInParentDirectories});

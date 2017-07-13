@@ -1,5 +1,13 @@
 {
   $type: "js/esnext-package",
+  dependencies: [
+    "dotenv@^4.0.0",
+    "node-version@^1.0.0",
+    "run-common@^0.6.0",
+    "run-core@^0.8.6",
+    "source-map-support@^0.4.15",
+    "update-notifier@^2.1.0"
+  ],
   name: "run-cli",
   version: "0.8.4",
   description: "One tool to run them all",
@@ -10,16 +18,9 @@
     run: "dist/bin/index.js"
   },
   preferGlobal: true,
-  dependencies: [
-    "node-version@^1.0.0",
-    "run-common@^0.6.0",
-    "run-core@^0.8.6",
-    "source-map-support@^0.4.15",
-    "update-notifier@^2.1.0"
-  ],
   test: {
-    $type: 'macro',
-    $expression: './tests run',
-    $listen: 'after:$test'
+    $type: "macro",
+    $listen: "after:$test",
+    $expression: "./tests run"
   }
 }
