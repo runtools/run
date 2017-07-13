@@ -61,6 +61,8 @@ export class Resource {
       setProperty(this, definition, '$runtime');
       setProperty(this, definition, '$files');
       setProperty(this, definition, '$hidden');
+      setProperty(this, definition, '$autoBoxing');
+      setProperty(this, definition, '$autoUnboxing');
 
       for (const base of bases) {
         this._inherit(base);
@@ -575,6 +577,34 @@ export class Resource {
     this._hidden = hidden;
   }
 
+  $defaultAutoBoxing = false;
+
+  get $autoBoxing() {
+    let autoBoxing = this._getInheritedValue('_autoBoxing');
+    if (autoBoxing === undefined) {
+      autoBoxing = this.$defaultAutoBoxing;
+    }
+    return autoBoxing;
+  }
+
+  set $autoBoxing(autoBoxing) {
+    this._autoBoxing = autoBoxing;
+  }
+
+  $defaultAutoUnboxing = false;
+
+  get $autoUnboxing() {
+    let autoUnboxing = this._getInheritedValue('_autoUnboxing');
+    if (autoUnboxing === undefined) {
+      autoUnboxing = this.$defaultAutoUnboxing;
+    }
+    return autoUnboxing;
+  }
+
+  set $autoUnboxing(autoUnboxing) {
+    this._autoUnboxing = autoUnboxing;
+  }
+
   $getExport() {
     return this._export;
   }
@@ -640,10 +670,10 @@ export class Resource {
 
     Object.defineProperty(this, name, {
       get() {
-        return child.$unwrap();
+        return child.$autoUnbox();
       },
       set(value) {
-        child.$wrap(value);
+        child.$autoBox(value);
       },
       configurable: true
     });
@@ -661,22 +691,39 @@ export class Resource {
     return result;
   }
 
-  $unwrap() {
-    return this;
-  }
+  $autoBox(value) {
+    if (this.$autoBoxing) {
+      const boxer = this.$box;
+      if (!boxer) {
+        throw new Error(`${formatCode('$boxer')} is not implemented`);
+      }
+      boxer.call(this, value);
+      return;
+    }
 
-  $wrap(value) {
     const parent = this.$getParent();
     if (!parent) {
-      throw new Error('Can\'t wrap a child without a parent');
+      throw new Error('Can\'t set a child without a parent');
     }
 
     const name = this.$name;
     if (!name) {
-      throw new Error('Can\'t wrap a child without a \'$name\'');
+      throw new Error('Can\'t set a child without a \'$name\'');
     }
 
     parent.$setChild(name, value, {ignoreAliases: true});
+  }
+
+  $autoUnbox() {
+    if (this.$autoUnboxing) {
+      const unboxer = this.$unbox;
+      if (!unboxer) {
+        throw new Error(`${formatCode('$unboxer')} is not implemented`);
+      }
+      return unboxer.call(this);
+    }
+
+    return this;
   }
 
   async $invoke(expression) {
@@ -868,6 +915,14 @@ export class Resource {
 
     if (this._hidden !== undefined) {
       definition.$hidden = this._hidden;
+    }
+
+    if (this._autoBoxing !== undefined) {
+      definition.$autoBoxing = this._autoBoxing;
+    }
+
+    if (this._autoUnboxing !== undefined) {
+      definition.$autoUnboxing = this._autoUnboxing;
     }
 
     this._serializeChildren(definition);

@@ -101,7 +101,9 @@ export class MethodResource extends Resource {
     };
   }
 
-  $unwrap() {
+  $defaultAutoUnboxing = true;
+
+  $unbox() {
     return this.$getFunction();
   }
 
@@ -148,12 +150,12 @@ export class MethodResource extends Resource {
       if (variadic && parameter === lastParameter) {
         const lastArguments = this._shiftLastArguments(remainingArguments);
         for (const argument of lastArguments) {
-          const normalizedArgument = parameter.$create(argument, {parse}).$unwrap();
+          const normalizedArgument = parameter.$create(argument, {parse}).$autoUnbox();
           normalizedArguments.push(normalizedArgument);
         }
       } else {
         const argument = remainingArguments.shift();
-        const normalizedArgument = parameter.$create(argument, {parse}).$unwrap();
+        const normalizedArgument = parameter.$create(argument, {parse}).$autoUnbox();
         normalizedArguments.push(normalizedArgument);
       }
     }

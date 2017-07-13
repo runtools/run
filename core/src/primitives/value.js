@@ -26,12 +26,16 @@ export class ValueResource extends Resource {
     return this._value;
   }
 
-  $unwrap() {
-    return this.$value;
+  $defaultAutoBoxing = true;
+
+  $box(value) {
+    this.$value = value;
   }
 
-  $wrap(value) {
-    this.$value = value;
+  $defaultAutoUnboxing = true;
+
+  $unbox() {
+    return this.$value;
   }
 
   async $invoke(expression) {
