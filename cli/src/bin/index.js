@@ -5,7 +5,9 @@ import {join} from 'path';
 import nodeVersion from 'node-version';
 import updateNotifier from 'update-notifier';
 import dotenv from 'dotenv';
+import JSON5 from 'json5';
 import {showErrorAndExit} from 'run-common';
+import {Resource} from 'run-core';
 
 import {run} from '../';
 
@@ -21,5 +23,14 @@ updateNotifier({pkg}).notify();
 (async () => {
   const expression = process.argv.slice(2).join(' ');
   const directory = process.cwd();
-  await run(expression, {directory});
+  let result = await run(expression, {directory});
+  if (result instanceof Resource) {
+    result = result.$autoUnbox();
+  }
+  if (result instanceof Resource) {
+    result = result.$serialize();
+  }
+  if (result !== undefined) {
+    console.log(JSON5.stringify(result, undefined, 2));
+  }
 })().catch(showErrorAndExit);

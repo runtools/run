@@ -21,7 +21,7 @@ describe('CLI', () => {
 
   test('can get a property', async () => {
     const name = await run('name', {directory: personInstanceDirectory});
-    expect(name).toBe('Manu');
+    expect(name.$value).toBe('Manu');
     await expect(
       run('invalidProperty', {directory: personInstanceDirectory})
     ).rejects.toBeInstanceOf(Error);

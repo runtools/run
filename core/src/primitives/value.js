@@ -1,4 +1,4 @@
-import {isEmpty, isPlainObject} from 'lodash';
+import {isPlainObject} from 'lodash';
 import {setProperty, addContextToErrors} from 'run-common';
 
 import Resource from '../resource';
@@ -38,12 +38,12 @@ export class ValueResource extends Resource {
     return this.$value;
   }
 
-  async $invoke(expression) {
-    if (expression.arguments.length || !isEmpty(expression.options)) {
-      throw new Error('A ValueResource cannot be invoked with arguments or options');
-    }
-    return this.$value;
-  }
+  // async $invoke(expression) {
+  //   if (expression.arguments.length || !isEmpty(expression.options)) {
+  //     throw new Error('A ValueResource cannot be invoked with arguments or options');
+  //   }
+  //   return this.$value;
+  // }
 
   static $normalize(definition, options) {
     if (definition !== undefined && !isPlainObject(definition)) {
