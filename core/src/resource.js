@@ -17,9 +17,9 @@ import {
   formatCode
 } from 'run-common';
 import {installPackage, PACKAGE_FILENAME} from '@resdir/package-manager';
+import Version from '@resdir/version';
 
 import {getPrimitiveResourceClass} from './primitives';
-import Version from './version';
 import Runtime from './runtime';
 
 const RESOURCE_FILE_NAME = '$resource';

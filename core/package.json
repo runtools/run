@@ -10,8 +10,6 @@
   ],
   "main": "dist",
   "dependencies": {
-    "@resdir/package-manager": "^0.1.0",
-    "@resdir/version-range": "^0.1.0",
     "child-process-promise": "^2.2.1",
     "core-decorators": "^0.19.0",
     "deep-freeze": "^0.0.1",
@@ -26,6 +24,9 @@
     "koa-json-body": "^5.3.0",
     "lodash": "^4.17.4",
     "quote-unquote": "^1.0.0",
+    "@resdir/package-manager": "^0.1.0",
+    "@resdir/version": "^0.1.0",
+    "@resdir/version-range": "^0.1.0",
     "run-common": "^0.6.0",
     "semver": "^5.3.0",
     "shell-quote": "^1.6.1",
