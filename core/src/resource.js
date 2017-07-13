@@ -219,9 +219,11 @@ export class Resource {
     return this.$load(specifier, {directory, importing: true});
   }
 
-  $save(directory) {
+  async $save(directory) {
+    await this.$emitEvent('before:$save');
+
     if (!this.$isRoot()) {
-      throw new Error('Can\'t $save() a child resource');
+      throw new Error('Can\'t save a child resource');
     }
 
     if (directory) {
@@ -241,6 +243,8 @@ export class Resource {
     }
 
     saveFile(file, definition, {stringify: true});
+
+    await this.$emitEvent('after:$save');
   }
 
   _bases = [];
