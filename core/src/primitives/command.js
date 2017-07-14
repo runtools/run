@@ -67,7 +67,7 @@ export class CommandResource extends OptionsMixin(MethodResource) {
     return lastArguments;
   }
 
-  async $invoke(expression, {parent}) {
+  async $invoke(expression = {arguments: [], options: {}}, {parent} = {}) {
     const fn = this.$getFunction({parseArguments: true});
     const args = [...expression.arguments, expression.options];
     return await fn.apply(parent, args);

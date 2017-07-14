@@ -192,7 +192,7 @@ export class MethodResource extends Resource {
     return implementation;
   }
 
-  async $invoke(expression, {parent}) {
+  async $invoke(expression = {arguments: [], options: {}}, {parent} = {}) {
     const fn = this.$getFunction({parseArguments: true});
     return await fn.apply(parent, expression.arguments);
   }

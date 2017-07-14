@@ -1,7 +1,0 @@
-[
-  {
-    "srcDir": "src",
-    "files": "**/*.js",
-    "command": "run transpiler transpile ${srcFile} --quiet"
-  }
-]

@@ -12,11 +12,14 @@ describe('MacroResource', () => {
     const Person = Resource.$import('../../fixtures/person', {directory: __dirname});
     let person = Person.$create({name: 'Manu', age: 29});
     expect(await person.formatGreetingMacro()).toBe('Hi Manu!');
+    expect(await person.formatGreetingMacro({ageLimit: 29})).toBe('Hello Manu!');
     person.age++;
     expect(await person.formatGreetingMacro()).toBe('Hello Manu!');
+    expect(await person.formatGreetingMacro({ageLimit: 31})).toBe('Hi Manu!');
 
     person = Resource.$load('../../fixtures/person-instance', {directory: __dirname});
-    expect(await person.formatWordsMacro()).toBe('blue, green.');
+    expect(await person.formatWordsMacro('blue')).toBe('Blue.');
+    expect(await person.formatWordsMacro('blue', {capitalize: false})).toBe('blue.');
   });
 
   test('resource loading', async () => {

@@ -18,7 +18,8 @@
     },
     formatGreetingMacro: {
       $type: 'macro',
-      $expression: 'formatGreetingCommand --ageLimit=30'
+      $options: {ageLimit: {$alias: 'limit', $value: 30}},
+      $expression: 'formatGreetingCommand --ageLimit=${@options.ageLimit}'
     },
     formatWordsMethod: {
       $type: 'method',
@@ -33,7 +34,10 @@
     },
     formatWordsMacro: {
       $type: 'macro',
-      $expression: 'formatWordsCommand blue green --capitalize=off'
+      $parameters: [{$name: 'word', $type: 'string'}],
+      $variadic: true,
+      $options: {capitalize: true},
+      $expression: 'formatWordsCommand ${@arguments[0]} --capitalize=${@options.capitalize}'
     },
     address: {
       $implementation: './address',

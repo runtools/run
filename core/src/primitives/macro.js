@@ -1,7 +1,7 @@
 import {isEmpty} from 'lodash';
 import {isAbsolute} from 'path';
 import {parse} from 'shell-quote';
-import {setProperty, addContextToErrors, parseCommandLineArguments} from 'run-common';
+import {setProperty, addContextToErrors, parseCommandLineArguments, formatCode} from 'run-common';
 
 import Resource from '../resource';
 import CommandResource from './command';
@@ -30,22 +30,59 @@ export class MacroResource extends CommandResource {
     return function (...args) {
       const options = args.pop();
       const expression = {arguments: args, options};
-      return macroResource.$invoke(expression, {parent: this});
+      return macroResource._run(expression, {parent: this});
     };
   }
 
-  async $invoke(_expression, {parent} = {}) {
-    const expressions = this.$expressions || [];
+  async _run(expression, {parent} = {}) {
+    const macroExpressions = this.$expressions || [];
     let result;
-    for (let expression of expressions) {
-      const args = parse(expression, variable => '$' + variable);
-      expression = parseCommandLineArguments(args);
-      result = await this._invokeExpression(expression, {parent});
+    for (let macroExpression of macroExpressions) {
+      const args = parse(macroExpression, variable => {
+        if (!variable.startsWith('@')) {
+          return '$' + variable;
+        }
+
+        if (variable.startsWith('@arguments[') && variable.endsWith(']')) {
+          // TODO: Handle variadic macros
+          let index = variable.slice('@arguments['.length, -1);
+          if (!/\d+/.test(index)) {
+            throw new Error(
+              `Invalid argument index (not a number) found in a macro variable: ${formatCode(
+                index
+              )}`
+            );
+          }
+          index = Number(index);
+          if (index > expression.arguments.length - 1) {
+            throw new Error(
+              `Invalid argument index (out of range) found in a macro variable: ${formatCode(
+                String(index)
+              )}`
+            );
+          }
+          return String(expression.arguments[index]);
+        }
+
+        if (variable.startsWith('@options.')) {
+          const name = variable.slice('@options.'.length);
+          if (!(name in expression.options)) {
+            throw new Error(`Invalid option name found in a macro variable: ${formatCode(name)}`);
+          }
+          return String(expression.options[name]);
+        }
+
+        throw new Error(`Invalid macro variable: ${formatCode(variable)}`);
+      });
+
+      macroExpression = parseCommandLineArguments(args);
+
+      result = await this._runExpression(macroExpression, {parent});
     }
     return result;
   }
 
-  async _invokeExpression(expression, {parent}) {
+  async _runExpression(expression, {parent}) {
     const firstArgument = expression.arguments[0];
     if (
       firstArgument &&

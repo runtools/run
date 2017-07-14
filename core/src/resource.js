@@ -731,7 +731,7 @@ export class Resource {
     return this;
   }
 
-  async $invoke(expression) {
+  async $invoke(expression = {arguments: [], options: {}}, {_parent} = {}) {
     expression = {...expression, arguments: [...expression.arguments]};
     const name = expression.arguments.shift();
     if (!name) {
