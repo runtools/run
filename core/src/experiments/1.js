@@ -8,7 +8,7 @@ class A {
 
 class B extends A {
   async hello() {
-    return (await super.hello()) + ' - Hello from B';
+    return (await super.hello()) + ' > Hello from B';
   }
 }
 

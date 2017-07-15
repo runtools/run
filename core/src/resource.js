@@ -3,7 +3,7 @@ import {existsSync} from 'fs';
 import {homedir} from 'os';
 import {isPlainObject, isEmpty} from 'lodash';
 import isDirectory from 'is-directory';
-import {copy, emptyDir} from 'fs-extra';
+import {copy, emptyDir, remove} from 'fs-extra';
 import {
   addContextToErrors,
   getProperty,
@@ -28,8 +28,7 @@ const DEFAULT_RESOURCE_FILE_FORMAT = 'json5';
 
 const RUN_DIRECTORY = join(homedir(), '.run');
 const PUBLISHED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'published-resources');
-// const INSTALLED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'installed-resources');
-const INSTALLED_RESOURCES_DIRECTORY = PUBLISHED_RESOURCES_DIRECTORY;
+const INSTALLED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'installed-resources');
 
 const BUILTIN_COMMANDS = ['$build', '$emitEvent', '$install', '$publish', '$test'];
 
@@ -197,10 +196,7 @@ export class Resource {
     } else if (isAbsolute(specifier)) {
       file = specifier;
     } else {
-      // TODO: load resources from Resdir
-      // FIXME: Don't hardcode path separators
-      file =
-        (process.env.RUN_RESOURCES_DIRECTORY || INSTALLED_RESOURCES_DIRECTORY) + '/' + specifier;
+      file = await this.$fetch(specifier);
     }
 
     file = searchResourceFile(file, {searchInParentDirectories});
@@ -214,6 +210,52 @@ export class Resource {
     const definition = loadFile(file, {parse: true});
 
     return await this.$create(definition, {file, importing});
+  }
+
+  static async $fetch(name) {
+    // TODO: fetch resources from Resdir
+
+    if (!this.$validateName(name)) {
+      throw new Error(`Resource name ${formatString(name)} is invalid`);
+    }
+
+    const scope = this.$getScope(name);
+    if (!scope) {
+      throw new Error(`Can't fetch a resource with a unscoped name: ${formatString(name)}`);
+    }
+
+    const identifier = this.$getIdentifier(name);
+
+    const resourcesDirectory = process.env.RUN_RESOURCES_DIRECTORY;
+    if (resourcesDirectory) {
+      // Development mode: resources are loaded directely from local source code
+      const directory = join(resourcesDirectory, scope, identifier);
+      return directory;
+    }
+
+    const directory = join(INSTALLED_RESOURCES_DIRECTORY, scope, identifier);
+    if (existsSync(directory)) {
+      return directory;
+    }
+
+    const publishedResourceDirectory = join(PUBLISHED_RESOURCES_DIRECTORY, scope, identifier);
+    if (!existsSync(publishedResourceDirectory)) {
+      throw new Error(`Can't find resource ${formatString(name)} at Resdir`);
+    }
+
+    console.log(`Installing ${formatString(name)} from Resdir...`);
+
+    await copy(publishedResourceDirectory, directory);
+
+    if (existsSync(join(directory, PACKAGE_FILENAME))) {
+      // Only useful for js/dependencies
+      await installPackage(directory, {production: true});
+    }
+
+    const resource = await this.$load(directory);
+    await resource.$install();
+
+    return directory;
   }
 
   static async $import(specifier, {directory} = {}) {
@@ -367,15 +409,14 @@ export class Resource {
 
   set $name(name) {
     if (name !== undefined) {
-      if (!this.$validateName(name)) {
+      if (!this.constructor.$validateName(name)) {
         throw new Error(`Resource name ${formatString(name)} is invalid`);
       }
     }
     this._name = name;
   }
 
-  $getScope() {
-    const name = this.$name;
+  static $getScope(name) {
     if (!name) {
       return undefined;
     }
@@ -386,8 +427,11 @@ export class Resource {
     return scope;
   }
 
-  $getIdentifier() {
-    const name = this.$name;
+  $getScope() {
+    return this.constructor.$getScope(this.$name);
+  }
+
+  static $getIdentifier(name) {
     if (!name) {
       return undefined;
     }
@@ -398,7 +442,11 @@ export class Resource {
     return identifier;
   }
 
-  $validateName(name) {
+  $getIdentifier() {
+    return this.constructor.$getIdentifier(this.$name);
+  }
+
+  static $validateName(name) {
     let [scope, identifier, rest] = name.split('/');
 
     if (scope && identifier === undefined) {
@@ -421,7 +469,7 @@ export class Resource {
     return true;
   }
 
-  $validateNamePart(part) {
+  static $validateNamePart(part) {
     if (!part) {
       return false;
     }
@@ -830,12 +878,8 @@ export class Resource {
         const srcDirectory = this.$getDirectory({throwIfUndefined: true});
 
         const srcFiles = [resourceFile];
-        let hasPackageFile;
         if (this.$files) {
           for (const file of this.$files) {
-            if (file === PACKAGE_FILENAME) {
-              hasPackageFile = true;
-            }
             srcFiles.push(resolve(srcDirectory, file));
           }
         }
@@ -857,16 +901,10 @@ export class Resource {
           const destFile = join(destDirectory, relativeFile);
 
           await copy(srcFile, destFile);
-        }
 
-        // TODO: Installation should not be done at publication time but
-        // when the resource is actually installed
-        if (hasPackageFile) {
-          // Only useful for js/dependencies
-          await installPackage(destDirectory, {production: true});
+          const installedResourceDirectory = join(INSTALLED_RESOURCES_DIRECTORY, scope, identifier);
+          await remove(installedResourceDirectory);
         }
-        const publishedResource = await this.constructor.$load(destDirectory);
-        await publishedResource.$install();
       },
       {
         intro: `Publishing ${formatString(name)} resource...`,
