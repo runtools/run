@@ -4,13 +4,13 @@ export async function run(expression = '', {directory} = {}) {
   let userResource;
 
   if (directory) {
-    userResource = Resource.$load(directory, {
+    userResource = await Resource.$load(directory, {
       searchInParentDirectories: true,
       throwIfNotFound: false
     });
   }
 
-  const macro = MacroResource.$create({$expression: expression}, {directory});
+  const macro = await MacroResource.$create({$expression: expression}, {directory});
 
   return await macro.$invoke(undefined, {parent: userResource});
 }

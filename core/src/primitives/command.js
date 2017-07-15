@@ -5,8 +5,10 @@ import MethodResource from './method';
 import OptionsMixin from './options-mixin';
 
 export class CommandResource extends OptionsMixin(MethodResource) {
-  _normalizeArguments(args, {parse}) {
-    const {normalizedArguments, remainingArguments} = super._normalizeArguments(args, {parse});
+  async _normalizeArguments(args, {parse}) {
+    const {normalizedArguments, remainingArguments} = await super._normalizeArguments(args, {
+      parse
+    });
 
     const normalizedOptions = {};
 
@@ -24,8 +26,9 @@ export class CommandResource extends OptionsMixin(MethodResource) {
     const options = [];
     let resource = this;
     while (resource) {
-      if (resource.$options) {
-        for (const newOption of resource.$options) {
+      const resourceOptions = resource.$getOptions && resource.$getOptions();
+      if (resourceOptions) {
+        for (const newOption of resourceOptions) {
           if (!options.find(option => option.$name === newOption.$name)) {
             options.push(newOption);
           }
@@ -39,7 +42,7 @@ export class CommandResource extends OptionsMixin(MethodResource) {
       if (key !== undefined) {
         delete remainingOptions[key];
       }
-      const normalizedValue = option.$create(value, {parse}).$autoUnbox();
+      const normalizedValue = (await option.$create(value, {parse})).$autoUnbox();
       if (normalizedValue !== undefined) {
         normalizedOptions[option.$name] = normalizedValue;
       }

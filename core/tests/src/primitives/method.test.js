@@ -4,32 +4,33 @@ import StringResource from '../../../dist/primitives/string';
 import NumberResource from '../../../dist/primitives/number';
 
 describe('MethodResource', () => {
-  test('creation', () => {
-    let method = MethodResource.$create({
+  test('creation', async () => {
+    let method = await MethodResource.$create({
       $parameters: [{$name: 'name', $type: 'string'}, {$name: 'age', $type: 'number'}]
     });
     expect(method).toBeInstanceOf(MethodResource);
-    expect(method.$parameters).toHaveLength(2);
-    expect(method.$parameters[0]).toBeInstanceOf(StringResource);
-    expect(method.$parameters[0].$name).toBe('name');
-    expect(method.$parameters[1]).toBeInstanceOf(NumberResource);
-    expect(method.$parameters[1].$name).toBe('age');
+    const parameters = method.$getParameters();
+    expect(parameters).toHaveLength(2);
+    expect(parameters[0]).toBeInstanceOf(StringResource);
+    expect(parameters[0].$name).toBe('name');
+    expect(parameters[1]).toBeInstanceOf(NumberResource);
+    expect(parameters[1].$name).toBe('age');
 
-    method = MethodResource.$create({$parameter: {$type: 'string'}, $variadic: true});
+    method = await MethodResource.$create({$parameter: {$type: 'string'}, $variadic: true});
     expect(method.$variadic).toBe(true);
   });
 
   test('invocation', async () => {
-    const Person = Resource.$import('../../fixtures/person', {directory: __dirname});
+    const Person = await Resource.$import('../../fixtures/person', {directory: __dirname});
     expect(await Person.formatGreetingMethod()).toBe('Hello Anonymous!');
 
-    let person = Person.$create({name: 'Manu'});
+    let person = await Person.$create({name: 'Manu'});
 
     expect(await person.formatGreetingMethod()).toBe('Hello Manu!');
     expect(await person.formatGreetingMethod('Konnichiwa')).toBe('Konnichiwa Manu!');
     await expect(person.formatGreetingMethod('Konnichiwa', 123)).rejects.toBeInstanceOf(Error);
 
-    person = Resource.$load('../../fixtures/person-instance', {directory: __dirname});
+    person = await Resource.$load('../../fixtures/person-instance', {directory: __dirname});
 
     expect(await person.formatGreetingMethod()).toBe('Hello Manu!');
 
@@ -39,33 +40,41 @@ describe('MethodResource', () => {
   });
 
   test('events', async () => {
-    const person = Resource.$load('../../fixtures/person-instance', {directory: __dirname});
+    const person = await Resource.$load('../../fixtures/person-instance', {directory: __dirname});
 
     expect(person.hasBeenBuilt).toBe(false);
     await person.publish();
     expect(person.hasBeenBuilt).toBe(true);
   });
 
-  test('serialization', () => {
-    expect(MethodResource.$create().$serialize()).toBeUndefined();
+  test('serialization', async () => {
+    expect((await MethodResource.$create()).$serialize()).toBeUndefined();
 
-    expect(MethodResource.$create({$type: 'method'}).$serialize()).toEqual({$type: 'method'});
+    expect((await MethodResource.$create({$type: 'method'})).$serialize()).toEqual({
+      $type: 'method'
+    });
 
-    expect(MethodResource.$create({$parameter: 1}).$serialize()).toEqual({$parameter: 1});
-    expect(MethodResource.$create({$parameters: [1, 2]}).$serialize()).toEqual({
+    expect((await MethodResource.$create({$parameter: 1})).$serialize()).toEqual({$parameter: 1});
+    expect((await MethodResource.$create({$parameters: [1, 2]})).$serialize()).toEqual({
       $parameters: [1, 2]
     });
 
-    expect(MethodResource.$create({$variadic: false}).$serialize()).toEqual({$variadic: false});
-    expect(MethodResource.$create({$variadic: true}).$serialize()).toEqual({$variadic: true});
+    expect((await MethodResource.$create({$variadic: false})).$serialize()).toEqual({
+      $variadic: false
+    });
+    expect((await MethodResource.$create({$variadic: true})).$serialize()).toEqual({
+      $variadic: true
+    });
 
-    expect(MethodResource.$create({$listen: 'before:build'}).$serialize()).toEqual({
+    expect((await MethodResource.$create({$listen: 'before:build'})).$serialize()).toEqual({
       $listen: 'before:build'
     });
     expect(
-      MethodResource.$create({$listen: ['before:build', 'after:install']}).$serialize()
+      (await MethodResource.$create({$listen: ['before:build', 'after:install']})).$serialize()
     ).toEqual({$listen: ['before:build', 'after:install']});
 
-    expect(MethodResource.$create({$emit: '*:build'}).$serialize()).toEqual({$emit: '*:build'});
+    expect((await MethodResource.$create({$emit: '*:build'})).$serialize()).toEqual({
+      $emit: '*:build'
+    });
   });
 });

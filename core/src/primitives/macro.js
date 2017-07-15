@@ -7,8 +7,8 @@ import Resource from '../resource';
 import CommandResource from './command';
 
 export class MacroResource extends CommandResource {
-  $construct(definition, options) {
-    super.$construct(definition, options);
+  async $construct(definition, options) {
+    await super.$construct(definition, options);
     addContextToErrors(() => {
       setProperty(this, definition, '$expressions', ['$expression']);
     }).call(this);
@@ -89,7 +89,7 @@ export class MacroResource extends CommandResource {
       (firstArgument.startsWith('.') || firstArgument.includes('/') || isAbsolute(firstArgument))
     ) {
       // The fist arguments looks like a resource path
-      parent = Resource.$load(firstArgument, {directory: this.$getDirectory()});
+      parent = await Resource.$load(firstArgument, {directory: this.$getDirectory()});
       expression = {...expression, arguments: expression.arguments.slice(1)};
     }
     return await parent.$invoke(expression);

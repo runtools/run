@@ -4,23 +4,24 @@ import StringResource from '../../../dist/primitives/string';
 import NumberResource from '../../../dist/primitives/number';
 
 describe('CommandResource', () => {
-  test('creation', () => {
-    const command = CommandResource.$create({
+  test('creation', async () => {
+    const command = await CommandResource.$create({
       $options: {name: {$type: 'string'}, age: {$type: 'number'}}
     });
     expect(command).toBeInstanceOf(CommandResource);
-    expect(command.$options).toHaveLength(2);
-    expect(command.$options[0]).toBeInstanceOf(StringResource);
-    expect(command.$options[0].$name).toBe('name');
-    expect(command.$options[1]).toBeInstanceOf(NumberResource);
-    expect(command.$options[1].$name).toBe('age');
+    const options = command.$getOptions();
+    expect(options).toHaveLength(2);
+    expect(options[0]).toBeInstanceOf(StringResource);
+    expect(options[0].$name).toBe('name');
+    expect(options[1]).toBeInstanceOf(NumberResource);
+    expect(options[1].$name).toBe('age');
   });
 
   test('invocation', async () => {
     // options
-    const Person = Resource.$import('../../fixtures/person', {directory: __dirname});
+    const Person = await Resource.$import('../../fixtures/person', {directory: __dirname});
 
-    const person = Person.$create({name: 'Manu', age: 44});
+    const person = await Person.$create({name: 'Manu', age: 44});
     expect(await person.formatGreetingCommand()).toBe('Hi Manu!');
     person.age++;
     expect(await person.formatGreetingCommand()).toBe('Hello Manu!');
@@ -43,13 +44,17 @@ describe('CommandResource', () => {
     expect(await Person.formatWordsCommand('blue', 'yellow', {shout: true})).toBe('BLUE, YELLOW.');
   });
 
-  test('serialization', () => {
-    expect(CommandResource.$create().$serialize()).toBeUndefined();
-    expect(CommandResource.$create({$type: 'command'}).$serialize()).toEqual({$type: 'command'});
-    expect(CommandResource.$create({$option: {name: 'Manu'}}).$serialize()).toEqual({
+  test('serialization', async () => {
+    expect((await CommandResource.$create()).$serialize()).toBeUndefined();
+    expect((await CommandResource.$create({$type: 'command'})).$serialize()).toEqual({
+      $type: 'command'
+    });
+    expect((await CommandResource.$create({$option: {name: 'Manu'}})).$serialize()).toEqual({
       $option: {name: 'Manu'}
     });
-    expect(CommandResource.$create({$options: {name: 'Manu', age: 44}}).$serialize()).toEqual({
+    expect(
+      (await CommandResource.$create({$options: {name: 'Manu', age: 44}})).$serialize()
+    ).toEqual({
       $options: {name: 'Manu', age: 44}
     });
   });

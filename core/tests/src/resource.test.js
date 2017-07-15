@@ -7,42 +7,42 @@ import ObjectResource from '../../dist/primitives/object';
 import ToolResource from '../../dist/primitives/tool';
 
 describe('Resource', () => {
-  test('creation', () => {
-    expect(Resource.$create()).toBeInstanceOf(Resource);
-    expect(Resource.$create({})).toBeInstanceOf(Resource);
-    expect(Resource.$create({$type: 'resource'})).toBeInstanceOf(Resource);
-    expect(Resource.$create({$types: ['resource']})).toBeInstanceOf(Resource);
-    expect(() => Resource.$create({$type: 'invalid'})).toThrow();
+  test('creation', async () => {
+    expect(await Resource.$create()).toBeInstanceOf(Resource);
+    expect(await Resource.$create({})).toBeInstanceOf(Resource);
+    expect(await Resource.$create({$type: 'resource'})).toBeInstanceOf(Resource);
+    expect(await Resource.$create({$types: ['resource']})).toBeInstanceOf(Resource);
+    await expect(Resource.$create({$type: 'invalid'})).rejects.toBeInstanceOf(Error);
 
-    expect(Resource.$create({$type: 'boolean'})).toBeInstanceOf(BooleanResource);
-    expect(Resource.$create(true)).toBeInstanceOf(BooleanResource);
-    expect(Resource.$create({$value: false})).toBeInstanceOf(BooleanResource);
+    expect(await Resource.$create({$type: 'boolean'})).toBeInstanceOf(BooleanResource);
+    expect(await Resource.$create(true)).toBeInstanceOf(BooleanResource);
+    expect(await Resource.$create({$value: false})).toBeInstanceOf(BooleanResource);
 
-    expect(Resource.$create({$type: 'number'})).toBeInstanceOf(NumberResource);
-    expect(Resource.$create(123.45)).toBeInstanceOf(NumberResource);
-    expect(Resource.$create({$value: 0})).toBeInstanceOf(NumberResource);
+    expect(await Resource.$create({$type: 'number'})).toBeInstanceOf(NumberResource);
+    expect(await Resource.$create(123.45)).toBeInstanceOf(NumberResource);
+    expect(await Resource.$create({$value: 0})).toBeInstanceOf(NumberResource);
 
-    expect(Resource.$create({$type: 'string'})).toBeInstanceOf(StringResource);
-    expect(Resource.$create('Hello')).toBeInstanceOf(StringResource);
-    expect(Resource.$create({$value: ''})).toBeInstanceOf(StringResource);
+    expect(await Resource.$create({$type: 'string'})).toBeInstanceOf(StringResource);
+    expect(await Resource.$create('Hello')).toBeInstanceOf(StringResource);
+    expect(await Resource.$create({$value: ''})).toBeInstanceOf(StringResource);
 
-    expect(Resource.$create({$type: 'array'})).toBeInstanceOf(ArrayResource);
-    expect(Resource.$create([1])).toBeInstanceOf(ArrayResource);
-    expect(Resource.$create({$value: []})).toBeInstanceOf(ArrayResource);
+    expect(await Resource.$create({$type: 'array'})).toBeInstanceOf(ArrayResource);
+    expect(await Resource.$create([1])).toBeInstanceOf(ArrayResource);
+    expect(await Resource.$create({$value: []})).toBeInstanceOf(ArrayResource);
 
-    expect(Resource.$create({$type: 'object'})).toBeInstanceOf(ObjectResource);
-    expect(Resource.$create({$value: {}})).toBeInstanceOf(ObjectResource);
+    expect(await Resource.$create({$type: 'object'})).toBeInstanceOf(ObjectResource);
+    expect(await Resource.$create({$value: {}})).toBeInstanceOf(ObjectResource);
   });
 
-  test('emptiness', () => {
-    const res = Resource.$create();
+  test('emptiness', async () => {
+    const res = await Resource.$create();
     expect(res.$name).toBeUndefined();
     expect(res.$aliases).toBeUndefined();
     expect(res.$hasAlias('hi')).toBe(false);
   });
 
-  test('$name', () => {
-    const res = Resource.$create();
+  test('$name', async () => {
+    const res = await Resource.$create();
     expect(res.$name).toBeUndefined();
     expect(res.$getScope()).toBeUndefined();
     expect(res.$getIdentifier()).toBeUndefined();
@@ -56,99 +56,106 @@ describe('Resource', () => {
     expect(res.$getIdentifier()).toBe('hello');
   });
 
-  test('$name validation', () => {
-    expect(() => Resource.$create({$name: 'hello'})).not.toThrow();
-    expect(() => Resource.$create({$name: 'runtools/hello'})).not.toThrow();
-    expect(() => Resource.$create({$name: ''})).toThrow();
-    expect(() => Resource.$create({$name: 'hello_world'})).not.toThrow();
-    expect(() => Resource.$create({$name: '_hello'})).not.toThrow();
-    expect(() => Resource.$create({$name: 'hello_'})).toThrow();
-    expect(() => Resource.$create({$name: 'hello*'})).toThrow();
-    expect(() => Resource.$create({$name: 'runtools/'})).toThrow();
-    expect(() => Resource.$create({$name: '/hello'})).toThrow();
+  test('$name validation', async () => {
+    await expect(Resource.$create({$name: 'hello'})).resolves.toBeInstanceOf(Resource);
+    await expect(Resource.$create({$name: 'runtools/hello'})).resolves.toBeInstanceOf(Resource);
+    await expect(Resource.$create({$name: ''})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({$name: 'hello_world'})).resolves.toBeInstanceOf(Resource);
+    await expect(Resource.$create({$name: '_hello'})).resolves.toBeInstanceOf(Resource);
+    await expect(Resource.$create({$name: 'hello_'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({$name: 'hello*'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({$name: 'runtools/'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({$name: '/hello'})).rejects.toBeInstanceOf(Error);
   });
 
-  test('$aliases', () => {
-    const res = Resource.$create({$aliases: ['hi']});
+  test('$aliases', async () => {
+    const res = await Resource.$create({$aliases: ['hi']});
     expect(res.$hasAlias('hi')).toBe(true);
     expect(res.$hasAlias('bonjour')).toBe(false);
     res.$addAlias('bonjour');
     expect(res.$hasAlias('bonjour')).toBe(true);
   });
 
-  test('matching by $name or $aliases', () => {
-    const res = Resource.$create({$name: 'hello', $aliases: ['hi', 'bonjour']});
+  test('matching by $name or $aliases', async () => {
+    const res = await Resource.$create({$name: 'hello', $aliases: ['hi', 'bonjour']});
     expect(res.$isMatching('hello')).toBe(true);
     expect(res.$isMatching('hi')).toBe(true);
     expect(res.$isMatching('bonjour')).toBe(true);
     expect(res.$isMatching('bye')).toBe(false);
   });
 
-  test('$version', () => {
-    expect(Resource.$create().$version).toBeUndefined();
-    expect(Resource.$create({$version: '1.2.3'}).$version.toString()).toBe('1.2.3');
-    expect(() => Resource.$create({$version: '1.2.3.4'})).toThrow();
+  test('$version', async () => {
+    expect((await Resource.$create()).$version).toBeUndefined();
+    expect((await Resource.$create({$version: '1.2.3'})).$version.toString()).toBe('1.2.3');
+    await expect(Resource.$create({$version: '1.2.3.4'})).rejects.toBeInstanceOf(Error);
   });
 
-  test('$description', () => {
-    expect(Resource.$create().$description).toBeUndefined();
-    expect(Resource.$create({$description: 'This is a resource'}).$description).toBe(
+  test('$description', async () => {
+    expect((await Resource.$create()).$description).toBeUndefined();
+    expect((await Resource.$create({$description: 'This is a resource'})).$description).toBe(
       'This is a resource'
     );
   });
 
-  test('$authors', () => {
-    expect(Resource.$create().$authors).toBeUndefined();
-    expect(Resource.$create({$authors: 'Manu'}).$authors).toEqual(['Manu']);
-    expect(Resource.$create({$authors: ['Manu', 'Paul']}).$authors).toEqual(['Manu', 'Paul']);
+  test('$authors', async () => {
+    expect((await Resource.$create()).$authors).toBeUndefined();
+    expect((await Resource.$create({$authors: 'Manu'})).$authors).toEqual(['Manu']);
+    expect((await Resource.$create({$authors: ['Manu', 'Paul']})).$authors).toEqual([
+      'Manu',
+      'Paul'
+    ]);
   });
 
-  test('$repository', () => {
-    expect(Resource.$create().$repository).toBeUndefined();
-    expect(Resource.$create({$repository: 'git://github.com/user/repo'}).$repository).toBe(
+  test('$repository', async () => {
+    expect((await Resource.$create()).$repository).toBeUndefined();
+    expect((await Resource.$create({$repository: 'git://github.com/user/repo'})).$repository).toBe(
       'git://github.com/user/repo'
     );
   });
 
-  test('$license', () => {
-    expect(Resource.$create().$license).toBeUndefined();
-    expect(Resource.$create({$license: 'MIT'}).$license).toBe('MIT');
+  test('$license', async () => {
+    expect((await Resource.$create()).$license).toBeUndefined();
+    expect((await Resource.$create({$license: 'MIT'})).$license).toBe('MIT');
   });
 
-  test('$runtime', () => {
-    expect(Resource.$create().$runtime).toBeUndefined();
-    expect(Resource.$create({$runtime: 'node@>=6.10.0'}).$runtime.toJSON()).toBe('node@>=6.10.0');
+  test('$runtime', async () => {
+    expect((await Resource.$create()).$runtime).toBeUndefined();
+    expect((await Resource.$create({$runtime: 'node@>=6.10.0'})).$runtime.toJSON()).toBe(
+      'node@>=6.10.0'
+    );
   });
 
-  test('$implementation', () => {
-    expect(Resource.$create().$implementation).toBeUndefined();
+  test('$implementation', async () => {
+    expect((await Resource.$create()).$implementation).toBeUndefined();
     expect(
-      Resource.$create({$implementation: '../fixtures/person/index.js'}, {directory: __dirname})
-        .$implementation
+      (await Resource.$create(
+        {$implementation: '../fixtures/person/index.js'},
+        {directory: __dirname}
+      )).$implementation
     ).toBe('../fixtures/person/index.js');
   });
 
-  test('$files', () => {
-    expect(Resource.$create().$files).toBeUndefined();
-    expect(Resource.$create({$files: ['./dist']}).$files).toEqual(['./dist']);
+  test('$files', async () => {
+    expect((await Resource.$create()).$files).toBeUndefined();
+    expect((await Resource.$create({$files: ['./dist']})).$files).toEqual(['./dist']);
   });
 
-  test('$hidden', () => {
-    expect(Resource.$create().$hidden).toBeUndefined();
-    expect(Resource.$create({$hidden: false}).$hidden).toBe(false);
-    expect(Resource.$create({$hidden: true}).$hidden).toBe(true);
+  test('$hidden', async () => {
+    expect((await Resource.$create()).$hidden).toBeUndefined();
+    expect((await Resource.$create({$hidden: false})).$hidden).toBe(false);
+    expect((await Resource.$create({$hidden: true})).$hidden).toBe(true);
   });
 
-  test('singular and plural property names', () => {
-    const res1 = Resource.$create({$author: 'Manu'});
+  test('singular and plural property names', async () => {
+    const res1 = await Resource.$create({$author: 'Manu'});
     expect(res1.$authors).toEqual(['Manu']);
 
-    const res2 = Resource.$create({$authors: ['Manu', 'Vince']});
+    const res2 = await Resource.$create({$authors: ['Manu', 'Vince']});
     expect(res2.$authors).toEqual(['Manu', 'Vince']);
 
     let error;
     try {
-      const res3 = Resource.$create({$name: 'hello', $authors: 'Manu', $author: 'Manu'}); // eslint-disable-line no-unused-vars
+      const res3 = await Resource.$create({$name: 'hello', $authors: 'Manu', $author: 'Manu'}); // eslint-disable-line no-unused-vars
     } catch (err) {
       error = err;
     }
@@ -159,83 +166,83 @@ describe('Resource', () => {
     expect(error.contextStack[0].$name).toBe('hello');
   });
 
-  test('simple property definition', () => {
-    const person = Resource.$create({name: {$type: 'string', $value: 'Manu'}});
-    expect(person.$get('name')).toBeDefined();
-    expect(person.$get('name')).toBeInstanceOf(StringResource);
+  test('simple property definition', async () => {
+    const person = await Resource.$create({name: {$type: 'string', $value: 'Manu'}});
+    expect(person.$getChild('name')).toBeDefined();
+    expect(person.$getChild('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('Manu');
     person.name = 'Manuel';
     expect(person.name).toBe('Manuel');
   });
 
-  test('properties defined from literals', () => {
-    const person = Resource.$create({name: 'Manu', age: 44, address: {city: 'London'}});
-    expect(person.$get('name')).toBeInstanceOf(StringResource);
+  test('properties defined from literals', async () => {
+    const person = await Resource.$create({name: 'Manu', age: 44, address: {city: 'London'}});
+    expect(person.$getChild('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('Manu');
-    expect(person.$get('age')).toBeInstanceOf(NumberResource);
+    expect(person.$getChild('age')).toBeInstanceOf(NumberResource);
     expect(person.age).toBe(44);
-    expect(person.$get('address')).toBeInstanceOf(Resource);
-    expect(person.$get('address')).toBe(person.address);
+    expect(person.$getChild('address')).toBeInstanceOf(Resource);
+    expect(person.$getChild('address')).toBe(person.address);
     expect(person.address.city).toBe('London');
   });
 
-  test('properties redefined', () => {
-    const person = Resource.$create({
+  test('properties redefined', async () => {
+    const person = await Resource.$create({
       name: {$type: 'string', $description: 'Name', $value: 'Manu'}
     });
-    expect(person.$get('name')).toBeInstanceOf(StringResource);
+    expect(person.$getChild('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('Manu');
-    expect(person.$get('name').$description).toBe('Name');
-    person.$set('name', 'Manuel');
-    expect(person.$get('name')).toBeInstanceOf(StringResource);
+    expect(person.$getChild('name').$description).toBe('Name');
+    await person.$setChild('name', 'Manuel');
+    expect(person.$getChild('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('Manuel');
-    expect(person.$get('name').$description).toBeUndefined();
-    person.$set('name', {$value: 'mvila', $description: 'The name'});
+    expect(person.$getChild('name').$description).toBeUndefined();
+    await person.$setChild('name', {$value: 'mvila', $description: 'The name'});
     expect(person.name).toBe('mvila');
-    expect(person.$get('name').$description).toBe('The name');
-    person.$set('name', 123); // Since there is no parent, we can change the type
-    expect(person.$get('name')).toBeInstanceOf(NumberResource);
+    expect(person.$getChild('name').$description).toBe('The name');
+    await person.$setChild('name', 123); // Since there is no parent, we can change the type
+    expect(person.$getChild('name')).toBeInstanceOf(NumberResource);
     expect(person.name).toBe(123);
   });
 
-  test('composed properties', () => {
+  test('composed properties', async () => {
     const type = {$export: {city: {$type: 'string'}}};
-    const person = Resource.$create({address: {$type: type}});
+    const person = await Resource.$create({address: {$type: type}});
     expect(person.address).toBeInstanceOf(Resource);
-    expect(person.address.$get('city')).toBeDefined();
+    expect(person.address.$getChild('city')).toBeDefined();
     expect(person.address.city).toBeUndefined();
     person.address.city = 'Paris';
     expect(person.address.city).toBe('Paris');
   });
 
-  test('inherited properties', () => {
+  test('inherited properties', async () => {
     const type = {$export: {name: 'anonymous'}};
-    const person = Resource.$create({$type: type});
+    const person = await Resource.$create({$type: type});
     const parent = person.$findBase(() => true);
-    expect(parent.$get('name')).toBeInstanceOf(StringResource);
+    expect(parent.$getChild('name')).toBeInstanceOf(StringResource);
     expect(parent.name).toBe('anonymous');
-    expect(person.$get('name')).toBeInstanceOf(StringResource);
+    expect(person.$getChild('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('anonymous');
     person.name = 'Manu';
     expect(person.name).toBe('Manu');
     expect(parent.name).toBe('anonymous');
   });
 
-  test('inherited properties redefined', () => {
+  test('inherited properties redefined', async () => {
     const type = {$export: {name: 'anonymous'}};
-    const person = Resource.$create({$type: type});
+    const person = await Resource.$create({$type: type});
     const parent = person.$findBase(() => true);
-    person.$set('name', 'Manuel');
-    expect(person.$get('name')).toBeInstanceOf(StringResource);
+    await person.$setChild('name', 'Manuel');
+    expect(person.$getChild('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('Manuel');
     expect(parent.name).toBe('anonymous');
     // Setting a type incompatible with the parent type throws an error
-    expect(() => person.$set('name', 123)).toThrow();
+    await expect(person.$setChild('name', 123)).rejects.toBeInstanceOf(Error);
   });
 
-  test('inherited properties with a value', () => {
+  test('inherited properties with a value', async () => {
     const type = {$export: {name: 'anonymous'}};
-    const person = Resource.$create({$type: type, name: 'Manu'});
+    const person = await Resource.$create({$type: type, name: 'Manu'});
     const parent = person.$findBase(() => true);
     expect(parent.name).toBe('anonymous');
     expect(person.name).toBe('Manu');
@@ -244,9 +251,9 @@ describe('Resource', () => {
     expect(parent.name).toBe('anonymous');
   });
 
-  test('inherited composed properties', () => {
+  test('inherited composed properties', async () => {
     const type = {$export: {address: {$type: {$export: {city: 'unknown'}}}}};
-    const person = Resource.$create({$type: type});
+    const person = await Resource.$create({$type: type});
     const parent = person.$findBase(() => true);
     expect(parent.address.city).toBe('unknown');
     expect(person.address.city).toBe('unknown');
@@ -255,62 +262,62 @@ describe('Resource', () => {
     expect(parent.address.city).toBe('unknown');
   });
 
-  test('inherited composed properties with a value', () => {
+  test('inherited composed properties with a value', async () => {
     const type = {
       $export: {address: {$type: {$export: {city: {$value: 'unknown', $description: 'The city'}}}}}
     };
-    const person = Resource.$create({
+    const person = await Resource.$create({
       $type: type,
       address: {city: 'Tokyo'}
     });
     const parent = person.$findBase(() => true);
     expect(parent.address.city).toBe('unknown');
-    expect(parent.address.$get('city').$description).toBe('The city');
+    expect(parent.address.$getChild('city').$description).toBe('The city');
     expect(person.address.city).toBe('Tokyo');
-    expect(person.address.$get('city').$description).toBe('The city');
+    expect(person.address.$getChild('city').$description).toBe('The city');
     person.address.city = 'Paris';
     expect(person.address.city).toBe('Paris');
     expect(parent.address.city).toBe('unknown');
-    person.address.$get('city').$description = 'La ville';
-    expect(person.address.$get('city').$description).toBe('La ville');
-    expect(parent.address.$get('city').$description).toBe('The city');
+    person.address.$getChild('city').$description = 'La ville';
+    expect(person.address.$getChild('city').$description).toBe('La ville');
+    expect(parent.address.$getChild('city').$description).toBe('The city');
   });
 
-  test('Resource loaded from a file', () => {
-    const PersonConstructor = Resource.$load('../fixtures/person', {directory: __dirname});
+  test('Resource loaded from a file', async () => {
+    const PersonConstructor = await Resource.$load('../fixtures/person', {directory: __dirname});
     expect(PersonConstructor).toBeInstanceOf(Resource);
     expect(PersonConstructor.$name).toBe('person');
     expect(PersonConstructor.$version.toString()).toBe('1.0.0');
-    expect(PersonConstructor.$get('name')).toBeUndefined();
-    expect(PersonConstructor.$get('age')).toBeUndefined();
+    expect(PersonConstructor.$getChild('name')).toBeUndefined();
+    expect(PersonConstructor.$getChild('age')).toBeUndefined();
 
-    const person = Resource.$load('../fixtures/person-instance', {directory: __dirname});
+    const person = await Resource.$load('../fixtures/person-instance', {directory: __dirname});
     expect(person).toBeInstanceOf(ToolResource);
-    expect(person.$get('name')).toBeInstanceOf(StringResource);
+    expect(person.$getChild('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('Manu');
-    expect(person.$get('age')).toBeInstanceOf(NumberResource);
+    expect(person.$getChild('age')).toBeInstanceOf(NumberResource);
     expect(person.age).toBe(44);
   });
 
-  test('Resource imported from a file', () => {
-    const Person = Resource.$import('../fixtures/person', {directory: __dirname});
+  test('Resource imported from a file', async () => {
+    const Person = await Resource.$import('../fixtures/person', {directory: __dirname});
     expect(Person).toBeInstanceOf(ToolResource);
     expect(Person.$name).toBeUndefined();
     expect(Person.$version).toBeUndefined();
-    expect(Person.$get('name')).toBeInstanceOf(StringResource);
+    expect(Person.$getChild('name')).toBeInstanceOf(StringResource);
     expect(Person.name).toBeUndefined();
-    expect(Person.$get('age')).toBeInstanceOf(NumberResource);
+    expect(Person.$getChild('age')).toBeInstanceOf(NumberResource);
     expect(Person.age).toBeUndefined();
   });
 
-  test('Resource imported from a file via a type', () => {
-    const person = Resource.$create(
+  test('Resource imported from a file via a type', async () => {
+    const person = await Resource.$create(
       {$name: 'manu', $type: '../fixtures/person'},
       {directory: __dirname}
     );
     expect(person.$name).toBe('manu');
-    expect(person.$get('name')).toBeInstanceOf(StringResource);
-    expect(person.$get('age')).toBeInstanceOf(NumberResource);
+    expect(person.$getChild('name')).toBeInstanceOf(StringResource);
+    expect(person.$getChild('age')).toBeInstanceOf(NumberResource);
     person.name = 'Manu';
     person.age = 44;
     expect(person.$serialize()).toEqual({
@@ -321,29 +328,29 @@ describe('Resource', () => {
     });
   });
 
-  test('Resource loaded from a property', () => {
-    const Company = Resource.$create(
+  test('Resource loaded from a property', async () => {
+    const Company = await Resource.$create(
       {name: {$type: 'string'}, boss: {$type: '../fixtures/person'}},
       {directory: __dirname}
     );
-    expect(Company.$get('name')).toBeInstanceOf(StringResource);
-    expect(Company.$get('boss')).toBeInstanceOf(Resource);
-    expect(Company.$get('boss').$get('name')).toBeInstanceOf(StringResource);
-    expect(Company.$get('boss').$get('age')).toBeInstanceOf(NumberResource);
+    expect(Company.$getChild('name')).toBeInstanceOf(StringResource);
+    expect(Company.$getChild('boss')).toBeInstanceOf(Resource);
+    expect(Company.$getChild('boss').$getChild('name')).toBeInstanceOf(StringResource);
+    expect(Company.$getChild('boss').$getChild('age')).toBeInstanceOf(NumberResource);
   });
 
-  test('serialization', () => {
-    function testSerialization(definition, options, expected) {
+  test('serialization', async () => {
+    async function testSerialization(definition, options, expected) {
       if (arguments.length < 3) {
         expected = definition;
       }
-      const resource = Resource.$create(definition, options);
+      const resource = await Resource.$create(definition, options);
       expect(resource.$serialize()).toEqual(expected);
     }
-    testSerialization(undefined, undefined, undefined);
-    testSerialization({}, undefined, undefined);
-    testSerialization({$type: 'resource'});
-    testSerialization({
+    await testSerialization(undefined, undefined, undefined);
+    await testSerialization({}, undefined, undefined);
+    await testSerialization({$type: 'resource'});
+    await testSerialization({
       $name: 'hello',
       $aliases: ['hi', 'bonjour'],
       $version: '1.2.3',
@@ -354,29 +361,29 @@ describe('Resource', () => {
       $files: ['./dist'],
       $hidden: true
     });
-    testSerialization({$author: 'Manu'});
-    testSerialization({color: {$type: 'string'}});
-    testSerialization({color: 'green'});
-    testSerialization({name: 'Manu', address: {city: 'Tokyo'}});
-    testSerialization({$type: {$name: 'person', $export: {name: 'anonymous'}}});
-    testSerialization({$type: {$name: 'person', $export: {name: 'anonymous'}}, name: 'Manu'});
-    testSerialization(
+    await testSerialization({$author: 'Manu'});
+    await testSerialization({color: {$type: 'string'}});
+    await testSerialization({color: 'green'});
+    await testSerialization({name: 'Manu', address: {city: 'Tokyo'}});
+    await testSerialization({$type: {$name: 'person', $export: {name: 'anonymous'}}});
+    await testSerialization({$type: {$name: 'person', $export: {name: 'anonymous'}}, name: 'Manu'});
+    await testSerialization(
       {$implementation: '../fixtures/person/index.js', $runtime: 'node@>=6.10.0'},
       {directory: __dirname}
     );
   });
 
-  test('customized normalization and serialization', () => {
-    const Person = Resource.$import('../fixtures/person', {directory: __dirname});
-    const person = Person.$create({address: {city: 'Paris', country: 'France'}});
+  test('customized normalization and serialization', async () => {
+    const Person = await Resource.$import('../fixtures/person', {directory: __dirname});
+    const person = await Person.$create({address: {city: 'Paris', country: 'France'}});
     expect(person.address.city).toBe('Paris');
     expect(person.address.country).toBe('France');
     expect(person.$serialize()).toEqual({address: 'Paris, France'});
-    person.address = 'Paris, France';
+    await person.$setChild('address', 'Paris, France');
     expect(person.address.city).toBe('Paris');
     expect(person.address.country).toBe('France');
     expect(person.$serialize()).toEqual({address: 'Paris, France'});
-    person.address = 'Tokyo';
+    await person.$setChild('address', 'Tokyo');
     expect(person.address.city).toBe('Tokyo');
     expect(person.address.country).toBeUndefined();
     expect(person.$serialize()).toEqual({address: 'Tokyo'});

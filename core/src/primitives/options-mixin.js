@@ -1,28 +1,31 @@
 import {entries, isEmpty} from 'lodash';
-import {setProperty, addContextToErrors} from 'run-common';
+import {getProperty, addContextToErrors} from 'run-common';
 
 import Resource from '../resource';
 
 export const OptionsMixin = base =>
   class OptionsMixin extends base {
-    $construct(definition, options) {
-      super.$construct(definition, options);
-      addContextToErrors(() => {
-        setProperty(this, definition, '$options', ['$option']);
+    async $construct(definition, options) {
+      await super.$construct(definition, options);
+      await addContextToErrors(async () => {
+        const optionsDefinition = getProperty(definition, '$options', ['$option']);
+        if (optionsDefinition !== undefined) {
+          await this.$setOptions(optionsDefinition);
+        }
       }).call(this);
     }
 
-    get $options() {
+    $getOptions() {
       return this._getInheritedValue('_options');
     }
 
-    set $options(options) {
+    async $setOptions(options) {
       this._options = undefined;
       if (options === undefined) {
         return;
       }
       for (let [name, option] of entries(options)) {
-        option = Resource.$create(option, {name, directory: this.$getDirectory()});
+        option = await Resource.$create(option, {name, directory: this.$getDirectory()});
         if (this._options === undefined) {
           this._options = [];
         }

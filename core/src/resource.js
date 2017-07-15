@@ -34,8 +34,8 @@ const INSTALLED_RESOURCES_DIRECTORY = PUBLISHED_RESOURCES_DIRECTORY;
 const BUILTIN_COMMANDS = ['$build', '$emitEvent', '$install', '$publish', '$test'];
 
 export class Resource {
-  $construct(definition = {}, {bases = [], parent, name, directory, file} = {}) {
-    addContextToErrors(() => {
+  async $construct(definition = {}, {bases = [], parent, name, directory, file} = {}) {
+    await addContextToErrors(async () => {
       if (parent !== undefined) {
         this.$setParent(parent);
       }
@@ -65,19 +65,19 @@ export class Resource {
       setProperty(this, definition, '$autoUnboxing');
 
       for (const base of bases) {
-        this._inherit(base);
+        await this._inherit(base);
       }
 
       for (const name of Object.keys(definition)) {
         if (name.startsWith('$')) {
           continue;
         }
-        this.$setChild(name, definition[name], {ignoreAliases: true});
+        await this.$setChild(name, definition[name], {ignoreAliases: true});
       }
 
       const exportDefinition = getProperty(definition, '$export', ['$exports']);
       if (exportDefinition !== undefined) {
-        const resource = this.constructor.$create(exportDefinition, {
+        const resource = await this.constructor.$create(exportDefinition, {
           directory: this.$getDirectory()
         });
         this.$setExport(resource);
@@ -85,7 +85,7 @@ export class Resource {
     }).call(this);
   }
 
-  static $create(
+  static async $create(
     definition = {},
     {bases = [], parent, name, directory, file, importing, parse} = {}
   ) {
@@ -124,11 +124,11 @@ export class Resource {
         if (Class) {
           basesClasses.push(Class);
         } else {
-          const base = Resource.$import(type, {directory: dir});
+          const base = await Resource.$import(type, {directory: dir});
           actualBases.push(base);
         }
       } else if (isPlainObject(type)) {
-        const base = Resource.$create(type, {directory: dir, importing: true});
+        const base = await Resource.$create(type, {directory: dir, importing: true});
         actualBases.push(base);
       } else {
         throw new Error('A \'type\' must be a string or a plain object');
@@ -164,7 +164,7 @@ export class Resource {
     normalizedDefinition = ResourceClass.$normalize(definition, {parse});
 
     let resource = new ResourceClass();
-    resource.$construct(normalizedDefinition, {
+    await resource.$construct(normalizedDefinition, {
       bases: actualBases,
       parent,
       name,
@@ -183,7 +183,7 @@ export class Resource {
     return resource;
   }
 
-  static $load(
+  static async $load(
     specifier,
     {directory, importing, searchInParentDirectories, throwIfNotFound = true} = {}
   ) {
@@ -213,11 +213,11 @@ export class Resource {
 
     const definition = loadFile(file, {parse: true});
 
-    return this.$create(definition, {file, importing});
+    return await this.$create(definition, {file, importing});
   }
 
-  static $import(specifier, {directory} = {}) {
-    return this.$load(specifier, {directory, importing: true});
+  static async $import(specifier, {directory} = {}) {
+    return await this.$load(specifier, {directory, importing: true});
   }
 
   async $save(directory) {
@@ -250,10 +250,10 @@ export class Resource {
 
   _bases = [];
 
-  _inherit(base) {
+  async _inherit(base) {
     this._bases.push(base);
-    base.$forEachChild(child => {
-      this.$setChild(child.$name, undefined, {ignoreAliases: true});
+    await base.$forEachChild(async child => {
+      await this.$setChild(child.$name, undefined, {ignoreAliases: true});
     });
   }
 
@@ -293,8 +293,8 @@ export class Resource {
     return result;
   }
 
-  $create(definition, options) {
-    return this.constructor.$create(definition, {...options, bases: [this]});
+  async $create(definition, options) {
+    return await this.constructor.$create(definition, {...options, bases: [this]});
   }
 
   $isInstanceOf(resource) {
@@ -622,16 +622,22 @@ export class Resource {
   _children = [];
 
   $forEachChild(fn) {
+    const promises = [];
     for (let i = 0; i < this._children.length; i++) {
       const child = this._children[i];
       const result = fn(child, i);
       if (result === false) {
         break;
       }
+      if (result && typeof result.then === 'function') {
+        promises.push(result);
+      }
+    }
+    if (promises.length) {
+      return Promise.all(promises);
     }
   }
 
-  // Alias: $get
   $getChild(name, {ignoreAliases} = {}) {
     let result;
     this.$forEachChild(child => {
@@ -654,13 +660,12 @@ export class Resource {
     return result;
   }
 
-  // Alias: $set
-  $setChild(name, definition, {ignoreAliases} = {}) {
+  async $setChild(name, definition, {ignoreAliases} = {}) {
     const removedChildIndex = this.$removeChild(name, {ignoreAliases});
 
     let child = this.$getChildFromBases(name, {ignoreAliases});
     const bases = child ? [child] : undefined;
-    child = Resource.$create(definition, {
+    child = await Resource.$create(definition, {
       bases,
       name,
       directory: this.$getDirectory(),
@@ -679,7 +684,14 @@ export class Resource {
         return child.$autoUnbox();
       },
       set(value) {
-        child.$autoBox(value);
+        const promise = child.$autoBox(value);
+        if (promise) {
+          throw new Error(
+            `Can't change ${formatCode(
+              name
+            )} synchronously with a property setter. Please use the $setChild() asynchronous method.`
+          );
+        }
       },
       configurable: true
     });
@@ -717,7 +729,7 @@ export class Resource {
       throw new Error('Can\'t set a child without a \'$name\'');
     }
 
-    parent.$setChild(name, value, {ignoreAliases: true});
+    return parent.$setChild(name, value, {ignoreAliases: true});
   }
 
   $autoUnbox() {
@@ -853,7 +865,7 @@ export class Resource {
           // Only useful for js/dependencies
           await installPackage(destDirectory, {production: true});
         }
-        const publishedResource = this.constructor.$load(destDirectory);
+        const publishedResource = await this.constructor.$load(destDirectory);
         await publishedResource.$install();
       },
       {
@@ -996,9 +1008,6 @@ export class Resource {
     }
   }
 }
-
-Resource.prototype.$get = Resource.prototype.$getChild;
-Resource.prototype.$set = Resource.prototype.$setChild;
 
 function searchResourceFile(directoryOrFile, {searchInParentDirectories = false} = {}) {
   let directory;

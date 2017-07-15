@@ -1,20 +1,20 @@
 module.exports = base =>
   class Person extends base {
-    formatGreetingMethod(verb) {
+    async formatGreetingMethod(verb) {
       const name = this.name || 'Anonymous';
       return `${verb} ${name}!`;
     }
 
-    formatGreetingCommand({ageLimit}) {
+    async formatGreetingCommand({ageLimit}) {
       const verb = this.age < ageLimit ? 'Hi' : 'Hello';
-      return this.formatGreetingMethod(verb);
+      return await this.formatGreetingMethod(verb);
     }
 
-    formatWordsMethod(...words) {
+    async formatWordsMethod(...words) {
       return formatWords(words, {capitalize: true});
     }
 
-    formatWordsCommand(...words) {
+    async formatWordsCommand(...words) {
       const {capitalize, shout} = words.pop();
       return formatWords(words, {capitalize, shout});
     }

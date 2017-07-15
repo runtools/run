@@ -1,16 +1,16 @@
 import ObjectResource from '../../../dist/primitives/object';
 
 describe('ObjectResource', () => {
-  test('creation', () => {
-    expect(ObjectResource.$create()).toBeInstanceOf(ObjectResource);
-    expect(ObjectResource.$create().$value).toBeUndefined();
-    expect(ObjectResource.$create({$value: {}}).$value).toEqual({});
-    expect(ObjectResource.$create({$value: {name: 'Manu'}}).$value).toEqual({name: 'Manu'});
-    expect(ObjectResource.$create({$value: {$name: 'abc', $xyz: 123}}).$value).toEqual({
+  test('creation', async () => {
+    expect(await ObjectResource.$create()).toBeInstanceOf(ObjectResource);
+    expect((await ObjectResource.$create()).$value).toBeUndefined();
+    expect((await ObjectResource.$create({$value: {}})).$value).toEqual({});
+    expect((await ObjectResource.$create({$value: {name: 'Manu'}})).$value).toEqual({name: 'Manu'});
+    expect((await ObjectResource.$create({$value: {$name: 'abc', $xyz: 123}})).$value).toEqual({
       $name: 'abc',
       $xyz: 123
     });
-    expect(() => ObjectResource.$create({$value: 'hello'})).toThrow();
+    await expect(ObjectResource.$create({$value: 'hello'})).rejects.toBeInstanceOf(Error);
   });
 
   // test('parsing', () => {
@@ -22,8 +22,8 @@ describe('ObjectResource', () => {
   //   expect(() => ObjectResource.$create({$value: 'Invalid JSON'}, {parse: true})).toThrow();
   // });
 
-  test('immutability', () => {
-    const obj = ObjectResource.$create({$value: {name: 'Manu'}});
+  test('immutability', async () => {
+    const obj = await ObjectResource.$create({$value: {name: 'Manu'}});
     expect(obj.$value).toEqual({name: 'Manu'});
     expect(() => {
       obj.$value.name = 'Manuel';
@@ -35,9 +35,9 @@ describe('ObjectResource', () => {
     expect(obj.$value.age).toBeUndefined();
   });
 
-  test('serialization', () => {
-    expect(ObjectResource.$create().$serialize()).toBeUndefined();
-    expect(ObjectResource.$create({$value: {name: 'Manu', age: 44}}).$serialize()).toEqual({
+  test('serialization', async () => {
+    expect((await ObjectResource.$create()).$serialize()).toBeUndefined();
+    expect((await ObjectResource.$create({$value: {name: 'Manu', age: 44}})).$serialize()).toEqual({
       name: 'Manu',
       age: 44
     });

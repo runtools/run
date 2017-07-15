@@ -1,6 +1,6 @@
 {
   "name": "run-cli",
-  "version": "0.8.6",
+  "version": "0.8.7",
   "description": "One tool to run them all",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
@@ -18,7 +18,7 @@
     "json5": "^0.5.1",
     "node-version": "^1.0.0",
     "run-common": "^0.6.0",
-    "run-core": "^0.8.6",
+    "run-core": "^0.9.0",
     "source-map-support": "^0.4.15",
     "update-notifier": "^2.1.0"
   },

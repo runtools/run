@@ -4,11 +4,15 @@ import {getProperty, setProperty, addContextToErrors, formatString, formatCode} 
 import Resource from '../resource';
 
 export class MethodResource extends Resource {
-  $construct(definition, options) {
-    super.$construct(definition, options);
-    addContextToErrors(() => {
+  async $construct(definition, options) {
+    await super.$construct(definition, options);
+    await addContextToErrors(async () => {
       setProperty(this, definition, '$variadic');
-      setProperty(this, definition, '$parameters', ['$parameter']);
+
+      const parameters = getProperty(definition, '$parameters', ['$parameter']);
+      if (parameters !== undefined) {
+        await this.$setParameters(parameters);
+      }
 
       const listenedEvents = getProperty(definition, '$listen', ['$listens']);
       if (listenedEvents) {
@@ -22,11 +26,11 @@ export class MethodResource extends Resource {
     }).call(this);
   }
 
-  get $parameters() {
+  $getParameters() {
     return this._getInheritedValue('_parameters');
   }
 
-  set $parameters(parameters) {
+  async $setParameters(parameters) {
     this._parameters = undefined;
     if (parameters === undefined) {
       return;
@@ -35,7 +39,7 @@ export class MethodResource extends Resource {
       parameters = [parameters];
     }
     for (let parameter of parameters) {
-      parameter = Resource.$create(parameter, {directory: this.$getDirectory()});
+      parameter = await Resource.$create(parameter, {directory: this.$getDirectory()});
       if (this._parameters === undefined) {
         this._parameters = [];
       }
@@ -111,7 +115,10 @@ export class MethodResource extends Resource {
     const methodResource = this;
 
     return async function (...args) {
-      const {normalizedArguments, remainingArguments} = methodResource._normalizeArguments(args, {
+      const {
+        normalizedArguments,
+        remainingArguments
+      } = await methodResource._normalizeArguments(args, {
         parse: parseArguments
       });
       if (remainingArguments.length) {
@@ -139,23 +146,23 @@ export class MethodResource extends Resource {
     };
   }
 
-  _normalizeArguments(args, {parse}) {
+  async _normalizeArguments(args, {parse}) {
     const normalizedArguments = [];
     const remainingArguments = [...args];
 
-    const parameters = this.$parameters || [];
+    const parameters = this.$getParameters() || [];
     const lastParameter = parameters[parameters.length - 1];
     const variadic = this.$variadic;
     for (const parameter of parameters) {
       if (variadic && parameter === lastParameter) {
         const lastArguments = this._shiftLastArguments(remainingArguments);
         for (const argument of lastArguments) {
-          const normalizedArgument = parameter.$create(argument, {parse}).$autoUnbox();
+          const normalizedArgument = (await parameter.$create(argument, {parse})).$autoUnbox();
           normalizedArguments.push(normalizedArgument);
         }
       } else {
         const argument = remainingArguments.shift();
-        const normalizedArgument = parameter.$create(argument, {parse}).$autoUnbox();
+        const normalizedArgument = (await parameter.$create(argument, {parse})).$autoUnbox();
         normalizedArguments.push(normalizedArgument);
       }
     }
