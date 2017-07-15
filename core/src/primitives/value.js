@@ -4,8 +4,8 @@ import {setProperty, addContextToErrors} from 'run-common';
 import Resource from '../resource';
 
 export class ValueResource extends Resource {
-  constructor(definition, options) {
-    super(definition, options);
+  $construct(definition, options) {
+    super.$construct(definition, options);
     addContextToErrors(() => {
       setProperty(this, definition, '$value');
     }).call(this);

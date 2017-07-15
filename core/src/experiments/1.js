@@ -1,5 +1,22 @@
 /* eslint-disable */
 
+class A {
+  async hello() {
+    return 'Hello from A';
+  }
+}
+
+class B extends A {
+  async hello() {
+    return (await super.hello()) + ' - Hello from B';
+  }
+}
+
+(async () => {
+  const b = new B();
+  console.log(await b.hello());
+})().catch(err => console.error(err));
+
 /*
 
 this.hello(); => We search an implementation starting from the current receiver

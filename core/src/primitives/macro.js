@@ -7,8 +7,8 @@ import Resource from '../resource';
 import CommandResource from './command';
 
 export class MacroResource extends CommandResource {
-  constructor(definition, options) {
-    super(definition, options);
+  $construct(definition, options) {
+    super.$construct(definition, options);
     addContextToErrors(() => {
       setProperty(this, definition, '$expressions', ['$expression']);
     }).call(this);

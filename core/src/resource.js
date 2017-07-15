@@ -31,10 +31,10 @@ const PUBLISHED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'published-resources')
 // const INSTALLED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'installed-resources');
 const INSTALLED_RESOURCES_DIRECTORY = PUBLISHED_RESOURCES_DIRECTORY;
 
-const BUILTIN_COMMANDS = ['$build', '$install', '$publish', '$test'];
+const BUILTIN_COMMANDS = ['$build', '$emitEvent', '$install', '$publish', '$test'];
 
 export class Resource {
-  constructor(definition = {}, {bases = [], parent, name, directory, file} = {}) {
+  $construct(definition = {}, {bases = [], parent, name, directory, file} = {}) {
     addContextToErrors(() => {
       if (parent !== undefined) {
         this.$setParent(parent);
@@ -163,7 +163,8 @@ export class Resource {
 
     normalizedDefinition = ResourceClass.$normalize(definition, {parse});
 
-    let resource = new ResourceClass(normalizedDefinition, {
+    let resource = new ResourceClass();
+    resource.$construct(normalizedDefinition, {
       bases: actualBases,
       parent,
       name,
@@ -739,7 +740,7 @@ export class Resource {
     }
 
     if (BUILTIN_COMMANDS.includes(name)) {
-      return await this[name]();
+      return await this[name](...expression.arguments);
     }
 
     const child = this.$getChild(name);

@@ -5,8 +5,8 @@ import Resource from '../resource';
 
 export const OptionsMixin = base =>
   class OptionsMixin extends base {
-    constructor(definition, options) {
-      super(definition, options);
+    $construct(definition, options) {
+      super.$construct(definition, options);
       addContextToErrors(() => {
         setProperty(this, definition, '$options', ['$option']);
       }).call(this);

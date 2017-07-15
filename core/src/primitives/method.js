@@ -4,8 +4,8 @@ import {getProperty, setProperty, addContextToErrors, formatString, formatCode} 
 import Resource from '../resource';
 
 export class MethodResource extends Resource {
-  constructor(definition, options) {
-    super(definition, options);
+  $construct(definition, options) {
+    super.$construct(definition, options);
     addContextToErrors(() => {
       setProperty(this, definition, '$variadic');
       setProperty(this, definition, '$parameters', ['$parameter']);
