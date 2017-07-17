@@ -12,7 +12,7 @@ export class NumberResource extends ValueResource {
 
   static $normalize(definition, options) {
     if (typeof definition === 'number') {
-      definition = {$value: definition};
+      definition = {'@value': definition};
     }
     return super.$normalize(definition, options);
   }

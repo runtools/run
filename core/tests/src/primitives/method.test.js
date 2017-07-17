@@ -6,7 +6,7 @@ import NumberResource from '../../../dist/primitives/number';
 describe('MethodResource', () => {
   test('creation', async () => {
     let method = await MethodResource.$create({
-      $parameters: [{$name: 'name', $type: 'string'}, {$name: 'age', $type: 'number'}]
+      '@parameters': [{'@name': 'name', '@type': 'string'}, {'@name': 'age', '@type': 'number'}]
     });
     expect(method).toBeInstanceOf(MethodResource);
     const parameters = method.$getParameters();
@@ -16,7 +16,7 @@ describe('MethodResource', () => {
     expect(parameters[1]).toBeInstanceOf(NumberResource);
     expect(parameters[1].$name).toBe('age');
 
-    method = await MethodResource.$create({$parameter: {$type: 'string'}, $variadic: true});
+    method = await MethodResource.$create({'@parameter': {'@type': 'string'}, '@variadic': true});
     expect(method.$variadic).toBe(true);
   });
 
@@ -50,31 +50,33 @@ describe('MethodResource', () => {
   test('serialization', async () => {
     expect((await MethodResource.$create()).$serialize()).toBeUndefined();
 
-    expect((await MethodResource.$create({$type: 'method'})).$serialize()).toEqual({
-      $type: 'method'
+    expect((await MethodResource.$create({'@type': 'method'})).$serialize()).toEqual({
+      '@type': 'method'
     });
 
-    expect((await MethodResource.$create({$parameter: 1})).$serialize()).toEqual({$parameter: 1});
-    expect((await MethodResource.$create({$parameters: [1, 2]})).$serialize()).toEqual({
-      $parameters: [1, 2]
+    expect((await MethodResource.$create({'@parameter': 1})).$serialize()).toEqual({
+      '@parameter': 1
+    });
+    expect((await MethodResource.$create({'@parameters': [1, 2]})).$serialize()).toEqual({
+      '@parameters': [1, 2]
     });
 
-    expect((await MethodResource.$create({$variadic: false})).$serialize()).toEqual({
-      $variadic: false
+    expect((await MethodResource.$create({'@variadic': false})).$serialize()).toEqual({
+      '@variadic': false
     });
-    expect((await MethodResource.$create({$variadic: true})).$serialize()).toEqual({
-      $variadic: true
+    expect((await MethodResource.$create({'@variadic': true})).$serialize()).toEqual({
+      '@variadic': true
     });
 
-    expect((await MethodResource.$create({$listen: 'before:build'})).$serialize()).toEqual({
-      $listen: 'before:build'
+    expect((await MethodResource.$create({'@listen': 'before:build'})).$serialize()).toEqual({
+      '@listen': 'before:build'
     });
     expect(
-      (await MethodResource.$create({$listen: ['before:build', 'after:install']})).$serialize()
-    ).toEqual({$listen: ['before:build', 'after:install']});
+      (await MethodResource.$create({'@listen': ['before:build', 'after:install']})).$serialize()
+    ).toEqual({'@listen': ['before:build', 'after:install']});
 
-    expect((await MethodResource.$create({$emit: '*:build'})).$serialize()).toEqual({
-      $emit: '*:build'
+    expect((await MethodResource.$create({'@emit': '*:build'})).$serialize()).toEqual({
+      '@emit': '*:build'
     });
   });
 });

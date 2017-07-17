@@ -8,7 +8,7 @@ export const OptionsMixin = base =>
     async $construct(definition, options) {
       await super.$construct(definition, options);
       await addContextToErrors(async () => {
-        const optionsDefinition = getProperty(definition, '$options', ['$option']);
+        const optionsDefinition = getProperty(definition, '@options', ['@option']);
         if (optionsDefinition !== undefined) {
           await this.$setOptions(optionsDefinition);
         }
@@ -52,9 +52,9 @@ export const OptionsMixin = base =>
           }
         }
         if (count === 1) {
-          definition.$option = serializedOptions;
+          definition['@option'] = serializedOptions;
         } else if (count > 1) {
-          definition.$options = serializedOptions;
+          definition['@options'] = serializedOptions;
         }
       }
 

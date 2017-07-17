@@ -6,7 +6,7 @@ import NumberResource from '../../../dist/primitives/number';
 describe('CommandResource', () => {
   test('creation', async () => {
     const command = await CommandResource.$create({
-      $options: {name: {$type: 'string'}, age: {$type: 'number'}}
+      '@options': {name: {'@type': 'string'}, age: {'@type': 'number'}}
     });
     expect(command).toBeInstanceOf(CommandResource);
     const options = command.$getOptions();
@@ -46,16 +46,16 @@ describe('CommandResource', () => {
 
   test('serialization', async () => {
     expect((await CommandResource.$create()).$serialize()).toBeUndefined();
-    expect((await CommandResource.$create({$type: 'command'})).$serialize()).toEqual({
-      $type: 'command'
+    expect((await CommandResource.$create({'@type': 'command'})).$serialize()).toEqual({
+      '@type': 'command'
     });
-    expect((await CommandResource.$create({$option: {name: 'Manu'}})).$serialize()).toEqual({
-      $option: {name: 'Manu'}
+    expect((await CommandResource.$create({'@option': {name: 'Manu'}})).$serialize()).toEqual({
+      '@option': {name: 'Manu'}
     });
     expect(
-      (await CommandResource.$create({$options: {name: 'Manu', age: 44}})).$serialize()
+      (await CommandResource.$create({'@options': {name: 'Manu', age: 44}})).$serialize()
     ).toEqual({
-      $options: {name: 'Manu', age: 44}
+      '@options': {name: 'Manu', age: 44}
     });
   });
 });

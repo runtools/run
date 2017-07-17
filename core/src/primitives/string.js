@@ -10,7 +10,7 @@ export class StringResource extends ValueResource {
 
   static $normalize(definition, options) {
     if (typeof definition === 'string') {
-      definition = {$value: definition};
+      definition = {'@value': definition};
     }
     return super.$normalize(definition, options);
   }

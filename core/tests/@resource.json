@@ -1,0 +1,4 @@
+{
+  "@type": "js/esnext-jest",
+  "testEnvironment": "node"
+}

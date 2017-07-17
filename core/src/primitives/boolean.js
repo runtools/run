@@ -12,7 +12,7 @@ export class BooleanResource extends ValueResource {
 
   static $normalize(definition, options) {
     if (typeof definition === 'boolean') {
-      definition = {$value: definition};
+      definition = {'@value': definition};
     }
     return super.$normalize(definition, options);
   }

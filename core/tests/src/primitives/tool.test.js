@@ -5,7 +5,7 @@ import NumberResource from '../../../dist/primitives/number';
 describe('ToolResource', () => {
   test('creation', async () => {
     const tool = await ToolResource.$create({
-      $options: {name: {$type: 'string'}, age: {$type: 'number'}}
+      '@options': {name: {'@type': 'string'}, age: {'@type': 'number'}}
     });
     expect(tool).toBeInstanceOf(ToolResource);
     const options = tool.$getOptions();
@@ -18,12 +18,14 @@ describe('ToolResource', () => {
 
   test('serialization', async () => {
     expect((await ToolResource.$create()).$serialize()).toBeUndefined();
-    expect((await ToolResource.$create({$type: 'tool'})).$serialize()).toEqual({$type: 'tool'});
-    expect((await ToolResource.$create({$option: {name: 'Manu'}})).$serialize()).toEqual({
-      $option: {name: 'Manu'}
+    expect((await ToolResource.$create({'@type': 'tool'})).$serialize()).toEqual({'@type': 'tool'});
+    expect((await ToolResource.$create({'@option': {name: 'Manu'}})).$serialize()).toEqual({
+      '@option': {name: 'Manu'}
     });
-    expect((await ToolResource.$create({$options: {name: 'Manu', age: 44}})).$serialize()).toEqual({
-      $options: {name: 'Manu', age: 44}
+    expect(
+      (await ToolResource.$create({'@options': {name: 'Manu', age: 44}})).$serialize()
+    ).toEqual({
+      '@options': {name: 'Manu', age: 44}
     });
   });
 });

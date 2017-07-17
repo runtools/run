@@ -1,7 +1,7 @@
 import {isEmpty} from 'lodash';
 import {isAbsolute} from 'path';
 import {parse} from 'shell-quote';
-import {setProperty, addContextToErrors, parseCommandLineArguments, formatCode} from 'run-common';
+import {getProperty, addContextToErrors, parseCommandLineArguments, formatCode} from 'run-common';
 
 import Resource from '../resource';
 import CommandResource from './command';
@@ -10,7 +10,10 @@ export class MacroResource extends CommandResource {
   async $construct(definition, options) {
     await super.$construct(definition, options);
     addContextToErrors(() => {
-      setProperty(this, definition, '$expressions', ['$expression']);
+      const expressions = getProperty(definition, '@expressions', ['@expression']);
+      if (expressions !== undefined) {
+        this.$expressions = expressions;
+      }
     }).call(this);
   }
 
@@ -105,9 +108,9 @@ export class MacroResource extends CommandResource {
     const expressions = this._expressions;
     if (expressions !== undefined) {
       if (expressions.length === 1) {
-        definition.$expression = expressions[0];
+        definition['@expression'] = expressions[0];
       } else if (expressions.length > 1) {
-        definition.$expressions = expressions;
+        definition['@expressions'] = expressions;
       }
     }
 

@@ -7,7 +7,6 @@ import {copy, emptyDir, remove} from 'fs-extra';
 import {
   addContextToErrors,
   getProperty,
-  setProperty,
   getPropertyKeyAndValue,
   loadFile,
   saveFile,
@@ -22,15 +21,15 @@ import Version from '@resdir/version';
 import {getPrimitiveResourceClass} from './primitives';
 import Runtime from './runtime';
 
-const RESOURCE_FILE_NAME = '$resource';
-const RESOURCE_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
-const DEFAULT_RESOURCE_FILE_FORMAT = 'json5';
+const RESOURCE_FILE_NAME = '@resource';
+const RESOURCE_FILE_FORMATS = ['json', 'json5', 'yaml', 'yml'];
+const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
 
 const RUN_DIRECTORY = join(homedir(), '.run');
 const PUBLISHED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'published-resources');
 const INSTALLED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'installed-resources');
 
-const BUILTIN_COMMANDS = ['$build', '$emitEvent', '$install', '$publish', '$test'];
+const BUILTIN_COMMANDS = ['@build', '@emitEvent', '@install', '@publish', '@test'];
 
 export class Resource {
   async $construct(definition = {}, {bases = [], parent, name, directory, file} = {}) {
@@ -48,33 +47,40 @@ export class Resource {
         this.$name = name;
       }
 
-      setProperty(this, definition, '$name');
-      setProperty(this, definition, '$aliases', ['$alias']);
-      setProperty(this, definition, '$version');
-      setProperty(this, definition, '$description');
-      setProperty(this, definition, '$authors', ['$author']);
-      setProperty(this, definition, '$repository');
-      setProperty(this, definition, '$license');
-      setProperty(this, definition, '$types', ['$type']);
-      setProperty(this, definition, '$implementation');
-      setProperty(this, definition, '$runtime');
-      setProperty(this, definition, '$files');
-      setProperty(this, definition, '$hidden');
-      setProperty(this, definition, '$autoBoxing');
-      setProperty(this, definition, '$autoUnboxing');
+      const set = (target, source, aliases) => {
+        const value = getProperty(definition, source, aliases);
+        if (value !== undefined) {
+          this[target] = value;
+        }
+      };
+
+      set('$name', '@name');
+      set('$aliases', '@aliases', ['@alias']);
+      set('$version', '@version');
+      set('$description', '@description');
+      set('$authors', '@authors', ['@author']);
+      set('$repository', '@repository');
+      set('$license', '@license');
+      set('$types', '@types', ['@type']);
+      set('$implementation', '@implementation');
+      set('$runtime', '@runtime');
+      set('$files', '@files');
+      set('$hidden', '@hidden');
+      set('$autoBoxing', '@autoBoxing');
+      set('$autoUnboxing', '@autoUnboxing');
 
       for (const base of bases) {
         await this._inherit(base);
       }
 
       for (const name of Object.keys(definition)) {
-        if (name.startsWith('$')) {
+        if (name.startsWith('@')) {
           continue;
         }
         await this.$setChild(name, definition[name], {ignoreAliases: true});
       }
 
-      const exportDefinition = getProperty(definition, '$export', ['$exports']);
+      const exportDefinition = getProperty(definition, '@export', ['@exports']);
       if (exportDefinition !== undefined) {
         const resource = await this.constructor.$create(exportDefinition, {
           directory: this.$getDirectory()
@@ -94,19 +100,19 @@ export class Resource {
     } else {
       normalizedDefinition = {};
       if (definition !== undefined) {
-        normalizedDefinition.$value = definition;
+        normalizedDefinition['@value'] = definition;
       }
     }
 
-    let types = getProperty(normalizedDefinition, '$types', ['$type']);
+    let types = getProperty(normalizedDefinition, '@types', ['@type']);
     types = Resource.$normalizeTypes(types);
     if (
       this === Resource &&
       types.length === 0 &&
       bases.length === 0 &&
-      normalizedDefinition.$value !== undefined
+      normalizedDefinition['@value'] !== undefined
     ) {
-      types = [inferType(normalizedDefinition.$value)];
+      types = [inferType(normalizedDefinition['@value'])];
     }
 
     const dir = directory || (file && dirname(file));
@@ -152,7 +158,7 @@ export class Resource {
       }
     }
 
-    const implementation = getProperty(normalizedDefinition, '$implementation');
+    const implementation = getProperty(normalizedDefinition, '@implementation');
     if (implementation) {
       const classBuilder = requireImplementation(implementation, {directory: dir});
       if (classBuilder) {
@@ -175,7 +181,7 @@ export class Resource {
     if (importing) {
       resource = resource.$getExport();
       if (!resource) {
-        throw new Error('Can\'t import a resource without an $export property');
+        throw new Error('Can\'t import a resource without an @export property');
       }
     }
 
@@ -243,17 +249,23 @@ export class Resource {
       throw new Error(`Can't find resource ${formatString(name)} at Resdir`);
     }
 
-    console.log(`Installing ${formatString(name)} from Resdir...`);
+    await task(
+      async () => {
+        await copy(publishedResourceDirectory, directory);
 
-    await copy(publishedResourceDirectory, directory);
+        if (existsSync(join(directory, PACKAGE_FILENAME))) {
+          // Only useful for js/dependencies
+          await installPackage(directory, {production: true});
+        }
 
-    if (existsSync(join(directory, PACKAGE_FILENAME))) {
-      // Only useful for js/dependencies
-      await installPackage(directory, {production: true});
-    }
-
-    const resource = await this.$load(directory);
-    await resource.$install();
+        const resource = await this.$load(directory);
+        await resource['@install']();
+      },
+      {
+        intro: `Installing ${formatString(name)} from Resdir...`,
+        outro: `${formatString(name)} installed from Resdir`
+      }
+    );
 
     return directory;
   }
@@ -263,7 +275,7 @@ export class Resource {
   }
 
   async $save(directory) {
-    await this.$emitEvent('before:$save');
+    await this.$emitEvent('before:@save');
 
     if (!this.$isRoot()) {
       throw new Error('Can\'t save a child resource');
@@ -287,7 +299,7 @@ export class Resource {
 
     saveFile(file, definition, {stringify: true});
 
-    await this.$emitEvent('after:$save');
+    await this.$emitEvent('after:@save');
   }
 
   _bases = [];
@@ -588,7 +600,7 @@ export class Resource {
     } else if (typeof types === 'string' || isPlainObject(types)) {
       types = [types];
     } else if (!Array.isArray(types)) {
-      throw new Error(`Invalid ${formatCode('$type')} value`);
+      throw new Error(`Invalid ${formatCode('@type')} value`);
     }
     return types;
   }
@@ -774,7 +786,7 @@ export class Resource {
 
     const name = this.$name;
     if (!name) {
-      throw new Error('Can\'t set a child without a \'$name\'');
+      throw new Error('Can\'t set a child without a \'@name\'');
     }
 
     return parent.$setChild(name, value, {ignoreAliases: true});
@@ -837,42 +849,46 @@ export class Resource {
     }
   }
 
-  async $build() {
-    await this.$emitEvent('before:$build');
-    // NOOP
-    await this.$emitEvent('after:$build');
+  async '@emitEvent'(...args) {
+    return await this.$emitEvent(...args);
   }
 
-  async $install() {
-    await this.$emitEvent('before:$install');
+  async '@build'() {
+    await this.$emitEvent('before:@build');
     // NOOP
-    await this.$emitEvent('after:$install');
+    await this.$emitEvent('after:@build');
   }
 
-  async $publish() {
-    await this.$emitEvent('before:$publish');
+  async '@install'() {
+    await this.$emitEvent('before:@install');
+    // NOOP
+    await this.$emitEvent('after:@install');
+  }
+
+  async '@publish'() {
+    await this.$emitEvent('before:@publish');
 
     const name = this.$name;
     if (!name) {
-      throw new Error(`Can't publish a resource without a ${formatCode('$name')} property`);
+      throw new Error(`Can't publish a resource without a ${formatCode('@name')} property`);
     }
 
     await task(
       async () => {
         const scope = this.$getScope();
         if (!scope) {
-          throw new Error(`Can't publish a resource with a unscoped ${formatCode('$name')}`);
+          throw new Error(`Can't publish a resource with a unscoped ${formatCode('@name')}`);
         }
 
         const identifier = this.$getIdentifier();
 
         if (!this.$version) {
-          throw new Error(`Can't publish a resource without a ${formatCode('$version')} property`);
+          throw new Error(`Can't publish a resource without a ${formatCode('@version')} property`);
         }
 
         const resourceFile = this.$getFile();
         if (!resourceFile) {
-          throw new Error(`Can't publish a resource without a ${formatPath('$resource')} file`);
+          throw new Error(`Can't publish a resource without a ${formatPath('@resource')} file`);
         }
 
         const srcDirectory = this.$getDirectory({throwIfUndefined: true});
@@ -912,13 +928,13 @@ export class Resource {
       }
     );
 
-    await this.$emitEvent('after:$publish');
+    await this.$emitEvent('after:@publish');
   }
 
-  async $test() {
-    await this.$emitEvent('before:$test');
+  async '@test'() {
+    await this.$emitEvent('before:@test');
     // NOOP
-    await this.$emitEvent('after:$test');
+    await this.$emitEvent('after:@test');
   }
 
   static $normalize(definition, _options) {
@@ -932,53 +948,53 @@ export class Resource {
     let definition = {};
 
     if (!omitName && this._name !== undefined) {
-      definition.$name = this._name;
+      definition['@name'] = this._name;
     }
 
     this._serializeAliases(definition);
 
     if (this._version !== undefined) {
-      definition.$version = this._version.toJSON();
+      definition['@version'] = this._version.toJSON();
     }
 
     if (this._description !== undefined) {
-      definition.$description = this._description;
+      definition['@description'] = this._description;
     }
 
     this._serializeAuthors(definition);
 
     if (this._repository !== undefined) {
-      definition.$repository = this._repository;
+      definition['@repository'] = this._repository;
     }
 
     if (this._license !== undefined) {
-      definition.$license = this._license;
+      definition['@license'] = this._license;
     }
 
     this._serializeTypes(definition);
 
     if (this._implementation !== undefined) {
-      definition.$implementation = this._implementation;
+      definition['@implementation'] = this._implementation;
     }
 
     if (this._runtime !== undefined) {
-      definition.$runtime = this._runtime.toJSON();
+      definition['@runtime'] = this._runtime.toJSON();
     }
 
     if (this._files !== undefined) {
-      definition.$files = this._files;
+      definition['@files'] = this._files;
     }
 
     if (this._hidden !== undefined) {
-      definition.$hidden = this._hidden;
+      definition['@hidden'] = this._hidden;
     }
 
     if (this._autoBoxing !== undefined) {
-      definition.$autoBoxing = this._autoBoxing;
+      definition['@autoBoxing'] = this._autoBoxing;
     }
 
     if (this._autoUnboxing !== undefined) {
-      definition.$autoUnboxing = this._autoUnboxing;
+      definition['@autoUnboxing'] = this._autoUnboxing;
     }
 
     this._serializeChildren(definition);
@@ -997,9 +1013,9 @@ export class Resource {
     if (aliases !== undefined) {
       aliases = Array.from(aliases);
       if (aliases.length === 1) {
-        definition.$alias = aliases[0];
+        definition['@alias'] = aliases[0];
       } else if (aliases.length > 1) {
-        definition.$aliases = aliases;
+        definition['@aliases'] = aliases;
       }
     }
   }
@@ -1008,9 +1024,9 @@ export class Resource {
     const authors = this._authors;
     if (authors !== undefined) {
       if (authors.length === 1) {
-        definition.$author = authors[0];
+        definition['@author'] = authors[0];
       } else if (authors.length > 1) {
-        definition.$authors = authors;
+        definition['@authors'] = authors;
       }
     }
   }
@@ -1019,9 +1035,9 @@ export class Resource {
     const types = this._types;
     if (types !== undefined) {
       if (types.length === 1) {
-        definition.$type = types[0];
+        definition['@type'] = types[0];
       } else if (types.length > 1) {
-        definition.$types = types;
+        definition['@types'] = types;
       }
     }
   }
@@ -1041,7 +1057,7 @@ export class Resource {
     if (exportResource) {
       const exportDefinition = exportResource.$serialize();
       if (exportDefinition) {
-        definition.$export = exportDefinition;
+        definition['@export'] = exportDefinition;
       }
     }
   }
@@ -1094,7 +1110,7 @@ function inferType(value) {
   } else if (isPlainObject(value)) {
     return 'object';
   }
-  throw new Error('Cannot infer the type from $value');
+  throw new Error('Cannot infer the type from @value');
 }
 
 function requireImplementation(implementationFile, {directory} = {}) {

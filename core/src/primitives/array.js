@@ -17,7 +17,7 @@ export class ArrayResource extends ValueResource {
 
   static $normalize(definition, options) {
     if (Array.isArray(definition)) {
-      definition = {$value: definition};
+      definition = {'@value': definition};
     }
     return super.$normalize(definition, options);
   }

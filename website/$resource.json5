@@ -1,5 +1,0 @@
-{
-  $name: 'run/website',
-  $version: '0.1.0',
-  $type: 'web/aws-website'
-}

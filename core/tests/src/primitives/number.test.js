@@ -4,11 +4,11 @@ describe('NumberResource', () => {
   test('creation', async () => {
     expect(await NumberResource.$create()).toBeInstanceOf(NumberResource);
     expect((await NumberResource.$create()).$value).toBeUndefined();
-    expect((await NumberResource.$create({$value: 0})).$value).toBe(0);
-    expect((await NumberResource.$create({$value: 1})).$value).toBe(1);
-    expect((await NumberResource.$create({$value: 123.45})).$value).toBe(123.45);
+    expect((await NumberResource.$create({'@value': 0})).$value).toBe(0);
+    expect((await NumberResource.$create({'@value': 1})).$value).toBe(1);
+    expect((await NumberResource.$create({'@value': 123.45})).$value).toBe(123.45);
     expect((await NumberResource.$create(-789)).$value).toBe(-789);
-    await expect(NumberResource.$create({$value: 'hello'})).rejects.toBeInstanceOf(Error);
+    await expect(NumberResource.$create({'@value': 'hello'})).rejects.toBeInstanceOf(Error);
     await expect(NumberResource.$create('hello')).rejects.toBeInstanceOf(Error);
   });
 

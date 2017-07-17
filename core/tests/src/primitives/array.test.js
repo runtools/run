@@ -4,10 +4,10 @@ describe('ArrayResource', () => {
   test('creation', async () => {
     expect(await ArrayResource.$create()).toBeInstanceOf(ArrayResource);
     expect((await ArrayResource.$create()).$value).toBeUndefined();
-    expect((await ArrayResource.$create({$value: []})).$value).toEqual([]);
-    expect((await ArrayResource.$create({$value: [1, 'hi']})).$value).toEqual([1, 'hi']);
+    expect((await ArrayResource.$create({'@value': []})).$value).toEqual([]);
+    expect((await ArrayResource.$create({'@value': [1, 'hi']})).$value).toEqual([1, 'hi']);
     expect((await ArrayResource.$create([true])).$value).toEqual([true]);
-    await expect(ArrayResource.$create({$value: 'hello'})).rejects.toBeInstanceOf(Error);
+    await expect(ArrayResource.$create({'@value': 'hello'})).rejects.toBeInstanceOf(Error);
     await expect(ArrayResource.$create('hello')).rejects.toBeInstanceOf(Error);
   });
 

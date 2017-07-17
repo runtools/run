@@ -1,5 +1,5 @@
 import {isPlainObject} from 'lodash';
-import {setProperty, addContextToErrors} from 'run-common';
+import {getProperty, addContextToErrors} from 'run-common';
 
 import Resource from '../resource';
 
@@ -7,7 +7,10 @@ export class ValueResource extends Resource {
   async $construct(definition, options) {
     await super.$construct(definition, options);
     addContextToErrors(() => {
-      setProperty(this, definition, '$value');
+      const value = getProperty(definition, '@value');
+      if (value !== undefined) {
+        this.$value = value;
+      }
     }).call(this);
   }
 
@@ -50,7 +53,7 @@ export class ValueResource extends Resource {
       if (typeof definition === 'string' && options && options.parse) {
         definition = this.$parse(definition);
       }
-      definition = {$value: definition};
+      definition = {'@value': definition};
     }
     return super.$normalize(definition, options);
   }
@@ -68,16 +71,16 @@ export class ValueResource extends Resource {
 
     const serializedValue = this.$serializeValue();
     if (serializedValue !== undefined) {
-      definition.$value = serializedValue;
+      definition['@value'] = serializedValue;
     }
 
     const keys = Object.keys(definition);
     if (keys.length === 0) {
       definition = undefined;
-    } else if (keys.length === 1 && keys[0] === '$value') {
-      definition = definition.$value;
-    } else if (keys.length === 2 && keys.includes('$type') && keys.includes('$value')) {
-      definition = definition.$value;
+    } else if (keys.length === 1 && keys[0] === '@value') {
+      definition = definition['@value'];
+    } else if (keys.length === 2 && keys.includes('@type') && keys.includes('@value')) {
+      definition = definition['@value'];
     }
 
     return definition;

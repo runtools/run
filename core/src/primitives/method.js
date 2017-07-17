@@ -1,5 +1,5 @@
 import {compact, isEmpty} from 'lodash';
-import {getProperty, setProperty, addContextToErrors, formatString, formatCode} from 'run-common';
+import {getProperty, addContextToErrors, formatString, formatCode} from 'run-common';
 
 import Resource from '../resource';
 
@@ -7,20 +7,23 @@ export class MethodResource extends Resource {
   async $construct(definition, options) {
     await super.$construct(definition, options);
     await addContextToErrors(async () => {
-      setProperty(this, definition, '$variadic');
+      const variadic = getProperty(definition, '@variadic');
+      if (variadic !== undefined) {
+        this.$variadic = variadic;
+      }
 
-      const parameters = getProperty(definition, '$parameters', ['$parameter']);
+      const parameters = getProperty(definition, '@parameters', ['@parameter']);
       if (parameters !== undefined) {
         await this.$setParameters(parameters);
       }
 
-      const listenedEvents = getProperty(definition, '$listen', ['$listens']);
-      if (listenedEvents) {
+      const listenedEvents = getProperty(definition, '@listen', ['@listens']);
+      if (listenedEvents !== undefined) {
         this.$setListenedEvents(listenedEvents);
       }
 
-      const emittedEvents = getProperty(definition, '$emit', ['$emits']);
-      if (emittedEvents) {
+      const emittedEvents = getProperty(definition, '@emit', ['@emits']);
+      if (emittedEvents !== undefined) {
         this.$setEmittedEvents(emittedEvents);
       }
     }).call(this);
@@ -216,14 +219,14 @@ export class MethodResource extends Resource {
       parameters = parameters.map(parameter => parameter.$serialize());
       parameters = compact(parameters);
       if (parameters.length === 1) {
-        definition.$parameter = parameters[0];
+        definition['@parameter'] = parameters[0];
       } else if (parameters.length > 1) {
-        definition.$parameters = parameters;
+        definition['@parameters'] = parameters;
       }
     }
 
     if (this._variadic !== undefined) {
-      definition.$variadic = this._variadic;
+      definition['@variadic'] = this._variadic;
     }
 
     let listenedEvents = this._listenedEvents;
@@ -231,7 +234,7 @@ export class MethodResource extends Resource {
       if (listenedEvents.length === 1) {
         listenedEvents = listenedEvents[0];
       }
-      definition.$listen = listenedEvents;
+      definition['@listen'] = listenedEvents;
     }
 
     const emittedEvents = this._emittedEvents;
@@ -239,7 +242,7 @@ export class MethodResource extends Resource {
       // TODO: handle custom event definitions
       let event = emittedEvents.before;
       event = event.slice('before:'.length);
-      definition.$emit = '*:' + event;
+      definition['@emit'] = '*:' + event;
     }
 
     if (isEmpty(definition)) {

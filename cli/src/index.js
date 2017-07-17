@@ -10,7 +10,7 @@ export async function run(expression = '', {directory} = {}) {
     });
   }
 
-  const macro = await MacroResource.$create({$expression: expression}, {directory});
+  const macro = await MacroResource.$create({'@expression': expression}, {directory});
 
   return await macro.$invoke(undefined, {parent: userResource});
 }

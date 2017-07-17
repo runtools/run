@@ -4,10 +4,10 @@ describe('BooleanResource', () => {
   test('creation', async () => {
     expect(await BooleanResource.$create()).toBeInstanceOf(BooleanResource);
     expect((await BooleanResource.$create()).$value).toBeUndefined();
-    expect((await BooleanResource.$create({$value: false})).$value).toBe(false);
-    expect((await BooleanResource.$create({$value: true})).$value).toBe(true);
+    expect((await BooleanResource.$create({'@value': false})).$value).toBe(false);
+    expect((await BooleanResource.$create({'@value': true})).$value).toBe(true);
     expect((await BooleanResource.$create(true)).$value).toBe(true);
-    await expect(BooleanResource.$create({$value: 1})).rejects.toBeInstanceOf(Error);
+    await expect(BooleanResource.$create({'@value': 1})).rejects.toBeInstanceOf(Error);
     await expect(BooleanResource.$create(1)).rejects.toBeInstanceOf(Error);
   });
 
