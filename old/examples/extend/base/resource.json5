@@ -1,8 +1,0 @@
-{
-  name: 'base',
-  version: '1.0.0',
-  is: ['js/tool'],
-  commands: {
-    'task': './task'
-  }
-}

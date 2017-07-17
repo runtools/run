@@ -1,6 +1,0 @@
-{
-  name: 'include-example',
-  version: '1.0.0',
-  is: ['js/tool'],
-  has: ['./console']
-}

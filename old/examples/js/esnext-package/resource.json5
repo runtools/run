@@ -1,5 +1,0 @@
-{
-  name: "js-enext-package-example",
-  version: "1.0.0",
-  is: "../../../tools/js/esnext-package"
-}

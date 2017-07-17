@@ -1,8 +1,0 @@
-{
-  "name": "hello-example",
-  "version": "1.0.0",
-  "main": "./commands/hello.js",
-  "dependencies": {
-    "cli-color": "^1.2.0"
-  }
-}
