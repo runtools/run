@@ -24,7 +24,7 @@ describe('MethodResource', () => {
     const Person = await Resource.$import('../../fixtures/person', {directory: __dirname});
     expect(await Person.formatGreetingMethod()).toBe('Hello Anonymous!');
 
-    let person = await Person.$create({name: 'Manu'});
+    let person = await Person.$extend({name: 'Manu'});
 
     expect(await person.formatGreetingMethod()).toBe('Hello Manu!');
     expect(await person.formatGreetingMethod('Konnichiwa')).toBe('Konnichiwa Manu!');

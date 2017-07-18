@@ -380,7 +380,7 @@ describe('Resource', () => {
 
   test('customized normalization and serialization', async () => {
     const Person = await Resource.$import('../fixtures/person', {directory: __dirname});
-    const person = await Person.$create({address: {city: 'Paris', country: 'France'}});
+    const person = await Person.$extend({address: {city: 'Paris', country: 'France'}});
     expect(person.address.city).toBe('Paris');
     expect(person.address.country).toBe('France');
     expect(person.$serialize()).toEqual({address: 'Paris, France'});

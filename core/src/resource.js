@@ -218,6 +218,10 @@ export class Resource {
     return await this.$create(definition, {file, importing});
   }
 
+  static async $import(specifier, {directory} = {}) {
+    return await this.$load(specifier, {directory, importing: true});
+  }
+
   static async $fetch(name) {
     // TODO: fetch resources from Resdir
 
@@ -270,8 +274,12 @@ export class Resource {
     return directory;
   }
 
-  static async $import(specifier, {directory} = {}) {
-    return await this.$load(specifier, {directory, importing: true});
+  async $extend(definition, options) {
+    return await this.constructor.$create(definition, {...options, bases: [this]});
+  }
+
+  $hasBase(resource) {
+    return Boolean(this.$findBase(base => base === resource));
   }
 
   async $save(directory) {
@@ -345,14 +353,6 @@ export class Resource {
       {deepSearch: true}
     );
     return result;
-  }
-
-  async $create(definition, options) {
-    return await this.constructor.$create(definition, {...options, bases: [this]});
-  }
-
-  $isInstanceOf(resource) {
-    return Boolean(this.$findBase(base => base === resource));
   }
 
   _getInheritedValue(name) {

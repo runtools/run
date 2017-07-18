@@ -10,7 +10,7 @@ describe('MacroResource', () => {
 
   test('invocation', async () => {
     const Person = await Resource.$import('../../fixtures/person', {directory: __dirname});
-    let person = await Person.$create({name: 'Manu', age: 29});
+    let person = await Person.$extend({name: 'Manu', age: 29});
     expect(await person.formatGreetingMacro()).toBe('Hi Manu!');
     expect(await person.formatGreetingMacro({ageLimit: 29})).toBe('Hello Manu!');
     person.age++;

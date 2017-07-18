@@ -21,7 +21,7 @@ describe('CommandResource', () => {
     // options
     const Person = await Resource.$import('../../fixtures/person', {directory: __dirname});
 
-    const person = await Person.$create({name: 'Manu', age: 44});
+    const person = await Person.$extend({name: 'Manu', age: 44});
     expect(await person.formatGreetingCommand()).toBe('Hi Manu!');
     person.age++;
     expect(await person.formatGreetingCommand()).toBe('Hello Manu!');

@@ -42,7 +42,7 @@ export class CommandResource extends OptionsMixin(MethodResource) {
       if (key !== undefined) {
         delete remainingOptions[key];
       }
-      const normalizedValue = (await option.$create(value, {parse})).$autoUnbox();
+      const normalizedValue = (await option.$extend(value, {parse})).$autoUnbox();
       if (normalizedValue !== undefined) {
         normalizedOptions[option.$name] = normalizedValue;
       }
