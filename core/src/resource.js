@@ -3,7 +3,7 @@ import {existsSync} from 'fs';
 import {homedir} from 'os';
 import {isPlainObject, isEmpty} from 'lodash';
 import isDirectory from 'is-directory';
-import {copy, emptyDir, remove} from 'fs-extra';
+import {copy, ensureDirSync, emptyDir, remove} from 'fs-extra';
 import {
   addContextToErrors,
   getProperty,
@@ -29,7 +29,15 @@ const RUN_DIRECTORY = join(homedir(), '.run');
 const PUBLISHED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'published-resources');
 const INSTALLED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'installed-resources');
 
-const BUILTIN_COMMANDS = ['@build', '@emitEvent', '@lint', '@install', '@publish', '@test'];
+const BUILTIN_COMMANDS = [
+  '@build',
+  '@create',
+  '@emitEvent',
+  '@lint',
+  '@install',
+  '@publish',
+  '@test'
+];
 
 export class Resource {
   async $construct(definition = {}, {bases = [], parent, name, directory, file} = {}) {
@@ -282,7 +290,7 @@ export class Resource {
     return Boolean(this.$findBase(base => base === resource));
   }
 
-  async $save(directory) {
+  async $save(directory, {ensureDirectory} = {}) {
     await this.$emitEvent('before:@save');
 
     if (!this.$isRoot()) {
@@ -303,6 +311,10 @@ export class Resource {
     let definition = this.$serialize();
     if (definition === undefined) {
       definition = {};
+    }
+
+    if (ensureDirectory) {
+      ensureDirSync(this.$getDirectory());
     }
 
     saveFile(file, definition, {stringify: true});
@@ -855,6 +867,43 @@ export class Resource {
     await this.$emitEvent('after:@build');
   }
 
+  async '@create'(name) {
+    if (!name) {
+      throw new Error(`${formatCode('name')} argument is missing`);
+    }
+
+    const resource = await task(
+      async () => {
+        const resource = await Resource.$create({
+          '@type': this.$name,
+          '@name': name,
+          '@version': '0.1.0'
+        });
+
+        await resource.$emitEvent('before:@create');
+
+        const directory = join(process.cwd(), resource.$getIdentifier());
+
+        const existingResource = await this.constructor.$load(directory, {throwIfNotFound: false});
+        if (existingResource) {
+          throw new Error(`A resource already exists in ${formatPath(directory)}`);
+        }
+
+        await resource.$save(directory, {ensureDirectory: true});
+
+        await resource.$emitEvent('after:@create');
+
+        return resource;
+      },
+      {
+        intro: `Creating ${formatString(name)} resource...`,
+        outro: `Resource ${formatString(name)} created`
+      }
+    );
+
+    return resource;
+  }
+
   async '@emitEvent'(...args) {
     return await this.$emitEvent(...args);
   }
@@ -953,6 +1002,8 @@ export class Resource {
   $serialize({omitName} = {}) {
     let definition = {};
 
+    this._serializeTypes(definition);
+
     if (!omitName && this._name !== undefined) {
       definition['@name'] = this._name;
     }
@@ -976,8 +1027,6 @@ export class Resource {
     if (this._license !== undefined) {
       definition['@license'] = this._license;
     }
-
-    this._serializeTypes(definition);
 
     if (this._implementation !== undefined) {
       definition['@implementation'] = this._implementation;

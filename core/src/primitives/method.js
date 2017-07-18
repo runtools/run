@@ -64,7 +64,7 @@ export class MethodResource extends Resource {
 
   $setListenedEvents(events) {
     if (!events) {
-      throw new Error('\'events\' parameter is missing');
+      throw new Error('\'events\' argument is missing');
     }
 
     if (!Array.isArray(events)) {
@@ -87,7 +87,7 @@ export class MethodResource extends Resource {
 
   $setEmittedEvents(events) {
     if (!events) {
-      throw new Error('\'events\' parameter is missing');
+      throw new Error('\'events\' argument is missing');
     }
 
     // TODO: handle event definition such as:

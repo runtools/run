@@ -28,7 +28,7 @@ updateNotifier({pkg}).notify();
     result = result.$autoUnbox();
   }
   if (result instanceof Resource) {
-    result = result.$serialize({omitName: true});
+    result = result.$serialize();
   }
   if (result !== undefined) {
     console.log(JSON5.stringify(result, undefined, 2));
