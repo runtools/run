@@ -29,7 +29,7 @@ const RUN_DIRECTORY = join(homedir(), '.run');
 const PUBLISHED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'published-resources');
 const INSTALLED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'installed-resources');
 
-const BUILTIN_COMMANDS = ['@build', '@emitEvent', '@install', '@publish', '@test'];
+const BUILTIN_COMMANDS = ['@build', '@emitEvent', '@lint', '@install', '@publish', '@test'];
 
 export class Resource {
   async $construct(definition = {}, {bases = [], parent, name, directory, file} = {}) {
@@ -849,20 +849,26 @@ export class Resource {
     }
   }
 
-  async '@emitEvent'(...args) {
-    return await this.$emitEvent(...args);
-  }
-
   async '@build'() {
     await this.$emitEvent('before:@build');
     // NOOP
     await this.$emitEvent('after:@build');
   }
 
+  async '@emitEvent'(...args) {
+    return await this.$emitEvent(...args);
+  }
+
   async '@install'() {
     await this.$emitEvent('before:@install');
     // NOOP
     await this.$emitEvent('after:@install');
+  }
+
+  async '@lint'() {
+    await this.$emitEvent('before:@lint');
+    // NOOP
+    await this.$emitEvent('after:@lint');
   }
 
   async '@publish'() {
