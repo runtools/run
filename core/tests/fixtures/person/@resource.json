@@ -2,7 +2,6 @@
   "@name": "person",
   "@version": "1.0.0",
   "@export": {
-    "@type": "tool",
     "@implementation": "./",
     "@runtime": "node@>=6.10.0",
     "name": {"@type": "string"},

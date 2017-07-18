@@ -16,8 +16,6 @@ export function getPrimitiveResourceClass(type) {
       return require('./command').default;
     case 'macro':
       return require('./macro').default;
-    case 'tool':
-      return require('./tool').default;
     default:
       return undefined;
   }

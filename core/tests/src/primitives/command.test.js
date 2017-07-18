@@ -39,7 +39,7 @@ describe('CommandResource', () => {
       'blue, yellow.'
     );
 
-    // options inherited from tool
+    // options inherited from parent resource
     expect(await Person.formatWordsCommand('blue', 'yellow')).toBe('Blue, yellow.');
     expect(await Person.formatWordsCommand('blue', 'yellow', {shout: true})).toBe('BLUE, YELLOW.');
   });

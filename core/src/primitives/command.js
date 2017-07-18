@@ -2,9 +2,8 @@ import {isPlainObject} from 'lodash';
 import {formatCode} from 'run-common';
 
 import MethodResource from './method';
-import OptionsMixin from './options-mixin';
 
-export class CommandResource extends OptionsMixin(MethodResource) {
+export class CommandResource extends MethodResource {
   async _normalizeArguments(args, {parse}) {
     const {normalizedArguments, remainingArguments} = await super._normalizeArguments(args, {
       parse

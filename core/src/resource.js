@@ -1,7 +1,7 @@
 import {join, resolve, relative, basename, dirname, isAbsolute} from 'path';
 import {existsSync} from 'fs';
 import {homedir} from 'os';
-import {isPlainObject, isEmpty} from 'lodash';
+import {isPlainObject, entries, isEmpty} from 'lodash';
 import isDirectory from 'is-directory';
 import {copy, ensureDirSync, emptyDir, remove} from 'fs-extra';
 import {
@@ -76,6 +76,11 @@ export class Resource {
       set('$hidden', '@hidden');
       set('$autoBoxing', '@autoBoxing');
       set('$autoUnboxing', '@autoUnboxing');
+
+      const optionsDefinition = getProperty(definition, '@options', ['@option']);
+      if (optionsDefinition !== undefined) {
+        await this.$setOptions(optionsDefinition);
+      }
 
       for (const base of bases) {
         await this._inherit(base);
@@ -683,6 +688,24 @@ export class Resource {
     this._autoUnboxing = autoUnboxing;
   }
 
+  $getOptions() {
+    return this._getInheritedValue('_options');
+  }
+
+  async $setOptions(options) {
+    this._options = undefined;
+    if (options === undefined) {
+      return;
+    }
+    for (let [name, option] of entries(options)) {
+      option = await Resource.$create(option, {name, directory: this.$getDirectory()});
+      if (this._options === undefined) {
+        this._options = [];
+      }
+      this._options.push(option);
+    }
+  }
+
   $getExport() {
     return this._export;
   }
@@ -1052,6 +1075,8 @@ export class Resource {
       definition['@autoUnboxing'] = this._autoUnboxing;
     }
 
+    this._serializeOptions(definition);
+
     this._serializeChildren(definition);
 
     this._serializeExport(definition);
@@ -1061,6 +1086,17 @@ export class Resource {
     }
 
     return definition;
+  }
+
+  _serializeTypes(definition) {
+    const types = this._types;
+    if (types !== undefined) {
+      if (types.length === 1) {
+        definition['@type'] = types[0];
+      } else if (types.length > 1) {
+        definition['@types'] = types;
+      }
+    }
   }
 
   _serializeAliases(definition) {
@@ -1086,13 +1122,22 @@ export class Resource {
     }
   }
 
-  _serializeTypes(definition) {
-    const types = this._types;
-    if (types !== undefined) {
-      if (types.length === 1) {
-        definition['@type'] = types[0];
-      } else if (types.length > 1) {
-        definition['@types'] = types;
+  _serializeOptions(definition) {
+    const options = this._options;
+    if (options) {
+      const serializedOptions = {};
+      let count = 0;
+      for (const option of options) {
+        const serializedOption = option.$serialize({omitName: true});
+        if (serializedOption !== undefined) {
+          serializedOptions[option.$name] = serializedOption;
+          count++;
+        }
+      }
+      if (count === 1) {
+        definition['@option'] = serializedOptions;
+      } else if (count > 1) {
+        definition['@options'] = serializedOptions;
       }
     }
   }

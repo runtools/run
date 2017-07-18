@@ -4,7 +4,6 @@ import NumberResource from '../../dist/primitives/number';
 import StringResource from '../../dist/primitives/string';
 import ArrayResource from '../../dist/primitives/array';
 import ObjectResource from '../../dist/primitives/object';
-import ToolResource from '../../dist/primitives/tool';
 
 describe('Resource', () => {
   test('creation', async () => {
@@ -294,7 +293,7 @@ describe('Resource', () => {
     expect(PersonConstructor.$getChild('age')).toBeUndefined();
 
     const person = await Resource.$load('../fixtures/person-instance', {directory: __dirname});
-    expect(person).toBeInstanceOf(ToolResource);
+    expect(person).toBeInstanceOf(Resource);
     expect(person.$getChild('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('Manu');
     expect(person.$getChild('age')).toBeInstanceOf(NumberResource);
@@ -303,7 +302,7 @@ describe('Resource', () => {
 
   test('Resource imported from a file', async () => {
     const Person = await Resource.$import('../fixtures/person', {directory: __dirname});
-    expect(Person).toBeInstanceOf(ToolResource);
+    expect(Person).toBeInstanceOf(Resource);
     expect(Person.$name).toBeUndefined();
     expect(Person.$version).toBeUndefined();
     expect(Person.$getChild('name')).toBeInstanceOf(StringResource);
