@@ -882,7 +882,7 @@ export class Resource {
     this.$forSelfAndEachBase(
       resource => {
         if (resource._listeners && resource._listeners[event]) {
-          methods.push(...resource._listeners[event]);
+          methods.unshift(...resource._listeners[event]);
         }
       },
       {deepSearch: true}
