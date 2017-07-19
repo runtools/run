@@ -30,7 +30,7 @@
     "sync-request@^4.1.0",
     "then-request@^2.2.0"
   ],
-  "version": "0.10.2",
+  "version": "0.10.3",
   "test": {
     "@type": "macro",
     "@listen": "after:@test",

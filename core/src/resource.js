@@ -70,8 +70,8 @@ export class Resource {
       set('$repository', '@repository');
       set('$license', '@license');
       set('$types', '@types', ['@type']);
-      set('$implementation', '@implementation');
       set('$runtime', '@runtime');
+      set('$implementation', '@implementation');
       set('$files', '@files');
       set('$hidden', '@hidden');
       set('$autoBoxing', '@autoBoxing');
@@ -632,14 +632,6 @@ export class Resource {
     return types;
   }
 
-  get $implementation() {
-    return this._implementation;
-  }
-
-  set $implementation(implementation) {
-    this._implementation = implementation;
-  }
-
   get $runtime() {
     return this._getInheritedValue('_runtime');
   }
@@ -649,6 +641,14 @@ export class Resource {
       runtime = new Runtime(runtime);
     }
     this._runtime = runtime;
+  }
+
+  get $implementation() {
+    return this._implementation;
+  }
+
+  set $implementation(implementation) {
+    this._implementation = implementation;
   }
 
   get $files() {
@@ -1060,12 +1060,12 @@ export class Resource {
       definition['@license'] = this._license;
     }
 
-    if (this._implementation !== undefined) {
-      definition['@implementation'] = this._implementation;
-    }
-
     if (this._runtime !== undefined) {
       definition['@runtime'] = this._runtime.toJSON();
+    }
+
+    if (this._implementation !== undefined) {
+      definition['@implementation'] = this._implementation;
     }
 
     if (this._files !== undefined) {
