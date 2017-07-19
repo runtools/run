@@ -4,6 +4,7 @@ import NumberResource from '../../dist/primitives/number';
 import StringResource from '../../dist/primitives/string';
 import ArrayResource from '../../dist/primitives/array';
 import ObjectResource from '../../dist/primitives/object';
+import MacroResource from '../../dist/primitives/macro';
 
 describe('Resource', () => {
   test('creation', async () => {
@@ -338,6 +339,32 @@ describe('Resource', () => {
     expect(Company.$getChild('boss')).toBeInstanceOf(Resource);
     expect(Company.$getChild('boss').$getChild('name')).toBeInstanceOf(StringResource);
     expect(Company.$getChild('boss').$getChild('age')).toBeInstanceOf(NumberResource);
+  });
+
+  test('multiple inheritance', async () => {
+    await expect(Resource.$create({'@types': ['number', 'string']})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@types': ['resource', 'string']})).resolves.toBeInstanceOf(
+      StringResource
+    );
+    await expect(Resource.$create({'@types': ['method', 'macro']})).resolves.toBeInstanceOf(
+      MacroResource
+    );
+    await expect(Resource.$create({'@types': ['macro', 'method']})).resolves.toBeInstanceOf(
+      MacroResource
+    );
+
+    const personWithMixin = await Resource.$create(
+      {
+        '@types': ['../fixtures/person', '../fixtures/mixin'],
+        name: 'Manu',
+        mixinProperty: 'mixin-property-value'
+      },
+      {directory: __dirname}
+    );
+    expect(personWithMixin.$getChild('name')).toBeInstanceOf(StringResource);
+    expect(personWithMixin.name).toBe('Manu');
+    expect(personWithMixin.$getChild('mixinProperty')).toBeInstanceOf(StringResource);
+    expect(personWithMixin.mixinProperty).toBe('mixin-property-value');
   });
 
   test('serialization', async () => {

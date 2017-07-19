@@ -1,0 +1,13 @@
+{
+  "@name": "mixin",
+  "@export": {
+    "@runtime": "node@>=6.10.0",
+    "@implementation": "./",
+    "mixinProperty": {
+      "@type": "string"
+    },
+    "mixinMethod": {
+      "@type": "method"
+    }
+  }
+}

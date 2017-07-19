@@ -1,7 +1,7 @@
 import {join, resolve, relative, basename, dirname, isAbsolute} from 'path';
 import {existsSync} from 'fs';
 import {homedir} from 'os';
-import {isPlainObject, entries, isEmpty} from 'lodash';
+import {isPlainObject, entries, isEmpty, union} from 'lodash';
 import isDirectory from 'is-directory';
 import {copy, ensureDirSync, emptyDir, remove} from 'fs-extra';
 import {
@@ -105,7 +105,7 @@ export class Resource {
 
   static async $create(
     definition = {},
-    {bases = [], parent, name, directory, file, importing, parse} = {}
+    {base, parent, name, directory, file, importing, parse} = {}
   ) {
     let normalizedDefinition;
     if (isPlainObject(definition)) {
@@ -122,68 +122,72 @@ export class Resource {
     if (
       this === Resource &&
       types.length === 0 &&
-      bases.length === 0 &&
+      base === undefined &&
       normalizedDefinition['@value'] !== undefined
     ) {
       types = [inferType(normalizedDefinition['@value'])];
     }
 
-    const dir = directory || (file && dirname(file));
+    if (file) {
+      directory = dirname(file);
+    }
 
-    const basesClasses = [this];
-    const actualBases = [...bases];
+    let NativeClass;
+    const bases = [];
+
+    if (base) {
+      bases.push(base);
+      NativeClass = base._getNativeClass();
+    } else {
+      NativeClass = this;
+    }
 
     for (const type of types) {
+      let Class;
+
       if (typeof type === 'string') {
-        if (type === 'resource') {
-          continue;
-        }
-        const Class = getPrimitiveResourceClass(type);
-        if (Class) {
-          basesClasses.push(Class);
-        } else {
-          const base = await Resource.$import(type, {directory: dir});
-          actualBases.push(base);
-        }
-      } else if (isPlainObject(type)) {
-        const base = await Resource.$create(type, {directory: dir, importing: true});
-        actualBases.push(base);
-      } else {
-        throw new Error('A \'type\' must be a string or a plain object');
+        Class = getResourceClass(type);
       }
-    }
 
-    for (const base of actualBases) {
-      basesClasses.push(base.constructor);
-    }
+      if (!Class) {
+        const base = await Resource.$import(type, {directory});
+        bases.push(base);
+        Class = base._getNativeClass();
+      }
 
-    let ResourceClass = Resource;
-    for (const Class of basesClasses) {
-      if (Object.prototype.isPrototypeOf.call(ResourceClass, Class)) {
-        ResourceClass = Class;
-      } else if (
-        ResourceClass === Class ||
-        Object.prototype.isPrototypeOf.call(Class, ResourceClass)
-      ) {
+      if (Object.prototype.isPrototypeOf.call(NativeClass, Class)) {
+        NativeClass = Class;
+      } else if (NativeClass === Class || Object.prototype.isPrototypeOf.call(Class, NativeClass)) {
         // NOOP
       } else {
-        throw new Error(`Can't mix a ${ResourceClass.name} with a ${Class.name}`);
+        throw new Error(`Can't mix a ${NativeClass.name} with a ${Class.name}`);
       }
+    }
+
+    let builders = [];
+    for (const base of bases) {
+      builders = union(builders, base._getClassBuilders());
     }
 
     const implementation = getProperty(normalizedDefinition, '@implementation');
     if (implementation) {
-      const classBuilder = requireImplementation(implementation, {directory: dir});
-      if (classBuilder) {
-        ResourceClass = classBuilder(ResourceClass);
+      const builder = requireImplementation(implementation, {directory});
+      if (builder && !builders.includes(builder)) {
+        builders.push(builder);
       }
+    }
+
+    let ResourceClass = NativeClass;
+    for (const builder of builders) {
+      ResourceClass = builder(ResourceClass);
+      ResourceClass._classBuilder = builder;
     }
 
     normalizedDefinition = ResourceClass.$normalize(definition, {parse});
 
     let resource = new ResourceClass();
     await resource.$construct(normalizedDefinition, {
-      bases: actualBases,
+      bases,
       parent,
       name,
       directory,
@@ -205,30 +209,35 @@ export class Resource {
     specifier,
     {directory, importing, searchInParentDirectories, throwIfNotFound = true} = {}
   ) {
+    let definition;
     let file;
 
-    if (specifier.startsWith('.')) {
-      if (!directory) {
-        throw new Error('\'directory\' argument is missing');
-      }
-      file = resolve(directory, specifier);
-    } else if (isAbsolute(specifier)) {
-      file = specifier;
+    if (isPlainObject(specifier)) {
+      definition = specifier;
     } else {
-      file = await this.$fetch(specifier);
-    }
-
-    file = searchResourceFile(file, {searchInParentDirectories});
-    if (!file) {
-      if (throwIfNotFound) {
-        throw new Error(`Resource not found: ${formatPath(specifier)}`);
+      if (specifier.startsWith('.')) {
+        if (!directory) {
+          throw new Error('\'directory\' argument is missing');
+        }
+        file = resolve(directory, specifier);
+      } else if (isAbsolute(specifier)) {
+        file = specifier;
+      } else {
+        file = await this.$fetch(specifier);
       }
-      return undefined;
+
+      file = searchResourceFile(file, {searchInParentDirectories});
+      if (!file) {
+        if (throwIfNotFound) {
+          throw new Error(`Resource not found: ${formatPath(specifier)}`);
+        }
+        return undefined;
+      }
+
+      definition = loadFile(file, {parse: true});
     }
 
-    const definition = loadFile(file, {parse: true});
-
-    return await this.$create(definition, {file, importing});
+    return await this.$create(definition, {file, directory, importing});
   }
 
   static async $import(specifier, {directory} = {}) {
@@ -288,7 +297,7 @@ export class Resource {
   }
 
   async $extend(definition, options) {
-    return await this.constructor.$create(definition, {...options, bases: [this]});
+    return await this.constructor.$create(definition, {...options, base: this});
   }
 
   $hasBase(resource) {
@@ -415,6 +424,7 @@ export class Resource {
 
   $setFile(file) {
     this._file = file;
+    this._directory = undefined;
   }
 
   $getDirectory({throwIfUndefined} = {}) {
@@ -758,10 +768,9 @@ export class Resource {
   async $setChild(name, definition, {ignoreAliases} = {}) {
     const removedChildIndex = this.$removeChild(name, {ignoreAliases});
 
-    let child = this.$getChildFromBases(name, {ignoreAliases});
-    const bases = child ? [child] : undefined;
-    child = await Resource.$create(definition, {
-      bases,
+    const base = this.$getChildFromBases(name, {ignoreAliases});
+    const child = await Resource.$create(definition, {
+      base,
       name,
       directory: this.$getDirectory(),
       parent: this
@@ -1161,6 +1170,31 @@ export class Resource {
       }
     }
   }
+
+  _getNativeClass() {
+    let Class = this.constructor;
+    while (Class._classBuilder) {
+      Class = Object.getPrototypeOf(Class);
+    }
+    return Class;
+  }
+
+  _getClassBuilders() {
+    const builders = [];
+    let Class = this.constructor;
+    while (Class._classBuilder) {
+      builders.unshift(Class._classBuilder);
+      Class = Object.getPrototypeOf(Class);
+    }
+    return builders;
+  }
+}
+
+function getResourceClass(type) {
+  if (type === 'resource') {
+    return Resource;
+  }
+  return getPrimitiveResourceClass(type);
 }
 
 function searchResourceFile(directoryOrFile, {searchInParentDirectories = false} = {}) {

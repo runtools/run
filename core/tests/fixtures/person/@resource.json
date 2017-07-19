@@ -2,8 +2,8 @@
   "@name": "person",
   "@version": "1.0.0",
   "@export": {
-    "@implementation": "./",
     "@runtime": "node@>=6.10.0",
+    "@implementation": "./",
     "name": {"@type": "string"},
     "age": {"@type": "number"},
     "@options": {"shout": false},

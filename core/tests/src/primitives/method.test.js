@@ -47,6 +47,15 @@ describe('MethodResource', () => {
     expect(person.hasBeenBuilt).toBe(true);
   });
 
+  test('multiple inheritance', async () => {
+    const personWithMixin = await Resource.$create(
+      {'@types': ['../../fixtures/person', '../../fixtures/mixin']},
+      {directory: __dirname}
+    );
+    expect(await personWithMixin.formatGreetingMethod()).toBe('Hello Anonymous!');
+    expect(await personWithMixin.mixinMethod()).toBe('mixin-method-returned-value');
+  });
+
   test('serialization', async () => {
     expect((await MethodResource.$create()).$serialize()).toBeUndefined();
 
