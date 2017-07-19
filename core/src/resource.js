@@ -30,6 +30,7 @@ const PUBLISHED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'published-resources')
 const INSTALLED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'installed-resources');
 
 const BUILTIN_COMMANDS = [
+  '@broadcastEvent',
   '@build',
   '@create',
   '@emitEvent',
@@ -893,10 +894,11 @@ export class Resource {
     }
   }
 
-  async '@build'() {
-    await this.$emitEvent('before:@build');
-    // NOOP
-    await this.$emitEvent('after:@build');
+  async $broadcastEvent(event, ...args) {
+    await this.$emitEvent(event, ...args);
+    await this.$forEachChild(async child => {
+      await child.$broadcastEvent(event, ...args);
+    });
   }
 
   async '@create'(name) {
@@ -912,7 +914,7 @@ export class Resource {
           '@version': '0.1.0'
         });
 
-        await resource.$emitEvent('before:@create');
+        await resource.$broadcastEvent('before:@create');
 
         const directory = join(process.cwd(), resource.$getIdentifier());
 
@@ -923,7 +925,7 @@ export class Resource {
 
         await resource.$save(directory, {ensureDirectory: true});
 
-        await resource.$emitEvent('after:@create');
+        await resource.$broadcastEvent('after:@create');
 
         return resource;
       },
@@ -936,24 +938,32 @@ export class Resource {
     return resource;
   }
 
-  async '@emitEvent'(...args) {
-    return await this.$emitEvent(...args);
+  async '@install'() {
+    await this.$broadcastEvent('before:@install');
+    // NOOP
+    await this.$broadcastEvent('after:@install');
   }
 
-  async '@install'() {
-    await this.$emitEvent('before:@install');
+  async '@build'() {
+    await this.$broadcastEvent('before:@build');
     // NOOP
-    await this.$emitEvent('after:@install');
+    await this.$broadcastEvent('after:@build');
   }
 
   async '@lint'() {
-    await this.$emitEvent('before:@lint');
+    await this.$broadcastEvent('before:@lint');
     // NOOP
-    await this.$emitEvent('after:@lint');
+    await this.$broadcastEvent('after:@lint');
+  }
+
+  async '@test'() {
+    await this.$broadcastEvent('before:@test');
+    // NOOP
+    await this.$broadcastEvent('after:@test');
   }
 
   async '@publish'() {
-    await this.$emitEvent('before:@publish');
+    await this.$emitEvent('before:@publish'); // TODO: should use $broadcastEvent?
 
     const name = this.$name;
     if (!name) {
@@ -1015,13 +1025,15 @@ export class Resource {
       }
     );
 
-    await this.$emitEvent('after:@publish');
+    await this.$emitEvent('after:@publish'); // TODO: should use $broadcastEvent?
   }
 
-  async '@test'() {
-    await this.$emitEvent('before:@test');
-    // NOOP
-    await this.$emitEvent('after:@test');
+  async '@emitEvent'(event, ...args) {
+    return await this.$emitEvent(event, ...args);
+  }
+
+  async '@broadcastEvent'(event, ...args) {
+    return await this.$broadcastEvent(event, ...args);
   }
 
   static $normalize(definition, _options) {
