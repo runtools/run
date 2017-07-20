@@ -355,7 +355,7 @@ export class Resource {
 
   async _inherit(base) {
     this._bases.push(base);
-    await base.$forEachChild(async child => {
+    await base.$forEachChildAsync(async child => {
       await this.$setChild(child.$name, undefined, {ignoreAliases: true});
     });
   }
@@ -784,19 +784,23 @@ export class Resource {
   _children = [];
 
   $forEachChild(fn) {
-    const promises = [];
     for (let i = 0; i < this._children.length; i++) {
       const child = this._children[i];
       const result = fn(child, i);
       if (result === false) {
         break;
       }
-      if (result && typeof result.then === 'function') {
-        promises.push(result);
-      }
     }
-    if (promises.length) {
-      return Promise.all(promises);
+  }
+
+  async $forEachChildAsync(fn) {
+    const childs = [];
+    this.$forEachChild(child => childs.push(child));
+    for (const child of childs) {
+      const result = await fn(child);
+      if (result === false) {
+        break;
+      }
     }
   }
 
@@ -952,7 +956,7 @@ export class Resource {
 
   async $broadcastEvent(event, ...args) {
     await this.$emitEvent(event, ...args);
-    await this.$forEachChild(async child => {
+    await this.$forEachChildAsync(async child => {
       await child.$broadcastEvent(event, ...args);
     });
   }
