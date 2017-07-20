@@ -47,10 +47,10 @@ export class Resource {
         this.$setParent(parent);
       }
       if (directory !== undefined) {
-        this.$setDirectory(directory);
+        this.$setCurrentDirectory(directory);
       }
       if (file !== undefined) {
-        this.$setFile(file);
+        this.$setResourceFile(file);
       }
       if (name !== undefined) {
         this.$name = name;
@@ -63,6 +63,9 @@ export class Resource {
         }
       };
 
+      set('$types', '@types', ['@type']);
+      set('$location', '@location');
+      set('$directory', '@directory');
       set('$name', '@name');
       set('$aliases', '@aliases', ['@alias']);
       set('$version', '@version');
@@ -70,7 +73,6 @@ export class Resource {
       set('$authors', '@authors', ['@author']);
       set('$repository', '@repository');
       set('$license', '@license');
-      set('$types', '@types', ['@type']);
       set('$runtime', '@runtime');
       set('$implementation', '@implementation');
       set('$files', '@files');
@@ -97,7 +99,7 @@ export class Resource {
       const exportDefinition = getProperty(definition, '@export', ['@exports']);
       if (exportDefinition !== undefined) {
         const resource = await this.constructor.$create(exportDefinition, {
-          directory: this.$getDirectory()
+          directory: this.$getCurrentDirectory()
         });
         this.$setExport(resource);
       }
@@ -120,9 +122,13 @@ export class Resource {
 
     let types = getProperty(normalizedDefinition, '@types', ['@type']);
     types = Resource.$normalizeTypes(types);
+
+    const location = getProperty(normalizedDefinition, '@location');
+
     if (
       this === Resource &&
       types.length === 0 &&
+      location === undefined &&
       base === undefined &&
       normalizedDefinition['@value'] !== undefined
     ) {
@@ -156,13 +162,14 @@ export class Resource {
         Class = base._getNativeClass();
       }
 
-      if (Object.prototype.isPrototypeOf.call(NativeClass, Class)) {
-        NativeClass = Class;
-      } else if (NativeClass === Class || Object.prototype.isPrototypeOf.call(Class, NativeClass)) {
-        // NOOP
-      } else {
-        throw new Error(`Can't mix a ${NativeClass.name} with a ${Class.name}`);
-      }
+      NativeClass = findSubclass(NativeClass, Class);
+    }
+
+    if (location) {
+      const base = await Resource.$load(location, {directory});
+      bases.push(base);
+      const Class = base._getNativeClass();
+      NativeClass = findSubclass(NativeClass, Class);
     }
 
     let builders = [];
@@ -172,6 +179,11 @@ export class Resource {
 
     const implementation = getProperty(normalizedDefinition, '@implementation');
     if (implementation) {
+      if (location) {
+        throw new Error(
+          `Can't have both a ${formatCode('@location')} and an ${formatCode('@implementation')}`
+        );
+      }
       const builder = requireImplementation(implementation, {directory});
       if (builder && !builders.includes(builder)) {
         builders.push(builder);
@@ -305,22 +317,21 @@ export class Resource {
     return Boolean(this.$findBase(base => base === resource));
   }
 
-  async $save(directory, {ensureDirectory} = {}) {
+  async $save({directory = this.$getCurrentDirectory(), ensureDirectory} = {}) {
     await this.$emitEvent('before:@save');
 
     if (!this.$isRoot()) {
       throw new Error('Can\'t save a child resource');
     }
 
-    if (directory) {
-      this.$setDirectory(directory);
-    }
+    let file = this.$getResourceFile();
 
-    let file = this.$getFile();
     if (!file) {
-      const directory = this.$getDirectory({throwIfUndefined: true});
+      if (!directory) {
+        throw new Error('Can\'t determine the path of the resource file');
+      }
       file = join(directory, RESOURCE_FILE_NAME + '.' + DEFAULT_RESOURCE_FILE_FORMAT);
-      this.$setFile(file);
+      this.$setResourceFile(file);
     }
 
     let definition = this.$serialize();
@@ -329,7 +340,7 @@ export class Resource {
     }
 
     if (ensureDirectory) {
-      ensureDirSync(this.$getDirectory());
+      ensureDirSync(dirname(file));
     }
 
     saveFile(file, definition, {stringify: true});
@@ -419,28 +430,89 @@ export class Resource {
     return !this.$getParent();
   }
 
-  $getFile() {
-    return this._file;
+  $getResourceFile() {
+    return this._resourceFile;
   }
 
-  $setFile(file) {
-    this._file = file;
-    this._directory = undefined;
+  $setResourceFile(file) {
+    this._resourceFile = file;
   }
 
-  $getDirectory({throwIfUndefined} = {}) {
-    const directory = this._directory || (this.$getFile() && dirname(this.$getFile()));
-    if (!directory && throwIfUndefined) {
-      throw new Error('Resource\'s directory is undefined');
+  $getCurrentDirectory({throwIfUndefined} = {}) {
+    let currentDirectory = this._currentDirectory;
+
+    if (!currentDirectory) {
+      const resourceFile = this.$getResourceFile();
+      if (resourceFile) {
+        currentDirectory = dirname(resourceFile);
+      }
     }
-    return directory;
+
+    const directory = this.$directory;
+
+    if (directory) {
+      if (isAbsolute(directory)) {
+        currentDirectory = directory;
+      }
+    }
+
+    if (!currentDirectory) {
+      if (throwIfUndefined) {
+        throw new Error('Can\'t determine the current directory');
+      }
+      return undefined;
+    }
+
+    if (directory) {
+      currentDirectory = resolve(currentDirectory, directory);
+    }
+
+    return currentDirectory;
   }
 
-  $setDirectory(directory) {
-    if (directory !== this._directory) {
-      this._directory = directory;
-      this._file = undefined;
+  $setCurrentDirectory(directory) {
+    this._currentDirectory = directory;
+  }
+
+  get $types() {
+    return this._types;
+  }
+
+  set $types(types) {
+    if (types !== undefined) {
+      types = Resource.$normalizeTypes(types);
     }
+    this._types = types;
+  }
+
+  static $normalizeTypes(types) {
+    if (types === undefined) {
+      types = [];
+    } else if (typeof types === 'string' || isPlainObject(types)) {
+      types = [types];
+    } else if (!Array.isArray(types)) {
+      throw new Error(`Invalid ${formatCode('@type')} value`);
+    }
+    return types;
+  }
+
+  get $location() {
+    return this._location;
+  }
+
+  set $location(location) {
+    if (!(typeof location === 'string' || isPlainObject(location))) {
+      throw new Error(`Invalid ${formatCode('@location')} value`);
+    }
+    this._location = location;
+  }
+
+  get $directory() {
+    return this._directory;
+  }
+
+  set $directory(directory) {
+    this._directory = directory;
   }
 
   get $name() {
@@ -611,28 +683,6 @@ export class Resource {
     this._license = license;
   }
 
-  get $types() {
-    return this._types;
-  }
-
-  set $types(types) {
-    if (types !== undefined) {
-      types = Resource.$normalizeTypes(types);
-    }
-    this._types = types;
-  }
-
-  static $normalizeTypes(types) {
-    if (types === undefined) {
-      types = [];
-    } else if (typeof types === 'string' || isPlainObject(types)) {
-      types = [types];
-    } else if (!Array.isArray(types)) {
-      throw new Error(`Invalid ${formatCode('@type')} value`);
-    }
-    return types;
-  }
-
   get $runtime() {
     return this._getInheritedValue('_runtime');
   }
@@ -709,7 +759,7 @@ export class Resource {
       return;
     }
     for (let [name, option] of entries(options)) {
-      option = await Resource.$create(option, {name, directory: this.$getDirectory()});
+      option = await Resource.$create(option, {name, directory: this.$getCurrentDirectory()});
       if (this._options === undefined) {
         this._options = [];
       }
@@ -773,7 +823,7 @@ export class Resource {
     const child = await Resource.$create(definition, {
       base,
       name,
-      directory: this.$getDirectory(),
+      directory: this.$getCurrentDirectory(),
       parent: this
     });
 
@@ -923,7 +973,7 @@ export class Resource {
           throw new Error(`A resource already exists in ${formatPath(directory)}`);
         }
 
-        await resource.$save(directory, {ensureDirectory: true});
+        await resource.$save({directory, ensureDirectory: true});
 
         await resource.$broadcastEvent('after:@create');
 
@@ -983,12 +1033,12 @@ export class Resource {
           throw new Error(`Can't publish a resource without a ${formatCode('@version')} property`);
         }
 
-        const resourceFile = this.$getFile();
+        const resourceFile = this.$getResourceFile();
         if (!resourceFile) {
           throw new Error(`Can't publish a resource without a ${formatPath('@resource')} file`);
         }
 
-        const srcDirectory = this.$getDirectory({throwIfUndefined: true});
+        const srcDirectory = this.$getCurrentDirectory({throwIfUndefined: true});
 
         const srcFiles = [resourceFile];
         if (this.$files) {
@@ -1047,6 +1097,14 @@ export class Resource {
     let definition = {};
 
     this._serializeTypes(definition);
+
+    if (this._location !== undefined) {
+      definition['@location'] = this._location;
+    }
+
+    if (this._directory !== undefined) {
+      definition['@directory'] = this._directory;
+    }
 
     if (!omitName && this._name !== undefined) {
       definition['@name'] = this._name;
@@ -1200,6 +1258,15 @@ export class Resource {
     }
     return builders;
   }
+}
+
+function findSubclass(A, B) {
+  if (A === B || Object.prototype.isPrototypeOf.call(B, A)) {
+    return A;
+  } else if (Object.prototype.isPrototypeOf.call(A, B)) {
+    return B;
+  }
+  throw new Error(`Can't mix a ${A.name} with a ${B.name}`);
 }
 
 function getResourceClass(type) {

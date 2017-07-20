@@ -19,9 +19,9 @@
     "source-map-support@^0.4.15",
     "update-notifier@^2.1.0"
   ],
-  "test": {
-    "@type": "macro",
-    "@listen": "after:@test",
-    "@expression": "./tests run"
+  "tests": {
+    "@type": "js/esnext-jest",
+    "@directory": "./tests",
+    "testEnvironment": "node"
   }
 }

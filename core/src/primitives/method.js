@@ -42,7 +42,7 @@ export class MethodResource extends Resource {
       parameters = [parameters];
     }
     for (let parameter of parameters) {
-      parameter = await Resource.$create(parameter, {directory: this.$getDirectory()});
+      parameter = await Resource.$create(parameter, {directory: this.$getCurrentDirectory()});
       if (this._parameters === undefined) {
         this._parameters = [];
       }
@@ -74,7 +74,7 @@ export class MethodResource extends Resource {
     const parent = this.$getParent();
     if (parent) {
       for (const event of events) {
-        this.$getParent().$listenEvent(event, this);
+        parent.$listenEvent(event, this);
       }
     }
 

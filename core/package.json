@@ -1,6 +1,6 @@
 {
   "name": "run-core",
-  "version": "0.10.5",
+  "version": "0.10.6",
   "description": "Resdir resources runner",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",

@@ -330,7 +330,7 @@ describe('Resource', () => {
     });
   });
 
-  test('Resource loaded from a property', async () => {
+  test('Resource imported from a file via a property type', async () => {
     const Company = await Resource.$create(
       {name: {'@type': 'string'}, boss: {'@type': '../fixtures/person'}},
       {directory: __dirname}
@@ -339,6 +339,17 @@ describe('Resource', () => {
     expect(Company.$getChild('boss')).toBeInstanceOf(Resource);
     expect(Company.$getChild('boss').$getChild('name')).toBeInstanceOf(StringResource);
     expect(Company.$getChild('boss').$getChild('age')).toBeInstanceOf(NumberResource);
+  });
+
+  test('Resource loaded from a file via a location', async () => {
+    const person = await Resource.$create(
+      {'@location': '../fixtures/person-instance'},
+      {directory: __dirname}
+    );
+    expect(person.$getChild('name')).toBeInstanceOf(StringResource);
+    expect(person.name).toBe('Manu');
+    expect(person.$getChild('age')).toBeInstanceOf(NumberResource);
+    expect(person.age).toBe(44);
   });
 
   test('multiple inheritance', async () => {
