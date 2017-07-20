@@ -1,26 +1,23 @@
 {
   "@type": "js/esnext-package",
   "name": "run-common",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "Miscellaneous functions used by ⚡run",
   "author": "Manuel Vila <mvila@3base.com>",
   "repository": "https://github.com/resdir/resdir.git",
   "license": "MIT",
-  "files": ["./dist"],
+  "files": [
+    "./dist"
+  ],
   "main": "./dist/index.js",
   "dependencies": [
-    "chalk@^1.1.3",
-    "cli-spinners@^1.0.0",
     "fs-extra@^3.0.1",
     "js-yaml@^3.8.4",
     "json5@^0.5.1",
     "lodash@^4.17.4",
     "node-fetch@^1.7.1",
-    "ora@^1.3.0",
-    "semver@^5.3.0",
-    "slice-ansi@^0.1.0",
-    "strict-uri-encode@^2.0.0",
-    "window-size@^1.1.0"
+    "@resdir/console@^0.1.0",
+    "strict-uri-encode@^2.0.0"
   ],
   "tests": {
     "@type": "js/esnext-jest",

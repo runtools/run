@@ -6,7 +6,7 @@ import nodeVersion from 'node-version';
 import updateNotifier from 'update-notifier';
 import dotenv from 'dotenv';
 import JSON5 from 'json5';
-import {showErrorAndExit} from 'run-common';
+import {showErrorAndExit} from '@resdir/console';
 import {Resource} from 'run-core';
 
 import {run} from '../';

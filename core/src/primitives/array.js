@@ -1,7 +1,7 @@
 import {cloneDeep} from 'lodash';
 import deepFreeze from 'deep-freeze';
 import JSON5 from 'json5';
-import {formatString} from 'run-common';
+import {formatString} from '@resdir/console';
 
 import ValueResource from './value';
 

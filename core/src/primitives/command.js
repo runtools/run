@@ -1,5 +1,5 @@
 import {isPlainObject} from 'lodash';
-import {formatCode} from 'run-common';
+import {formatCode} from '@resdir/console';
 
 import MethodResource from './method';
 

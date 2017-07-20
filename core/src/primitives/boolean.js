@@ -1,4 +1,4 @@
-import {formatString} from 'run-common';
+import {formatString} from '@resdir/console';
 
 import ValueResource from './value';
 

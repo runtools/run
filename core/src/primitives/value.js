@@ -1,5 +1,6 @@
 import {isPlainObject} from 'lodash';
-import {getProperty, addContextToErrors} from 'run-common';
+import {getProperty} from 'run-common';
+import {addContextToErrors} from '@resdir/console';
 
 import Resource from '../resource';
 

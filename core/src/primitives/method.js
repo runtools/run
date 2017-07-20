@@ -1,5 +1,6 @@
 import {compact, isEmpty} from 'lodash';
-import {getProperty, addContextToErrors, formatString, formatCode} from 'run-common';
+import {getProperty} from 'run-common';
+import {addContextToErrors, formatString, formatCode} from '@resdir/console';
 
 import Resource from '../resource';
 

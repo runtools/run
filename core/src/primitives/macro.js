@@ -1,7 +1,8 @@
 import {isEmpty} from 'lodash';
 import {isAbsolute} from 'path';
 import {parse} from 'shell-quote';
-import {getProperty, addContextToErrors, parseCommandLineArguments, formatCode} from 'run-common';
+import {getProperty, parseCommandLineArguments} from 'run-common';
+import {addContextToErrors, formatCode} from '@resdir/console';
 
 import Resource from '../resource';
 import CommandResource from './command';
