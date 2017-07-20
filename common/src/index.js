@@ -200,91 +200,101 @@ export async function task(fn, {intro, outro, debug, verbose, quiet}) {
     throw new TypeError('\'fn\' must be a function');
   }
 
-  let progress;
-
-  if (debug || verbose) {
-    progress = {
-      outro,
-      start() {
-        return this;
-      },
-      complete() {
-        console.log(getSuccessSymbol() + '  ' + this.outro);
-        return this;
-      },
-      fail() {
-        return this;
-      },
-      setMessage(message) {
-        console.log(getRunningSymbol() + '  ' + message);
-        return this;
-      },
-      setOutro(message) {
-        this.outro = message;
-        return this;
-      }
-    };
-  } else if (quiet) {
-    progress = {
-      start() {
-        return this;
-      },
-      complete() {
-        return this;
-      },
-      fail() {
-        return this;
-      },
-      setMessage(_message) {
-        return this;
-      },
-      setOutro(_message) {
-        return this;
-      }
-    };
-  } else {
-    progress = {
-      spinner: ora({
-        spinner: cliSpinners.runner
-      }),
-      outro,
-      start() {
-        this.spinner.start();
-        return this;
-      },
-      complete() {
-        this.spinner.stopAndPersist({
-          text: this.outro,
-          symbol: getSuccessSymbol() + ' '
-        });
-        return this;
-      },
-      fail() {
-        this.spinner.stopAndPersist({
-          symbol: getErrorSymbol() + ' '
-        });
-        return this;
-      },
-      setMessage(message) {
-        this.spinner.text = adjustToWindowWidth(message, {leftMargin: 3});
-        return this;
-      },
-      setOutro(message) {
-        this.outro = message;
-        return this;
-      }
-    };
-  }
-
-  progress.setMessage(intro).start();
-
   try {
-    const result = await fn(progress);
-    progress.complete();
-    return result;
-  } catch (err) {
-    progress.fail();
-    throw err;
+    if (global.runCommonTaskCount === undefined) {
+      global.runCommonTaskCount = 0;
+    }
+
+    global.runCommonTaskCount++;
+
+    let progress;
+
+    if (quiet || global.runCommonTaskCount > 1) {
+      progress = {
+        start() {
+          return this;
+        },
+        complete() {
+          return this;
+        },
+        fail() {
+          return this;
+        },
+        setMessage(_message) {
+          return this;
+        },
+        setOutro(_message) {
+          return this;
+        }
+      };
+    } else if (debug || verbose) {
+      progress = {
+        outro,
+        start() {
+          return this;
+        },
+        complete() {
+          console.log(getSuccessSymbol() + '  ' + this.outro);
+          return this;
+        },
+        fail() {
+          return this;
+        },
+        setMessage(message) {
+          console.log(getRunningSymbol() + '  ' + message);
+          return this;
+        },
+        setOutro(message) {
+          this.outro = message;
+          return this;
+        }
+      };
+    } else {
+      progress = {
+        spinner: ora({
+          spinner: cliSpinners.runner
+        }),
+        outro,
+        start() {
+          this.spinner.start();
+          return this;
+        },
+        complete() {
+          this.spinner.stopAndPersist({
+            text: this.outro,
+            symbol: getSuccessSymbol() + ' '
+          });
+          return this;
+        },
+        fail() {
+          this.spinner.stopAndPersist({
+            symbol: getErrorSymbol() + ' '
+          });
+          return this;
+        },
+        setMessage(message) {
+          this.spinner.text = adjustToWindowWidth(message, {leftMargin: 3});
+          return this;
+        },
+        setOutro(message) {
+          this.outro = message;
+          return this;
+        }
+      };
+    }
+
+    progress.setMessage(intro).start();
+
+    try {
+      const result = await fn(progress);
+      progress.complete();
+      return result;
+    } catch (err) {
+      progress.fail();
+      throw err;
+    }
+  } finally {
+    global.runCommonTaskCount--;
   }
 }
 

@@ -99,7 +99,7 @@ export class Resource {
       const exportDefinition = getProperty(definition, '@export', ['@exports']);
       if (exportDefinition !== undefined) {
         const resource = await this.constructor.$create(exportDefinition, {
-          directory: this.$getCurrentDirectory()
+          directory: this.$getCurrentDirectory({throwIfUndefined: false})
         });
         this.$setExport(resource);
       }
@@ -317,7 +317,7 @@ export class Resource {
     return Boolean(this.$findBase(base => base === resource));
   }
 
-  async $save({directory = this.$getCurrentDirectory(), ensureDirectory} = {}) {
+  async $save({directory, ensureDirectory} = {}) {
     await this.$emitEvent('before:@save');
 
     if (!this.$isRoot()) {
@@ -327,6 +327,9 @@ export class Resource {
     let file = this.$getResourceFile();
 
     if (!file) {
+      if (!directory) {
+        directory = this.$getCurrentDirectory({throwIfUndefined: false});
+      }
       if (!directory) {
         throw new Error('Can\'t determine the path of the resource file');
       }
@@ -438,7 +441,7 @@ export class Resource {
     this._resourceFile = file;
   }
 
-  $getCurrentDirectory({throwIfUndefined} = {}) {
+  $getCurrentDirectory({throwIfUndefined = true} = {}) {
     let currentDirectory = this._currentDirectory;
 
     if (!currentDirectory) {
@@ -759,7 +762,10 @@ export class Resource {
       return;
     }
     for (let [name, option] of entries(options)) {
-      option = await Resource.$create(option, {name, directory: this.$getCurrentDirectory()});
+      option = await Resource.$create(option, {
+        name,
+        directory: this.$getCurrentDirectory({throwIfUndefined: false})
+      });
       if (this._options === undefined) {
         this._options = [];
       }
@@ -823,7 +829,7 @@ export class Resource {
     const child = await Resource.$create(definition, {
       base,
       name,
-      directory: this.$getCurrentDirectory(),
+      directory: this.$getCurrentDirectory({throwIfUndefined: false}),
       parent: this
     });
 
@@ -1038,7 +1044,7 @@ export class Resource {
           throw new Error(`Can't publish a resource without a ${formatPath('@resource')} file`);
         }
 
-        const srcDirectory = this.$getCurrentDirectory({throwIfUndefined: true});
+        const srcDirectory = this.$getCurrentDirectory();
 
         const srcFiles = [resourceFile];
         if (this.$files) {

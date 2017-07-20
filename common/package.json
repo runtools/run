@@ -1,10 +1,12 @@
 {
   "name": "run-common",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "Miscellaneous functions used by ⚡run",
   "author": "Manuel Vila <mvila@3base.com>",
   "license": "MIT",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "main": "dist",
   "repository": "https://github.com/resdir/resdir.git",
   "dependencies": {

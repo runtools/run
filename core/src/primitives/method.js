@@ -42,7 +42,9 @@ export class MethodResource extends Resource {
       parameters = [parameters];
     }
     for (let parameter of parameters) {
-      parameter = await Resource.$create(parameter, {directory: this.$getCurrentDirectory()});
+      parameter = await Resource.$create(parameter, {
+        directory: this.$getCurrentDirectory({throwIfUndefined: false})
+      });
       if (this._parameters === undefined) {
         this._parameters = [];
       }
