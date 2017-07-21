@@ -84,7 +84,7 @@ export class Resource {
         if (name.startsWith('@')) {
           continue;
         }
-        await this.$setChild(name, definition[name], {ignoreAliases: true});
+        await this.$setChild(name, definition[name]);
       }
 
       const exportDefinition = getProperty(definition, '@export', ['@exports']);
@@ -347,7 +347,7 @@ export class Resource {
   async _inherit(base) {
     this._bases.push(base);
     await base.$forEachChildAsync(async child => {
-      await this.$setChild(child.$name, undefined, {ignoreAliases: true});
+      await this.$setChild(child.$name, undefined);
     });
   }
 
@@ -795,10 +795,10 @@ export class Resource {
     }
   }
 
-  $getChild(name, {ignoreAliases} = {}) {
+  $getChild(name) {
     let result;
     this.$forEachChild(child => {
-      if (child.$isMatching(name, {ignoreAliases})) {
+      if (child.$name === name) {
         result = child;
         return false;
       }
@@ -806,10 +806,21 @@ export class Resource {
     return result;
   }
 
-  $getChildFromBases(name, {ignoreAliases} = {}) {
+  $findChild(name) {
+    let result;
+    this.$forEachChild(child => {
+      if (child.$name === name || child.$hasAlias(name)) {
+        result = child;
+        return false;
+      }
+    });
+    return result;
+  }
+
+  $getChildFromBases(name) {
     let result;
     this.$forEachBase(base => {
-      result = base.$getChild(name, {ignoreAliases});
+      result = base.$getChild(name);
       if (result) {
         return false;
       }
@@ -817,10 +828,10 @@ export class Resource {
     return result;
   }
 
-  async $setChild(name, definition, {ignoreAliases} = {}) {
-    const removedChildIndex = this.$removeChild(name, {ignoreAliases});
+  async $setChild(name, definition) {
+    const removedChildIndex = this.$removeChild(name);
 
-    const base = this.$getChildFromBases(name, {ignoreAliases});
+    const base = this.$getChildFromBases(name);
     const child = await Resource.$create(definition, {
       base,
       name,
@@ -853,10 +864,10 @@ export class Resource {
     });
   }
 
-  $removeChild(name, {ignoreAliases} = {}) {
+  $removeChild(name) {
     let result;
     this.$forEachChild((child, index) => {
-      if (child.$isMatching(name, {ignoreAliases})) {
+      if (child.$name === name) {
         this._children.splice(index, 1);
         result = index;
         return false;
@@ -885,7 +896,7 @@ export class Resource {
       throw new Error('Can\'t set a child without a \'@name\'');
     }
 
-    return parent.$setChild(name, value, {ignoreAliases: true});
+    return parent.$setChild(name, value);
   }
 
   $autoUnbox() {
@@ -911,7 +922,7 @@ export class Resource {
       return await this[name](...expression.arguments, expression.options);
     }
 
-    const child = this.$getChild(name);
+    const child = this.$findChild(name);
     if (!child) {
       throw new Error(`Child not found: ${formatCode(name)}`);
     }
