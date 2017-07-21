@@ -908,7 +908,7 @@ export class Resource {
     }
 
     if (BUILTIN_COMMANDS.includes(name)) {
-      return await this[name](...expression.arguments);
+      return await this[name](...expression.arguments, expression.options);
     }
 
     const child = this.$getChild(name);
@@ -929,7 +929,7 @@ export class Resource {
     this._listeners[event].push(method);
   }
 
-  async $emitEvent(event, ...args) {
+  async $emitEvent(event, args, {parseArguments} = {}) {
     const methods = [];
     this.$forSelfAndEachBase(
       resource => {
@@ -940,20 +940,20 @@ export class Resource {
       {deepSearch: true}
     );
     for (const method of methods) {
-      const fn = method.$getFunction();
+      const fn = method.$getFunction({parseArguments});
       await fn.apply(this, args);
     }
   }
 
-  async $broadcastEvent(event, ...args) {
-    await this.$emitEvent(event, ...args);
+  async $broadcastEvent(event, args, {parseArguments} = {}) {
+    await this.$emitEvent(event, args, {parseArguments});
     await this.$forEachChildAsync(async child => {
-      await child.$broadcastEvent(event, ...args);
+      await child.$broadcastEvent(event, args, {parseArguments});
     });
   }
 
-  async '@create'(name) {
-    if (!name) {
+  async '@create'(name, options) {
+    if (!name || typeof name !== 'string') {
       throw new Error(`${formatCode('name')} argument is missing`);
     }
 
@@ -965,7 +965,7 @@ export class Resource {
           '@version': '0.1.0'
         });
 
-        await resource.$broadcastEvent('before:@create');
+        await resource.$broadcastEvent('before:@create', [name, options], {parseArguments: true});
 
         const directory = join(process.cwd(), resource.$getIdentifier());
 
@@ -976,7 +976,7 @@ export class Resource {
 
         await resource.$save({directory, ensureDirectory: true});
 
-        await resource.$broadcastEvent('after:@create');
+        await resource.$broadcastEvent('after:@create', [name, options], {parseArguments: true});
 
         return resource;
       },
@@ -989,32 +989,28 @@ export class Resource {
     return resource;
   }
 
-  async '@install'() {
-    await this.$broadcastEvent('before:@install');
-    // NOOP
-    await this.$broadcastEvent('after:@install');
+  async '@install'(...args) {
+    await this.$broadcastEvent('before:@install', args, {parseArguments: true});
+    await this.$broadcastEvent('after:@install', args, {parseArguments: true});
   }
 
-  async '@build'() {
-    await this.$broadcastEvent('before:@build');
-    // NOOP
-    await this.$broadcastEvent('after:@build');
+  async '@build'(...args) {
+    await this.$broadcastEvent('before:@build', args, {parseArguments: true});
+    await this.$broadcastEvent('after:@build', args, {parseArguments: true});
   }
 
-  async '@lint'() {
-    await this.$broadcastEvent('before:@lint');
-    // NOOP
-    await this.$broadcastEvent('after:@lint');
+  async '@lint'(...args) {
+    await this.$broadcastEvent('before:@lint', args, {parseArguments: true});
+    await this.$broadcastEvent('after:@lint', args, {parseArguments: true});
   }
 
-  async '@test'() {
-    await this.$broadcastEvent('before:@test');
-    // NOOP
-    await this.$broadcastEvent('after:@test');
+  async '@test'(...args) {
+    await this.$broadcastEvent('before:@test', args, {parseArguments: true});
+    await this.$broadcastEvent('after:@test', args, {parseArguments: true});
   }
 
-  async '@publish'() {
-    await this.$emitEvent('before:@publish'); // TODO: should use $broadcastEvent?
+  async '@publish'(...args) {
+    await this.$emitEvent('before:@publish', args, {parseArguments: true}); // TODO: should use $broadcastEvent?
 
     const name = this.$name;
     if (!name) {
@@ -1076,15 +1072,15 @@ export class Resource {
       }
     );
 
-    await this.$emitEvent('after:@publish'); // TODO: should use $broadcastEvent?
+    await this.$emitEvent('after:@publish', args, {parseArguments: true}); // TODO: should use $broadcastEvent?
   }
 
   async '@emitEvent'(event, ...args) {
-    return await this.$emitEvent(event, ...args);
+    return await this.$emitEvent(event, args, {parseArguments: true});
   }
 
   async '@broadcastEvent'(event, ...args) {
-    return await this.$broadcastEvent(event, ...args);
+    return await this.$broadcastEvent(event, args, {parseArguments: true});
   }
 
   static $normalize(definition, _options) {

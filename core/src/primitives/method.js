@@ -161,7 +161,7 @@ export class MethodResource extends Resource {
     const variadic = this.$variadic;
     for (const parameter of parameters) {
       if (variadic && parameter === lastParameter) {
-        const lastArguments = this._shiftLastArguments(remainingArguments);
+        const lastArguments = this._shiftVariadicArguments(remainingArguments);
         for (const argument of lastArguments) {
           const normalizedArgument = (await parameter.$extend(argument, {parse})).$autoUnbox();
           normalizedArguments.push(normalizedArgument);
@@ -176,7 +176,7 @@ export class MethodResource extends Resource {
     return {normalizedArguments, remainingArguments};
   }
 
-  _shiftLastArguments(args) {
+  _shiftVariadicArguments(args) {
     // In the case of a MethodResource, return every arguments
     // See CommandResource for a more useful implementation
     const lastArguments = [];

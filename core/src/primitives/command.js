@@ -1,20 +1,31 @@
-import {isPlainObject} from 'lodash';
+import {isPlainObject, last} from 'lodash';
 import {formatCode} from '@resdir/console';
 
 import MethodResource from './method';
 
 export class CommandResource extends MethodResource {
   async _normalizeArguments(args, {parse}) {
+    let optionsArgument;
+
+    if (parse && isPlainObject(last(args))) {
+      optionsArgument = args.pop();
+    }
+
     const {normalizedArguments, remainingArguments} = await super._normalizeArguments(args, {
       parse
     });
 
     const normalizedOptions = {};
 
-    let optionsArgument = remainingArguments.shift();
+    if (optionsArgument === undefined) {
+      optionsArgument = remainingArguments.shift();
+    }
+
     if (optionsArgument === undefined) {
       optionsArgument = {};
-    } else if (!isPlainObject(optionsArgument)) {
+    }
+
+    if (!isPlainObject(optionsArgument)) {
       throw new Error(
         `Invalid argument type. The ${formatCode('options')} argument should be a plain Object.`
       );
@@ -57,7 +68,7 @@ export class CommandResource extends MethodResource {
     return {normalizedArguments, remainingArguments};
   }
 
-  _shiftLastArguments(args) {
+  _shiftVariadicArguments(args) {
     // Get arguments before options
     const lastArguments = [];
     while (args.length) {
