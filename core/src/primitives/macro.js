@@ -69,11 +69,11 @@ export class MacroResource extends CommandResource {
         }
 
         if (variable.startsWith('@options.')) {
-          const name = variable.slice('@options.'.length);
-          if (!(name in expression.options)) {
-            throw new Error(`Invalid option name found in a macro variable: ${formatCode(name)}`);
+          const key = variable.slice('@options.'.length);
+          if (!(key in expression.options)) {
+            throw new Error(`Invalid option name found in a macro variable: ${formatCode(key)}`);
           }
-          return String(expression.options[name]);
+          return String(expression.options[key]);
         }
 
         throw new Error(`Invalid macro variable: ${formatCode(variable)}`);

@@ -42,9 +42,9 @@ export class MethodResource extends Resource {
     if (!isPlainObject(parameters)) {
       throw new Error(`${formatCode('@parameters')} property must be an object`);
     }
-    for (const [name, definition] of entries(parameters)) {
+    for (const [key, definition] of entries(parameters)) {
       const parameter = await Resource.$create(definition, {
-        name,
+        key,
         directory: this.$getCurrentDirectory({throwIfUndefined: false})
       });
       if (this._parameters === undefined) {
@@ -129,12 +129,12 @@ export class MethodResource extends Resource {
         parse: parseArguments
       });
       if (remainingArguments.length) {
-        throw new Error(`Too many arguments passed to ${formatCode(methodResource.$name)}`);
+        throw new Error(`Too many arguments passed to ${formatCode(methodResource.$getKey())}`);
       }
 
       const implementation = methodResource._getImplementation();
       if (!implementation) {
-        throw new Error(`Can't find implementation for ${formatCode(methodResource.$name)}`);
+        throw new Error(`Can't find implementation for ${formatCode(methodResource.$getKey())}`);
       }
 
       const emittedEvents = methodResource.$getEmittedEvents();
@@ -195,7 +195,7 @@ export class MethodResource extends Resource {
       parent.$forSelfAndEachBase(
         resource => {
           const proto = resource.constructor.prototype;
-          implementation = proto[this.$name];
+          implementation = proto[this.$getKey()];
           if (implementation) {
             return false;
           }
@@ -223,9 +223,9 @@ export class MethodResource extends Resource {
       const serializedParameters = {};
       let count = 0;
       for (const parameter of parameters) {
-        const parameterDefinition = parameter.$serialize({omitName: true});
+        const parameterDefinition = parameter.$serialize();
         if (parameterDefinition !== undefined) {
-          serializedParameters[parameter.$name] = parameterDefinition;
+          serializedParameters[parameter.$getKey()] = parameterDefinition;
           count++;
         }
       }

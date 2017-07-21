@@ -40,7 +40,7 @@ export class CommandResource extends MethodResource {
       const resourceOptions = resource.$getOptions && resource.$getOptions();
       if (resourceOptions) {
         for (const newOption of resourceOptions) {
-          if (!options.find(option => option.$name === newOption.$name)) {
+          if (!options.find(option => option.$getKey() === newOption.$getKey())) {
             options.push(newOption);
           }
         }
@@ -50,19 +50,19 @@ export class CommandResource extends MethodResource {
 
     for (const option of options) {
       const {key, value} =
-        getPropertyKeyAndValue(remainingOptions, option.$name, option.$aliases) || {};
+        getPropertyKeyAndValue(remainingOptions, option.$getKey(), option.$aliases) || {};
       if (key !== undefined) {
         delete remainingOptions[key];
       }
       const normalizedValue = (await option.$extend(value, {parse})).$autoUnbox();
       if (normalizedValue !== undefined) {
-        normalizedOptions[option.$name] = normalizedValue;
+        normalizedOptions[option.$getKey()] = normalizedValue;
       }
     }
 
-    const remainingOptionNames = Object.keys(remainingOptions);
-    if (remainingOptionNames.length) {
-      throw new Error(`Invalid command option: ${formatCode(remainingOptionNames[0])}.`);
+    const remainingOptionKeys = Object.keys(remainingOptions);
+    if (remainingOptionKeys.length) {
+      throw new Error(`Invalid command option: ${formatCode(remainingOptionKeys[0])}.`);
     }
 
     normalizedArguments.push(normalizedOptions);

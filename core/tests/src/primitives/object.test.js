@@ -14,7 +14,7 @@ describe('ObjectResource', () => {
       '@name': 'abc',
       '@xyz': 123
     });
-    await expect(ObjectResource.$create({$value: 'hello'})).rejects.toBeInstanceOf(Error);
+    await expect(ObjectResource.$create({'@value': 'hello'})).rejects.toBeInstanceOf(Error);
   });
 
   test('immutability', async () => {

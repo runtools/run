@@ -32,19 +32,22 @@ const BUILTIN_COMMANDS = [
 ];
 
 export class Resource {
-  async $construct(definition = {}, {bases = [], parent, name, directory, file} = {}) {
+  async $construct(definition = {}, {bases = [], parent, key, directory, file} = {}) {
     await addContextToErrors(async () => {
       if (parent !== undefined) {
         this.$setParent(parent);
       }
+
+      if (key !== undefined) {
+        this.$setKey(key);
+      }
+
       if (directory !== undefined) {
         this.$setCurrentDirectory(directory);
       }
+
       if (file !== undefined) {
         this.$setResourceFile(file);
-      }
-      if (name !== undefined) {
-        this.$name = name;
       }
 
       const set = (target, source, aliases) => {
@@ -80,11 +83,11 @@ export class Resource {
         await this._inherit(base);
       }
 
-      for (const name of Object.keys(definition)) {
-        if (name.startsWith('@')) {
+      for (const key of Object.keys(definition)) {
+        if (key.startsWith('@')) {
           continue;
         }
-        await this.$setChild(name, definition[name]);
+        await this.$setChild(key, definition[key]);
       }
 
       const exportDefinition = getProperty(definition, '@export', ['@exports']);
@@ -99,7 +102,7 @@ export class Resource {
 
   static async $create(
     definition = {},
-    {base, parent, name, directory, file, importing, parse} = {}
+    {base, parent, key, directory, file, importing, parse} = {}
   ) {
     let normalizedDefinition;
     if (isPlainObject(definition)) {
@@ -193,7 +196,7 @@ export class Resource {
     await resource.$construct(normalizedDefinition, {
       bases,
       parent,
-      name,
+      key,
       directory,
       file,
       parse
@@ -347,7 +350,7 @@ export class Resource {
   async _inherit(base) {
     this._bases.push(base);
     await base.$forEachChildAsync(async child => {
-      await this.$setChild(child.$name, undefined);
+      await this.$setChild(child.$getKey(), undefined);
     });
   }
 
@@ -387,12 +390,12 @@ export class Resource {
     return result;
   }
 
-  _getInheritedValue(name) {
+  _getInheritedValue(key) {
     let result;
     this.$forSelfAndEachBase(
       resource => {
-        if (name in resource) {
-          result = resource[name];
+        if (key in resource) {
+          result = resource[key];
           return false;
         }
       },
@@ -407,6 +410,14 @@ export class Resource {
 
   $setParent(parent) {
     this._parent = parent;
+  }
+
+  $getKey() {
+    return this._key;
+  }
+
+  $setKey(key) {
+    this._key = key;
   }
 
   $getRoot() {
@@ -744,9 +755,9 @@ export class Resource {
     if (options === undefined) {
       return;
     }
-    for (const [name, definition] of entries(options)) {
+    for (const [key, definition] of entries(options)) {
       const option = await Resource.$create(definition, {
-        name,
+        key,
         directory: this.$getCurrentDirectory({throwIfUndefined: false})
       });
       if (this._options === undefined) {
@@ -787,10 +798,10 @@ export class Resource {
     }
   }
 
-  $getChild(name) {
+  $getChild(key) {
     let result;
     this.$forEachChild(child => {
-      if (child.$name === name) {
+      if (child.$getKey() === key) {
         result = child;
         return false;
       }
@@ -798,10 +809,10 @@ export class Resource {
     return result;
   }
 
-  $findChild(name) {
+  $findChild(key) {
     let result;
     this.$forEachChild(child => {
-      if (child.$name === name || child.$hasAlias(name)) {
+      if (child.$getKey() === key || child.$hasAlias(key)) {
         result = child;
         return false;
       }
@@ -809,10 +820,10 @@ export class Resource {
     return result;
   }
 
-  $getChildFromBases(name) {
+  $getChildFromBases(key) {
     let result;
     this.$forEachBase(base => {
-      result = base.$getChild(name);
+      result = base.$getChild(key);
       if (result) {
         return false;
       }
@@ -820,13 +831,13 @@ export class Resource {
     return result;
   }
 
-  async $setChild(name, definition) {
-    const removedChildIndex = this.$removeChild(name);
+  async $setChild(key, definition) {
+    const removedChildIndex = this.$removeChild(key);
 
-    const base = this.$getChildFromBases(name);
+    const base = this.$getChildFromBases(key);
     const child = await Resource.$create(definition, {
       base,
-      name,
+      key,
       directory: this.$getCurrentDirectory({throwIfUndefined: false}),
       parent: this
     });
@@ -838,7 +849,7 @@ export class Resource {
       this._children.push(child);
     }
 
-    Object.defineProperty(this, name, {
+    Object.defineProperty(this, key, {
       get() {
         return child.$autoUnbox();
       },
@@ -847,7 +858,7 @@ export class Resource {
         if (promise) {
           throw new Error(
             `Can't change ${formatCode(
-              name
+              key
             )} synchronously with a property setter. Please use the $setChild() asynchronous method.`
           );
         }
@@ -856,10 +867,10 @@ export class Resource {
     });
   }
 
-  $removeChild(name) {
+  $removeChild(key) {
     let result;
     this.$forEachChild((child, index) => {
-      if (child.$name === name) {
+      if (child.$getKey() === key) {
         this._children.splice(index, 1);
         result = index;
         return false;
@@ -883,12 +894,12 @@ export class Resource {
       throw new Error('Can\'t set a child without a parent');
     }
 
-    const name = this.$name;
-    if (!name) {
-      throw new Error('Can\'t set a child without a \'@name\'');
+    const key = this.$getKey();
+    if (!key) {
+      throw new Error('Can\'t set a child without a key');
     }
 
-    return parent.$setChild(name, value);
+    return parent.$setChild(key, value);
   }
 
   $autoUnbox() {
@@ -905,18 +916,18 @@ export class Resource {
 
   async $invoke(expression = {arguments: [], options: {}}, {_parent} = {}) {
     expression = {...expression, arguments: [...expression.arguments]};
-    const name = expression.arguments.shift();
-    if (!name) {
+    const key = expression.arguments.shift();
+    if (!key) {
       return this;
     }
 
-    if (BUILTIN_COMMANDS.includes(name)) {
-      return await this[name](...expression.arguments, expression.options);
+    if (BUILTIN_COMMANDS.includes(key)) {
+      return await this[key](...expression.arguments, expression.options);
     }
 
-    const child = this.$findChild(name);
+    const child = this.$findChild(key);
     if (!child) {
-      throw new Error(`Child not found: ${formatCode(name)}`);
+      throw new Error(`Child not found: ${formatCode(key)}`);
     }
 
     return await child.$invoke(expression, {parent: this});
@@ -1093,7 +1104,7 @@ export class Resource {
     return definition;
   }
 
-  $serialize({omitName} = {}) {
+  $serialize(_options) {
     let definition = {};
 
     this._serializeTypes(definition);
@@ -1106,7 +1117,7 @@ export class Resource {
       definition['@directory'] = this._directory;
     }
 
-    if (!omitName && this._name !== undefined) {
+    if (this._name !== undefined) {
       definition['@name'] = this._name;
     }
 
@@ -1207,9 +1218,9 @@ export class Resource {
       const serializedOptions = {};
       let count = 0;
       for (const option of options) {
-        const serializedOption = option.$serialize({omitName: true});
+        const serializedOption = option.$serialize();
         if (serializedOption !== undefined) {
-          serializedOptions[option.$name] = serializedOption;
+          serializedOptions[option.$getKey()] = serializedOption;
           count++;
         }
       }
@@ -1223,10 +1234,9 @@ export class Resource {
 
   _serializeChildren(definition) {
     this.$forEachChild(child => {
-      const childDefinition = child.$serialize({omitName: true});
+      const childDefinition = child.$serialize();
       if (childDefinition !== undefined) {
-        const name = child.$name;
-        definition[name] = childDefinition;
+        definition[child.$getKey()] = childDefinition;
       }
     });
   }

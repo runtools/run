@@ -12,9 +12,9 @@ describe('MethodResource', () => {
     const parameters = method.$getParameters();
     expect(parameters).toHaveLength(2);
     expect(parameters[0]).toBeInstanceOf(StringResource);
-    expect(parameters[0].$name).toBe('name');
+    expect(parameters[0].$getKey()).toBe('name');
     expect(parameters[1]).toBeInstanceOf(NumberResource);
-    expect(parameters[1].$name).toBe('age');
+    expect(parameters[1].$getKey()).toBe('age');
 
     method = await MethodResource.$create({
       '@parameter': {args: {'@type': 'string'}},

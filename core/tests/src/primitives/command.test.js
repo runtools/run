@@ -12,9 +12,9 @@ describe('CommandResource', () => {
     const options = command.$getOptions();
     expect(options).toHaveLength(2);
     expect(options[0]).toBeInstanceOf(StringResource);
-    expect(options[0].$name).toBe('name');
+    expect(options[0].$getKey()).toBe('name');
     expect(options[1]).toBeInstanceOf(NumberResource);
-    expect(options[1].$name).toBe('age');
+    expect(options[1].$getKey()).toBe('age');
   });
 
   test('invocation', async () => {
