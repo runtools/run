@@ -1,4 +1,4 @@
-import {compact, isEmpty} from 'lodash';
+import {isEmpty, isPlainObject, entries} from 'lodash';
 import {getProperty} from 'run-common';
 import {addContextToErrors, formatString, formatCode} from '@resdir/console';
 
@@ -39,11 +39,12 @@ export class MethodResource extends Resource {
     if (parameters === undefined) {
       return;
     }
-    if (!Array.isArray(parameters)) {
-      parameters = [parameters];
+    if (!isPlainObject(parameters)) {
+      throw new Error(`${formatCode('@parameters')} property must be an object`);
     }
-    for (let parameter of parameters) {
-      parameter = await Resource.$create(parameter, {
+    for (const [name, definition] of entries(parameters)) {
+      const parameter = await Resource.$create(definition, {
+        name,
         directory: this.$getCurrentDirectory({throwIfUndefined: false})
       });
       if (this._parameters === undefined) {
@@ -217,14 +218,21 @@ export class MethodResource extends Resource {
       definition = {};
     }
 
-    let parameters = this._parameters;
+    const parameters = this._parameters;
     if (parameters) {
-      parameters = parameters.map(parameter => parameter.$serialize());
-      parameters = compact(parameters);
-      if (parameters.length === 1) {
-        definition['@parameter'] = parameters[0];
-      } else if (parameters.length > 1) {
-        definition['@parameters'] = parameters;
+      const serializedParameters = {};
+      let count = 0;
+      for (const parameter of parameters) {
+        const parameterDefinition = parameter.$serialize({omitName: true});
+        if (parameterDefinition !== undefined) {
+          serializedParameters[parameter.$name] = parameterDefinition;
+          count++;
+        }
+      }
+      if (count === 1) {
+        definition['@parameter'] = serializedParameters;
+      } else if (count > 1) {
+        definition['@parameters'] = serializedParameters;
       }
     }
 

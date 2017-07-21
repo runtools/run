@@ -752,8 +752,8 @@ export class Resource {
     if (options === undefined) {
       return;
     }
-    for (let [name, option] of entries(options)) {
-      option = await Resource.$create(option, {
+    for (const [name, definition] of entries(options)) {
+      const option = await Resource.$create(definition, {
         name,
         directory: this.$getCurrentDirectory({throwIfUndefined: false})
       });

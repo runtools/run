@@ -9,7 +9,9 @@
     "@options": {"shout": false},
     "formatGreetingMethod": {
       "@type": "method",
-      "@parameters": ["Hello"]
+      "@parameter": {
+        "verb": "Hello"
+      }
     },
     "formatGreetingCommand": {
       "@type": "command",
@@ -22,18 +24,24 @@
     },
     "formatWordsMethod": {
       "@type": "method",
-      "@parameters": [{"@type": "string"}],
+      "@parameter": {
+        "words": {"@type": "string"}
+      },
       "@variadic": true
     },
     "formatWordsCommand": {
       "@type": "command",
-      "@parameters": [{"@type": "string"}],
+      "@parameter": {
+        "words": {"@type": "string"}
+      },
       "@variadic": true,
       "@options": {"capitalize": true}
     },
     "formatWordsMacro": {
       "@type": "macro",
-      "@parameters": [{"@name": "word", "@type": "string"}],
+      "@parameter": {
+        "words": {"@type": "string"}
+      },
       "@variadic": true,
       "@options": {"capitalize": true},
       "@expression": "formatWordsCommand ${@arguments[0]} --capitalize=${@options.capitalize}"
