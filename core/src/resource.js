@@ -4,7 +4,7 @@ import {homedir} from 'os';
 import {isPlainObject, entries, isEmpty, union} from 'lodash';
 import isDirectory from 'is-directory';
 import {copy, ensureDirSync, emptyDir, remove} from 'fs-extra';
-import {getProperty, getPropertyKeyAndValue, loadFile, saveFile} from 'run-common';
+import {getProperty, loadFile, saveFile} from 'run-common';
 import {addContextToErrors, task, formatString, formatPath, formatCode} from '@resdir/console';
 import {installPackage, PACKAGE_FILENAME} from '@resdir/package-manager';
 import Version from '@resdir/version';
@@ -621,14 +621,6 @@ export class Resource {
   $hasAlias(alias) {
     const aliases = this.$aliases;
     return Boolean(aliases && aliases.has(alias));
-  }
-
-  $isMatching(name, {ignoreAliases} = {}) {
-    return this.$name === name || (!ignoreAliases && this.$hasAlias(name));
-  }
-
-  $match(object) {
-    return getPropertyKeyAndValue(object, this.$name, this.$aliases);
   }
 
   get $version() {

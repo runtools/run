@@ -1,4 +1,5 @@
 import {isPlainObject, last} from 'lodash';
+import {getPropertyKeyAndValue} from 'run-common';
 import {formatCode} from '@resdir/console';
 
 import MethodResource from './method';
@@ -48,7 +49,8 @@ export class CommandResource extends MethodResource {
     }
 
     for (const option of options) {
-      const {key, value} = option.$match(remainingOptions) || {};
+      const {key, value} =
+        getPropertyKeyAndValue(remainingOptions, option.$name, option.$aliases) || {};
       if (key !== undefined) {
         delete remainingOptions[key];
       }

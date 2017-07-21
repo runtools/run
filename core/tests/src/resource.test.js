@@ -76,14 +76,6 @@ describe('Resource', () => {
     expect(res.$hasAlias('bonjour')).toBe(true);
   });
 
-  test('matching by @name or @aliases', async () => {
-    const res = await Resource.$create({'@name': 'hello', '@aliases': ['hi', 'bonjour']});
-    expect(res.$isMatching('hello')).toBe(true);
-    expect(res.$isMatching('hi')).toBe(true);
-    expect(res.$isMatching('bonjour')).toBe(true);
-    expect(res.$isMatching('bye')).toBe(false);
-  });
-
   test('@version', async () => {
     expect((await Resource.$create()).$version).toBeUndefined();
     expect((await Resource.$create({'@version': '1.2.3'})).$version.toString()).toBe('1.2.3');
