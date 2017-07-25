@@ -1,12 +1,18 @@
-import {join} from 'path';
-import {readFileSync, statSync} from 'fs';
-import {outputFile} from 'fs-extra';
-import {tmpdir} from 'os';
 import crypto from 'crypto';
-import {pick, entries, cloneDeepWith} from 'lodash';
-import fetch from 'node-fetch';
-import strictUriEncode from 'strict-uri-encode';
+import {entries, cloneDeepWith} from 'lodash';
 import {formatCode} from '@resdir/console';
+
+export function getProperty(source, name, aliases) {
+  const result = getPropertyKeyAndValue(source, name, aliases);
+  return result && result.value;
+}
+
+export function setProperty(target, source, name, aliases) {
+  const result = getPropertyKeyAndValue(source, name, aliases);
+  if (result) {
+    target[name] = result.value;
+  }
+}
 
 export function getPropertyKeyAndValue(source, name, aliases = []) {
   if (source === undefined) {
@@ -27,66 +33,10 @@ export function getPropertyKeyAndValue(source, name, aliases = []) {
   return result;
 }
 
-export function getProperty(source, name, aliases) {
-  const result = getPropertyKeyAndValue(source, name, aliases);
-  return result && result.value;
-}
-
-export function setProperty(target, source, name, aliases) {
-  const result = getPropertyKeyAndValue(source, name, aliases);
-  if (result) {
-    target[name] = result.value;
-  }
-}
-
 export function generateHash(data, algorithm = 'sha256') {
   const hash = crypto.createHash(algorithm);
   hash.update(data);
   return hash.digest('hex');
-}
-
-export async function fetchJSON(url, options = {}) {
-  if (typeof url !== 'string') {
-    throw new TypeError('\'url\' must be a string');
-  }
-
-  let cacheFile;
-
-  if (options.cacheTime) {
-    const cacheDir = join(tmpdir(), 'run-common', 'cache');
-    cacheFile = join(cacheDir, strictUriEncode(url));
-
-    let stats;
-    try {
-      stats = statSync(cacheFile);
-    } catch (err) {
-      /* File is missing */
-    }
-    if (stats && Date.now() - stats.mtime.getTime() < options.cacheTime) {
-      const result = JSON.parse(readFileSync(cacheFile, 'utf8'));
-      return result;
-    }
-  }
-
-  const opts = {
-    headers: {Accept: 'application/json'}
-  };
-  Object.assign(opts, pick(options, ['method', 'headers', 'timeout']));
-
-  const response = await fetch(url, opts);
-  if (response.status !== 200) {
-    const error = new Error(`Unexpected ${response.status} HTTP status`);
-    error.httpStatus = response.status;
-    throw error;
-  }
-
-  const result = await response.json();
-
-  if (cacheFile) {
-    await outputFile(cacheFile, JSON.stringify(result));
-  }
-
-  return result;
 }
 
 export async function catchError(promise) {
