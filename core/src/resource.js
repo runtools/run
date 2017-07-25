@@ -4,8 +4,9 @@ import {homedir} from 'os';
 import {isPlainObject, entries, isEmpty, union} from 'lodash';
 import isDirectory from 'is-directory';
 import {copy, ensureDirSync, emptyDir, remove} from 'fs-extra';
-import {getProperty, loadFile, saveFile} from 'run-common';
+import {getProperty} from 'run-common';
 import {addContextToErrors, task, formatString, formatPath, formatCode} from '@resdir/console';
+import {load, save} from '@resdir/file-manager';
 import {installPackage, PACKAGE_FILENAME} from '@resdir/package-manager';
 import Version from '@resdir/version';
 
@@ -241,7 +242,7 @@ export class Resource {
         return undefined;
       }
 
-      definition = loadFile(file, {parse: true});
+      definition = load(file);
     }
 
     return await this.$create(definition, {file, directory, importing});
@@ -340,7 +341,7 @@ export class Resource {
       ensureDirSync(dirname(file));
     }
 
-    saveFile(file, definition, {stringify: true});
+    save(file, definition);
 
     await this.$emitEvent('after:@save');
   }
@@ -966,7 +967,11 @@ export class Resource {
     });
   }
 
-  async '@create'(name, options) {
+  async '@create'(type, name, options) {
+    if (!type || typeof type !== 'string') {
+      throw new Error(`${formatCode('type')} argument is missing`);
+    }
+
     if (!name || typeof name !== 'string') {
       throw new Error(`${formatCode('name')} argument is missing`);
     }
@@ -974,7 +979,7 @@ export class Resource {
     const resource = await task(
       async () => {
         const resource = await Resource.$create({
-          '@type': this.$name,
+          '@type': type,
           '@name': name,
           '@version': '0.1.0'
         });

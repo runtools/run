@@ -1,15 +1,15 @@
 /* eslint-disable */
 
 import {removeSync} from 'fs-extra';
-import {loadFile, saveFile} from 'run-common';
+import {load, save} from '@resdir/file-manager';
 
-let data = loadFile('$resource.json5', {parse: true});
+let data = load('$resource.json5');
 data = JSON.stringify(data, undefined, 2);
 data = data.replace(/"\$(\w+)":/g, (_match, key) => {
   return `"@${key}":`;
 });
 console.log(data);
-saveFile('@resource.json', data);
+save('@resource.json', data, {stringify: false});
 removeSync('$resource.json5');
 
 // class A {

@@ -1,74 +1,12 @@
-import {join, extname} from 'path';
-import {readFileSync, writeFileSync, statSync} from 'fs';
+import {join} from 'path';
+import {readFileSync, statSync} from 'fs';
 import {outputFile} from 'fs-extra';
 import {tmpdir} from 'os';
 import crypto from 'crypto';
 import {pick, entries, cloneDeepWith} from 'lodash';
 import fetch from 'node-fetch';
 import strictUriEncode from 'strict-uri-encode';
-import JSON5 from 'json5';
-import YAML from 'js-yaml';
-import {formatPath, formatCode} from '@resdir/console';
-
-export function loadFile(file, {throwIfNotFound = true, parse = false} = {}) {
-  if (typeof file !== 'string') {
-    throw new TypeError('\'file\' must be a string');
-  }
-
-  let data;
-
-  try {
-    data = readFileSync(file, 'utf8');
-  } catch (_) {
-    if (throwIfNotFound) {
-      throw new Error(`File not found: ${formatPath(file)}`);
-    }
-    return undefined;
-  }
-
-  if (parse) {
-    let parser;
-    const ext = extname(file);
-    if (ext === '.json5') {
-      parser = data => JSON5.parse(data);
-    } else if (ext === '.json') {
-      parser = data => JSON.parse(data);
-    } else if (ext === '.yaml' || ext === '.yml') {
-      parser = data => YAML.safeLoad(data);
-    } else {
-      throw new Error(`Unsupported file format: ${formatPath(file)}`);
-    }
-
-    try {
-      data = parser(data);
-    } catch (err) {
-      throw new Error(`Invalid file: ${formatPath(file)} (${err.message})`);
-    }
-  }
-
-  return data;
-}
-
-export function saveFile(file, data, {stringify = false} = {}) {
-  if (typeof file !== 'string') {
-    throw new TypeError('\'file\' must be a string');
-  }
-
-  if (stringify) {
-    const ext = extname(file);
-    if (ext === '.json5') {
-      data = JSON5.stringify(data, undefined, 2);
-    } else if (ext === '.json') {
-      data = JSON.stringify(data, undefined, 2);
-    } else if (ext === '.yaml' || ext === '.yml') {
-      data = YAML.safeDump(data);
-    } else {
-      throw new Error(`Unsupported file format: ${formatPath(file)}`);
-    }
-  }
-
-  writeFileSync(file, data);
-}
+import {formatCode} from '@resdir/console';
 
 export function getPropertyKeyAndValue(source, name, aliases = []) {
   if (source === undefined) {
