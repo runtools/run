@@ -591,15 +591,15 @@ export class Resource {
       return false;
     }
 
-    if (/[^a-z0-9._-]/i.test(part)) {
+    if (/[^a-z0-9_@]/i.test(part[0])) {
       return false;
     }
 
-    if (/[^a-z0-9_]/i.test(part[0])) {
+    if (/[^a-z0-9._-]/i.test(part.slice(1, -1))) {
       return false;
     }
 
-    if (/[^a-z0-9]/i.test(part[part.length - 1])) {
+    if (/[^a-z0-9]/i.test(part.slice(-1))) {
       return false;
     }
 
