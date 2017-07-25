@@ -1,5 +1,5 @@
 import {isEmpty, isPlainObject, entries} from 'lodash';
-import {getProperty} from 'run-common';
+import {getProperty} from '@resdir/util';
 import {addContextToErrors, formatString, formatCode} from '@resdir/console';
 
 import Resource from '../resource';

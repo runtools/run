@@ -1,5 +1,5 @@
 import {isPlainObject, last} from 'lodash';
-import {getPropertyKeyAndValue} from 'run-common';
+import {getPropertyKeyAndValue} from '@resdir/util';
 import {formatCode} from '@resdir/console';
 
 import MethodResource from './method';

@@ -4,7 +4,7 @@ import {homedir} from 'os';
 import {isPlainObject, entries, isEmpty, union} from 'lodash';
 import isDirectory from 'is-directory';
 import {copy, ensureDirSync, emptyDir, remove} from 'fs-extra';
-import {getProperty} from 'run-common';
+import {getProperty} from '@resdir/util';
 import {addContextToErrors, task, formatString, formatPath, formatCode} from '@resdir/console';
 import {load, save} from '@resdir/file-manager';
 import {installPackage, PACKAGE_FILENAME} from '@resdir/package-manager';

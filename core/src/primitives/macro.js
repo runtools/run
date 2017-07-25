@@ -1,7 +1,7 @@
 import {isEmpty} from 'lodash';
 import {isAbsolute} from 'path';
 import {parse} from 'shell-quote';
-import {getProperty, parseCommandLineArguments} from 'run-common';
+import {getProperty} from '@resdir/util';
 import {addContextToErrors, formatCode} from '@resdir/console';
 
 import Resource from '../resource';
@@ -123,6 +123,71 @@ export class MacroResource extends CommandResource {
 
     return definition;
   }
+}
+
+export function parseCommandLineArguments(argsAndOpts) {
+  if (!Array.isArray(argsAndOpts)) {
+    throw new TypeError('\'argsAndOpts\' must be an array');
+  }
+
+  const result = {arguments: [], options: {}};
+
+  for (let i = 0; i < argsAndOpts.length; i++) {
+    const argOrOpt = argsAndOpts[i];
+
+    if (typeof argOrOpt === 'string' && argOrOpt.startsWith('--')) {
+      let opt = argOrOpt.slice(2);
+      let val;
+
+      const index = opt.indexOf('=');
+      if (index !== -1) {
+        val = opt.slice(index + 1);
+        opt = opt.slice(0, index);
+      }
+
+      if (val === undefined) {
+        if (opt.startsWith('no-')) {
+          val = 'false';
+          opt = opt.slice(3);
+        } else if (opt.startsWith('non-')) {
+          val = 'false';
+          opt = opt.slice(4);
+        }
+      }
+
+      if (val === undefined && i + 1 < argsAndOpts.length) {
+        const nextArgOrOpt = argsAndOpts[i + 1];
+        if (typeof nextArgOrOpt !== 'string' || !nextArgOrOpt.startsWith('-')) {
+          val = nextArgOrOpt;
+          i++;
+        }
+      }
+
+      if (val === undefined) {
+        val = 'true';
+      }
+
+      result.options[opt] = val;
+      continue;
+    }
+
+    if (typeof argOrOpt === 'string' && argOrOpt.startsWith('-')) {
+      const opts = argOrOpt.slice(1);
+      for (let i = 0; i < opts.length; i++) {
+        const opt = opts[i];
+        if (!/[\w\d]/.test(opt)) {
+          throw new Error(`Invalid command line option: ${formatCode(argOrOpt)}`);
+        }
+        result.options[opt] = 'true';
+      }
+      continue;
+    }
+
+    const argument = argOrOpt;
+    result.arguments.push(argument);
+  }
+
+  return result;
 }
 
 export default MacroResource;
