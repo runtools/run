@@ -1,3 +1,5 @@
+import {join} from 'path';
+
 import Resource from '../../dist/resource';
 import BooleanResource from '../../dist/primitives/boolean';
 import NumberResource from '../../dist/primitives/number';
@@ -130,6 +132,15 @@ describe('Resource', () => {
   test('@files', async () => {
     expect((await Resource.$create()).$files).toBeUndefined();
     expect((await Resource.$create({'@files': ['./dist']})).$files).toEqual(['./dist']);
+  });
+
+  test('$getFiles()', async () => {
+    const resource = await Resource.$load('../fixtures/files', {directory: __dirname});
+    expect(await resource.$getFiles()).toEqual([
+      join(__dirname, '..', 'fixtures', 'files', 'file.txt'),
+      join(__dirname, '..', 'fixtures', 'files', 'directory', 'file1.txt'),
+      join(__dirname, '..', 'fixtures', 'files', 'directory', 'file2.txt')
+    ]);
   });
 
   test('@hidden', async () => {

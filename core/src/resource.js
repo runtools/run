@@ -1,14 +1,16 @@
-import {join, resolve, relative, basename, dirname, isAbsolute} from 'path';
-import {existsSync} from 'fs';
+import {join, resolve, basename, dirname, isAbsolute} from 'path';
+import {readFileSync, existsSync} from 'fs';
 import {homedir} from 'os';
 import {isPlainObject, entries, isEmpty, union} from 'lodash';
 import isDirectory from 'is-directory';
-import {copy, ensureDirSync, emptyDir, remove} from 'fs-extra';
+import {outputFileSync, ensureDirSync, emptyDir, remove} from 'fs-extra';
+import readDirectory from 'recursive-readdir';
 import {getProperty} from '@resdir/util';
 import {addContextToErrors, task, formatString, formatPath, formatCode} from '@resdir/console';
 import {load, save} from '@resdir/file-manager';
 import {installPackage, PACKAGE_FILENAME} from '@resdir/package-manager';
 import Version from '@resdir/version';
+import {zip, unzip} from '@resdir/archive-manager';
 
 import {getPrimitiveResourceClass} from './primitives';
 import Runtime from './runtime';
@@ -285,7 +287,12 @@ export class Resource {
 
     await task(
       async () => {
-        await copy(publishedResourceDirectory, directory);
+        const resourceFilename = RESOURCE_FILE_NAME + '.' + DEFAULT_RESOURCE_FILE_FORMAT;
+        const definition = readFileSync(join(publishedResourceDirectory, resourceFilename));
+        outputFileSync(join(directory, resourceFilename), definition);
+
+        const files = readFileSync(join(publishedResourceDirectory, 'files.zip'));
+        await unzip(directory, files);
 
         if (existsSync(join(directory, PACKAGE_FILENAME))) {
           // Only useful for js/dependencies
@@ -711,6 +718,30 @@ export class Resource {
     this._files = files;
   }
 
+  async $getFiles() {
+    const directory = this.$getCurrentDirectory();
+    let files = [];
+
+    for (const file of this.$files || []) {
+      const resolvedFile = resolve(directory, file);
+
+      if (!existsSync(resolvedFile)) {
+        throw new Error(
+          `File ${formatPath(file)} specified in ${formatCode('@files')} property doesn't exist`
+        );
+      }
+
+      if (isDirectory.sync(resolvedFile)) {
+        const newFiles = await readDirectory(resolvedFile);
+        files = files.concat(newFiles);
+      } else {
+        files.push(resolvedFile);
+      }
+    }
+
+    return files;
+  }
+
   get $hidden() {
     return this._getInheritedValue('_hidden');
   }
@@ -1038,52 +1069,13 @@ export class Resource {
 
     await task(
       async () => {
-        const scope = this.$getScope();
-        if (!scope) {
-          throw new Error(`Can't publish a resource with a unscoped ${formatCode('@name')}`);
-        }
+        const definition = this.$serialize();
 
-        const identifier = this.$getIdentifier();
+        const directory = this.$getCurrentDirectory();
+        let files = await this.$getFiles();
+        files = await zip(directory, files);
 
-        if (!this.$version) {
-          throw new Error(`Can't publish a resource without a ${formatCode('@version')} property`);
-        }
-
-        const resourceFile = this.$getResourceFile();
-        if (!resourceFile) {
-          throw new Error(`Can't publish a resource without a ${formatPath('@resource')} file`);
-        }
-
-        const srcDirectory = this.$getCurrentDirectory();
-
-        const srcFiles = [resourceFile];
-        if (this.$files) {
-          for (const file of this.$files) {
-            srcFiles.push(resolve(srcDirectory, file));
-          }
-        }
-
-        const destDirectory = join(PUBLISHED_RESOURCES_DIRECTORY, scope, identifier);
-
-        await emptyDir(destDirectory);
-
-        for (const srcFile of srcFiles) {
-          const relativeFile = relative(srcDirectory, srcFile);
-          if (relativeFile.startsWith('..')) {
-            throw new Error(
-              `Cannot publish a file (${formatPath(
-                srcFile
-              )}) located outside of the resource directory (${formatPath(srcDirectory)})`
-            );
-          }
-
-          const destFile = join(destDirectory, relativeFile);
-
-          await copy(srcFile, destFile);
-
-          const installedResourceDirectory = join(INSTALLED_RESOURCES_DIRECTORY, scope, identifier);
-          await remove(installedResourceDirectory);
-        }
+        await this.constructor._publish(definition, files);
       },
       {
         intro: `Publishing ${formatString(name)} resource...`,
@@ -1092,6 +1084,40 @@ export class Resource {
     );
 
     await this.$emitEvent('after:@publish', args, {parseArguments: true}); // TODO: should use $broadcastEvent?
+  }
+
+  static async _publish(definition, files) {
+    const name = definition['@name'];
+    if (!name) {
+      throw new Error(`Can't publish a resource without a ${formatCode('@name')} property`);
+    }
+
+    const scope = this.$getScope(name);
+    if (!scope) {
+      throw new Error(`Can't publish a resource with a unscoped ${formatCode('@name')}`);
+    }
+
+    const identifier = this.$getIdentifier(name);
+
+    if (!definition['@version']) {
+      throw new Error(`Can't publish a resource without a ${formatCode('@version')} property`);
+    }
+
+    const publishedResourceDirectory = join(PUBLISHED_RESOURCES_DIRECTORY, scope, identifier);
+
+    await emptyDir(publishedResourceDirectory);
+
+    const resourceFile = join(
+      publishedResourceDirectory,
+      RESOURCE_FILE_NAME + '.' + DEFAULT_RESOURCE_FILE_FORMAT
+    );
+    save(resourceFile, definition);
+
+    const archiveFile = join(publishedResourceDirectory, 'files.zip');
+    outputFileSync(archiveFile, files);
+
+    const installedResourceDirectory = join(INSTALLED_RESOURCES_DIRECTORY, scope, identifier);
+    await remove(installedResourceDirectory);
   }
 
   async '@emitEvent'(event, ...args) {
