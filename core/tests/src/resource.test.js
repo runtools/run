@@ -33,6 +33,12 @@ describe('Resource', () => {
     expect(await Resource.$create({'@value': []})).toBeInstanceOf(ArrayResource);
 
     expect(await Resource.$create({'@type': 'object'})).toBeInstanceOf(ObjectResource);
+    expect(await Resource.$create({'@type': 'object', '@value': {name: 'Manu'}})).toBeInstanceOf(
+      ObjectResource
+    );
+    expect((await Resource.$create({'@type': 'object', '@value': {name: 'Manu'}})).$value).toEqual({
+      name: 'Manu'
+    });
     expect(await Resource.$create({'@value': {}})).toBeInstanceOf(ObjectResource);
   });
 
@@ -392,6 +398,9 @@ describe('Resource', () => {
     await testSerialization(undefined, undefined, undefined);
     await testSerialization({}, undefined, undefined);
     await testSerialization({'@type': 'resource'});
+    await testSerialization({'@type': 'object'});
+    await testSerialization({'@type': 'object', '@value': {}});
+    await testSerialization({'@type': 'object', '@value': {name: 'Manu'}});
     await testSerialization({
       '@name': 'hello',
       '@aliases': ['hi', 'bonjour'],

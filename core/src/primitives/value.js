@@ -80,8 +80,6 @@ export class ValueResource extends Resource {
       definition = undefined;
     } else if (keys.length === 1 && keys[0] === '@value') {
       definition = definition['@value'];
-    } else if (keys.length === 2 && keys.includes('@type') && keys.includes('@value')) {
-      definition = definition['@value'];
     }
 
     return definition;

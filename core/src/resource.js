@@ -103,10 +103,7 @@ export class Resource {
     }).call(this);
   }
 
-  static async $create(
-    definition = {},
-    {base, parent, key, directory, file, importing, parse} = {}
-  ) {
+  static async $create(definition, {base, parent, key, directory, file, importing, parse} = {}) {
     let normalizedDefinition;
     if (isPlainObject(definition)) {
       normalizedDefinition = definition;
