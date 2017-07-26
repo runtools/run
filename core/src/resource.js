@@ -1,16 +1,19 @@
 import {join, resolve, basename, dirname, isAbsolute} from 'path';
-import {readFileSync, existsSync} from 'fs';
+import {existsSync} from 'fs';
 import {homedir} from 'os';
 import {isPlainObject, entries, isEmpty, union} from 'lodash';
 import isDirectory from 'is-directory';
-import {outputFileSync, ensureDirSync, emptyDir, remove} from 'fs-extra';
+import {ensureDirSync, remove} from 'fs-extra';
 import readDirectory from 'recursive-readdir';
 import {getProperty} from '@resdir/util';
 import {addContextToErrors, task, formatString, formatPath, formatCode} from '@resdir/console';
 import {load, save} from '@resdir/file-manager';
 import {installPackage, PACKAGE_FILENAME} from '@resdir/package-manager';
+import {getScope, getIdentifier, validate as validateName} from '@resdir/resource-name';
+import {parse as parseSpecifier} from '@resdir/resource-specifier';
 import Version from '@resdir/version';
 import {zip, unzip} from '@resdir/archive-manager';
+import RegistryClient from '@resdir/registry-client';
 
 import {getPrimitiveResourceClass} from './primitives';
 import Runtime from './runtime';
@@ -20,7 +23,6 @@ const RESOURCE_FILE_FORMATS = ['json', 'json5', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
 
 const RUN_DIRECTORY = join(homedir(), '.run');
-const PUBLISHED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'published-resources');
 const INSTALLED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'installed-resources');
 
 const BUILTIN_COMMANDS = [
@@ -222,13 +224,15 @@ export class Resource {
     if (isPlainObject(specifier)) {
       definition = specifier;
     } else {
-      if (specifier.startsWith('.')) {
-        if (!directory) {
-          throw new Error('\'directory\' argument is missing');
+      const {location} = parseSpecifier(specifier);
+      if (location) {
+        file = location;
+        if (file.startsWith('.')) {
+          if (!directory) {
+            throw new Error('\'directory\' argument is missing');
+          }
+          file = resolve(directory, file);
         }
-        file = resolve(directory, specifier);
-      } else if (isAbsolute(specifier)) {
-        file = specifier;
       } else {
         file = await this.$fetch(specifier);
       }
@@ -251,23 +255,29 @@ export class Resource {
     return await this.$load(specifier, {directory, importing: true});
   }
 
-  static async $fetch(name) {
-    // TODO: fetch resources from Resdir
-
-    if (!this.$validateName(name)) {
-      throw new Error(`Resource name ${formatString(name)} is invalid`);
+  static $getRegistryClient() {
+    if (!this._registry) {
+      this._registry = new RegistryClient();
     }
+    return this._registry;
+  }
 
-    const scope = this.$getScope(name);
+  static async $fetch(specifier) {
+    const {name} = parseSpecifier(specifier);
+
+    const scope = getScope(name);
     if (!scope) {
       throw new Error(`Can't fetch a resource with a unscoped name: ${formatString(name)}`);
     }
 
-    const identifier = this.$getIdentifier(name);
+    const identifier = getIdentifier(name);
 
-    const resourcesDirectory = process.env.RUN_RESOURCES_DIRECTORY;
+    let resourcesDirectory = process.env.RUN_RESOURCES_DIRECTORY;
+    if (resourcesDirectory === '0') {
+      resourcesDirectory = undefined;
+    }
     if (resourcesDirectory) {
-      // Development mode: resources are loaded directely from local source code
+      // Development mode: resources are loaded directly from local source code
       const directory = join(resourcesDirectory, scope, identifier);
       return directory;
     }
@@ -277,18 +287,16 @@ export class Resource {
       return directory;
     }
 
-    const publishedResourceDirectory = join(PUBLISHED_RESOURCES_DIRECTORY, scope, identifier);
-    if (!existsSync(publishedResourceDirectory)) {
-      throw new Error(`Can't find resource ${formatString(name)} at Resdir`);
-    }
-
     await task(
       async () => {
-        const resourceFilename = RESOURCE_FILE_NAME + '.' + DEFAULT_RESOURCE_FILE_FORMAT;
-        const definition = readFileSync(join(publishedResourceDirectory, resourceFilename));
-        outputFileSync(join(directory, resourceFilename), definition);
+        const registry = this.$getRegistryClient();
+        const {definition, files} = await registry.fetch(specifier);
 
-        const files = readFileSync(join(publishedResourceDirectory, 'files.zip'));
+        ensureDirSync(directory);
+
+        const resourceFile = join(directory, '@resource.json');
+        save(resourceFile, definition);
+
         await unzip(directory, files);
 
         if (existsSync(join(directory, PACKAGE_FILENAME))) {
@@ -531,84 +539,19 @@ export class Resource {
 
   set $name(name) {
     if (name !== undefined) {
-      if (!this.constructor.$validateName(name)) {
+      if (!validateName(name)) {
         throw new Error(`Resource name ${formatString(name)} is invalid`);
       }
     }
     this._name = name;
   }
 
-  static $getScope(name) {
-    if (!name) {
-      return undefined;
-    }
-    const [scope, identifier] = name.split('/');
-    if (!identifier) {
-      return undefined;
-    }
-    return scope;
-  }
-
   $getScope() {
-    return this.constructor.$getScope(this.$name);
-  }
-
-  static $getIdentifier(name) {
-    if (!name) {
-      return undefined;
-    }
-    const [scope, identifier] = name.split('/');
-    if (!identifier) {
-      return scope;
-    }
-    return identifier;
+    return getScope(this.$name);
   }
 
   $getIdentifier() {
-    return this.constructor.$getIdentifier(this.$name);
-  }
-
-  static $validateName(name) {
-    let [scope, identifier, rest] = name.split('/');
-
-    if (scope && identifier === undefined) {
-      identifier = scope;
-      scope = undefined;
-    }
-
-    if (scope !== undefined && !this.$validateNamePart(scope)) {
-      return false;
-    }
-
-    if (!this.$validateNamePart(identifier)) {
-      return false;
-    }
-
-    if (rest) {
-      return false;
-    }
-
-    return true;
-  }
-
-  static $validateNamePart(part) {
-    if (!part) {
-      return false;
-    }
-
-    if (/[^a-z0-9_@]/i.test(part[0])) {
-      return false;
-    }
-
-    if (/[^a-z0-9._-]/i.test(part.slice(1, -1))) {
-      return false;
-    }
-
-    if (/[^a-z0-9]/i.test(part.slice(-1))) {
-      return false;
-    }
-
-    return true;
+    return getIdentifier(this.$name);
   }
 
   get $aliases() {
@@ -1006,15 +949,18 @@ export class Resource {
 
     const resource = await task(
       async () => {
-        const resource = await Resource.$create({
-          '@type': type,
-          '@name': name,
-          '@version': '0.1.0'
-        });
+        const definition = {'@type': type};
+        if (!name.startsWith('@')) {
+          // Don't set @name if it looks like a npm package scoped name
+          definition['@name'] = name;
+        }
+        definition['@version'] = '0.1.0';
+
+        const resource = await Resource.$create(definition);
 
         await resource.$broadcastEvent('before:@create', [name, options], {parseArguments: true});
 
-        const directory = join(process.cwd(), resource.$getIdentifier());
+        const directory = join(process.cwd(), getIdentifier(name));
 
         const existingResource = await this.constructor.$load(directory, {throwIfNotFound: false});
         if (existingResource) {
@@ -1072,7 +1018,14 @@ export class Resource {
         let files = await this.$getFiles();
         files = await zip(directory, files);
 
-        await this.constructor._publish(definition, files);
+        const registry = this.constructor.$getRegistryClient();
+        await registry.publish(definition, files);
+
+        // TODO: Remove this when we handle versions:
+        const scope = this.$getScope();
+        const identifier = this.$getIdentifier();
+        const installedResourceDirectory = join(INSTALLED_RESOURCES_DIRECTORY, scope, identifier);
+        await remove(installedResourceDirectory);
       },
       {
         intro: `Publishing ${formatString(name)} resource...`,
@@ -1081,40 +1034,6 @@ export class Resource {
     );
 
     await this.$emitEvent('after:@publish', args, {parseArguments: true}); // TODO: should use $broadcastEvent?
-  }
-
-  static async _publish(definition, files) {
-    const name = definition['@name'];
-    if (!name) {
-      throw new Error(`Can't publish a resource without a ${formatCode('@name')} property`);
-    }
-
-    const scope = this.$getScope(name);
-    if (!scope) {
-      throw new Error(`Can't publish a resource with a unscoped ${formatCode('@name')}`);
-    }
-
-    const identifier = this.$getIdentifier(name);
-
-    if (!definition['@version']) {
-      throw new Error(`Can't publish a resource without a ${formatCode('@version')} property`);
-    }
-
-    const publishedResourceDirectory = join(PUBLISHED_RESOURCES_DIRECTORY, scope, identifier);
-
-    await emptyDir(publishedResourceDirectory);
-
-    const resourceFile = join(
-      publishedResourceDirectory,
-      RESOURCE_FILE_NAME + '.' + DEFAULT_RESOURCE_FILE_FORMAT
-    );
-    save(resourceFile, definition);
-
-    const archiveFile = join(publishedResourceDirectory, 'files.zip');
-    outputFileSync(archiveFile, files);
-
-    const installedResourceDirectory = join(INSTALLED_RESOURCES_DIRECTORY, scope, identifier);
-    await remove(installedResourceDirectory);
   }
 
   async '@emitEvent'(event, ...args) {

@@ -142,11 +142,13 @@ describe('Resource', () => {
 
   test('$getFiles()', async () => {
     const resource = await Resource.$load('../fixtures/files', {directory: __dirname});
-    expect(await resource.$getFiles()).toEqual([
-      join(__dirname, '..', 'fixtures', 'files', 'file.txt'),
-      join(__dirname, '..', 'fixtures', 'files', 'directory', 'file1.txt'),
-      join(__dirname, '..', 'fixtures', 'files', 'directory', 'file2.txt')
-    ]);
+    expect((await resource.$getFiles()).sort()).toEqual(
+      [
+        join(__dirname, '..', 'fixtures', 'files', 'file.txt'),
+        join(__dirname, '..', 'fixtures', 'files', 'directory', 'file1.txt'),
+        join(__dirname, '..', 'fixtures', 'files', 'directory', 'file2.txt')
+      ].sort()
+    );
   });
 
   test('@hidden', async () => {
