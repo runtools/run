@@ -10,6 +10,8 @@ export function getPrimitiveResourceClass(type) {
       return require('./array').default;
     case 'object':
       return require('./object').default;
+    case 'binary':
+      return require('./binary').default;
     case 'method':
       return require('./method').default;
     case 'command':
