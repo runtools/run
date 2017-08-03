@@ -76,6 +76,7 @@ export class Resource {
       set('$implementation', '@implementation');
       set('$files', '@files');
       set('$hidden', '@hidden');
+      set('$publishable', '@publishable');
       set('$autoBoxing', '@autoBoxing');
       set('$autoUnboxing', '@autoUnboxing');
 
@@ -690,6 +691,18 @@ export class Resource {
     this._hidden = hidden;
   }
 
+  get $publishable() {
+    let publishable = this._getInheritedValue('_publishable');
+    if (publishable === undefined) {
+      publishable = true;
+    }
+    return publishable;
+  }
+
+  set $publishable(publishable) {
+    this._publishable = publishable;
+  }
+
   $defaultAutoBoxing = false;
 
   get $autoBoxing() {
@@ -1012,7 +1025,7 @@ export class Resource {
 
     await task(
       async () => {
-        const definition = this.$serialize();
+        const definition = this.$serialize({publishing: true});
 
         const directory = this.$getCurrentDirectory();
         let files = await this.$getFiles();
@@ -1051,10 +1064,10 @@ export class Resource {
     return definition;
   }
 
-  $serialize(_options) {
+  $serialize(options) {
     let definition = {};
 
-    this._serializeTypes(definition);
+    this._serializeTypes(definition, options);
 
     if (this._location !== undefined) {
       definition['@location'] = this._location;
@@ -1068,7 +1081,7 @@ export class Resource {
       definition['@name'] = this._name;
     }
 
-    this._serializeAliases(definition);
+    this._serializeAliases(definition, options);
 
     if (this._version !== undefined) {
       definition['@version'] = this._version.toJSON();
@@ -1078,7 +1091,7 @@ export class Resource {
       definition['@description'] = this._description;
     }
 
-    this._serializeAuthors(definition);
+    this._serializeAuthors(definition, options);
 
     if (this._repository !== undefined) {
       definition['@repository'] = this._repository;
@@ -1104,6 +1117,10 @@ export class Resource {
       definition['@hidden'] = this._hidden;
     }
 
+    if (this._publishable !== undefined) {
+      definition['@publishable'] = this._publishable;
+    }
+
     if (this._autoBoxing !== undefined) {
       definition['@autoBoxing'] = this._autoBoxing;
     }
@@ -1112,11 +1129,11 @@ export class Resource {
       definition['@autoUnboxing'] = this._autoUnboxing;
     }
 
-    this._serializeOptions(definition);
+    this._serializeOptions(definition, options);
 
-    this._serializeChildren(definition);
+    this._serializeChildren(definition, options);
 
-    this._serializeExport(definition);
+    this._serializeExport(definition, options);
 
     if (isEmpty(definition)) {
       definition = undefined;
@@ -1125,7 +1142,7 @@ export class Resource {
     return definition;
   }
 
-  _serializeTypes(definition) {
+  _serializeTypes(definition, _options) {
     const types = this._types;
     if (types !== undefined) {
       if (types.length === 1) {
@@ -1136,7 +1153,7 @@ export class Resource {
     }
   }
 
-  _serializeAliases(definition) {
+  _serializeAliases(definition, _options) {
     let aliases = this._aliases;
     if (aliases !== undefined) {
       aliases = Array.from(aliases);
@@ -1148,7 +1165,7 @@ export class Resource {
     }
   }
 
-  _serializeAuthors(definition) {
+  _serializeAuthors(definition, _options) {
     const authors = this._authors;
     if (authors !== undefined) {
       if (authors.length === 1) {
@@ -1159,13 +1176,13 @@ export class Resource {
     }
   }
 
-  _serializeOptions(definition) {
-    const options = this._options;
-    if (options) {
+  _serializeOptions(definition, options) {
+    const resourceOptions = this._options;
+    if (resourceOptions) {
       const serializedOptions = {};
       let count = 0;
-      for (const option of options) {
-        const serializedOption = option.$serialize();
+      for (const option of resourceOptions) {
+        const serializedOption = option.$serialize(options);
         if (serializedOption !== undefined) {
           serializedOptions[option.$getKey()] = serializedOption;
           count++;
@@ -1179,19 +1196,24 @@ export class Resource {
     }
   }
 
-  _serializeChildren(definition) {
+  _serializeChildren(definition, options) {
     this.$forEachChild(child => {
-      const childDefinition = child.$serialize();
-      if (childDefinition !== undefined) {
-        definition[child.$getKey()] = childDefinition;
+      const publishing = options && options.publishing;
+      if (publishing && !child.$publishable) {
+        return;
       }
+      const childDefinition = child.$serialize(options);
+      if (childDefinition === undefined) {
+        return;
+      }
+      definition[child.$getKey()] = childDefinition;
     });
   }
 
-  _serializeExport(definition) {
+  _serializeExport(definition, options) {
     const exportResource = this.$getExport();
     if (exportResource) {
-      const exportDefinition = exportResource.$serialize();
+      const exportDefinition = exportResource.$serialize(options);
       if (exportDefinition) {
         definition['@export'] = exportDefinition;
       }
