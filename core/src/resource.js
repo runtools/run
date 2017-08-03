@@ -6,7 +6,7 @@ import isDirectory from 'is-directory';
 import {ensureDirSync, remove} from 'fs-extra';
 import readDirectory from 'recursive-readdir';
 import {getProperty} from '@resdir/util';
-import {addContextToErrors, task, formatString, formatPath, formatCode} from '@resdir/console';
+import {catchContext, task, formatString, formatPath, formatCode} from '@resdir/console';
 import {load, save} from '@resdir/file-manager';
 import {installPackage, PACKAGE_FILENAME} from '@resdir/package-manager';
 import {getScope, getIdentifier, validate as validateName} from '@resdir/resource-name';
@@ -38,7 +38,7 @@ const BUILTIN_COMMANDS = [
 
 export class Resource {
   async $construct(definition = {}, {bases = [], parent, key, directory, file} = {}) {
-    await addContextToErrors(async () => {
+    await catchContext(this, async () => {
       if (parent !== undefined) {
         this.$setParent(parent);
       }
@@ -103,7 +103,7 @@ export class Resource {
         });
         this.$setExport(resource);
       }
-    }).call(this);
+    });
   }
 
   static async $create(definition, {base, parent, key, directory, file, importing, parse} = {}) {
@@ -900,22 +900,24 @@ export class Resource {
   }
 
   async $invoke(expression = {arguments: [], options: {}}, {_parent} = {}) {
-    expression = {...expression, arguments: [...expression.arguments]};
-    const key = expression.arguments.shift();
-    if (!key) {
-      return this;
-    }
+    return await catchContext(this, async () => {
+      expression = {...expression, arguments: [...expression.arguments]};
+      const key = expression.arguments.shift();
+      if (!key) {
+        return this;
+      }
 
-    if (BUILTIN_COMMANDS.includes(key)) {
-      return await this[key](...expression.arguments, expression.options);
-    }
+      if (BUILTIN_COMMANDS.includes(key)) {
+        return await this[key](...expression.arguments, expression.options);
+      }
 
-    const child = this.$findChild(key);
-    if (!child) {
-      throw new Error(`Child not found: ${formatCode(key)}`);
-    }
+      const child = this.$findChild(key);
+      if (!child) {
+        throw new Error(`Child not found: ${formatCode(key)}`);
+      }
 
-    return await child.$invoke(expression, {parent: this});
+      return await child.$invoke(expression, {parent: this});
+    });
   }
 
   $listenEvent(event, method) {
@@ -1016,7 +1018,7 @@ export class Resource {
   }
 
   async '@publish'(...args) {
-    await this.$emitEvent('before:@publish', args, {parseArguments: true}); // TODO: should use $broadcastEvent?
+    await this.$emitEvent('before:@publish', args, {parseArguments: true});
 
     const name = this.$name;
     if (!name) {
@@ -1046,7 +1048,7 @@ export class Resource {
       }
     );
 
-    await this.$emitEvent('after:@publish', args, {parseArguments: true}); // TODO: should use $broadcastEvent?
+    await this.$emitEvent('after:@publish', args, {parseArguments: true});
   }
 
   async '@emitEvent'(event, ...args) {

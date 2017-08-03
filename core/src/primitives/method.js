@@ -1,13 +1,13 @@
 import {isEmpty, isPlainObject, entries} from 'lodash';
 import {getProperty} from '@resdir/util';
-import {addContextToErrors, formatString, formatCode} from '@resdir/console';
+import {catchContext, formatString, formatCode} from '@resdir/console';
 
 import Resource from '../resource';
 
 export class MethodResource extends Resource {
   async $construct(definition, options) {
     await super.$construct(definition, options);
-    await addContextToErrors(async () => {
+    await catchContext(this, async () => {
       const variadic = getProperty(definition, '@variadic');
       if (variadic !== undefined) {
         this.$variadic = variadic;
@@ -27,7 +27,7 @@ export class MethodResource extends Resource {
       if (emittedEvents !== undefined) {
         this.$setEmittedEvents(emittedEvents);
       }
-    }).call(this);
+    });
   }
 
   $getParameters() {

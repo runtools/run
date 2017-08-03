@@ -2,7 +2,7 @@ import {isEmpty} from 'lodash';
 import {isAbsolute} from 'path';
 import {parse} from 'shell-quote';
 import {getProperty} from '@resdir/util';
-import {addContextToErrors, formatCode} from '@resdir/console';
+import {catchContext, formatCode} from '@resdir/console';
 
 import Resource from '../resource';
 import CommandResource from './command';
@@ -10,12 +10,12 @@ import CommandResource from './command';
 export class MacroResource extends CommandResource {
   async $construct(definition, options) {
     await super.$construct(definition, options);
-    addContextToErrors(() => {
+    catchContext(this, () => {
       const expressions = getProperty(definition, '@expressions', ['@expression']);
       if (expressions !== undefined) {
         this.$expressions = expressions;
       }
-    }).call(this);
+    });
   }
 
   get $expressions() {

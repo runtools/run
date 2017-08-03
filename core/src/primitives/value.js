@@ -1,18 +1,18 @@
 import {isPlainObject} from 'lodash';
 import {getProperty} from '@resdir/util';
-import {addContextToErrors} from '@resdir/console';
+import {catchContext} from '@resdir/console';
 
 import Resource from '../resource';
 
 export class ValueResource extends Resource {
   async $construct(definition, options) {
     await super.$construct(definition, options);
-    addContextToErrors(() => {
+    catchContext(this, () => {
       const value = getProperty(definition, '@value');
       if (value !== undefined) {
         this.$value = value;
       }
-    }).call(this);
+    });
   }
 
   get $value() {
