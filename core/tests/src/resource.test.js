@@ -1,5 +1,3 @@
-import {join} from 'path';
-
 import Resource from '../../dist/resource';
 import BooleanResource from '../../dist/primitives/boolean';
 import NumberResource from '../../dist/primitives/number';
@@ -74,6 +72,7 @@ describe('Resource', () => {
     await expect(Resource.$create({'@name': 'hello*'})).rejects.toBeInstanceOf(Error);
     await expect(Resource.$create({'@name': 'runtools/'})).rejects.toBeInstanceOf(Error);
     await expect(Resource.$create({'@name': '/hello'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@name': 'runtools/hello/hi'})).rejects.toBeInstanceOf(Error);
   });
 
   test('@aliases', async () => {
@@ -140,16 +139,17 @@ describe('Resource', () => {
     expect((await Resource.$create({'@files': ['./dist']})).$files).toEqual(['./dist']);
   });
 
-  test('$getFiles()', async () => {
-    const resource = await Resource.$load('../fixtures/files', {directory: __dirname});
-    expect((await resource.$getFiles()).sort()).toEqual(
-      [
-        join(__dirname, '..', 'fixtures', 'files', 'file.txt'),
-        join(__dirname, '..', 'fixtures', 'files', 'directory', 'file1.txt'),
-        join(__dirname, '..', 'fixtures', 'files', 'directory', 'file2.txt')
-      ].sort()
-    );
-  });
+  // TODO: Move to @resdir/registry-client
+  // test('$getFiles()', async () => {
+  //   const resource = await Resource.$load('../fixtures/files', {directory: __dirname});
+  //   expect((await resource.$getFiles()).sort()).toEqual(
+  //     [
+  //       join(__dirname, '..', 'fixtures', 'files', 'file.txt'),
+  //       join(__dirname, '..', 'fixtures', 'files', 'directory', 'file1.txt'),
+  //       join(__dirname, '..', 'fixtures', 'files', 'directory', 'file2.txt')
+  //     ].sort()
+  //   );
+  // });
 
   test('@hidden', async () => {
     expect((await Resource.$create()).$hidden).toBeUndefined();

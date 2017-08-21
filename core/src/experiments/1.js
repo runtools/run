@@ -1,16 +1,23 @@
 /* eslint-disable */
 
-import {removeSync} from 'fs-extra';
-import {load, save} from '@resdir/file-manager';
+class A {
+  static a = 123;
+  static b = A.a;
+}
 
-let data = load('$resource.json5');
-data = JSON.stringify(data, undefined, 2);
-data = data.replace(/"\$(\w+)":/g, (_match, key) => {
-  return `"@${key}":`;
-});
-console.log(data);
-save('@resource.json', data, {stringify: false});
-removeSync('$resource.json5');
+console.log(A.b);
+
+// import {removeSync} from 'fs-extra';
+// import {load, save} from '@resdir/file-manager';
+//
+// let data = load('$resource.json5');
+// data = JSON.stringify(data, undefined, 2);
+// data = data.replace(/"\$(\w+)":/g, (_match, key) => {
+//   return `"@${key}":`;
+// });
+// console.log(data);
+// save('@resource.json', data, {stringify: false});
+// removeSync('$resource.json5');
 
 // class A {
 //   async hello() {

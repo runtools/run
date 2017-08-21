@@ -42,7 +42,17 @@ export class MacroResource extends CommandResource {
     const macroExpressions = this.$expressions || [];
     let result;
     for (let macroExpression of macroExpressions) {
-      const args = parse(macroExpression, variable => {
+      // TODO: Replace 'shell-quote' with something more suitable
+
+      // // Prevent 'shell-quote' from interpreting operators:
+      // for (const operator of '|&;()<>') {
+      //   macroExpression = macroExpression.replace(
+      //     new RegExp('\\' + operator, 'g'),
+      //     '\\' + operator
+      //   );
+      // }
+
+      let args = parse(macroExpression, variable => {
         if (!variable.startsWith('@')) {
           return '$' + variable;
         }
@@ -77,6 +87,13 @@ export class MacroResource extends CommandResource {
         }
 
         throw new Error(`Invalid macro variable: ${formatCode(variable)}`);
+      });
+
+      args = args.map(arg => {
+        if (typeof arg === 'string') {
+          return arg;
+        }
+        throw new Error(`Argument parsing failed (arg: ${JSON.stringify(arg)})`);
       });
 
       macroExpression = parseCommandLineArguments(args);

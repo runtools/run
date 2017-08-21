@@ -21,7 +21,10 @@ const pkg = require('../../package');
 updateNotifier({pkg}).notify();
 
 (async () => {
-  const expression = process.argv.slice(2).join(' ');
+  let expression = process.argv.slice(2);
+  expression = expression.map(arg => '"' + arg + '"');
+  expression = expression.join(' ');
+
   const directory = process.cwd();
   let result = await run(expression, {directory});
   if (result instanceof Resource) {

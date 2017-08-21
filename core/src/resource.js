@@ -1,19 +1,22 @@
 import {join, resolve, basename, dirname, isAbsolute} from 'path';
 import {existsSync} from 'fs';
-import {homedir} from 'os';
 import {isPlainObject, entries, isEmpty, union} from 'lodash';
 import isDirectory from 'is-directory';
-import {ensureDirSync, remove} from 'fs-extra';
-import readDirectory from 'recursive-readdir';
+import {ensureDirSync, ensureFileSync} from 'fs-extra';
 import {getProperty} from '@resdir/util';
 import {catchContext, task, formatString, formatPath, formatCode} from '@resdir/console';
 import {load, save} from '@resdir/file-manager';
 import {installPackage, PACKAGE_FILENAME} from '@resdir/package-manager';
-import {getScope, getIdentifier, validate as validateName} from '@resdir/resource-name';
+import {
+  getScope,
+  getIdentifier,
+  validate as validateName,
+  parse as parseName
+} from '@resdir/resource-name';
 import {parse as parseSpecifier} from '@resdir/resource-specifier';
 import Version from '@resdir/version';
-import {zip, unzip} from '@resdir/archive-manager';
 import RegistryClient from '@resdir/registry-client';
+import RegistryCache from '@resdir/registry-cache';
 
 import {getPrimitiveResourceClass} from './primitives';
 import Runtime from './runtime';
@@ -21,9 +24,6 @@ import Runtime from './runtime';
 const RESOURCE_FILE_NAME = '@resource';
 const RESOURCE_FILE_FORMATS = ['json', 'json5', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
-
-const RUN_DIRECTORY = join(homedir(), '.run');
-const INSTALLED_RESOURCES_DIRECTORY = join(RUN_DIRECTORY, 'installed-resources');
 
 const BUILTIN_COMMANDS = [
   '@broadcastEvent',
@@ -215,106 +215,131 @@ export class Resource {
     return resource;
   }
 
-  static async $load(
-    specifier,
-    {directory, importing, searchInParentDirectories, throwIfNotFound = true} = {}
-  ) {
-    let definition;
-    let file;
-
-    if (isPlainObject(specifier)) {
-      definition = specifier;
-    } else {
-      const {location} = parseSpecifier(specifier);
-      if (location) {
-        file = location;
-        if (file.startsWith('.')) {
-          if (!directory) {
-            throw new Error('\'directory\' argument is missing');
-          }
-          file = resolve(directory, file);
-        }
-      } else {
-        file = await this.$fetch(specifier);
-      }
-
-      file = searchResourceFile(file, {searchInParentDirectories});
-      if (!file) {
-        if (throwIfNotFound) {
-          throw new Error(`Resource not found: ${formatPath(specifier)}`);
-        }
-        return undefined;
-      }
-
-      definition = load(file);
-    }
-
-    return await this.$create(definition, {file, directory, importing});
-  }
-
-  static async $import(specifier, {directory} = {}) {
-    return await this.$load(specifier, {directory, importing: true});
-  }
-
-  static $getRegistryClient() {
+  static $getRegistry() {
     if (!this._registry) {
-      this._registry = new RegistryClient();
+      const client = new RegistryClient();
+      const cache = new RegistryCache(client);
+      this._registry = cache;
     }
     return this._registry;
   }
 
-  static async $fetch(specifier) {
-    const {name} = parseSpecifier(specifier);
+  static async $load(
+    specifier,
+    {directory, importing, searchInParentDirectories, throwIfNotFound = true} = {}
+  ) {
+    let result;
 
-    const scope = getScope(name);
-    if (!scope) {
-      throw new Error(`Can't fetch a resource with a unscoped name: ${formatString(name)}`);
-    }
-
-    const identifier = getIdentifier(name);
-
-    let resourcesDirectory = process.env.RUN_RESOURCES_DIRECTORY;
-    if (resourcesDirectory === '0') {
-      resourcesDirectory = undefined;
-    }
-    if (resourcesDirectory) {
-      // Development mode: resources are loaded directly from local source code
-      const directory = join(resourcesDirectory, scope, identifier);
-      return directory;
-    }
-
-    const directory = join(INSTALLED_RESOURCES_DIRECTORY, scope, identifier);
-    if (existsSync(directory)) {
-      return directory;
-    }
-
-    await task(
-      async () => {
-        const registry = this.$getRegistryClient();
-        const {definition, files} = await registry.fetch(specifier);
-
-        ensureDirSync(directory);
-
-        const resourceFile = join(directory, '@resource.json');
-        save(resourceFile, definition);
-
-        await unzip(directory, files);
-
-        if (existsSync(join(directory, PACKAGE_FILENAME))) {
-          // Only useful for js/dependencies
-          await installPackage(directory, {production: true});
+    if (isPlainObject(specifier)) {
+      result = {definition: specifier};
+    } else {
+      const {location} = parseSpecifier(specifier);
+      if (location) {
+        result = await this._fetchFromLocation(location, {directory, searchInParentDirectories});
+      } else {
+        result = await this._fetchFromLocalResources(specifier);
+        if (!result) {
+          result = await this._fetchFromRegistry(specifier);
         }
-
-        const resource = await this.$load(directory);
-        await resource['@install']();
-      },
-      {
-        intro: `Installing ${formatString(name)} from Resdir...`,
-        outro: `${formatString(name)} installed from Resdir`
       }
-    );
+    }
 
-    return directory;
+    if (!result) {
+      if (throwIfNotFound) {
+        throw new Error(`Resource not found: ${formatString(specifier)}`);
+      }
+      return undefined;
+    }
+
+    const {definition, file} = result;
+    directory = result.directory;
+    const resource = await this.$create(definition, {file, directory, importing});
+
+    return resource;
+  }
+
+  static async _fetchFromLocation(location, {directory, searchInParentDirectories} = {}) {
+    let file = location;
+    if (file.startsWith('.')) {
+      if (!directory) {
+        throw new Error('\'directory\' argument is missing');
+      }
+      file = resolve(directory, file);
+    }
+    file = searchResourceFile(file, {searchInParentDirectories});
+    if (!file) {
+      return undefined;
+    }
+    const definition = load(file);
+    return {definition, file};
+  }
+
+  static async _fetchFromLocalResources(specifier) {
+    // Useful for development: resources are loaded directly from local source code
+
+    const {name, versionRange} = parseSpecifier(specifier);
+    const {scope, identifier} = parseName(name, {throwIfUnscoped: true});
+
+    const resourcesDirectory = process.env.RUN_LOCAL_RESOURCES;
+    if (
+      !resourcesDirectory ||
+      resourcesDirectory === '0' ||
+      specifier.startsWith('resdir/example')
+    ) {
+      return undefined;
+    }
+
+    const directory = join(resourcesDirectory, scope, identifier);
+    if (!existsSync(directory)) {
+      return undefined;
+    }
+
+    const {definition, file} = await this._fetchFromLocation(directory);
+
+    const version = definition['@version'];
+    if (!versionRange.includes(version)) {
+      return undefined;
+    }
+
+    return {definition, file};
+  }
+
+  static async _fetchFromRegistry(specifier) {
+    const registry = this.$getRegistry();
+    const result = await registry.fetch(specifier);
+    if (!result) {
+      return undefined;
+    }
+
+    const {definition, directory} = result;
+
+    const installedFlagFile = join(directory, '.installed');
+    if (!existsSync(installedFlagFile)) {
+      const nameAndVersion = definition['@name'] + '@' + definition['@version'];
+      await task(
+        async () => {
+          if (existsSync(join(directory, PACKAGE_FILENAME))) {
+            // Only useful for js/dependencies
+            await installPackage(directory, {production: true});
+          }
+
+          const resource = await this.$create(definition, {directory});
+          await resource['@install']();
+
+          ensureFileSync(installedFlagFile);
+        },
+        {
+          intro: `Installing ${formatString(nameAndVersion)}...`,
+          outro: `${formatString(nameAndVersion)} installed`
+        }
+      );
+    }
+
+    return {definition, directory};
+  }
+
+  static async $import(specifier, {directory} = {}) {
+    return await this.$load(specifier, {directory, importing: true});
   }
 
   async $extend(definition, options) {
@@ -540,9 +565,7 @@ export class Resource {
 
   set $name(name) {
     if (name !== undefined) {
-      if (!validateName(name)) {
-        throw new Error(`Resource name ${formatString(name)} is invalid`);
-      }
+      validateName(name);
     }
     this._name = name;
   }
@@ -657,30 +680,6 @@ export class Resource {
       files = [files];
     }
     this._files = files;
-  }
-
-  async $getFiles() {
-    const directory = this.$getCurrentDirectory();
-    let files = [];
-
-    for (const file of this.$files || []) {
-      const resolvedFile = resolve(directory, file);
-
-      if (!existsSync(resolvedFile)) {
-        throw new Error(
-          `File ${formatPath(file)} specified in ${formatCode('@files')} property doesn't exist`
-        );
-      }
-
-      if (isDirectory.sync(resolvedFile)) {
-        const newFiles = await readDirectory(resolvedFile);
-        files = files.concat(newFiles);
-      } else {
-        files.push(resolvedFile);
-      }
-    }
-
-    return files;
   }
 
   get $hidden() {
@@ -1028,19 +1027,9 @@ export class Resource {
     await task(
       async () => {
         const definition = this.$serialize({publishing: true});
-
         const directory = this.$getCurrentDirectory();
-        let files = await this.$getFiles();
-        files = await zip(directory, files);
-
-        const registry = this.constructor.$getRegistryClient();
-        await registry.publish(definition, files);
-
-        // TODO: Remove this when we handle versions:
-        const scope = this.$getScope();
-        const identifier = this.$getIdentifier();
-        const installedResourceDirectory = join(INSTALLED_RESOURCES_DIRECTORY, scope, identifier);
-        await remove(installedResourceDirectory);
+        const registry = this.constructor.$getRegistry();
+        await registry.publish(definition, directory);
       },
       {
         intro: `Publishing ${formatString(name)} resource...`,
