@@ -8,12 +8,12 @@ import {catchContext, task, formatString, formatPath, formatCode} from '@resdir/
 import {load, save} from '@resdir/file-manager';
 import {installPackage, PACKAGE_FILENAME} from '@resdir/package-manager';
 import {
-  getScope,
-  getIdentifier,
-  validate as validateName,
-  parse as parseName
+  getResourceScope,
+  getResourceIdentifier,
+  validateResourceName,
+  parseResourceName
 } from '@resdir/resource-name';
-import {parse as parseSpecifier} from '@resdir/resource-specifier';
+import {parseResourceSpecifier} from '@resdir/resource-specifier';
 import Version from '@resdir/version';
 import RegistryClient from '@resdir/registry-client';
 import RegistryCache from '@resdir/registry-cache';
@@ -233,7 +233,7 @@ export class Resource {
     if (isPlainObject(specifier)) {
       result = {definition: specifier};
     } else {
-      const {location} = parseSpecifier(specifier);
+      const {location} = parseResourceSpecifier(specifier);
       if (location) {
         result = await this._fetchFromLocation(location, {directory, searchInParentDirectories});
       } else {
@@ -277,8 +277,8 @@ export class Resource {
   static async _fetchFromLocalResources(specifier) {
     // Useful for development: resources are loaded directly from local source code
 
-    const {name, versionRange} = parseSpecifier(specifier);
-    const {scope, identifier} = parseName(name, {throwIfUnscoped: true});
+    const {name, versionRange} = parseResourceSpecifier(specifier);
+    const {scope, identifier} = parseResourceName(name, {throwIfUnscoped: true});
 
     const resourcesDirectory = process.env.RUN_LOCAL_RESOURCES;
     if (
@@ -565,17 +565,17 @@ export class Resource {
 
   set $name(name) {
     if (name !== undefined) {
-      validateName(name);
+      validateResourceName(name);
     }
     this._name = name;
   }
 
   $getScope() {
-    return getScope(this.$name);
+    return getResourceScope(this.$name);
   }
 
   $getIdentifier() {
-    return getIdentifier(this.$name);
+    return getResourceIdentifier(this.$name);
   }
 
   get $aliases() {
@@ -974,7 +974,7 @@ export class Resource {
 
         await resource.$broadcastEvent('before:@create', [name, options], {parseArguments: true});
 
-        const directory = join(process.cwd(), getIdentifier(name));
+        const directory = join(process.cwd(), getResourceIdentifier(name));
 
         const existingResource = await this.constructor.$load(directory, {throwIfNotFound: false});
         if (existingResource) {
