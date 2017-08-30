@@ -8,7 +8,7 @@ import {catchContext, task, formatString, formatPath, formatCode} from '@resdir/
 import {load, save} from '@resdir/file-manager';
 import {installPackage, PACKAGE_FILENAME} from '@resdir/package-manager';
 import {
-  getResourceScope,
+  getResourceNamespace,
   getResourceIdentifier,
   validateResourceName,
   parseResourceName
@@ -217,7 +217,11 @@ export class Resource {
 
   static $getRegistry() {
     if (!this._registry) {
-      const client = new RegistryClient();
+      const client = new RegistryClient({
+        awsRegion: process.env.RESDIR_REGISTRY_AWS_REGION,
+        awsS3BucketName: process.env.RESDIR_REGISTRY_AWS_S3_BUCKET_NAME,
+        awsS3ResourceUploadsPrefix: process.env.RESDIR_REGISTRY_AWS_S3_RESOURCE_UPLOADS_PREFIX
+      });
       const cache = new RegistryCache(client);
       this._registry = cache;
     }
@@ -278,7 +282,7 @@ export class Resource {
     // Useful for development: resources are loaded directly from local source code
 
     const {name, versionRange} = parseResourceSpecifier(specifier);
-    const {scope, identifier} = parseResourceName(name, {throwIfUnscoped: true});
+    const {namespace, identifier} = parseResourceName(name);
 
     const resourcesDirectory = process.env.RUN_LOCAL_RESOURCES;
     if (
@@ -289,7 +293,7 @@ export class Resource {
       return undefined;
     }
 
-    const directory = join(resourcesDirectory, scope, identifier);
+    const directory = join(resourcesDirectory, namespace, identifier);
     if (!existsSync(directory)) {
       return undefined;
     }
@@ -570,8 +574,8 @@ export class Resource {
     this._name = name;
   }
 
-  $getScope() {
-    return getResourceScope(this.$name);
+  $getNamespace() {
+    return getResourceNamespace(this.$name);
   }
 
   $getIdentifier() {
