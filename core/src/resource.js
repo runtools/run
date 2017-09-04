@@ -21,6 +21,8 @@ import RegistryCache from '@resdir/registry-cache';
 import {getPrimitiveResourceClass} from './primitives';
 import Runtime from './runtime';
 
+const CLIENT_ID = 'RUN_CLI';
+
 const RESOURCE_FILE_NAME = '@resource';
 const RESOURCE_FILE_FORMATS = ['json', 'json5', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
@@ -33,6 +35,10 @@ const BUILTIN_COMMANDS = [
   '@lint',
   '@install',
   '@publish',
+  '@signUp',
+  '@signIn',
+  '@signOut',
+  '@user',
   '@test'
 ];
 
@@ -220,7 +226,8 @@ export class Resource {
       const client = new RegistryClient({
         awsRegion: process.env.RESDIR_REGISTRY_AWS_REGION,
         awsS3BucketName: process.env.RESDIR_REGISTRY_AWS_S3_BUCKET_NAME,
-        awsS3ResourceUploadsPrefix: process.env.RESDIR_REGISTRY_AWS_S3_RESOURCE_UPLOADS_PREFIX
+        awsS3ResourceUploadsPrefix: process.env.RESDIR_REGISTRY_AWS_S3_RESOURCE_UPLOADS_PREFIX,
+        clientId: CLIENT_ID
       });
       const cache = new RegistryCache(client);
       this._registry = cache;
@@ -916,7 +923,7 @@ export class Resource {
 
       const child = this.$findChild(key);
       if (!child) {
-        throw new Error(`Child not found: ${formatCode(key)}`);
+        throw new Error(`Command or property not found: ${formatCode(key)}`);
       }
 
       return await child.$invoke(expression, {parent: this});
@@ -1018,6 +1025,41 @@ export class Resource {
   async '@test'(...args) {
     await this.$broadcastEvent('before:@test', args, {parseArguments: true});
     await this.$broadcastEvent('after:@test', args, {parseArguments: true});
+  }
+
+  async '@signUp'(...args) {
+    args.pop(); // Ignore options
+    const email = args.shift();
+    const registry = this.constructor.$getRegistry();
+    await registry.signUp(email);
+  }
+
+  async '@signIn'(...args) {
+    args.pop(); // Ignore options
+    const email = args.shift();
+    const registry = this.constructor.$getRegistry();
+    await registry.signIn(email);
+  }
+
+  async '@signOut'() {
+    const registry = this.constructor.$getRegistry();
+    await registry.signOut();
+  }
+
+  async '@user'(...args) {
+    args.pop(); // Ignore options
+    let key;
+    key = args.shift();
+    if (key !== 'namespace') {
+      throw new Error('UNIMPLEMENTED');
+    }
+    key = args.shift();
+    if (key !== 'create') {
+      throw new Error('UNIMPLEMENTED');
+    }
+    const namespace = args.shift();
+    const registry = this.constructor.$getRegistry();
+    await registry.createUserNamespace(namespace);
   }
 
   async '@publish'(...args) {
