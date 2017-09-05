@@ -1,5 +1,6 @@
 import {join, resolve, basename, dirname, isAbsolute} from 'path';
 import {existsSync} from 'fs';
+import {homedir} from 'os';
 import {isPlainObject, entries, isEmpty, union} from 'lodash';
 import isDirectory from 'is-directory';
 import {ensureDirSync, ensureFileSync} from 'fs-extra';
@@ -21,7 +22,13 @@ import RegistryCache from '@resdir/registry-cache';
 import {getPrimitiveResourceClass} from './primitives';
 import Runtime from './runtime';
 
+const RUN_DIRECTORY = join(homedir(), '.run');
 const CLIENT_ID = 'RUN_CLI';
+
+// TODO: Change this AWS config when production is deployed
+const RESDIR_REGISTRY_AWS_REGION = 'ap-northeast-1';
+const RESDIR_REGISTRY_AWS_S3_BUCKET_NAME = 'resdir-registry-dev-v1';
+const RESDIR_REGISTRY_AWS_S3_RESOURCE_UPLOADS_PREFIX = 'resources/uploads/';
 
 const RESOURCE_FILE_NAME = '@resource';
 const RESOURCE_FILE_FORMATS = ['json', 'json5', 'yaml', 'yml'];
@@ -223,13 +230,22 @@ export class Resource {
 
   static $getRegistry() {
     if (!this._registry) {
+      const runDirectory = process.env.RUN_DIRECTORY || RUN_DIRECTORY;
+      const clientId = CLIENT_ID;
+      const awsRegion = process.env.RESDIR_REGISTRY_AWS_REGION || RESDIR_REGISTRY_AWS_REGION;
+      const awsS3BucketName =
+        process.env.RESDIR_REGISTRY_AWS_S3_BUCKET_NAME || RESDIR_REGISTRY_AWS_S3_BUCKET_NAME;
+      const awsS3ResourceUploadsPrefix =
+        process.env.RESDIR_REGISTRY_AWS_S3_RESOURCE_UPLOADS_PREFIX ||
+        RESDIR_REGISTRY_AWS_S3_RESOURCE_UPLOADS_PREFIX;
       const client = new RegistryClient({
-        awsRegion: process.env.RESDIR_REGISTRY_AWS_REGION,
-        awsS3BucketName: process.env.RESDIR_REGISTRY_AWS_S3_BUCKET_NAME,
-        awsS3ResourceUploadsPrefix: process.env.RESDIR_REGISTRY_AWS_S3_RESOURCE_UPLOADS_PREFIX,
-        clientId: CLIENT_ID
+        runDirectory,
+        clientId,
+        awsRegion,
+        awsS3BucketName,
+        awsS3ResourceUploadsPrefix
       });
-      const cache = new RegistryCache(client);
+      const cache = new RegistryCache({client, runDirectory});
       this._registry = cache;
     }
     return this._registry;
