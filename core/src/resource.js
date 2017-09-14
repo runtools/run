@@ -308,11 +308,7 @@ export class Resource {
     const {namespace, identifier} = parseResourceName(name);
 
     const resourcesDirectory = process.env.RUN_LOCAL_RESOURCES;
-    if (
-      !resourcesDirectory ||
-      resourcesDirectory === '0' ||
-      specifier.startsWith('resdir/example')
-    ) {
+    if (!resourcesDirectory || resourcesDirectory === '0') {
       return undefined;
     }
 

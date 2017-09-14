@@ -1,11 +1,15 @@
 /* eslint-disable */
 
-class A {
-  static a = 123;
-  static b = A.a;
-}
+const o1 = {a: 1, b: 2};
 
-console.log(A.b);
+const o2 = {...o1};
+
+// class A {
+//   static a = 123;
+//   static b = A.a;
+// }
+//
+// console.log(A.b);
 
 // import {removeSync} from 'fs-extra';
 // import {load, save} from '@resdir/file-manager';
