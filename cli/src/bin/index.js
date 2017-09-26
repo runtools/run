@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import 'regenerator-runtime/runtime';
 import 'source-map-support/register';
 import {join} from 'path';
 import nodeVersion from 'node-version';
