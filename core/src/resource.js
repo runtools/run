@@ -26,6 +26,7 @@ const RUN_DIRECTORY = join(homedir(), '.run');
 const CLIENT_ID = 'RUN_CLI';
 
 // TODO: Change this AWS config when production is deployed
+const RESDIR_REGISTRY_URL = 'http://registry.dev.resdir.com';
 const RESDIR_REGISTRY_AWS_REGION = 'ap-northeast-1';
 const RESDIR_REGISTRY_AWS_S3_BUCKET_NAME = 'resdir-registry-dev-v1';
 const RESDIR_REGISTRY_AWS_S3_RESOURCE_UPLOADS_PREFIX = 'resources/uploads/';
@@ -230,6 +231,7 @@ export class Resource {
 
   static $getRegistry() {
     if (!this._registry) {
+      const registryURL = process.env.RESDIR_REGISTRY_URL || RESDIR_REGISTRY_URL;
       const runDirectory = process.env.RUN_DIRECTORY || RUN_DIRECTORY;
       const clientId = CLIENT_ID;
       const awsRegion = process.env.RESDIR_REGISTRY_AWS_REGION || RESDIR_REGISTRY_AWS_REGION;
@@ -239,6 +241,7 @@ export class Resource {
         process.env.RESDIR_REGISTRY_AWS_S3_RESOURCE_UPLOADS_PREFIX ||
         RESDIR_REGISTRY_AWS_S3_RESOURCE_UPLOADS_PREFIX;
       const client = new RegistryClient({
+        registryURL,
         runDirectory,
         clientId,
         awsRegion,
@@ -1060,18 +1063,24 @@ export class Resource {
 
   async '@user'(...args) {
     args.pop(); // Ignore options
+
+    const registry = this.constructor.$getRegistry();
+
     let key;
     key = args.shift();
-    if (key !== 'namespace') {
+    if (key === 'show') {
+      await registry.showUser();
+    } else if (key === 'namespace') {
+      key = args.shift();
+      if (key === 'create') {
+        const namespace = args.shift();
+        await registry.createUserNamespace(namespace);
+      } else {
+        throw new Error('UNIMPLEMENTED');
+      }
+    } else {
       throw new Error('UNIMPLEMENTED');
     }
-    key = args.shift();
-    if (key !== 'create') {
-      throw new Error('UNIMPLEMENTED');
-    }
-    const namespace = args.shift();
-    const registry = this.constructor.$getRegistry();
-    await registry.createUserNamespace(namespace);
   }
 
   async '@publish'(...args) {
