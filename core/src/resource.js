@@ -1075,6 +1075,8 @@ export class Resource {
       if (key === 'create') {
         const namespace = args.shift();
         await registry.createUserNamespace(namespace);
+      } else if (key === 'remove') {
+        await registry.removeUserNamespace();
       } else {
         throw new Error('UNIMPLEMENTED');
       }
