@@ -7,7 +7,7 @@ import nodeVersion from 'node-version';
 import updateNotifier from 'update-notifier';
 import dotenv from 'dotenv';
 import JSON5 from 'json5';
-import {showErrorAndExit} from '@resdir/console';
+import {printErrorAndExit} from '@resdir/console';
 import {Resource} from 'run-core';
 
 import {run} from '../';
@@ -15,7 +15,7 @@ import {run} from '../';
 dotenv.config({path: join(__dirname, '..', '..', '.env')});
 
 if (nodeVersion.major < 6) {
-  showErrorAndExit('⚡run requires at least version 6 of Node.');
+  printErrorAndExit('⚡run requires at least version 6 of Node.');
 }
 
 const pkg = require('../../package');
@@ -37,4 +37,4 @@ updateNotifier({pkg}).notify();
   if (result !== undefined) {
     console.log(JSON5.stringify(result, undefined, 2));
   }
-})().catch(showErrorAndExit);
+})().catch(printErrorAndExit);

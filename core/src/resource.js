@@ -332,7 +332,7 @@ export class Resource {
 
   static async _fetchFromRegistry(specifier) {
     const registry = this.$getRegistry();
-    const result = await registry.fetch(specifier);
+    const result = await registry.fetchResource(specifier);
     if (!result) {
       return undefined;
     }
@@ -1070,6 +1070,8 @@ export class Resource {
     key = args.shift();
     if (key === 'show') {
       await registry.showUser();
+    } else if (key === 'delete') {
+      await registry.deleteUser();
     } else if (key === 'namespace') {
       key = args.shift();
       if (key === 'create') {
@@ -1077,6 +1079,15 @@ export class Resource {
         await registry.createUserNamespace(namespace);
       } else if (key === 'remove') {
         await registry.removeUserNamespace();
+      } else {
+        throw new Error('UNIMPLEMENTED');
+      }
+    } else if (key === 'github') {
+      key = args.shift();
+      if (key === 'connect') {
+        await registry.connectGitHubAccount();
+      } else if (key === 'disconnect') {
+        await registry.disconnectGitHubAccount();
       } else {
         throw new Error('UNIMPLEMENTED');
       }
@@ -1098,7 +1109,7 @@ export class Resource {
         const definition = this.$serialize({publishing: true});
         const directory = this.$getCurrentDirectory();
         const registry = this.constructor.$getRegistry();
-        await registry.publish(definition, directory);
+        await registry.publishResource(definition, directory);
       },
       {
         intro: `Publishing ${formatString(name)} resource...`,
