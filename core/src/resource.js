@@ -47,6 +47,7 @@ const BUILTIN_COMMANDS = [
   '@signIn',
   '@signOut',
   '@user',
+  '@organization',
   '@test'
 ];
 
@@ -1072,6 +1073,13 @@ export class Resource {
       await registry.showUser();
     } else if (key === 'delete') {
       await registry.deleteUser();
+    } else if (key === 'organizations') {
+      key = args.shift();
+      if (key === 'list') {
+        await registry.listUserOrganizations();
+      } else {
+        throw new Error('UNIMPLEMENTED');
+      }
     } else if (key === 'namespace') {
       key = args.shift();
       if (key === 'create') {
@@ -1091,6 +1099,31 @@ export class Resource {
       } else {
         throw new Error('UNIMPLEMENTED');
       }
+    } else {
+      throw new Error('UNIMPLEMENTED');
+    }
+  }
+
+  async '@organization'(...args) {
+    args.pop(); // Ignore options
+
+    const registry = this.constructor.$getRegistry();
+
+    const key = args.shift();
+    if (key === 'create') {
+      const namespace = args.shift();
+      await registry.createOrganization(namespace);
+    } else if (key === 'delete') {
+      const namespace = args.shift();
+      await registry.deleteOrganization(namespace);
+    } else if (key === 'addMember') {
+      const organizationNamespace = args.shift();
+      const userNamespace = args.shift();
+      await registry.addOrganizationMember(organizationNamespace, userNamespace);
+    } else if (key === 'removeMember') {
+      const organizationNamespace = args.shift();
+      const userNamespace = args.shift();
+      await registry.removeOrganizationMember(organizationNamespace, userNamespace);
     } else {
       throw new Error('UNIMPLEMENTED');
     }
