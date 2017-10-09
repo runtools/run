@@ -32,8 +32,8 @@ const RESDIR_REGISTRY_AWS_S3_BUCKET_NAME = 'resdir-registry-dev-v1';
 const RESDIR_REGISTRY_AWS_S3_RESOURCE_UPLOADS_PREFIX = 'resources/uploads/';
 
 const RESOURCE_FILE_NAME = '@resource';
-const RESOURCE_FILE_FORMATS = ['json', 'json5', 'yaml', 'yml'];
-const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
+const RESOURCE_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
+const DEFAULT_RESOURCE_FILE_FORMAT = 'json5';
 
 const BUILTIN_COMMANDS = [
   '@broadcastEvent',
