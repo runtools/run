@@ -7,7 +7,6 @@ import {ensureDirSync, ensureFileSync} from 'fs-extra';
 import {getProperty} from '@resdir/util';
 import {catchContext, task, formatString, formatPath, formatCode} from '@resdir/console';
 import {load, save} from '@resdir/file-manager';
-import {installPackage, PACKAGE_FILENAME} from '@resdir/package-manager';
 import {
   getResourceNamespace,
   getResourceIdentifier,
@@ -345,14 +344,8 @@ export class Resource {
       const nameAndVersion = definition['@name'] + '@' + definition['@version'];
       await task(
         async () => {
-          if (existsSync(join(directory, PACKAGE_FILENAME))) {
-            // Only useful for js/dependencies
-            await installPackage(directory, {production: true});
-          }
-
           const resource = await this.$create(definition, {directory});
           await resource['@install']();
-
           ensureFileSync(installedFlagFile);
         },
         {
