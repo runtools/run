@@ -13,7 +13,7 @@ import {
   validateResourceName,
   parseResourceName
 } from '@resdir/resource-name';
-import {parseResourceSpecifier} from '@resdir/resource-specifier';
+import {parseResourceSpecifier, formatResourceSpecifier} from '@resdir/resource-specifier';
 import Version from '@resdir/version';
 import RegistryClient from '@resdir/registry-client';
 import RegistryCache from '@resdir/registry-cache';
@@ -341,7 +341,10 @@ export class Resource {
 
     const installedFlagFile = join(directory, '.installed');
     if (!existsSync(installedFlagFile)) {
-      const nameAndVersion = definition['@name'] + '@' + definition['@version'];
+      const nameAndVersion = formatResourceSpecifier({
+        name: definition['@name'],
+        versionRange: definition['@version']
+      });
       await task(
         async () => {
           const resource = await this.$create(definition, {directory});

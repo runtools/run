@@ -116,8 +116,8 @@ describe('Resource', () => {
 
   test('@runtime', async () => {
     expect((await Resource.$create()).$runtime).toBeUndefined();
-    expect((await Resource.$create({'@runtime': 'node@>=6.10.0'})).$runtime.toJSON()).toBe(
-      'node@>=6.10.0'
+    expect((await Resource.$create({'@runtime': 'node#>=6.10.0'})).$runtime.toJSON()).toBe(
+      'node#>=6.10.0'
     );
   });
 
@@ -423,7 +423,7 @@ describe('Resource', () => {
       name: 'Manu'
     });
     await testSerialization(
-      {'@implementation': '../fixtures/person/index.js', '@runtime': 'node@>=6.10.0'},
+      {'@implementation': '../fixtures/person/index.js', '@runtime': 'node#>=6.10.0'},
       {directory: __dirname}
     );
   });

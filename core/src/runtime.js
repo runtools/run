@@ -3,7 +3,7 @@ import VersionRange from '@resdir/version-range';
 export class Runtime {
   constructor(definition) {
     if (typeof definition === 'string') {
-      const [name, version] = definition.split('@');
+      const [name, version] = definition.split('#');
       definition = {name, version};
     }
 
@@ -15,7 +15,7 @@ export class Runtime {
     let json = this.name;
     const version = this.version.toString();
     if (version) {
-      json += '@' + version;
+      json += '#' + version;
     }
     return json;
   }
