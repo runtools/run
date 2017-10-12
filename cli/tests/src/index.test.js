@@ -29,33 +29,40 @@ describe('CLI', () => {
 
   test('can run a method', async () => {
     let greeting;
+
     greeting = await run('formatGreetingMethod', {directory: personInstanceDirectory});
     expect(greeting).toBe('Hello Manu!');
-    greeting = await run('formatGreetingMethod Konnichiwa', {directory: personInstanceDirectory});
+
+    greeting = await run('formatGreetingMethod --verb=Welcome', {
+      directory: personInstanceDirectory
+    });
+    expect(greeting).toBe('Welcome Manu!');
+
+    greeting = await run('formatGreetingMethod Konnichiwa', {
+      directory: personInstanceDirectory
+    });
     expect(greeting).toBe('Konnichiwa Manu!');
+
+    greeting = await run('formatGreetingMethod Bonjour --shout', {
+      directory: personInstanceDirectory
+    });
+    expect(greeting).toBe('BONJOUR MANU!');
+
     await expect(
       run('formatGreetingMethod Hi extraArgument', {directory: personInstanceDirectory})
     ).rejects.toBeInstanceOf(Error);
   });
 
-  test('can run a command', async () => {
-    let greeting;
-    greeting = await run('formatGreetingCommand', {directory: personInstanceDirectory});
-    expect(greeting).toBe('Hi Manu!');
-    greeting = await run('formatGreetingCommand --ageLimit=44', {
-      directory: personInstanceDirectory
-    });
-    expect(greeting).toBe('Hello Manu!');
-    await expect(
-      run('formatGreetingCommand extraArgument', {directory: personInstanceDirectory})
-    ).rejects.toBeInstanceOf(Error);
-    await expect(
-      run('formatGreetingCommand --invalidProperty=1', {directory: personInstanceDirectory})
-    ).rejects.toBeInstanceOf(Error);
-  });
-
   test('can run a macro', async () => {
-    const greeting = await run('formatGreetingMacro', {directory: personInstanceDirectory});
+    let greeting;
+
+    greeting = await run('formatGreetingMacro', {directory: personInstanceDirectory});
+    expect(greeting).toBe('Hi Manu!');
+
+    greeting = await run('formatGreetingMacro --verb=Hello', {directory: personInstanceDirectory});
     expect(greeting).toBe('Hello Manu!');
+
+    greeting = await run('formatGreetingMacro Bonjour', {directory: personInstanceDirectory});
+    expect(greeting).toBe('Bonjour Manu!');
   });
 });

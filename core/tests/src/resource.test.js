@@ -80,6 +80,20 @@ describe('Resource', () => {
     expect(res.$hasAlias('bonjour')).toBe(true);
   });
 
+  test('@parameters', async () => {
+    const res = await Resource.$create({
+      '@parameters': {name: {'@type': 'string', '@position': 0}, age: {'@type': 'number'}}
+    });
+    const params = res.$getParameters();
+    expect(params).toHaveLength(2);
+    expect(params[0]).toBeInstanceOf(StringResource);
+    expect(params[0].$getKey()).toBe('name');
+    expect(params[0].$position).toBe(0);
+    expect(params[1]).toBeInstanceOf(NumberResource);
+    expect(params[1].$getKey()).toBe('age');
+    expect(params[1].$position).toBeUndefined();
+  });
+
   test('@version', async () => {
     expect((await Resource.$create()).$version).toBeUndefined();
     expect((await Resource.$create({'@version': '1.2.3'})).$version.toString()).toBe('1.2.3');
@@ -403,6 +417,7 @@ describe('Resource', () => {
     await testSerialization({
       '@name': 'run/hello-test',
       '@aliases': ['hi', 'bonjour'],
+      '@parameters': {name: {'@type': 'string', '@position': 0}, age: {'@type': 'number'}},
       '@version': '1.2.3',
       '@description': 'This is a resource',
       '@authors': ['Manu', 'Vince'],
@@ -411,6 +426,7 @@ describe('Resource', () => {
       '@files': ['./dist'],
       '@hidden': true
     });
+
     await testSerialization({'@author': 'Manu'});
     await testSerialization({color: {'@type': 'string'}});
     await testSerialization({color: 'green'});

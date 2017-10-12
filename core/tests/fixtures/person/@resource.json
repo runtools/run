@@ -6,45 +6,21 @@
     "@implementation": "./",
     "name": {"@type": "string"},
     "age": {"@type": "number"},
-    "@options": {"shout": false},
+    "@parameters": {
+      "shout": false
+    },
     "formatGreetingMethod": {
       "@type": "method",
-      "@parameter": {
-        "verb": "Hello"
+      "@parameters": {
+        "verb": {"@value": "Hello", "@position": 0}
       }
-    },
-    "formatGreetingCommand": {
-      "@type": "command",
-      "@options": {"ageLimit": {"@alias": "limit", "@value": 45}}
     },
     "formatGreetingMacro": {
       "@type": "macro",
-      "@options": {"ageLimit": {"@alias": "limit", "@value": 30}},
-      "@expression": "formatGreetingCommand --ageLimit=${@options.ageLimit}"
-    },
-    "formatWordsMethod": {
-      "@type": "method",
-      "@parameter": {
-        "words": {"@type": "string"}
+      "@parameters": {
+        "verb": {"@value": "Hi", "@position": 0}
       },
-      "@variadic": true
-    },
-    "formatWordsCommand": {
-      "@type": "command",
-      "@parameter": {
-        "words": {"@type": "string"}
-      },
-      "@variadic": true,
-      "@options": {"capitalize": true}
-    },
-    "formatWordsMacro": {
-      "@type": "macro",
-      "@parameter": {
-        "words": {"@type": "string"}
-      },
-      "@variadic": true,
-      "@options": {"capitalize": true},
-      "@expression": "formatWordsCommand ${@arguments[0]} --capitalize=${@options.capitalize}"
+      "@expression": "formatGreetingMethod $verb"
     },
     "address": {
       "@implementation": "./address",

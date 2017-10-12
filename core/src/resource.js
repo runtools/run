@@ -1,7 +1,7 @@
 import {join, resolve, basename, dirname, isAbsolute} from 'path';
 import {existsSync} from 'fs';
 import {homedir} from 'os';
-import {isPlainObject, entries, isEmpty, union} from 'lodash';
+import {isPlainObject, isEmpty, union, entries} from 'lodash';
 import isDirectory from 'is-directory';
 import {ensureDirSync, ensureFileSync} from 'fs-extra';
 import {getProperty} from '@resdir/util';
@@ -19,6 +19,7 @@ import RegistryClient from '@resdir/registry-client';
 import RegistryCache from '@resdir/registry-cache';
 
 import {getPrimitiveResourceClass} from './primitives';
+import {shiftArguments, findPositionalArguments} from './arguments';
 import Runtime from './runtime';
 
 const RUN_DIRECTORY = join(homedir(), '.run');
@@ -81,6 +82,7 @@ export class Resource {
       set('$directory', '@directory');
       set('$name', '@name');
       set('$aliases', '@aliases', ['@alias']);
+      set('$position', '@position');
       set('$version', '@version');
       set('$description', '@description');
       set('$authors', '@authors', ['@author']);
@@ -94,9 +96,9 @@ export class Resource {
       set('$autoBoxing', '@autoBoxing');
       set('$autoUnboxing', '@autoUnboxing');
 
-      const optionsDefinition = getProperty(definition, '@options', ['@option']);
-      if (optionsDefinition !== undefined) {
-        await this.$setOptions(optionsDefinition);
+      const parameters = getProperty(definition, '@parameters');
+      if (parameters !== undefined) {
+        await this.$setParameters(parameters);
       }
 
       for (const base of bases) {
@@ -629,6 +631,17 @@ export class Resource {
     return Boolean(aliases && aliases.has(alias));
   }
 
+  get $position() {
+    return this._getInheritedValue('_position');
+  }
+
+  set $position(position) {
+    if (position !== undefined && typeof position !== 'number') {
+      throw new TypeError(`Property ${formatCode('@position')} must be a number`);
+    }
+    this._position = position;
+  }
+
   get $version() {
     return this._getInheritedValue('_version');
   }
@@ -694,6 +707,47 @@ export class Resource {
     this._implementation = implementation;
   }
 
+  $getParameters() {
+    return this._getInheritedValue('_parameters');
+  }
+
+  async $setParameters(parameters) {
+    this._parameters = undefined;
+    if (parameters === undefined) {
+      return;
+    }
+    if (!isPlainObject(parameters)) {
+      throw new Error(`${formatCode('parameters')} property must be an object`);
+    }
+    for (const [key, definition] of entries(parameters)) {
+      const parameter = await Resource.$create(definition, {
+        key,
+        directory: this.$getCurrentDirectory({throwIfUndefined: false})
+      });
+      if (this._parameters === undefined) {
+        this._parameters = [];
+      }
+      this._parameters.push(parameter);
+    }
+  }
+
+  $getAllParameters() {
+    const allParameters = [];
+    let resource = this;
+    while (resource) {
+      const parameters = resource.$getParameters && resource.$getParameters();
+      if (parameters) {
+        for (const parameter of parameters) {
+          if (!allParameters.find(param => param.$getKey() === parameter.$getKey())) {
+            allParameters.push(parameter);
+          }
+        }
+      }
+      resource = resource.$getParent();
+    }
+    return allParameters;
+  }
+
   get $files() {
     return this._files;
   }
@@ -751,27 +805,6 @@ export class Resource {
 
   set $autoUnboxing(autoUnboxing) {
     this._autoUnboxing = autoUnboxing;
-  }
-
-  $getOptions() {
-    return this._getInheritedValue('_options');
-  }
-
-  async $setOptions(options) {
-    this._options = undefined;
-    if (options === undefined) {
-      return;
-    }
-    for (const [key, definition] of entries(options)) {
-      const option = await Resource.$create(definition, {
-        key,
-        directory: this.$getCurrentDirectory({throwIfUndefined: false})
-      });
-      if (this._options === undefined) {
-        this._options = [];
-      }
-      this._options.push(option);
-    }
   }
 
   $getExport() {
@@ -921,28 +954,32 @@ export class Resource {
     return this;
   }
 
-  async $invoke(expression = {arguments: [], options: {}}, {_parent} = {}) {
+  async $invoke(args, {_parent} = {}) {
     return await catchContext(this, async () => {
-      expression = {...expression, arguments: [...expression.arguments]};
-      const key = expression.arguments.shift();
-      if (!key) {
+      args = {...args};
+      const key = shiftArguments(args);
+      if (key === undefined) {
         return this;
       }
 
       if (BUILTIN_COMMANDS.includes(key)) {
-        return await this[key](...expression.arguments, expression.options);
+        return await this[key](args);
       }
 
       const child = this.$findChild(key);
       if (!child) {
-        throw new Error(`Command or property not found: ${formatCode(key)}`);
+        throw new Error(`No property or method found with this key: ${formatCode(key)}`);
       }
 
-      return await child.$invoke(expression, {parent: this});
+      return await child.$invoke(args, {parent: this});
     });
   }
 
   $listenEvent(event, method) {
+    if (typeof event !== 'string') {
+      throw new TypeError('\'event\' argument must be a string');
+    }
+
     if (!this._listeners) {
       this._listeners = {};
     }
@@ -952,7 +989,15 @@ export class Resource {
     this._listeners[event].push(method);
   }
 
-  async $emitEvent(event, args, {parseArguments} = {}) {
+  async $emitEvent(event, args = {}, {parseArguments} = {}) {
+    if (typeof event !== 'string') {
+      throw new TypeError('\'event\' argument must be a string');
+    }
+
+    if (!isPlainObject(args)) {
+      throw new TypeError('\'args\' argument must be a plain object');
+    }
+
     const methods = [];
     this.$forSelfAndEachBase(
       resource => {
@@ -962,9 +1007,10 @@ export class Resource {
       },
       {deepSearch: true}
     );
+
     for (const method of methods) {
       const fn = method.$getFunction({parseArguments});
-      await fn.apply(this, args);
+      await fn.call(this, args);
     }
   }
 
@@ -975,7 +1021,7 @@ export class Resource {
     });
   }
 
-  async '@create'(type, name, options) {
+  async '@create'({type, name}) {
     if (!type || typeof type !== 'string') {
       throw new Error(`${formatCode('type')} argument is missing`);
     }
@@ -995,7 +1041,7 @@ export class Resource {
 
         const resource = await Resource.$create(definition);
 
-        await resource.$broadcastEvent('before:@create', [name, options], {parseArguments: true});
+        await resource.$broadcastEvent('before:@create', {name}, {parseArguments: true});
 
         const directory = join(process.cwd(), getResourceIdentifier(name));
 
@@ -1006,7 +1052,7 @@ export class Resource {
 
         await resource.$save({directory, ensureDirectory: true});
 
-        await resource.$broadcastEvent('after:@create', [name, options], {parseArguments: true});
+        await resource.$broadcastEvent('after:@create', {name}, {parseArguments: true});
 
         return resource;
       },
@@ -1019,36 +1065,32 @@ export class Resource {
     return resource;
   }
 
-  async '@install'(...args) {
+  async '@install'(args) {
     await this.$broadcastEvent('before:@install', args, {parseArguments: true});
     await this.$broadcastEvent('after:@install', args, {parseArguments: true});
   }
 
-  async '@build'(...args) {
+  async '@build'(args) {
     await this.$broadcastEvent('before:@build', args, {parseArguments: true});
     await this.$broadcastEvent('after:@build', args, {parseArguments: true});
   }
 
-  async '@lint'(...args) {
+  async '@lint'(args) {
     await this.$broadcastEvent('before:@lint', args, {parseArguments: true});
     await this.$broadcastEvent('after:@lint', args, {parseArguments: true});
   }
 
-  async '@test'(...args) {
+  async '@test'(args) {
     await this.$broadcastEvent('before:@test', args, {parseArguments: true});
     await this.$broadcastEvent('after:@test', args, {parseArguments: true});
   }
 
-  async '@signUp'(...args) {
-    args.pop(); // Ignore options
-    const email = args.shift();
+  async '@signUp'({email}) {
     const registry = this.constructor.$getRegistry();
     await registry.signUp(email);
   }
 
-  async '@signIn'(...args) {
-    args.pop(); // Ignore options
-    const email = args.shift();
+  async '@signIn'({email}) {
     const registry = this.constructor.$getRegistry();
     await registry.signIn(email);
   }
@@ -1058,8 +1100,8 @@ export class Resource {
     await registry.signOut();
   }
 
-  async '@user'(...args) {
-    args.pop(); // Ignore options
+  async '@user'(args) {
+    args = findPositionalArguments(args);
 
     const registry = this.constructor.$getRegistry();
 
@@ -1100,8 +1142,8 @@ export class Resource {
     }
   }
 
-  async '@organization'(...args) {
-    args.pop(); // Ignore options
+  async '@organization'(args) {
+    args = findPositionalArguments(args);
 
     const registry = this.constructor.$getRegistry();
 
@@ -1125,7 +1167,7 @@ export class Resource {
     }
   }
 
-  async '@publish'(...args) {
+  async '@publish'(args) {
     await this.$emitEvent('before:@publish', args, {parseArguments: true});
 
     const name = this.$name;
@@ -1149,11 +1191,13 @@ export class Resource {
     await this.$emitEvent('after:@publish', args, {parseArguments: true});
   }
 
-  async '@emitEvent'(event, ...args) {
+  async '@emitEvent'({event, args}) {
+    args = JSON.parse(args); // TODO: remove this stupid parsing
     return await this.$emitEvent(event, args, {parseArguments: true});
   }
 
-  async '@broadcastEvent'(event, ...args) {
+  async '@broadcastEvent'({event, args}) {
+    args = JSON.parse(args); // TODO: remove this stupid parsing
     return await this.$broadcastEvent(event, args, {parseArguments: true});
   }
 
@@ -1182,6 +1226,12 @@ export class Resource {
     }
 
     this._serializeAliases(definition, options);
+
+    this._serializeParameters(definition, options);
+
+    if (this._position !== undefined) {
+      definition['@position'] = this._position;
+    }
 
     if (this._version !== undefined) {
       definition['@version'] = this._version.toJSON();
@@ -1229,8 +1279,6 @@ export class Resource {
       definition['@autoUnboxing'] = this._autoUnboxing;
     }
 
-    this._serializeOptions(definition, options);
-
     this._serializeChildren(definition, options);
 
     this._serializeExport(definition, options);
@@ -1265,6 +1313,24 @@ export class Resource {
     }
   }
 
+  _serializeParameters(definition, _options) {
+    const parameters = this._parameters;
+    if (parameters) {
+      const serializedParameters = {};
+      let count = 0;
+      for (const parameter of parameters) {
+        const parameterDefinition = parameter.$serialize();
+        if (parameterDefinition !== undefined) {
+          serializedParameters[parameter.$getKey()] = parameterDefinition;
+          count++;
+        }
+      }
+      if (count > 0) {
+        definition['@parameters'] = serializedParameters;
+      }
+    }
+  }
+
   _serializeAuthors(definition, _options) {
     const authors = this._authors;
     if (authors !== undefined) {
@@ -1272,26 +1338,6 @@ export class Resource {
         definition['@author'] = authors[0];
       } else if (authors.length > 1) {
         definition['@authors'] = authors;
-      }
-    }
-  }
-
-  _serializeOptions(definition, options) {
-    const resourceOptions = this._options;
-    if (resourceOptions) {
-      const serializedOptions = {};
-      let count = 0;
-      for (const option of resourceOptions) {
-        const serializedOption = option.$serialize(options);
-        if (serializedOption !== undefined) {
-          serializedOptions[option.$getKey()] = serializedOption;
-          count++;
-        }
-      }
-      if (count === 1) {
-        definition['@option'] = serializedOptions;
-      } else if (count > 1) {
-        definition['@options'] = serializedOptions;
       }
     }
   }

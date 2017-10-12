@@ -14,8 +14,6 @@ export function getPrimitiveResourceClass(type) {
       return require('./binary').default;
     case 'method':
       return require('./method').default;
-    case 'command':
-      return require('./command').default;
     case 'macro':
       return require('./macro').default;
     default:

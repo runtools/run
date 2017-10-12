@@ -5,117 +5,88 @@ import {getProperty} from '@resdir/util';
 import {catchContext, formatCode} from '@resdir/console';
 
 import Resource from '../resource';
-import CommandResource from './command';
+import MethodResource from './method';
+import {makePositionalArgumentKey, getFirstArgument, shiftArguments} from '../arguments';
 
-export class MacroResource extends CommandResource {
+export class MacroResource extends MethodResource {
   async $construct(definition, options) {
     await super.$construct(definition, options);
     catchContext(this, () => {
-      const expressions = getProperty(definition, '@expressions', ['@expression']);
-      if (expressions !== undefined) {
-        this.$expressions = expressions;
+      const expression = getProperty(definition, '@expression');
+      if (expression !== undefined) {
+        this.$expression = expression;
       }
     });
   }
 
-  get $expressions() {
-    return this._getInheritedValue('_expressions');
+  get $expression() {
+    return this._getInheritedValue('_expression');
   }
 
-  set $expressions(expressions) {
-    if (typeof expressions === 'string') {
-      expressions = [expressions];
+  set $expression(expression) {
+    if (typeof expression === 'string') {
+      expression = [expression];
     }
-    this._expressions = expressions;
+    this._expression = expression;
   }
 
   _getImplementation() {
     const macroResource = this;
-    return function (...args) {
-      const options = args.pop();
-      const expression = {arguments: args, options};
-      return macroResource._run(expression, {parent: this});
+    return function (args) {
+      return macroResource._run(args, {parent: this});
     };
   }
 
-  async _run(expression, {parent} = {}) {
-    const macroExpressions = this.$expressions || [];
+  async _run(args, {parent} = {}) {
     let result;
-    for (let macroExpression of macroExpressions) {
+
+    for (const expression of this.$expression || []) {
       // TODO: Replace 'shell-quote' with something more suitable
 
       // // Prevent 'shell-quote' from interpreting operators:
       // for (const operator of '|&;()<>') {
-      //   macroExpression = macroExpression.replace(
+      //   expression = expression.replace(
       //     new RegExp('\\' + operator, 'g'),
       //     '\\' + operator
       //   );
       // }
 
-      let args = parse(macroExpression, variable => {
-        if (!variable.startsWith('@')) {
-          return '$' + variable;
+      let macroArguments = parse(expression, variable => {
+        if (!(variable in args)) {
+          throw new Error(`Invalid variable found in a macro: ${formatCode(variable)}`);
         }
-
-        if (variable.startsWith('@arguments[') && variable.endsWith(']')) {
-          // TODO: Handle variadic macros
-          let index = variable.slice('@arguments['.length, -1);
-          if (!/\d+/.test(index)) {
-            throw new Error(
-              `Invalid argument index (not a number) found in a macro variable: ${formatCode(
-                index
-              )}`
-            );
-          }
-          index = Number(index);
-          if (index > expression.arguments.length - 1) {
-            throw new Error(
-              `Invalid argument index (out of range) found in a macro variable: ${formatCode(
-                String(index)
-              )}`
-            );
-          }
-          return String(expression.arguments[index]);
-        }
-
-        if (variable.startsWith('@options.')) {
-          const key = variable.slice('@options.'.length);
-          if (!(key in expression.options)) {
-            throw new Error(`Invalid option name found in a macro variable: ${formatCode(key)}`);
-          }
-          return String(expression.options[key]);
-        }
-
-        throw new Error(`Invalid macro variable: ${formatCode(variable)}`);
+        return String(args[variable]);
       });
 
-      args = args.map(arg => {
+      macroArguments = macroArguments.map(arg => {
         if (typeof arg === 'string') {
           return arg;
         }
         throw new Error(`Argument parsing failed (arg: ${JSON.stringify(arg)})`);
       });
 
-      macroExpression = parseCommandLineArguments(args);
+      macroArguments = parseCommandLineArguments(macroArguments);
 
-      result = await this._runExpression(macroExpression, {parent});
+      result = await this._runExpression(macroArguments, {parent});
     }
+
     return result;
   }
 
-  async _runExpression(expression, {parent}) {
-    const firstArgument = expression.arguments[0];
+  async _runExpression(args, {parent}) {
+    const firstArgument = getFirstArgument(args);
     if (
-      firstArgument &&
+      firstArgument !== undefined &&
       (firstArgument.startsWith('.') || firstArgument.includes('/') || isAbsolute(firstArgument))
     ) {
-      // The fist arguments looks like a resource path
+      // The fist arguments looks like a resource identifier
       parent = await Resource.$load(firstArgument, {
         directory: this.$getCurrentDirectory({throwIfUndefined: false})
       });
-      expression = {...expression, arguments: expression.arguments.slice(1)};
+      args = {...args};
+      shiftArguments(args);
     }
-    return await parent.$invoke(expression);
+    return await parent.$invoke(args);
   }
 
   $serialize(opts) {
@@ -125,12 +96,12 @@ export class MacroResource extends CommandResource {
       definition = {};
     }
 
-    const expressions = this._expressions;
-    if (expressions !== undefined) {
-      if (expressions.length === 1) {
-        definition['@expression'] = expressions[0];
-      } else if (expressions.length > 1) {
-        definition['@expressions'] = expressions;
+    const expression = this._expression;
+    if (expression !== undefined) {
+      if (expression.length === 1) {
+        definition['@expression'] = expression[0];
+      } else if (expression.length > 1) {
+        definition['@expression'] = expression;
       }
     }
 
@@ -147,9 +118,9 @@ export function parseCommandLineArguments(argsAndOpts) {
     throw new TypeError('\'argsAndOpts\' must be an array');
   }
 
-  const result = {arguments: [], options: {}};
+  const result = {};
 
-  for (let i = 0; i < argsAndOpts.length; i++) {
+  for (let i = 0, position = 0; i < argsAndOpts.length; i++) {
     const argOrOpt = argsAndOpts[i];
 
     if (typeof argOrOpt === 'string' && argOrOpt.startsWith('--')) {
@@ -184,7 +155,7 @@ export function parseCommandLineArguments(argsAndOpts) {
         val = 'true';
       }
 
-      result.options[opt] = val;
+      result[opt] = val;
       continue;
     }
 
@@ -195,13 +166,13 @@ export function parseCommandLineArguments(argsAndOpts) {
         if (!/[\w\d]/.test(opt)) {
           throw new Error(`Invalid command line option: ${formatCode(argOrOpt)}`);
         }
-        result.options[opt] = 'true';
+        result[opt] = 'true';
       }
       continue;
     }
 
-    const argument = argOrOpt;
-    result.arguments.push(argument);
+    result[makePositionalArgumentKey(position)] = argOrOpt;
+    position++;
   }
 
   return result;

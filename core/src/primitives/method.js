@@ -1,65 +1,25 @@
-import {isEmpty, isPlainObject, entries} from 'lodash';
+import {isEmpty, isPlainObject} from 'lodash';
 import {getProperty} from '@resdir/util';
 import {catchContext, formatString, formatCode} from '@resdir/console';
+import {getPropertyKeyAndValue} from '@resdir/util';
 
 import Resource from '../resource';
+import {makePositionalArgumentKey} from '../arguments';
 
 export class MethodResource extends Resource {
   async $construct(definition, options) {
     await super.$construct(definition, options);
     await catchContext(this, async () => {
-      const variadic = getProperty(definition, '@variadic');
-      if (variadic !== undefined) {
-        this.$variadic = variadic;
-      }
-
-      const parameters = getProperty(definition, '@parameters', ['@parameter']);
-      if (parameters !== undefined) {
-        await this.$setParameters(parameters);
-      }
-
-      const listenedEvents = getProperty(definition, '@listen', ['@listens']);
+      const listenedEvents = getProperty(definition, '@listen');
       if (listenedEvents !== undefined) {
         this.$setListenedEvents(listenedEvents);
       }
 
-      const emittedEvents = getProperty(definition, '@emit', ['@emits']);
+      const emittedEvents = getProperty(definition, '@emit');
       if (emittedEvents !== undefined) {
         this.$setEmittedEvents(emittedEvents);
       }
     });
-  }
-
-  $getParameters() {
-    return this._getInheritedValue('_parameters');
-  }
-
-  async $setParameters(parameters) {
-    this._parameters = undefined;
-    if (parameters === undefined) {
-      return;
-    }
-    if (!isPlainObject(parameters)) {
-      throw new Error(`${formatCode('@parameters')} property must be an object`);
-    }
-    for (const [key, definition] of entries(parameters)) {
-      const parameter = await Resource.$create(definition, {
-        key,
-        directory: this.$getCurrentDirectory({throwIfUndefined: false})
-      });
-      if (this._parameters === undefined) {
-        this._parameters = [];
-      }
-      this._parameters.push(parameter);
-    }
-  }
-
-  get $variadic() {
-    return this._getInheritedValue('_variadic');
-  }
-
-  set $variadic(variadic) {
-    this._variadic = variadic;
   }
 
   $getListenedEvents() {
@@ -121,15 +81,16 @@ export class MethodResource extends Resource {
   $getFunction({parseArguments} = {}) {
     const methodResource = this;
 
-    return async function (...args) {
-      const {
-        normalizedArguments,
-        remainingArguments
-      } = await methodResource._normalizeArguments(args, {
+    return async function (args, ...rest) {
+      const normalizedArguments = await methodResource._normalizeArguments(args, {
         parse: parseArguments
       });
-      if (remainingArguments.length) {
-        throw new Error(`Too many arguments passed to ${formatCode(methodResource.$getKey())}`);
+
+      if (rest.length !== 0) {
+        throw new TypeError(
+          `A resource method must be invoked with a single plain object argument (${rest.length +
+            1} arguments received)`
+        );
       }
 
       const implementation = methodResource._getImplementation();
@@ -143,7 +104,7 @@ export class MethodResource extends Resource {
         await this.$emitEvent(emittedEvents.before);
       }
 
-      const result = await implementation.apply(this, normalizedArguments);
+      const result = await implementation.call(this, normalizedArguments);
 
       if (emittedEvents && emittedEvents.after) {
         await this.$emitEvent(emittedEvents.after);
@@ -154,38 +115,38 @@ export class MethodResource extends Resource {
   }
 
   async _normalizeArguments(args, {parse}) {
-    const normalizedArguments = [];
-    const remainingArguments = [...args];
+    if (args === undefined) {
+      args = {};
+    }
 
-    const parameters = this.$getParameters() || [];
-    const lastParameter = parameters[parameters.length - 1];
-    const variadic = this.$variadic;
-    for (const parameter of parameters) {
-      if (variadic && parameter === lastParameter) {
-        const lastArguments = this._shiftVariadicArguments(remainingArguments);
-        for (const argument of lastArguments) {
-          const normalizedArgument = (await parameter.$extend(argument, {parse})).$autoUnbox();
-          normalizedArguments.push(normalizedArgument);
-        }
-      } else {
-        const argument = remainingArguments.shift();
-        const normalizedArgument = (await parameter.$extend(argument, {parse})).$autoUnbox();
-        normalizedArguments.push(normalizedArgument);
+    if (!isPlainObject(args)) {
+      throw new TypeError(
+        `A resource method must be invoked with a plain object argument (${formatString(
+          typeof args
+        )} received)`
+      );
+    }
+
+    const remainingArguments = {...args};
+    const normalizedArguments = {};
+
+    for (const parameter of this.$getAllParameters()) {
+      const {key, value} = findArgument(remainingArguments, parameter);
+      if (key !== undefined) {
+        delete remainingArguments[key];
+      }
+      const normalizedValue = (await parameter.$extend(value, {parse})).$autoUnbox();
+      if (normalizedValue !== undefined) {
+        normalizedArguments[parameter.$getKey()] = normalizedValue;
       }
     }
 
-    return {normalizedArguments, remainingArguments};
-  }
-
-  _shiftVariadicArguments(args) {
-    // In the case of a MethodResource, return every arguments
-    // See CommandResource for a more useful implementation
-    const lastArguments = [];
-    while (args.length) {
-      const arg = args.shift();
-      lastArguments.push(arg);
+    const remainingArgumentKeys = Object.keys(remainingArguments);
+    if (remainingArgumentKeys.length) {
+      throw new Error(`Invalid method argument: ${formatCode(remainingArgumentKeys[0])}.`);
     }
-    return lastArguments;
+
+    return normalizedArguments;
   }
 
   _getImplementation() {
@@ -206,9 +167,9 @@ export class MethodResource extends Resource {
     return implementation;
   }
 
-  async $invoke(expression = {arguments: [], options: {}}, {parent} = {}) {
+  async $invoke(args, {parent} = {}) {
     const fn = this.$getFunction({parseArguments: true});
-    return await fn.apply(parent, expression.arguments);
+    return await fn.call(parent, args);
   }
 
   $serialize(options) {
@@ -216,28 +177,6 @@ export class MethodResource extends Resource {
 
     if (definition === undefined) {
       definition = {};
-    }
-
-    const parameters = this._parameters;
-    if (parameters) {
-      const serializedParameters = {};
-      let count = 0;
-      for (const parameter of parameters) {
-        const parameterDefinition = parameter.$serialize();
-        if (parameterDefinition !== undefined) {
-          serializedParameters[parameter.$getKey()] = parameterDefinition;
-          count++;
-        }
-      }
-      if (count === 1) {
-        definition['@parameter'] = serializedParameters;
-      } else if (count > 1) {
-        definition['@parameters'] = serializedParameters;
-      }
-    }
-
-    if (this._variadic !== undefined) {
-      definition['@variadic'] = this._variadic;
     }
 
     let listenedEvents = this._listenedEvents;
@@ -262,6 +201,23 @@ export class MethodResource extends Resource {
 
     return definition;
   }
+}
+
+function findArgument(args, parameter) {
+  let {key, value} = getPropertyKeyAndValue(args, parameter.$getKey(), parameter.$aliases) || {};
+
+  if (key === undefined) {
+    const position = parameter.$position;
+    if (position !== undefined) {
+      const positionalArgumentKey = makePositionalArgumentKey(position);
+      if (positionalArgumentKey in args) {
+        key = positionalArgumentKey;
+        value = args[key];
+      }
+    }
+  }
+
+  return {key, value};
 }
 
 export default MethodResource;
