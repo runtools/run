@@ -16,10 +16,10 @@ describe('ObjectResource', () => {
     expect(
       (await ObjectResource.$create({
         '@type': 'object',
-        '@value': {'@name': 'abc', '@xyz': 123}
+        '@value': {'@id': 'abc', '@xyz': 123}
       })).$value
     ).toEqual({
-      '@name': 'abc',
+      '@id': 'abc',
       '@xyz': 123
     });
     await expect(ObjectResource.$create('hello')).rejects.toBeInstanceOf(Error);

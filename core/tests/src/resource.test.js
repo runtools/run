@@ -40,34 +40,34 @@ describe('Resource', () => {
 
   test('emptiness', async () => {
     const res = await Resource.$create();
-    expect(res.$name).toBeUndefined();
+    expect(res.$identifier).toBeUndefined();
     expect(res.$aliases).toBeUndefined();
     expect(res.$hasAlias('hi')).toBe(false);
   });
 
-  test('@name', async () => {
+  test('@id', async () => {
     const res = await Resource.$create();
-    expect(res.$name).toBeUndefined();
+    expect(res.$identifier).toBeUndefined();
     expect(res.$getNamespace()).toBeUndefined();
-    expect(res.$getIdentifier()).toBeUndefined();
-    res.$name = 'run/hello';
-    expect(res.$name).toBe('run/hello');
+    expect(res.$getName()).toBeUndefined();
+    res.$identifier = 'run/hello';
+    expect(res.$identifier).toBe('run/hello');
     expect(res.$getNamespace()).toBe('run');
-    expect(res.$getIdentifier()).toBe('hello');
+    expect(res.$getName()).toBe('hello');
   });
 
-  test('@name validation', async () => {
-    await expect(Resource.$create({'@name': ''})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@name': 'hello'})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@name': 'run/hello'})).resolves.toBeInstanceOf(Resource);
-    await expect(Resource.$create({'@name': 'run/hello-world'})).resolves.toBeInstanceOf(Resource);
-    await expect(Resource.$create({'@name': 'run/hello-'})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@name': 'run/hello*world'})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@name': 'run/-hello'})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@name': 'run/hello--world'})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@name': 'run/'})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@name': '/hello'})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@name': 'run/hello/hi'})).rejects.toBeInstanceOf(Error);
+  test('@id validation', async () => {
+    await expect(Resource.$create({'@id': ''})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@id': 'hello'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@id': 'run/hello'})).resolves.toBeInstanceOf(Resource);
+    await expect(Resource.$create({'@id': 'run/hello-world'})).resolves.toBeInstanceOf(Resource);
+    await expect(Resource.$create({'@id': 'run/hello-'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@id': 'run/hello*world'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@id': 'run/-hello'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@id': 'run/hello--world'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@id': 'run/'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@id': '/hello'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@id': 'run/hello/hi'})).rejects.toBeInstanceOf(Error);
   });
 
   test('@aliases', async () => {
@@ -175,7 +175,7 @@ describe('Resource', () => {
 
     let error;
     try {
-      await Resource.$create({'@name': 'run/hello-test', '@authors': 'Manu', '@author': 'Manu'});
+      await Resource.$create({'@id': 'run/hello-test', '@authors': 'Manu', '@author': 'Manu'});
     } catch (err) {
       error = err;
     }
@@ -183,7 +183,7 @@ describe('Resource', () => {
     expect(error).toBeInstanceOf(Error);
     expect(error.contextStack).toHaveLength(1);
     expect(error.contextStack[0]).toBeInstanceOf(Resource);
-    expect(error.contextStack[0].$name).toBe('run/hello-test');
+    expect(error.contextStack[0].$identifier).toBe('run/hello-test');
   });
 
   test('simple property definition', async () => {
@@ -308,7 +308,7 @@ describe('Resource', () => {
   test('Resource loaded from a file', async () => {
     const PersonConstructor = await Resource.$load('../fixtures/person', {directory: __dirname});
     expect(PersonConstructor).toBeInstanceOf(Resource);
-    expect(PersonConstructor.$name).toBe('run/person-test');
+    expect(PersonConstructor.$identifier).toBe('run/person-test');
     expect(PersonConstructor.$version.toString()).toBe('1.0.0');
     expect(PersonConstructor.$getChild('name')).toBeUndefined();
     expect(PersonConstructor.$getChild('age')).toBeUndefined();
@@ -324,7 +324,7 @@ describe('Resource', () => {
   test('Resource imported from a file', async () => {
     const Person = await Resource.$import('../fixtures/person', {directory: __dirname});
     expect(Person).toBeInstanceOf(Resource);
-    expect(Person.$name).toBeUndefined();
+    expect(Person.$identifier).toBeUndefined();
     expect(Person.$version).toBeUndefined();
     expect(Person.$getChild('name')).toBeInstanceOf(StringResource);
     expect(Person.name).toBeUndefined();
@@ -334,16 +334,16 @@ describe('Resource', () => {
 
   test('Resource imported from a file via a type', async () => {
     const person = await Resource.$create(
-      {'@name': 'run/manu-test', '@import': '../fixtures/person'},
+      {'@id': 'run/manu-test', '@import': '../fixtures/person'},
       {directory: __dirname}
     );
-    expect(person.$name).toBe('run/manu-test');
+    expect(person.$identifier).toBe('run/manu-test');
     expect(person.$getChild('name')).toBeInstanceOf(StringResource);
     expect(person.$getChild('age')).toBeInstanceOf(NumberResource);
     person.name = 'Manu';
     person.age = 44;
     expect(person.$serialize()).toEqual({
-      '@name': 'run/manu-test',
+      '@id': 'run/manu-test',
       '@import': '../fixtures/person',
       name: 'Manu',
       age: 44
@@ -402,7 +402,7 @@ describe('Resource', () => {
     await testSerialization({'@type': 'object', '@value': {}});
     await testSerialization({'@type': 'object', '@value': {name: 'Manu'}});
     await testSerialization({
-      '@name': 'run/hello-test',
+      '@id': 'run/hello-test',
       '@aliases': ['hi', 'bonjour'],
       '@parameters': {name: {'@type': 'string', '@position': 0}, age: {'@type': 'number'}},
       '@version': '1.2.3',
@@ -419,10 +419,10 @@ describe('Resource', () => {
     await testSerialization({color: 'green'});
     await testSerialization({name: 'Manu', address: {city: 'Tokyo'}});
     await testSerialization({
-      '@import': {'@name': 'run/person-test', '@export': {name: 'anonymous'}}
+      '@import': {'@id': 'run/person-test', '@export': {name: 'anonymous'}}
     });
     await testSerialization({
-      '@import': {'@name': 'run/person-test', '@export': {name: 'anonymous'}},
+      '@import': {'@id': 'run/person-test', '@export': {name: 'anonymous'}},
       name: 'Manu'
     });
     await testSerialization(

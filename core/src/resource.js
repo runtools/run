@@ -9,10 +9,10 @@ import {catchContext, task, formatString, formatPath, formatCode} from '@resdir/
 import {load, save} from '@resdir/file-manager';
 import {
   getResourceNamespace,
-  getResourceIdentifier,
-  validateResourceName,
-  parseResourceName
-} from '@resdir/resource-name';
+  getResourceName,
+  validateResourceIdentifier,
+  parseResourceIdentifier
+} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, formatResourceSpecifier} from '@resdir/resource-specifier';
 import Version from '@resdir/version';
 import RegistryClient from '@resdir/registry-client';
@@ -80,7 +80,7 @@ export class Resource {
       set('$types', '@type', ['@import']); // TODO: @type and @import should be handled separately
       set('$location', '@load');
       set('$directory', '@directory');
-      set('$name', '@name');
+      set('$identifier', '@id');
       set('$aliases', '@aliases');
       set('$position', '@position');
       set('$version', '@version');
@@ -309,15 +309,15 @@ export class Resource {
   static async _fetchFromLocalResources(specifier) {
     // Useful for development: resources are loaded directly from local source code
 
-    const {name, versionRange} = parseResourceSpecifier(specifier);
-    const {namespace, identifier} = parseResourceName(name);
+    const {identifier, versionRange} = parseResourceSpecifier(specifier);
+    const {namespace, name} = parseResourceIdentifier(identifier);
 
     const resourcesDirectory = process.env.RUN_LOCAL_RESOURCES;
     if (!resourcesDirectory || resourcesDirectory === '0') {
       return undefined;
     }
 
-    const directory = join(resourcesDirectory, namespace, identifier);
+    const directory = join(resourcesDirectory, namespace, name);
     if (!existsSync(directory)) {
       return undefined;
     }
@@ -343,8 +343,8 @@ export class Resource {
 
     const installedFlagFile = join(directory, '.installed');
     if (!existsSync(installedFlagFile)) {
-      const nameAndVersion = formatResourceSpecifier({
-        name: definition['@name'],
+      const idAndVersion = formatResourceSpecifier({
+        identifier: definition['@id'],
         versionRange: definition['@version']
       });
       await task(
@@ -354,8 +354,8 @@ export class Resource {
           ensureFileSync(installedFlagFile);
         },
         {
-          intro: `Installing ${formatString(nameAndVersion)}...`,
-          outro: `${formatString(nameAndVersion)} installed`
+          intro: `Installing ${formatString(idAndVersion)}...`,
+          outro: `${formatString(idAndVersion)} installed`
         }
       );
     }
@@ -584,23 +584,23 @@ export class Resource {
     this._directory = directory;
   }
 
-  get $name() {
-    return this._getInheritedValue('_name');
+  get $identifier() {
+    return this._getInheritedValue('_identifier');
   }
 
-  set $name(name) {
-    if (name !== undefined) {
-      validateResourceName(name);
+  set $identifier(identifier) {
+    if (identifier !== undefined) {
+      validateResourceIdentifier(identifier);
     }
-    this._name = name;
+    this._identifier = identifier;
   }
 
   $getNamespace() {
-    return getResourceNamespace(this.$name);
+    return getResourceNamespace(this.$identifier);
   }
 
-  $getIdentifier() {
-    return getResourceIdentifier(this.$name);
+  $getName() {
+    return getResourceName(this.$identifier);
   }
 
   get $aliases() {
@@ -1021,29 +1021,29 @@ export class Resource {
     });
   }
 
-  async '@create'({import: importArg, name}) {
+  async '@create'({import: importArg, id: identifier}) {
     if (!importArg || typeof importArg !== 'string') {
       throw new Error(`${formatCode('import')} argument is missing`);
     }
 
-    if (!name || typeof name !== 'string') {
-      throw new Error(`${formatCode('name')} argument is missing`);
+    if (!identifier || typeof identifier !== 'string') {
+      throw new Error(`${formatCode('identifier')} argument is missing`);
     }
 
     const resource = await task(
       async () => {
         const definition = {'@import': importArg};
-        if (!name.startsWith('@')) {
-          // Don't set @name if it looks like a npm package scoped name
-          definition['@name'] = name;
+        if (!identifier.startsWith('@')) {
+          // Don't set @id if it looks like a npm package scoped name
+          definition['@id'] = identifier;
         }
         definition['@version'] = '0.1.0';
 
         const resource = await Resource.$create(definition);
 
-        await resource.$broadcastEvent('before:@create', {name}, {parseArguments: true});
+        await resource.$broadcastEvent('before:@create', {id: identifier}, {parseArguments: true});
 
-        const directory = join(process.cwd(), getResourceIdentifier(name));
+        const directory = join(process.cwd(), getResourceName(identifier));
 
         const existingResource = await this.constructor.$load(directory, {throwIfNotFound: false});
         if (existingResource) {
@@ -1052,13 +1052,13 @@ export class Resource {
 
         await resource.$save({directory, ensureDirectory: true});
 
-        await resource.$broadcastEvent('after:@create', {name}, {parseArguments: true});
+        await resource.$broadcastEvent('after:@create', {id: identifier}, {parseArguments: true});
 
         return resource;
       },
       {
-        intro: `Creating ${formatString(name)} resource...`,
-        outro: `Resource ${formatString(name)} created`
+        intro: `Creating ${formatString(identifier)} resource...`,
+        outro: `Resource ${formatString(identifier)} created`
       }
     );
 
@@ -1170,11 +1170,11 @@ export class Resource {
   async '@publish'({major, minor, patch}) {
     await this.$emitEvent('before:@publish', undefined, {parseArguments: true});
 
-    const name = this.$name;
+    const identifier = this.$identifier;
     const version = this.$version;
-    if (!(name && version)) {
+    if (!(identifier && version)) {
       throw new Error(
-        `Can't publish a resource without ${formatCode('@name')} and ${formatCode(
+        `Can't publish a resource without ${formatCode('@id')} and ${formatCode(
           '@version'
         )} properties`
       );
@@ -1194,10 +1194,10 @@ export class Resource {
           version.bump(part);
           await this.$save();
           progress.setOutro(
-            `Version number bumped to ${formatString(version)} (${formatString(name)})`
+            `Version number bumped to ${formatString(version)} (${formatString(identifier)})`
           );
         },
-        {intro: `Bumping version number (${formatString(name)})...`}
+        {intro: `Bumping version number (${formatString(identifier)})...`}
       );
     }
 
@@ -1209,8 +1209,8 @@ export class Resource {
         await registry.publishResource(definition, directory);
       },
       {
-        intro: `Publishing resource (${formatString(name)})...`,
-        outro: `Resource published (${formatString(name)})`
+        intro: `Publishing resource (${formatString(identifier)})...`,
+        outro: `Resource published (${formatString(identifier)})`
       }
     );
 
@@ -1247,8 +1247,8 @@ export class Resource {
       definition['@directory'] = this._directory;
     }
 
-    if (this._name !== undefined) {
-      definition['@name'] = this._name;
+    if (this._identifier !== undefined) {
+      definition['@id'] = this._identifier;
     }
 
     this._serializeAliases(definition, options);
