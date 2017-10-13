@@ -78,7 +78,7 @@ export class Resource {
       };
 
       set('$types', '@type', ['@import']); // TODO: @type and @import should be handled separately
-      set('$location', '@location');
+      set('$location', '@load');
       set('$directory', '@directory');
       set('$name', '@name');
       set('$aliases', '@aliases', ['@alias']);
@@ -136,7 +136,7 @@ export class Resource {
     let types = getProperty(normalizedDefinition, '@type', ['@import']);
     types = Resource.$normalizeTypes(types);
 
-    const location = getProperty(normalizedDefinition, '@location');
+    const location = getProperty(normalizedDefinition, '@load');
 
     if (
       this === Resource &&
@@ -194,7 +194,7 @@ export class Resource {
     if (implementation) {
       if (location) {
         throw new Error(
-          `Can't have both a ${formatCode('@location')} and an ${formatCode('@code')}`
+          `Can't have both ${formatCode('@load')} and ${formatCode('@code')} properties`
         );
       }
       const builder = requireImplementation(implementation, {directory});
@@ -571,7 +571,7 @@ export class Resource {
 
   set $location(location) {
     if (!(typeof location === 'string' || isPlainObject(location))) {
-      throw new Error(`Invalid ${formatCode('@location')} value`);
+      throw new Error(`Invalid ${formatCode('@load')} value`);
     }
     this._location = location;
   }
@@ -1214,7 +1214,7 @@ export class Resource {
     this._serializeTypes(definition, options);
 
     if (this._location !== undefined) {
-      definition['@location'] = this._location;
+      definition['@load'] = this._location;
     }
 
     if (this._directory !== undefined) {

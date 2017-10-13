@@ -359,9 +359,9 @@ describe('Resource', () => {
     expect(Company.$getChild('boss').$getChild('age')).toBeInstanceOf(NumberResource);
   });
 
-  test('Resource loaded from a file via a location', async () => {
+  test('Resource loaded from a file', async () => {
     const person = await Resource.$create(
-      {'@location': '../fixtures/person-instance'},
+      {'@load': '../fixtures/person-instance'},
       {directory: __dirname}
     );
     expect(person.$getChild('name')).toBeInstanceOf(StringResource);
