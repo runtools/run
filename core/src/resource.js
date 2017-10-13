@@ -81,7 +81,7 @@ export class Resource {
       set('$location', '@load');
       set('$directory', '@directory');
       set('$name', '@name');
-      set('$aliases', '@aliases', ['@alias']);
+      set('$aliases', '@aliases');
       set('$position', '@position');
       set('$version', '@version');
       set('$description', '@description');
@@ -1311,9 +1311,7 @@ export class Resource {
     let aliases = this._aliases;
     if (aliases !== undefined) {
       aliases = Array.from(aliases);
-      if (aliases.length === 1) {
-        definition['@alias'] = aliases[0];
-      } else if (aliases.length > 1) {
+      if (aliases.length > 0) {
         definition['@aliases'] = aliases;
       }
     }
