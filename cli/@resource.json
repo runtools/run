@@ -1,5 +1,5 @@
 {
-  "@type": "js/esnext-package",
+  "@import": "js/esnext-package",
   "name": "run-cli",
   "version": "0.10.6",
   "description": "One tool to run them all",
@@ -30,7 +30,7 @@
     }
   },
   "tests": {
-    "@type": "js/esnext-jest",
+    "@import": "js/esnext-jest",
     "@directory": "./tests",
     "testEnvironment": "node",
     "run": {

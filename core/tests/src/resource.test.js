@@ -4,14 +4,12 @@ import NumberResource from '../../dist/primitives/number';
 import StringResource from '../../dist/primitives/string';
 import ArrayResource from '../../dist/primitives/array';
 import ObjectResource from '../../dist/primitives/object';
-import MacroResource from '../../dist/primitives/macro';
 
 describe('Resource', () => {
   test('creation', async () => {
     expect(await Resource.$create()).toBeInstanceOf(Resource);
     expect(await Resource.$create({})).toBeInstanceOf(Resource);
     expect(await Resource.$create({'@type': 'resource'})).toBeInstanceOf(Resource);
-    expect(await Resource.$create({'@types': ['resource']})).toBeInstanceOf(Resource);
     await expect(Resource.$create({'@type': 'invalid'})).rejects.toBeInstanceOf(Error);
 
     expect(await Resource.$create({'@type': 'boolean'})).toBeInstanceOf(BooleanResource);
@@ -226,8 +224,8 @@ describe('Resource', () => {
   });
 
   test('composed properties', async () => {
-    const type = {'@export': {city: {'@type': 'string'}}};
-    const person = await Resource.$create({address: {'@type': type}});
+    const definition = {'@export': {city: {'@type': 'string'}}};
+    const person = await Resource.$create({address: {'@import': definition}});
     expect(person.address).toBeInstanceOf(Resource);
     expect(person.address.$getChild('city')).toBeDefined();
     expect(person.address.city).toBeUndefined();
@@ -236,8 +234,8 @@ describe('Resource', () => {
   });
 
   test('inherited properties', async () => {
-    const type = {'@export': {name: 'anonymous'}};
-    const person = await Resource.$create({'@type': type});
+    const definition = {'@export': {name: 'anonymous'}};
+    const person = await Resource.$create({'@import': definition});
     const parent = person.$findBase(() => true);
     expect(parent.$getChild('name')).toBeInstanceOf(StringResource);
     expect(parent.name).toBe('anonymous');
@@ -249,8 +247,8 @@ describe('Resource', () => {
   });
 
   test('inherited properties redefined', async () => {
-    const type = {'@export': {name: 'anonymous'}};
-    const person = await Resource.$create({'@type': type});
+    const definition = {'@export': {name: 'anonymous'}};
+    const person = await Resource.$create({'@import': definition});
     const parent = person.$findBase(() => true);
     await person.$setChild('name', 'Manuel');
     expect(person.$getChild('name')).toBeInstanceOf(StringResource);
@@ -261,8 +259,8 @@ describe('Resource', () => {
   });
 
   test('inherited properties with a value', async () => {
-    const type = {'@export': {name: 'anonymous'}};
-    const person = await Resource.$create({'@type': type, name: 'Manu'});
+    const definition = {'@export': {name: 'anonymous'}};
+    const person = await Resource.$create({'@import': definition, name: 'Manu'});
     const parent = person.$findBase(() => true);
     expect(parent.name).toBe('anonymous');
     expect(person.name).toBe('Manu');
@@ -272,8 +270,8 @@ describe('Resource', () => {
   });
 
   test('inherited composed properties', async () => {
-    const type = {'@export': {address: {'@type': {'@export': {city: 'unknown'}}}}};
-    const person = await Resource.$create({'@type': type});
+    const definition = {'@export': {address: {'@import': {'@export': {city: 'unknown'}}}}};
+    const person = await Resource.$create({'@import': definition});
     const parent = person.$findBase(() => true);
     expect(parent.address.city).toBe('unknown');
     expect(person.address.city).toBe('unknown');
@@ -283,13 +281,13 @@ describe('Resource', () => {
   });
 
   test('inherited composed properties with a value', async () => {
-    const type = {
+    const definition = {
       '@export': {
-        address: {'@type': {'@export': {city: {'@value': 'unknown', '@description': 'The city'}}}}
+        address: {'@import': {'@export': {city: {'@value': 'unknown', '@description': 'The city'}}}}
       }
     };
     const person = await Resource.$create({
-      '@type': type,
+      '@import': definition,
       address: {city: 'Tokyo'}
     });
     const parent = person.$findBase(() => true);
@@ -334,7 +332,7 @@ describe('Resource', () => {
 
   test('Resource imported from a file via a type', async () => {
     const person = await Resource.$create(
-      {'@name': 'run/manu-test', '@type': '../fixtures/person'},
+      {'@name': 'run/manu-test', '@import': '../fixtures/person'},
       {directory: __dirname}
     );
     expect(person.$name).toBe('run/manu-test');
@@ -344,7 +342,7 @@ describe('Resource', () => {
     person.age = 44;
     expect(person.$serialize()).toEqual({
       '@name': 'run/manu-test',
-      '@type': '../fixtures/person',
+      '@import': '../fixtures/person',
       name: 'Manu',
       age: 44
     });
@@ -352,7 +350,7 @@ describe('Resource', () => {
 
   test('Resource imported from a file via a property type', async () => {
     const Company = await Resource.$create(
-      {name: {'@type': 'string'}, boss: {'@type': '../fixtures/person'}},
+      {name: {'@type': 'string'}, boss: {'@import': '../fixtures/person'}},
       {directory: __dirname}
     );
     expect(Company.$getChild('name')).toBeInstanceOf(StringResource);
@@ -373,20 +371,9 @@ describe('Resource', () => {
   });
 
   test('multiple inheritance', async () => {
-    await expect(Resource.$create({'@types': ['number', 'string']})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@types': ['resource', 'string']})).resolves.toBeInstanceOf(
-      StringResource
-    );
-    await expect(Resource.$create({'@types': ['method', 'macro']})).resolves.toBeInstanceOf(
-      MacroResource
-    );
-    await expect(Resource.$create({'@types': ['macro', 'method']})).resolves.toBeInstanceOf(
-      MacroResource
-    );
-
     const personWithMixin = await Resource.$create(
       {
-        '@types': ['../fixtures/person', '../fixtures/mixin'],
+        '@import': ['../fixtures/person', '../fixtures/mixin'],
         name: 'Manu',
         mixinProperty: 'mixin-property-value'
       },
@@ -430,10 +417,10 @@ describe('Resource', () => {
     await testSerialization({color: 'green'});
     await testSerialization({name: 'Manu', address: {city: 'Tokyo'}});
     await testSerialization({
-      '@type': {'@name': 'run/person-test', '@export': {name: 'anonymous'}}
+      '@import': {'@name': 'run/person-test', '@export': {name: 'anonymous'}}
     });
     await testSerialization({
-      '@type': {'@name': 'run/person-test', '@export': {name: 'anonymous'}},
+      '@import': {'@name': 'run/person-test', '@export': {name: 'anonymous'}},
       name: 'Manu'
     });
     await testSerialization(

@@ -77,7 +77,7 @@ export class Resource {
         }
       };
 
-      set('$types', '@types', ['@type']);
+      set('$types', '@type', ['@import']); // TODO: @type and @import should be handled separately
       set('$location', '@location');
       set('$directory', '@directory');
       set('$name', '@name');
@@ -133,7 +133,7 @@ export class Resource {
       }
     }
 
-    let types = getProperty(normalizedDefinition, '@types', ['@type']);
+    let types = getProperty(normalizedDefinition, '@type', ['@import']);
     types = Resource.$normalizeTypes(types);
 
     const location = getProperty(normalizedDefinition, '@location');
@@ -560,7 +560,7 @@ export class Resource {
     } else if (typeof types === 'string' || isPlainObject(types)) {
       types = [types];
     } else if (!Array.isArray(types)) {
-      throw new Error(`Invalid ${formatCode('@type')} value`);
+      throw new Error(`Invalid ${formatCode('@type')}/${formatCode('@import')} value`);
     }
     return types;
   }
@@ -1021,9 +1021,9 @@ export class Resource {
     });
   }
 
-  async '@create'({type, name}) {
-    if (!type || typeof type !== 'string') {
-      throw new Error(`${formatCode('type')} argument is missing`);
+  async '@create'({import: importArg, name}) {
+    if (!importArg || typeof importArg !== 'string') {
+      throw new Error(`${formatCode('import')} argument is missing`);
     }
 
     if (!name || typeof name !== 'string') {
@@ -1032,7 +1032,7 @@ export class Resource {
 
     const resource = await task(
       async () => {
-        const definition = {'@type': type};
+        const definition = {'@import': importArg};
         if (!name.startsWith('@')) {
           // Don't set @name if it looks like a npm package scoped name
           definition['@name'] = name;
@@ -1291,12 +1291,18 @@ export class Resource {
   }
 
   _serializeTypes(definition, _options) {
+    // TODO: @type and @import should be handled separately
     const types = this._types;
     if (types !== undefined) {
       if (types.length === 1) {
-        definition['@type'] = types[0];
+        const type = types[0];
+        if (isPlainObject(type) || type.match(/[./]/)) {
+          definition['@import'] = type;
+        } else {
+          definition['@type'] = type;
+        }
       } else if (types.length > 1) {
-        definition['@types'] = types;
+        definition['@import'] = types;
       }
     }
   }
