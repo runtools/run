@@ -2,7 +2,7 @@
   "@name": "run/mixin-test",
   "@export": {
     "@runtime": "node@>=6.10.0",
-    "@code": "./",
+    "@implementation": "./",
     "mixinProperty": {
       "@type": "string"
     },

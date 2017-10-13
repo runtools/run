@@ -89,7 +89,7 @@ export class Resource {
       set('$repository', '@repository');
       set('$license', '@license');
       set('$runtime', '@runtime');
-      set('$implementation', '@code');
+      set('$implementation', '@implementation');
       set('$files', '@files');
       set('$hidden', '@hidden');
       set('$publishable', '@publishable');
@@ -190,11 +190,11 @@ export class Resource {
       builders = union(builders, base._getClassBuilders());
     }
 
-    const implementation = getProperty(normalizedDefinition, '@code');
+    const implementation = getProperty(normalizedDefinition, '@implementation');
     if (implementation) {
       if (location) {
         throw new Error(
-          `Can't have both ${formatCode('@load')} and ${formatCode('@code')} properties`
+          `Can't have both ${formatCode('@load')} and ${formatCode('@implementation')} properties`
         );
       }
       const builder = requireImplementation(implementation, {directory});
@@ -1167,12 +1167,38 @@ export class Resource {
     }
   }
 
-  async '@publish'(args) {
-    await this.$emitEvent('before:@publish', args, {parseArguments: true});
+  async '@publish'({major, minor, patch}) {
+    await this.$emitEvent('before:@publish', undefined, {parseArguments: true});
 
     const name = this.$name;
-    if (!name) {
-      throw new Error(`Can't publish a resource without a ${formatCode('@name')} property`);
+    const version = this.$version;
+    if (!(name && version)) {
+      throw new Error(
+        `Can't publish a resource without ${formatCode('@name')} and ${formatCode(
+          '@version'
+        )} properties`
+      );
+    }
+
+    let part;
+    if (major) {
+      part = 'major';
+    } else if (minor) {
+      part = 'minor';
+    } else if (patch) {
+      part = 'patch';
+    }
+    if (part) {
+      await task(
+        async progress => {
+          version.bump(part);
+          await this.$save();
+          progress.setOutro(
+            `Version number bumped to ${formatString(version)} (${formatString(name)})`
+          );
+        },
+        {intro: `Bumping version number (${formatString(name)})...`}
+      );
     }
 
     await task(
@@ -1183,12 +1209,12 @@ export class Resource {
         await registry.publishResource(definition, directory);
       },
       {
-        intro: `Publishing ${formatString(name)} resource...`,
-        outro: `Resource ${formatString(name)} published`
+        intro: `Publishing resource (${formatString(name)})...`,
+        outro: `Resource published (${formatString(name)})`
       }
     );
 
-    await this.$emitEvent('after:@publish', args, {parseArguments: true});
+    await this.$emitEvent('after:@publish', undefined, {parseArguments: true});
   }
 
   async '@emitEvent'({event, args}) {
@@ -1256,7 +1282,7 @@ export class Resource {
     }
 
     if (this._implementation !== undefined) {
-      definition['@code'] = this._implementation;
+      definition['@implementation'] = this._implementation;
     }
 
     if (this._files !== undefined) {
