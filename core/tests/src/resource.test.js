@@ -135,13 +135,11 @@ describe('Resource', () => {
     );
   });
 
-  test('@implementation', async () => {
+  test('@code', async () => {
     expect((await Resource.$create()).$implementation).toBeUndefined();
     expect(
-      (await Resource.$create(
-        {'@implementation': '../fixtures/person/index.js'},
-        {directory: __dirname}
-      )).$implementation
+      (await Resource.$create({'@code': '../fixtures/person/index.js'}, {directory: __dirname}))
+        .$implementation
     ).toBe('../fixtures/person/index.js');
   });
 
@@ -439,7 +437,7 @@ describe('Resource', () => {
       name: 'Manu'
     });
     await testSerialization(
-      {'@implementation': '../fixtures/person/index.js', '@runtime': 'node#>=6.10.0'},
+      {'@code': '../fixtures/person/index.js', '@runtime': 'node#>=6.10.0'},
       {directory: __dirname}
     );
   });

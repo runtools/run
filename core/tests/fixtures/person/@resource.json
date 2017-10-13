@@ -3,7 +3,7 @@
   "@version": "1.0.0",
   "@export": {
     "@runtime": "node@>=6.10.0",
-    "@implementation": "./",
+    "@code": "./",
     "name": {"@type": "string"},
     "age": {"@type": "number"},
     "@parameters": {
@@ -23,7 +23,7 @@
       "@expression": "formatGreetingMethod $verb"
     },
     "address": {
-      "@implementation": "./address",
+      "@code": "./address",
       "city": {"@type": "string"},
       "country": {"@type": "string"}
     },

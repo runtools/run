@@ -89,7 +89,7 @@ export class Resource {
       set('$repository', '@repository');
       set('$license', '@license');
       set('$runtime', '@runtime');
-      set('$implementation', '@implementation');
+      set('$implementation', '@code');
       set('$files', '@files');
       set('$hidden', '@hidden');
       set('$publishable', '@publishable');
@@ -190,11 +190,11 @@ export class Resource {
       builders = union(builders, base._getClassBuilders());
     }
 
-    const implementation = getProperty(normalizedDefinition, '@implementation');
+    const implementation = getProperty(normalizedDefinition, '@code');
     if (implementation) {
       if (location) {
         throw new Error(
-          `Can't have both a ${formatCode('@location')} and an ${formatCode('@implementation')}`
+          `Can't have both a ${formatCode('@location')} and an ${formatCode('@code')}`
         );
       }
       const builder = requireImplementation(implementation, {directory});
@@ -1256,7 +1256,7 @@ export class Resource {
     }
 
     if (this._implementation !== undefined) {
-      definition['@implementation'] = this._implementation;
+      definition['@code'] = this._implementation;
     }
 
     if (this._files !== undefined) {
