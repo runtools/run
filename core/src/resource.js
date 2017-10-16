@@ -16,14 +16,13 @@ import {
 import {parseResourceSpecifier, formatResourceSpecifier} from '@resdir/resource-specifier';
 import Version from '@resdir/version';
 import RegistryClient from '@resdir/registry-client';
-import RegistryCache from '@resdir/registry-cache';
 
 import {getPrimitiveResourceClass} from './primitives';
 import {shiftArguments, findPositionalArguments} from './arguments';
 import Runtime from './runtime';
 
-const RUN_DIRECTORY = join(homedir(), '.run');
-const CLIENT_ID = 'RUN_CLI';
+const RUN_CLIENT_ID = 'RUN_CLI';
+const RUN_CLIENT_DIRECTORY = join(homedir(), '.run');
 
 // TODO: Change this AWS config when production is deployed
 const RESDIR_REGISTRY_URL = 'http://registry.dev.resdir.com';
@@ -234,24 +233,22 @@ export class Resource {
   static $getRegistry() {
     if (!this._registry) {
       const registryURL = process.env.RESDIR_REGISTRY_URL || RESDIR_REGISTRY_URL;
-      const runDirectory = process.env.RUN_DIRECTORY || RUN_DIRECTORY;
-      const clientId = CLIENT_ID;
+      const clientId = RUN_CLIENT_ID;
+      const clientDirectory = process.env.RUN_CLIENT_DIRECTORY || RUN_CLIENT_DIRECTORY;
       const awsRegion = process.env.RESDIR_REGISTRY_AWS_REGION || RESDIR_REGISTRY_AWS_REGION;
       const awsS3BucketName =
         process.env.RESDIR_REGISTRY_AWS_S3_BUCKET_NAME || RESDIR_REGISTRY_AWS_S3_BUCKET_NAME;
       const awsS3ResourceUploadsPrefix =
         process.env.RESDIR_REGISTRY_AWS_S3_RESOURCE_UPLOADS_PREFIX ||
         RESDIR_REGISTRY_AWS_S3_RESOURCE_UPLOADS_PREFIX;
-      const client = new RegistryClient({
+      this._registry = new RegistryClient({
         registryURL,
-        runDirectory,
         clientId,
+        clientDirectory,
         awsRegion,
         awsS3BucketName,
         awsS3ResourceUploadsPrefix
       });
-      const cache = new RegistryCache({client, runDirectory});
-      this._registry = cache;
     }
     return this._registry;
   }
