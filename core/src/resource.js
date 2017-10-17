@@ -7,14 +7,8 @@ import {ensureDirSync, ensureFileSync} from 'fs-extra';
 import {getProperty} from '@resdir/util';
 import {catchContext, task, formatString, formatPath, formatCode} from '@resdir/console';
 import {load, save} from '@resdir/file-manager';
-import {
-  getResourceNamespace,
-  getResourceName,
-  validateResourceIdentifier,
-  parseResourceIdentifier
-} from '@resdir/resource-identifier';
+import {getResourceName, parseResourceIdentifier} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, formatResourceSpecifier} from '@resdir/resource-specifier';
-import Version from '@resdir/version';
 import RegistryClient from '@resdir/registry-client';
 
 import {getPrimitiveResourceClass} from './primitives';
@@ -23,12 +17,6 @@ import Runtime from './runtime';
 
 const RUN_CLIENT_ID = 'RUN_CLI';
 const RUN_CLIENT_DIRECTORY = join(homedir(), '.run');
-
-// TODO: Change this AWS config when production is deployed
-const RESDIR_REGISTRY_URL = 'http://registry.dev.resdir.com';
-const RESDIR_REGISTRY_AWS_REGION = 'ap-northeast-1';
-const RESDIR_REGISTRY_AWS_S3_BUCKET_NAME = 'resdir-registry-dev-v1';
-const RESDIR_REGISTRY_AWS_S3_RESOURCE_UPLOADS_PREFIX = 'resources/uploads/';
 
 const RESOURCE_FILE_NAME = '@resource';
 const RESOURCE_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
@@ -79,19 +67,13 @@ export class Resource {
       set('$types', '@type', ['@import']); // TODO: @type and @import should be handled separately
       set('$location', '@load');
       set('$directory', '@directory');
-      set('$identifier', '@id');
       set('$aliases', '@aliases');
       set('$position', '@position');
-      set('$version', '@version');
-      set('$description', '@description');
-      set('$authors', '@authors', ['@author']);
-      set('$repository', '@repository');
-      set('$license', '@license');
       set('$runtime', '@runtime');
       set('$implementation', '@implementation');
-      set('$files', '@files');
       set('$hidden', '@hidden');
       set('$publishable', '@publishable');
+      set('$help', '@help');
       set('$autoBoxing', '@autoBoxing');
       set('$autoUnboxing', '@autoUnboxing');
 
@@ -111,7 +93,7 @@ export class Resource {
         await this.$setChild(key, definition[key]);
       }
 
-      const exportDefinition = getProperty(definition, '@export', ['@exports']);
+      const exportDefinition = getProperty(definition, '@export');
       if (exportDefinition !== undefined) {
         const resource = await this.constructor.$create(exportDefinition, {
           directory: this.$getCurrentDirectory({throwIfUndefined: false})
@@ -121,7 +103,7 @@ export class Resource {
     });
   }
 
-  static async $create(definition, {base, parent, key, directory, file, importing, parse} = {}) {
+  static async $create(definition, {base, parent, key, directory, file, parse} = {}) {
     let normalizedDefinition;
     if (isPlainObject(definition)) {
       normalizedDefinition = definition;
@@ -210,7 +192,7 @@ export class Resource {
 
     normalizedDefinition = ResourceClass.$normalize(definition, {parse});
 
-    let resource = new ResourceClass();
+    const resource = new ResourceClass();
     await resource.$construct(normalizedDefinition, {
       bases,
       parent,
@@ -220,37 +202,7 @@ export class Resource {
       parse
     });
 
-    if (importing) {
-      resource = resource.$getExport();
-      if (!resource) {
-        throw new Error('Can\'t import a resource without an @export property');
-      }
-    }
-
     return resource;
-  }
-
-  static $getRegistry() {
-    if (!this._registry) {
-      const registryURL = process.env.RESDIR_REGISTRY_URL || RESDIR_REGISTRY_URL;
-      const clientId = RUN_CLIENT_ID;
-      const clientDirectory = process.env.RUN_CLIENT_DIRECTORY || RUN_CLIENT_DIRECTORY;
-      const awsRegion = process.env.RESDIR_REGISTRY_AWS_REGION || RESDIR_REGISTRY_AWS_REGION;
-      const awsS3BucketName =
-        process.env.RESDIR_REGISTRY_AWS_S3_BUCKET_NAME || RESDIR_REGISTRY_AWS_S3_BUCKET_NAME;
-      const awsS3ResourceUploadsPrefix =
-        process.env.RESDIR_REGISTRY_AWS_S3_RESOURCE_UPLOADS_PREFIX ||
-        RESDIR_REGISTRY_AWS_S3_RESOURCE_UPLOADS_PREFIX;
-      this._registry = new RegistryClient({
-        registryURL,
-        clientId,
-        clientDirectory,
-        awsRegion,
-        awsS3BucketName,
-        awsS3ResourceUploadsPrefix
-      });
-    }
-    return this._registry;
   }
 
   static async $load(
@@ -280,9 +232,17 @@ export class Resource {
       return undefined;
     }
 
-    const {definition, file} = result;
+    let {definition, file} = result;
     directory = result.directory;
-    const resource = await this.$create(definition, {file, directory, importing});
+
+    if (importing) {
+      definition = getProperty(definition, '@export');
+      if (definition === undefined) {
+        throw new Error(`Can't import a resource without a ${formatCode('@export')} property`);
+      }
+    }
+
+    const resource = await this.$create(definition, {file, directory});
 
     return resource;
   }
@@ -321,12 +281,39 @@ export class Resource {
 
     const {definition, file} = await this._fetchFromLocation(directory);
 
-    const version = definition['@version'];
+    const version = definition.version;
     if (!versionRange.includes(version)) {
       return undefined;
     }
 
     return {definition, file};
+  }
+
+  static $getClientId() {
+    return process.env.RUN_CLIENT_ID || RUN_CLIENT_ID;
+  }
+
+  $getClientId() {
+    return this.constructor.$getClientId();
+  }
+
+  static $getClientDirectory() {
+    return process.env.RUN_CLIENT_DIRECTORY || RUN_CLIENT_DIRECTORY;
+  }
+
+  $getClientDirectory() {
+    return this.constructor.$getClientDirectory();
+  }
+
+  static $getRegistry() {
+    if (!this._registry) {
+      this._registry = new RegistryClient({
+        registryURL: process.env.RESDIR_REGISTRY_URL,
+        clientId: this.$getClientId(),
+        clientDirectory: this.$getClientDirectory()
+      });
+    }
+    return this._registry;
   }
 
   static async _fetchFromRegistry(specifier) {
@@ -341,8 +328,8 @@ export class Resource {
     const installedFlagFile = join(directory, '.installed');
     if (!existsSync(installedFlagFile)) {
       const idAndVersion = formatResourceSpecifier({
-        identifier: definition['@id'],
-        versionRange: definition['@version']
+        identifier: definition.id,
+        versionRange: definition.version
       });
       await task(
         async () => {
@@ -581,25 +568,6 @@ export class Resource {
     this._directory = directory;
   }
 
-  get $identifier() {
-    return this._getInheritedValue('_identifier');
-  }
-
-  set $identifier(identifier) {
-    if (identifier !== undefined) {
-      validateResourceIdentifier(identifier);
-    }
-    this._identifier = identifier;
-  }
-
-  $getNamespace() {
-    return getResourceNamespace(this.$identifier);
-  }
-
-  $getName() {
-    return getResourceName(this.$identifier);
-  }
-
   get $aliases() {
     return this._getInheritedValue('_aliases');
   }
@@ -639,50 +607,12 @@ export class Resource {
     this._position = position;
   }
 
-  get $version() {
-    return this._getInheritedValue('_version');
+  get $help() {
+    return this._getInheritedValue('_help');
   }
 
-  set $version(version) {
-    if (typeof version === 'string') {
-      version = new Version(version);
-    }
-    this._version = version;
-  }
-
-  get $description() {
-    return this._getInheritedValue('_description');
-  }
-
-  set $description(description) {
-    this._description = description;
-  }
-
-  get $authors() {
-    return this._getInheritedValue('_authors');
-  }
-
-  set $authors(authors) {
-    if (typeof authors === 'string') {
-      authors = [authors];
-    }
-    this._authors = authors;
-  }
-
-  get $repository() {
-    return this._getInheritedValue('_repository');
-  }
-
-  set $repository(repository) {
-    this._repository = repository;
-  }
-
-  get $license() {
-    return this._getInheritedValue('_license');
-  }
-
-  set $license(license) {
-    this._license = license;
+  set $help(help) {
+    this._help = help;
   }
 
   get $runtime() {
@@ -743,17 +673,6 @@ export class Resource {
       resource = resource.$getParent();
     }
     return allParameters;
-  }
-
-  get $files() {
-    return this._files;
-  }
-
-  set $files(files) {
-    if (typeof files === 'string') {
-      files = [files];
-    }
-    this._files = files;
   }
 
   get $hidden() {
@@ -1031,10 +950,10 @@ export class Resource {
       async () => {
         const definition = {'@import': importArg};
         if (!identifier.startsWith('@')) {
-          // Don't set @id if it looks like a npm package scoped name
-          definition['@id'] = identifier;
+          // Don't set id if it looks like a npm package scoped name
+          definition.id = identifier;
         }
-        definition['@version'] = '0.1.0';
+        definition.version = '0.1.0';
 
         const resource = await Resource.$create(definition);
 
@@ -1164,56 +1083,6 @@ export class Resource {
     }
   }
 
-  async '@publish'({major, minor, patch}) {
-    await this.$emitEvent('before:@publish', undefined, {parseArguments: true});
-
-    const identifier = this.$identifier;
-    const version = this.$version;
-    if (!(identifier && version)) {
-      throw new Error(
-        `Can't publish a resource without ${formatCode('@id')} and ${formatCode(
-          '@version'
-        )} properties`
-      );
-    }
-
-    let part;
-    if (major) {
-      part = 'major';
-    } else if (minor) {
-      part = 'minor';
-    } else if (patch) {
-      part = 'patch';
-    }
-    if (part) {
-      await task(
-        async progress => {
-          version.bump(part);
-          await this.$save();
-          progress.setOutro(
-            `Version number bumped to ${formatString(version)} (${formatString(identifier)})`
-          );
-        },
-        {intro: `Bumping version number (${formatString(identifier)})...`}
-      );
-    }
-
-    await task(
-      async () => {
-        const definition = this.$serialize({publishing: true});
-        const directory = this.$getCurrentDirectory();
-        const registry = this.constructor.$getRegistry();
-        await registry.publishResource(definition, directory);
-      },
-      {
-        intro: `Publishing resource (${formatString(identifier)})...`,
-        outro: `Resource published (${formatString(identifier)})`
-      }
-    );
-
-    await this.$emitEvent('after:@publish', undefined, {parseArguments: true});
-  }
-
   async '@emitEvent'({event, args}) {
     args = JSON.parse(args); // TODO: remove this stupid parsing
     return await this.$emitEvent(event, args, {parseArguments: true});
@@ -1244,10 +1113,6 @@ export class Resource {
       definition['@directory'] = this._directory;
     }
 
-    if (this._identifier !== undefined) {
-      definition['@id'] = this._identifier;
-    }
-
     this._serializeAliases(definition, options);
 
     this._serializeParameters(definition, options);
@@ -1256,22 +1121,8 @@ export class Resource {
       definition['@position'] = this._position;
     }
 
-    if (this._version !== undefined) {
-      definition['@version'] = this._version.toJSON();
-    }
-
-    if (this._description !== undefined) {
-      definition['@description'] = this._description;
-    }
-
-    this._serializeAuthors(definition, options);
-
-    if (this._repository !== undefined) {
-      definition['@repository'] = this._repository;
-    }
-
-    if (this._license !== undefined) {
-      definition['@license'] = this._license;
+    if (this._help !== undefined) {
+      definition['@help'] = this._help;
     }
 
     if (this._runtime !== undefined) {
@@ -1280,10 +1131,6 @@ export class Resource {
 
     if (this._implementation !== undefined) {
       definition['@implementation'] = this._implementation;
-    }
-
-    if (this._files !== undefined) {
-      definition['@files'] = this._files;
     }
 
     if (this._hidden !== undefined) {
@@ -1354,17 +1201,6 @@ export class Resource {
       }
       if (count > 0) {
         definition['@parameters'] = serializedParameters;
-      }
-    }
-  }
-
-  _serializeAuthors(definition, _options) {
-    const authors = this._authors;
-    if (authors !== undefined) {
-      if (authors.length === 1) {
-        definition['@author'] = authors[0];
-      } else if (authors.length > 1) {
-        definition['@authors'] = authors;
       }
     }
   }
@@ -1491,9 +1327,11 @@ function requireImplementation(implementationFile, {directory} = {}) {
     const result = require(file);
     return result.default || result;
   } catch (err) {
-    // console.warn(
-    //   `An error occured while loading implementation (file: ${formatPath(file)}): ${err.message}`
-    // );
+    if (process.env.DEBUG) {
+      console.warn(
+        `An error occured while loading implementation (file: ${formatPath(file)}): ${err.message}`
+      );
+    }
   }
 }
 

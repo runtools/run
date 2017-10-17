@@ -13,13 +13,13 @@ describe('StringResource', () => {
 
   test('serialization', async () => {
     expect((await StringResource.$create()).$serialize()).toBeUndefined();
-    expect((await StringResource.$create({'@id': 'run/color-test'})).$serialize()).toEqual({
-      '@id': 'run/color-test'
+    expect((await StringResource.$create({'@aliases': ['colour']})).$serialize()).toEqual({
+      '@aliases': ['colour']
     });
     expect(
-      (await StringResource.$create({'@id': 'run/color-test', '@value': 'green'})).$serialize()
+      (await StringResource.$create({'@aliases': ['colour'], '@value': 'green'})).$serialize()
     ).toEqual({
-      '@id': 'run/color-test',
+      '@aliases': ['colour'],
       '@value': 'green'
     });
     expect((await StringResource.$create({'@value': 'green'})).$serialize()).toBe('green');
