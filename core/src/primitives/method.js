@@ -78,7 +78,7 @@ export class MethodResource extends Resource {
     return this.$getFunction();
   }
 
-  $getFunction({parseArguments} = {}) {
+  $getFunction(environment = {}, {parseArguments} = {}) {
     const methodResource = this;
 
     return async function (args, ...rest) {
@@ -104,7 +104,7 @@ export class MethodResource extends Resource {
         await this.$emitEvent(emittedEvents.before);
       }
 
-      const result = await implementation.call(this, normalizedArguments);
+      const result = await implementation.call(this, normalizedArguments, environment);
 
       if (emittedEvents && emittedEvents.after) {
         await this.$emitEvent(emittedEvents.after);
@@ -168,7 +168,7 @@ export class MethodResource extends Resource {
   }
 
   async $invoke(args, {parent} = {}) {
-    const fn = this.$getFunction({parseArguments: true});
+    const fn = this.$getFunction(undefined, {parseArguments: true});
     return await fn.call(parent, args);
   }
 

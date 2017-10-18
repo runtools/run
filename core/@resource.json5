@@ -1,7 +1,7 @@
 {
   "@import": "js/esnext-package",
   name: "run-core",
-  version: "0.10.45",
+  version: "0.10.46",
   description: "Resdir resources runner",
   author: "Manuel Vila <mvila@3base.com>",
   repository: "https://github.com/resdir/resdir.git",

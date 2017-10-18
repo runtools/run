@@ -939,8 +939,8 @@ export class Resource {
     );
 
     for (const method of methods) {
-      const fn = method.$getFunction({parseArguments});
-      await fn.call(this, args);
+      const fn = method.$getFunction({event: {name: event, arguments: args}}, {parseArguments});
+      await fn.call(this);
     }
   }
 
