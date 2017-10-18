@@ -1,0 +1,6 @@
+{
+  files: [
+    "./file.txt",
+    "./directory"
+  ]
+}

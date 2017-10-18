@@ -1,0 +1,11 @@
+{
+  _test: {
+    "@type": "macro",
+    "@hidden": true,
+    "@listen": "after:@test",
+    "@expression": [
+      "./core @test",
+      "./cli @test"
+    ]
+  }
+}

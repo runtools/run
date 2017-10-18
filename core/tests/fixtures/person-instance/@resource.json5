@@ -1,0 +1,5 @@
+{
+  "@import": "../person",
+  name: "Manu",
+  age: 44
+}

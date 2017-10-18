@@ -1,5 +1,0 @@
-{
-  "@import": "web/aws-website",
-  "id": "run/website",
-  "version": "0.1.0"
-}
