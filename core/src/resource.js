@@ -31,13 +31,11 @@ const BUILTIN_COMMANDS = [
   '@lint',
   '@install',
   '@publish',
-  '@signUp',
-  '@signIn',
-  '@signOut',
-  '@user',
-  '@organization',
+  '@registry',
   '@test'
 ];
+
+const RESDIR_REGISTRY_RESOURCE = 'resdir/registry';
 
 export class Resource {
   async $construct(definition = {}, {bases = [], parent, key, directory, file} = {}) {
@@ -1019,86 +1017,9 @@ export class Resource {
     await this.$broadcastEvent('after:@test', args, {parseArguments: true});
   }
 
-  async '@signUp'({email}) {
-    const registry = this.constructor.$getRegistry();
-    await registry.signUp(email);
-  }
-
-  async '@signIn'({email}) {
-    const registry = this.constructor.$getRegistry();
-    await registry.signIn(email);
-  }
-
-  async '@signOut'() {
-    const registry = this.constructor.$getRegistry();
-    await registry.signOut();
-  }
-
-  async '@user'(args) {
-    args = findPositionalArguments(args);
-
-    const registry = this.constructor.$getRegistry();
-
-    let key;
-    key = args.shift();
-    if (key === 'show') {
-      await registry.showUser();
-    } else if (key === 'delete') {
-      await registry.deleteUser();
-    } else if (key === 'organizations') {
-      key = args.shift();
-      if (key === 'list') {
-        await registry.listUserOrganizations();
-      } else {
-        throw new Error('UNIMPLEMENTED');
-      }
-    } else if (key === 'namespace') {
-      key = args.shift();
-      if (key === 'create') {
-        const namespace = args.shift();
-        await registry.createUserNamespace(namespace);
-      } else if (key === 'remove') {
-        await registry.removeUserNamespace();
-      } else {
-        throw new Error('UNIMPLEMENTED');
-      }
-    } else if (key === 'github') {
-      key = args.shift();
-      if (key === 'connect') {
-        await registry.connectGitHubAccount();
-      } else if (key === 'disconnect') {
-        await registry.disconnectGitHubAccount();
-      } else {
-        throw new Error('UNIMPLEMENTED');
-      }
-    } else {
-      throw new Error('UNIMPLEMENTED');
-    }
-  }
-
-  async '@organization'(args) {
-    args = findPositionalArguments(args);
-
-    const registry = this.constructor.$getRegistry();
-
-    const key = args.shift();
-    if (key === 'create') {
-      const namespace = args.shift();
-      await registry.createOrganization(namespace);
-    } else if (key === 'delete') {
-      const namespace = args.shift();
-      await registry.deleteOrganization(namespace);
-    } else if (key === 'addMember') {
-      const organizationNamespace = args.shift();
-      const userNamespace = args.shift();
-      await registry.addOrganizationMember(organizationNamespace, userNamespace);
-    } else if (key === 'removeMember') {
-      const organizationNamespace = args.shift();
-      const userNamespace = args.shift();
-      await registry.removeOrganizationMember(organizationNamespace, userNamespace);
-    } else {
-      throw new Error('UNIMPLEMENTED');
-    }
+  async '@registry'(args) {
+    const registry = await this.constructor.$import(RESDIR_REGISTRY_RESOURCE);
+    await registry.$invoke(args);
   }
 
   async '@emitEvent'({event, args}) {
