@@ -31,11 +31,11 @@ const RESOURCE_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json5';
 
 const BUILTIN_COMMANDS = [
-  '@broadcastEvent',
+  '@broadcast',
   '@build',
   '@console',
   '@create',
-  '@emitEvent',
+  '@emit',
   '@lint',
   '@install',
   '@normalizeResourceFile',
@@ -1049,13 +1049,15 @@ export class Resource {
     await registry.$invoke(args);
   }
 
-  async '@emitEvent'({event, args}) {
-    args = JSON.parse(args); // TODO: remove this stupid parsing
+  async '@emit'({event, arguments: args}) {
+    // TODO: improve parameters handling
+    args = JSON.parse(args);
     return await this.$emitEvent(event, args, {parseArguments: true});
   }
 
-  async '@broadcastEvent'({event, args}) {
-    args = JSON.parse(args); // TODO: remove this stupid parsing
+  async '@broadcast'({event, arguments: args}) {
+    // TODO: improve parameters handling
+    args = JSON.parse(args);
     return await this.$broadcastEvent(event, args, {parseArguments: true});
   }
 
