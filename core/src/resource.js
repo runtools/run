@@ -1,11 +1,11 @@
 import {join, resolve, basename, dirname, isAbsolute} from 'path';
-import {existsSync} from 'fs';
+import {existsSync, unlinkSync} from 'fs';
 import {homedir} from 'os';
 import {isPlainObject, isEmpty, union, entries} from 'lodash';
 import isDirectory from 'is-directory';
 import {ensureDirSync, ensureFileSync} from 'fs-extra';
 import {getProperty} from '@resdir/util';
-import {catchContext, task, formatString, formatPath, formatCode} from '@resdir/console';
+import {catchContext, task, formatString, formatPath, formatCode, print} from '@resdir/console';
 import {load, save} from '@resdir/file-manager';
 import {getResourceName, parseResourceIdentifier} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, formatResourceSpecifier} from '@resdir/resource-specifier';
@@ -25,6 +25,7 @@ const DEFAULT_RESOURCE_FILE_FORMAT = 'json5';
 const BUILTIN_COMMANDS = [
   '@broadcastEvent',
   '@build',
+  '@console',
   '@create',
   '@emitEvent',
   '@lint',
@@ -326,22 +327,28 @@ export class Resource {
     const {definition, directory} = result;
 
     const installedFlagFile = join(directory, '.installed');
-    if (!existsSync(installedFlagFile)) {
-      const idAndVersion = formatResourceSpecifier({
-        identifier: definition.id,
-        versionRange: definition.version
-      });
-      await task(
-        async () => {
-          const resource = await this.$create(definition, {directory});
-          await resource['@install']();
-          ensureFileSync(installedFlagFile);
-        },
-        {
-          intro: `Installing ${formatString(idAndVersion)}...`,
-          outro: `${formatString(idAndVersion)} installed`
-        }
-      );
+    const installingFlagFile = join(directory, '.installing');
+    if (!existsSync(installedFlagFile) && !existsSync(installingFlagFile)) {
+      ensureFileSync(installingFlagFile);
+      try {
+        const idAndVersion = formatResourceSpecifier({
+          identifier: definition.id,
+          versionRange: definition.version
+        });
+        await task(
+          async () => {
+            const resource = await this.$create(definition, {directory});
+            await resource['@install']();
+            ensureFileSync(installedFlagFile);
+          },
+          {
+            intro: `Installing ${formatString(idAndVersion)}...`,
+            outro: `${formatString(idAndVersion)} installed`
+          }
+        );
+      } finally {
+        unlinkSync(installingFlagFile);
+      }
     }
 
     return {definition, directory};
@@ -989,6 +996,17 @@ export class Resource {
   async '@build'(args) {
     await this.$broadcastEvent('before:@build', args, {parseArguments: true});
     await this.$broadcastEvent('after:@build', args, {parseArguments: true});
+  }
+
+  async '@console'(args) {
+    args = findPositionalArguments(args);
+    const key = args.shift();
+    if (key === 'print') {
+      const message = args.shift();
+      print(message || '');
+    } else {
+      throw new Error('UNIMPLEMENTED');
+    }
   }
 
   async '@lint'(args) {
