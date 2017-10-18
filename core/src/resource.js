@@ -1,11 +1,19 @@
-import {join, resolve, basename, dirname, isAbsolute} from 'path';
+import {join, resolve, basename, dirname, extname, isAbsolute} from 'path';
 import {existsSync, unlinkSync} from 'fs';
 import {homedir} from 'os';
 import {isPlainObject, isEmpty, union, entries} from 'lodash';
 import isDirectory from 'is-directory';
 import {ensureDirSync, ensureFileSync} from 'fs-extra';
 import {getProperty} from '@resdir/util';
-import {catchContext, task, formatString, formatPath, formatCode, print} from '@resdir/console';
+import {
+  catchContext,
+  task,
+  formatString,
+  formatPath,
+  formatCode,
+  print,
+  printSuccess
+} from '@resdir/console';
 import {load, save} from '@resdir/file-manager';
 import {getResourceName, parseResourceIdentifier} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, formatResourceSpecifier} from '@resdir/resource-specifier';
@@ -30,7 +38,7 @@ const BUILTIN_COMMANDS = [
   '@emitEvent',
   '@lint',
   '@install',
-  '@publish',
+  '@normalizeResourceFile',
   '@registry',
   '@test'
 ];
@@ -67,19 +75,20 @@ export class Resource {
       set('$location', '@load');
       set('$directory', '@directory');
       set('$aliases', '@aliases');
-      set('$position', '@position');
-      set('$runtime', '@runtime');
-      set('$implementation', '@implementation');
-      set('$hidden', '@hidden');
-      set('$publishable', '@publishable');
       set('$help', '@help');
-      set('$autoBoxing', '@autoBoxing');
-      set('$autoUnboxing', '@autoUnboxing');
 
       const parameters = getProperty(definition, '@parameters');
       if (parameters !== undefined) {
         await this.$setParameters(parameters);
       }
+
+      set('$position', '@position');
+      set('$runtime', '@runtime');
+      set('$implementation', '@implementation');
+      set('$hidden', '@hidden');
+      set('$publishable', '@publishable');
+      set('$autoBoxing', '@autoBoxing');
+      set('$autoUnboxing', '@autoUnboxing');
 
       for (const base of bases) {
         await this._inherit(base);
@@ -601,42 +610,12 @@ export class Resource {
     return Boolean(aliases && aliases.has(alias));
   }
 
-  get $position() {
-    return this._getInheritedValue('_position');
-  }
-
-  set $position(position) {
-    if (position !== undefined && typeof position !== 'number') {
-      throw new TypeError(`Property ${formatCode('@position')} must be a number`);
-    }
-    this._position = position;
-  }
-
   get $help() {
     return this._getInheritedValue('_help');
   }
 
   set $help(help) {
     this._help = help;
-  }
-
-  get $runtime() {
-    return this._getInheritedValue('_runtime');
-  }
-
-  set $runtime(runtime) {
-    if (typeof runtime === 'string') {
-      runtime = new Runtime(runtime);
-    }
-    this._runtime = runtime;
-  }
-
-  get $implementation() {
-    return this._implementation;
-  }
-
-  set $implementation(implementation) {
-    this._implementation = implementation;
   }
 
   $getParameters() {
@@ -678,6 +657,36 @@ export class Resource {
       resource = resource.$getParent();
     }
     return allParameters;
+  }
+
+  get $position() {
+    return this._getInheritedValue('_position');
+  }
+
+  set $position(position) {
+    if (position !== undefined && typeof position !== 'number') {
+      throw new TypeError(`Property ${formatCode('@position')} must be a number`);
+    }
+    this._position = position;
+  }
+
+  get $runtime() {
+    return this._getInheritedValue('_runtime');
+  }
+
+  set $runtime(runtime) {
+    if (typeof runtime === 'string') {
+      runtime = new Runtime(runtime);
+    }
+    this._runtime = runtime;
+  }
+
+  get $implementation() {
+    return this._implementation;
+  }
+
+  set $implementation(implementation) {
+    this._implementation = implementation;
   }
 
   get $hidden() {
@@ -1017,6 +1026,24 @@ export class Resource {
     await this.$broadcastEvent('after:@test', args, {parseArguments: true});
   }
 
+  async '@normalizeResourceFile'({json5}) {
+    const file = this.$getResourceFile();
+    if (!file) {
+      throw new Error('Resource file is undefined');
+    }
+    const extension = extname(file);
+    const convertToJSON5 = json5 && extension !== '.json5';
+    if (convertToJSON5) {
+      const newFile = file.slice(0, -extension.length) + '.json5';
+      this.$setResourceFile(newFile);
+    }
+    await this.$save();
+    if (convertToJSON5) {
+      unlinkSync(file);
+    }
+    printSuccess('Resource file normalized');
+  }
+
   async '@registry'(args) {
     const registry = await this.constructor.$import(RESDIR_REGISTRY_RESOURCE);
     await registry.$invoke(args);
@@ -1054,14 +1081,14 @@ export class Resource {
 
     this._serializeAliases(definition, options);
 
+    if (this._help !== undefined) {
+      definition['@help'] = this._help;
+    }
+
     this._serializeParameters(definition, options);
 
     if (this._position !== undefined) {
       definition['@position'] = this._position;
-    }
-
-    if (this._help !== undefined) {
-      definition['@help'] = this._help;
     }
 
     if (this._runtime !== undefined) {
