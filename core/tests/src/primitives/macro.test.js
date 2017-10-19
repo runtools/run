@@ -3,9 +3,9 @@ import MacroResource from '../../../dist/primitives/macro';
 
 describe('MacroResource', () => {
   test('creation', async () => {
-    const macro = await MacroResource.$create({'@expression': 'frontend deploy --verbose'});
+    const macro = await MacroResource.$create({'@expression': 'frontend deploy --@verbose'});
     expect(macro).toBeInstanceOf(MacroResource);
-    expect(macro.$expression).toEqual(['frontend deploy --verbose']);
+    expect(macro.$expression).toEqual(['frontend deploy --@verbose']);
   });
 
   test('invocation', async () => {
@@ -31,8 +31,8 @@ describe('MacroResource', () => {
       '@type': 'macro'
     });
     expect(
-      (await MacroResource.$create({'@expression': 'frontend deploy --verbose'})).$serialize()
-    ).toEqual({'@expression': 'frontend deploy --verbose'});
+      (await MacroResource.$create({'@expression': 'frontend deploy --@verbose'})).$serialize()
+    ).toEqual({'@expression': 'frontend deploy --@verbose'});
     expect(
       (await MacroResource.$create({'@expression': ['build', 'deploy']})).$serialize()
     ).toEqual({'@expression': ['build', 'deploy']});

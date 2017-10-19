@@ -3,7 +3,7 @@ import {getProperty} from '@resdir/util';
 import {catchContext, formatString, formatCode} from '@resdir/console';
 import {getPropertyKeyAndValue} from '@resdir/util';
 
-import Resource from '../resource';
+import {Resource, getCommonParameters} from '../resource';
 import {makePositionalArgumentKey} from '../arguments';
 
 export class MethodResource extends Resource {
@@ -78,18 +78,25 @@ export class MethodResource extends Resource {
     return this.$getFunction();
   }
 
-  $getFunction(environment = {}, {parseArguments} = {}) {
+  $getFunction({parseArguments} = {}) {
     const methodResource = this;
 
-    return async function (args, ...rest) {
-      const normalizedArguments = await methodResource._normalizeArguments(args, {
+    return async function (args, environment, ...rest) {
+      const {
+        normalizedArguments,
+        environmentArguments
+      } = await methodResource._normalizeArguments(args, {
         parse: parseArguments
       });
 
+      environment = methodResource._normalizeEnvironement(environment);
+      environment = {...environment, ...environmentArguments};
+
       if (rest.length !== 0) {
         throw new TypeError(
-          `A resource method must be invoked with a single plain object argument (${rest.length +
-            1} arguments received)`
+          `A resource method must be invoked with a maximum of two arguments (${formatCode(
+            'arguments'
+          )} and ${formatCode('environment')})`
         );
       }
 
@@ -121,23 +128,27 @@ export class MethodResource extends Resource {
 
     if (!isPlainObject(args)) {
       throw new TypeError(
-        `A resource method must be invoked with a plain object argument (${formatString(
-          typeof args
-        )} received)`
+        `A resource method must be invoked with a plain object ${formatCode(
+          'arguments'
+        )} argument (${formatString(typeof args)} received)`
       );
     }
 
     const remainingArguments = {...args};
-    const normalizedArguments = {};
 
+    const normalizedArguments = {};
     for (const parameter of this.$getAllParameters()) {
-      const {key, value} = findArgument(remainingArguments, parameter);
-      if (key !== undefined) {
-        delete remainingArguments[key];
+      const {key, value} = await extractArgument(remainingArguments, parameter, {parse});
+      if (value !== undefined) {
+        normalizedArguments[key] = value;
       }
-      const normalizedValue = (await parameter.$extend(value, {parse})).$autoUnbox();
-      if (normalizedValue !== undefined) {
-        normalizedArguments[parameter.$getKey()] = normalizedValue;
+    }
+
+    const environmentArguments = {};
+    for (const parameter of await getCommonParameters()) {
+      const {key, value} = await extractArgument(remainingArguments, parameter, {parse});
+      if (value !== undefined) {
+        environmentArguments[key.slice(1)] = value;
       }
     }
 
@@ -146,7 +157,23 @@ export class MethodResource extends Resource {
       throw new Error(`Invalid method argument: ${formatCode(remainingArgumentKeys[0])}.`);
     }
 
-    return normalizedArguments;
+    return {normalizedArguments, environmentArguments};
+  }
+
+  _normalizeEnvironement(environment) {
+    if (environment === undefined) {
+      environment = {};
+    }
+
+    if (!isPlainObject(environment)) {
+      throw new TypeError(
+        `A resource method must be invoked with a plain object ${formatCode(
+          'environment'
+        )} argument (${formatString(typeof environment)} received)`
+      );
+    }
+
+    return environment;
   }
 
   _getImplementation() {
@@ -168,7 +195,7 @@ export class MethodResource extends Resource {
   }
 
   async $invoke(args, {parent} = {}) {
-    const fn = this.$getFunction(undefined, {parseArguments: true});
+    const fn = this.$getFunction({parseArguments: true});
     return await fn.call(parent, args);
   }
 
@@ -218,6 +245,15 @@ function findArgument(args, parameter) {
   }
 
   return {key, value};
+}
+
+async function extractArgument(args, parameter, {parse}) {
+  const {key, value} = findArgument(args, parameter);
+  if (key !== undefined) {
+    delete args[key];
+  }
+  const normalizedValue = (await parameter.$extend(value, {parse})).$autoUnbox();
+  return {key: parameter.$getKey(), value: normalizedValue};
 }
 
 export default MethodResource;

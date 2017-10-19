@@ -140,6 +140,12 @@ export function parseCommandLineArguments(argsAndOpts) {
         } else if (opt.startsWith('non-')) {
           val = 'false';
           opt = opt.slice(4);
+        } else if (opt.startsWith('@no-')) {
+          val = 'false';
+          opt = '@' + opt.slice(4);
+        } else if (opt.startsWith('@non-')) {
+          val = 'false';
+          opt = '@' + opt.slice(5);
         }
       }
 

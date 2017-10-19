@@ -631,8 +631,7 @@ export class Resource {
       throw new Error(`${formatCode('parameters')} property must be an object`);
     }
     for (const [key, definition] of entries(parameters)) {
-      const parameter = await Resource.$create(definition, {
-        key,
+      const parameter = await createParameter(key, definition, {
         directory: this.$getCurrentDirectory({throwIfUndefined: false})
       });
       if (this._parameters === undefined) {
@@ -938,9 +937,11 @@ export class Resource {
       {deepSearch: true}
     );
 
+    const environment = {event: {name: event, arguments: args}};
+
     for (const method of methods) {
-      const fn = method.$getFunction({event: {name: event, arguments: args}}, {parseArguments});
-      await fn.call(this);
+      const fn = method.$getFunction({parseArguments});
+      await fn.call(this, undefined, environment);
     }
   }
 
@@ -1214,6 +1215,22 @@ export class Resource {
     }
     return builders;
   }
+}
+
+async function createParameter(key, definition, {directory} = {}) {
+  return await Resource.$create(definition, {key, directory});
+}
+
+let _commonParameters;
+export async function getCommonParameters() {
+  if (!_commonParameters) {
+    _commonParameters = [
+      await createParameter('@verbose', {'@type': 'boolean'}),
+      await createParameter('@quiet', {'@type': 'boolean'}),
+      await createParameter('@debug', {'@type': 'boolean'})
+    ];
+  }
+  return _commonParameters;
 }
 
 function findSubclass(A, B) {
