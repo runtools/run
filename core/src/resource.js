@@ -15,12 +15,13 @@ import {
   printSuccess
 } from '@resdir/console';
 import {load, save} from '@resdir/file-manager';
-import {getResourceName, parseResourceIdentifier} from '@resdir/resource-identifier';
+import {parseResourceIdentifier} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, formatResourceSpecifier} from '@resdir/resource-specifier';
 import RegistryClient from '@resdir/registry-client';
+import JSON5 from 'json5';
 
 import {getPrimitiveResourceClass} from './primitives';
-import {shiftArguments, findPositionalArguments} from './arguments';
+import {shiftArguments, takeArgument} from './arguments';
 import Runtime from './runtime';
 
 const RUN_CLIENT_ID = 'RUN_CLI';
@@ -31,14 +32,17 @@ const RESOURCE_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json5';
 
 const BUILTIN_COMMANDS = [
+  '@add',
   '@broadcast',
   '@build',
   '@console',
   '@create',
   '@emit',
+  '@initialize',
   '@lint',
   '@install',
   '@normalizeResourceFile',
+  '@print',
   '@registry',
   '@test'
 ];
@@ -95,7 +99,7 @@ export class Resource {
       }
 
       for (const key of Object.keys(definition)) {
-        if (key.startsWith('@')) {
+        if (key.startsWith('@') && !BUILTIN_COMMANDS.includes(key)) {
           continue;
         }
         await this.$setChild(key, definition[key]);
@@ -904,6 +908,16 @@ export class Resource {
     });
   }
 
+  $print() {
+    let output = this.$autoUnbox();
+    if (output instanceof Resource) {
+      output = output.$serialize();
+    }
+    if (output !== undefined) {
+      print(JSON5.stringify(output, undefined, 2));
+    }
+  }
+
   $listenEvent(event, method) {
     if (typeof event !== 'string') {
       throw new TypeError('\'event\' argument must be a string');
@@ -952,49 +966,64 @@ export class Resource {
     });
   }
 
-  async '@create'({import: importArg, id: identifier}) {
-    if (!importArg || typeof importArg !== 'string') {
-      throw new Error(`${formatCode('import')} argument is missing`);
+  async '@create'(args) {
+    args = {...args};
+
+    let importArg = takeArgument(args, '@import', ['@i']);
+    if (importArg === undefined) {
+      importArg = shiftArguments(args);
     }
 
-    if (!identifier || typeof identifier !== 'string') {
-      throw new Error(`${formatCode('identifier')} argument is missing`);
+    const type = takeArgument(args, '@type', ['@t']);
+
+    if (importArg && type) {
+      throw new Error(
+        `You cannot specify both ${formatCode('@import')} and ${formatCode('@type')} arguments`
+      );
+    }
+
+    if (!(importArg || type)) {
+      throw new Error(
+        `Please specify either ${formatCode('@import')} or ${formatCode('@type')} argument`
+      );
     }
 
     const resource = await task(
       async () => {
-        const definition = {'@import': importArg};
-        if (!identifier.startsWith('@')) {
-          // Don't set id if it looks like a npm package scoped name
-          definition.id = identifier;
-        }
-        definition.version = '0.1.0';
-
-        const resource = await Resource.$create(definition);
-
-        await resource.$broadcastEvent('before:@create', {id: identifier}, {parseArguments: true});
-
-        const directory = join(process.cwd(), getResourceName(identifier));
+        const directory = process.cwd();
 
         const existingResource = await this.constructor.$load(directory, {throwIfNotFound: false});
         if (existingResource) {
-          throw new Error(`A resource already exists in ${formatPath(directory)}`);
+          throw new Error(`A resource already exists in the current directory`);
         }
 
-        await resource.$save({directory, ensureDirectory: true});
+        const definition = {};
+        if (importArg) {
+          definition['@import'] = importArg;
+        }
+        if (type) {
+          definition['@type'] = type;
+        }
 
-        await resource.$broadcastEvent('after:@create', {id: identifier}, {parseArguments: true});
+        const resource = await Resource.$create(definition, {directory});
+        await resource.$save();
+        const initialize = resource.$getChild('@initialize');
+        if (initialize) {
+          await initialize.$invoke(args, {parent: resource});
+        }
 
         return resource;
       },
       {
-        intro: `Creating ${formatString(identifier)} resource...`,
-        outro: `Resource ${formatString(identifier)} created`
+        intro: `Creating resource...`,
+        outro: `Resource created`
       }
     );
 
     return resource;
   }
+
+  async '@initialize'() {}
 
   async '@install'(args) {
     await this.$broadcastEvent('before:@install', args, {parseArguments: true});
@@ -1006,11 +1035,15 @@ export class Resource {
     await this.$broadcastEvent('after:@build', args, {parseArguments: true});
   }
 
+  async '@print'() {
+    this.$print();
+  }
+
   async '@console'(args) {
-    args = findPositionalArguments(args);
-    const key = args.shift();
+    args = {...args};
+    const key = shiftArguments(args);
     if (key === 'print') {
-      const message = args.shift();
+      const message = shiftArguments(args);
       print(message || '');
     } else {
       throw new Error('UNIMPLEMENTED');
@@ -1225,9 +1258,9 @@ let _commonParameters;
 export async function getCommonParameters() {
   if (!_commonParameters) {
     _commonParameters = [
-      await createParameter('@verbose', {'@type': 'boolean'}),
-      await createParameter('@quiet', {'@type': 'boolean'}),
-      await createParameter('@debug', {'@type': 'boolean'})
+      await createParameter('@verbose', {'@type': 'boolean', '@aliases': ['@v']}),
+      await createParameter('@quiet', {'@type': 'boolean', '@aliases': ['@q']}),
+      await createParameter('@debug', {'@type': 'boolean', '@aliases': ['@d']})
     ];
   }
   return _commonParameters;

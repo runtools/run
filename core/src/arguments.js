@@ -1,4 +1,10 @@
+import {takeProperty} from '@resdir/util';
+
 const POSITIONAL_ARGUMENT_PREFIX = '@$';
+
+export function takeArgument(args, key, aliases) {
+  return takeProperty(args, key, aliases);
+}
 
 export function getFirstArgument(args) {
   return args[makePositionalArgumentKey(0)];

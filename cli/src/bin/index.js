@@ -6,9 +6,7 @@ import {join} from 'path';
 import nodeVersion from 'node-version';
 import updateNotifier from 'update-notifier';
 import dotenv from 'dotenv';
-import JSON5 from 'json5';
 import {printErrorAndExit} from '@resdir/console';
-import {Resource} from 'run-core';
 
 import {run} from '../';
 
@@ -26,15 +24,13 @@ updateNotifier({pkg}).notify();
   expression = expression.map(arg => '"' + arg + '"');
   expression = expression.join(' ');
 
+  if (expression === '') {
+    throw new Error('REPL is not yet implemented');
+  }
+
   const directory = process.cwd();
-  let result = await run(expression, {directory});
-  if (result instanceof Resource) {
-    result = result.$autoUnbox();
-  }
-  if (result instanceof Resource) {
-    result = result.$serialize();
-  }
-  if (result !== undefined) {
-    console.log(JSON5.stringify(result, undefined, 2));
+  const result = await run(expression, {directory});
+  if (result) {
+    result.$print();
   }
 })().catch(printErrorAndExit);
