@@ -1019,6 +1019,7 @@ export class Resource {
 
         const definition = {};
         if (importArg) {
+          importArg = await this._pinResource(importArg);
           definition['@import'] = importArg;
         }
         if (type) {
@@ -1041,6 +1042,20 @@ export class Resource {
     );
 
     return resource;
+  }
+
+  async _pinResource(specifier) {
+    const {identifier, versionRange, location} = parseResourceSpecifier(specifier);
+    if (location) {
+      return specifier;
+    }
+    if (versionRange.toJSON() === undefined) {
+      const resource = await Resource.$load(identifier);
+      if (resource.version) {
+        specifier = formatResourceSpecifier({identifier, versionRange: '^' + resource.version});
+      }
+    }
+    return specifier;
   }
 
   async '@initialize'() {}
