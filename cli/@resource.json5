@@ -24,17 +24,19 @@
     "source-map-support@^0.4.15",
     "update-notifier@^2.1.0"
   ],
-  transpiler: {
-    targets: {
-      node: 8
-    }
-  },
-  tests: {
-    "@import": "js/esnext-jest",
-    "@directory": "./tests",
-    testEnvironment: "node",
-    run: {
-      "@listen": "after:@test"
+  "@private": {
+    transpiler: {
+      targets: {
+        node: 8
+      }
+    },
+    tests: {
+      "@import": "js/esnext-jest",
+      "@directory": "./tests",
+      testEnvironment: "node",
+      run: {
+        "@listen": "after:@test"
+      }
     }
   }
 }

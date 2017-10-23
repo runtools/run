@@ -50,7 +50,10 @@ const BUILTIN_COMMANDS = [
 const RESDIR_REGISTRY_RESOURCE = 'resdir/registry';
 
 export class Resource {
-  async $construct(definition = {}, {bases = [], parent, key, directory, file} = {}) {
+  async $construct(
+    definition = {},
+    {bases = [], parent, key, directory, file, private: privateOption} = {}
+  ) {
     await catchContext(this, async () => {
       if (parent !== undefined) {
         this.$setParent(parent);
@@ -66,6 +69,10 @@ export class Resource {
 
       if (file !== undefined) {
         this.$setResourceFile(file);
+      }
+
+      if (privateOption) {
+        this.$private = true;
       }
 
       const set = (target, source, aliases) => {
@@ -90,7 +97,6 @@ export class Resource {
       set('$runtime', '@runtime');
       set('$implementation', '@implementation');
       set('$hidden', '@hidden');
-      set('$publishable', '@publishable');
       set('$autoBoxing', '@autoBoxing');
       set('$autoUnboxing', '@autoUnboxing');
 
@@ -98,8 +104,21 @@ export class Resource {
         await this._inherit(base);
       }
 
+      const privateDefinition = getProperty(definition, '@private');
+      if (privateDefinition !== undefined) {
+        for (const key of Object.keys(privateDefinition)) {
+          if (key.startsWith('@')) {
+            throw new Error(
+              `The ${formatCode('@private')} section cannot contain ${formatCode(key)} property`
+            );
+          }
+          await this.$setChild(key, privateDefinition[key], {private: true});
+        }
+      }
+
       for (const key of Object.keys(definition)) {
         if (key.startsWith('@') && !BUILTIN_COMMANDS.includes(key)) {
+          // TODO: Remove this particular case
           continue;
         }
         await this.$setChild(key, definition[key]);
@@ -115,7 +134,10 @@ export class Resource {
     });
   }
 
-  static async $create(definition, {base, parent, key, directory, file, parse} = {}) {
+  static async $create(
+    definition,
+    {base, parent, key, directory, file, parse, private: privateOption} = {}
+  ) {
     let normalizedDefinition;
     if (isPlainObject(definition)) {
       normalizedDefinition = definition;
@@ -211,7 +233,8 @@ export class Resource {
       key,
       directory,
       file,
-      parse
+      parse,
+      private: privateOption
     });
 
     return resource;
@@ -700,16 +723,12 @@ export class Resource {
     this._hidden = hidden;
   }
 
-  get $publishable() {
-    let publishable = this._getInheritedValue('_publishable');
-    if (publishable === undefined) {
-      publishable = true;
-    }
-    return publishable;
+  get $private() {
+    return this._getInheritedValue('_private');
   }
 
-  set $publishable(publishable) {
-    this._publishable = publishable;
+  set $private(value) {
+    this._private = value;
   }
 
   $defaultAutoBoxing = false;
@@ -804,7 +823,7 @@ export class Resource {
     return result;
   }
 
-  async $setChild(key, definition) {
+  async $setChild(key, definition, {private: privateOption} = {}) {
     const removedChildIndex = this.$removeChild(key);
 
     const base = this.$getChildFromBases(key);
@@ -812,7 +831,8 @@ export class Resource {
       base,
       key,
       directory: this.$getCurrentDirectory({throwIfUndefined: false}),
-      parent: this
+      parent: this,
+      private: privateOption
     });
 
     if (removedChildIndex !== undefined) {
@@ -1139,10 +1159,6 @@ export class Resource {
       definition['@hidden'] = this._hidden;
     }
 
-    if (this._publishable !== undefined) {
-      definition['@publishable'] = this._publishable;
-    }
-
     if (this._autoBoxing !== undefined) {
       definition['@autoBoxing'] = this._autoBoxing;
     }
@@ -1208,17 +1224,27 @@ export class Resource {
   }
 
   _serializeChildren(definition, options) {
+    const privateDefinition = {};
+
     this.$forEachChild(child => {
       const publishing = options && options.publishing;
-      if (publishing && !child.$publishable) {
+      if (publishing && child.$private) {
         return;
       }
       const childDefinition = child.$serialize(options);
       if (childDefinition === undefined) {
         return;
       }
-      definition[child.$getKey()] = childDefinition;
+      if (child.$private) {
+        privateDefinition[child.$getKey()] = childDefinition;
+      } else {
+        definition[child.$getKey()] = childDefinition;
+      }
     });
+
+    if (!isEmpty(privateDefinition)) {
+      definition['@private'] = privateDefinition;
+    }
   }
 
   _serializeExport(definition, options) {
