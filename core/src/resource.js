@@ -44,6 +44,8 @@ const BUILTIN_COMMANDS = [
   '@normalizeResourceFile',
   '@print',
   '@registry',
+  '@remove',
+  '@rm',
   '@test'
 ];
 
@@ -858,6 +860,8 @@ export class Resource {
       },
       configurable: true
     });
+
+    return child;
   }
 
   $removeChild(key) {
@@ -989,7 +993,7 @@ export class Resource {
   async '@create'(args) {
     args = {...args};
 
-    let importArg = takeArgument(args, '@import', ['@i']);
+    let importArg = takeArgument(args, '@import');
     if (importArg === undefined) {
       importArg = shiftArguments(args);
     }
@@ -1042,6 +1046,105 @@ export class Resource {
     );
 
     return resource;
+  }
+
+  async '@add'(args) {
+    args = {...args};
+
+    let key = takeArgument(args, '@key');
+    if (key === undefined) {
+      key = shiftArguments(args);
+    }
+
+    if (!key) {
+      throw new Error(`${formatCode('@key')} argument is missing`);
+    }
+
+    let child = this.$getChild(key);
+    if (child) {
+      throw new Error(`A property with the same key (${formatCode(key)}) already exists`);
+    }
+
+    let importArg = takeArgument(args, '@import');
+    if (importArg === undefined) {
+      importArg = shiftArguments(args);
+    }
+
+    const type = takeArgument(args, '@type', ['@t']);
+
+    if (importArg && type) {
+      throw new Error(
+        `You cannot specify both ${formatCode('@import')} and ${formatCode('@type')} arguments`
+      );
+    }
+
+    if (!(importArg || type)) {
+      throw new Error(
+        `Please specify either ${formatCode('@import')} or ${formatCode('@type')} argument`
+      );
+    }
+
+    child = await task(
+      async () => {
+        const definition = {};
+        if (importArg) {
+          importArg = await this._pinResource(importArg);
+          definition['@import'] = importArg;
+        }
+        if (type) {
+          definition['@type'] = type;
+        }
+
+        child = await this.$setChild(key, definition);
+        await this.$save();
+
+        const initialize = child.$getChild('@initialize');
+        if (initialize) {
+          await initialize.$invoke(args, {parent: child});
+        }
+
+        return child;
+      },
+      {
+        intro: `Adding property...`,
+        outro: `Property added`
+      }
+    );
+
+    return child;
+  }
+
+  async '@remove'(args) {
+    args = {...args};
+
+    let key = takeArgument(args, '@key');
+    if (key === undefined) {
+      key = shiftArguments(args);
+    }
+
+    if (!key) {
+      throw new Error(`${formatCode('@key')} argument is missing`);
+    }
+
+    const child = this.$getChild(key);
+    if (!child) {
+      throw new Error(`Property not found (key: ${formatCode(key)})`);
+    }
+
+    await task(
+      async () => {
+        await this.$removeChild(key);
+        await this.$save();
+      },
+      {
+        intro: `Removing property...`,
+        outro: `Property removed`
+      }
+    );
+  }
+
+  async '@rm'(args) {
+    return await this['@remove'](args);
   }
 
   async _pinResource(specifier) {

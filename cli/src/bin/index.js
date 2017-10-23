@@ -28,9 +28,5 @@ updateNotifier({pkg}).notify();
     throw new Error('REPL is not yet implemented');
   }
 
-  const directory = process.cwd();
-  const result = await run(expression, {directory});
-  if (result) {
-    result.$print();
-  }
+  await run(expression, {directory: process.cwd()});
 })().catch(printErrorAndExit);
