@@ -1,9 +1,9 @@
-import Resource from '../../dist/resource';
-import BooleanResource from '../../dist/primitives/boolean';
-import NumberResource from '../../dist/primitives/number';
-import StringResource from '../../dist/primitives/string';
-import ArrayResource from '../../dist/primitives/array';
-import ObjectResource from '../../dist/primitives/object';
+import Resource from '../../../dist/resource';
+import BooleanResource from '../../../dist/resource/boolean';
+import NumberResource from '../../../dist/resource/number';
+import StringResource from '../../../dist/resource/string';
+import ArrayResource from '../../../dist/resource/array';
+import ObjectResource from '../../../dist/resource/object';
 
 describe('Resource', () => {
   test('creation', async () => {
@@ -122,10 +122,10 @@ describe('Resource', () => {
     expect((await Resource.$create()).$implementation).toBeUndefined();
     expect(
       (await Resource.$create(
-        {'@implementation': '../fixtures/person/index.js'},
+        {'@implementation': '../../fixtures/person/index.js'},
         {directory: __dirname}
       )).$implementation
-    ).toBe('../fixtures/person/index.js');
+    ).toBe('../../fixtures/person/index.js');
   });
 
   test.skip('@files', async () => {
@@ -259,12 +259,12 @@ describe('Resource', () => {
   });
 
   test('Resource loaded from a file', async () => {
-    const PersonConstructor = await Resource.$load('../fixtures/person', {directory: __dirname});
+    const PersonConstructor = await Resource.$load('../../fixtures/person', {directory: __dirname});
     expect(PersonConstructor).toBeInstanceOf(Resource);
     expect(PersonConstructor.$getChild('name')).toBeUndefined();
     expect(PersonConstructor.$getChild('age')).toBeUndefined();
 
-    const person = await Resource.$load('../fixtures/person-instance', {directory: __dirname});
+    const person = await Resource.$load('../../fixtures/person-instance', {directory: __dirname});
     expect(person).toBeInstanceOf(Resource);
     expect(person.$getChild('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('Manu');
@@ -273,7 +273,7 @@ describe('Resource', () => {
   });
 
   test('Resource imported from a file', async () => {
-    const Person = await Resource.$import('../fixtures/person', {directory: __dirname});
+    const Person = await Resource.$import('../../fixtures/person', {directory: __dirname});
     expect(Person).toBeInstanceOf(Resource);
     expect(Person.$getChild('name')).toBeInstanceOf(StringResource);
     expect(Person.name).toBeUndefined();
@@ -283,7 +283,7 @@ describe('Resource', () => {
 
   test('Resource imported from a file via a type', async () => {
     const person = await Resource.$create(
-      {'@import': '../fixtures/person'},
+      {'@import': '../../fixtures/person'},
       {directory: __dirname}
     );
     expect(person.$getChild('name')).toBeInstanceOf(StringResource);
@@ -291,7 +291,7 @@ describe('Resource', () => {
     person.name = 'Manu';
     person.age = 44;
     expect(person.$serialize()).toEqual({
-      '@import': '../fixtures/person',
+      '@import': '../../fixtures/person',
       name: 'Manu',
       age: 44
     });
@@ -299,7 +299,7 @@ describe('Resource', () => {
 
   test('Resource imported from a file via a property type', async () => {
     const Company = await Resource.$create(
-      {name: {'@type': 'string'}, boss: {'@import': '../fixtures/person'}},
+      {name: {'@type': 'string'}, boss: {'@import': '../../fixtures/person'}},
       {directory: __dirname}
     );
     expect(Company.$getChild('name')).toBeInstanceOf(StringResource);
@@ -310,7 +310,7 @@ describe('Resource', () => {
 
   test('Resource loaded from a file', async () => {
     const person = await Resource.$create(
-      {'@load': '../fixtures/person-instance'},
+      {'@load': '../../fixtures/person-instance'},
       {directory: __dirname}
     );
     expect(person.$getChild('name')).toBeInstanceOf(StringResource);
@@ -322,7 +322,7 @@ describe('Resource', () => {
   test('multiple inheritance', async () => {
     const personWithMixin = await Resource.$create(
       {
-        '@import': ['../fixtures/person', '../fixtures/mixin'],
+        '@import': ['../../fixtures/person', '../../fixtures/mixin'],
         name: 'Manu',
         mixinProperty: 'mixin-property-value'
       },
@@ -366,13 +366,13 @@ describe('Resource', () => {
       name: 'Manu'
     });
     await testSerialization(
-      {'@implementation': '../fixtures/person/index.js', '@runtime': 'node#>=6.10.0'},
+      {'@implementation': '../../fixtures/person/index.js', '@runtime': 'node#>=6.10.0'},
       {directory: __dirname}
     );
   });
 
   test('customized normalization and serialization', async () => {
-    const Person = await Resource.$import('../fixtures/person', {directory: __dirname});
+    const Person = await Resource.$import('../../fixtures/person', {directory: __dirname});
     const person = await Person.$extend({address: {city: 'Paris', country: 'France'}});
     expect(person.address.city).toBe('Paris');
     expect(person.address.country).toBe('France');

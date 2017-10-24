@@ -20,9 +20,8 @@ import {parseResourceSpecifier, formatResourceSpecifier} from '@resdir/resource-
 import RegistryClient from '@resdir/registry-client';
 import JSON5 from 'json5';
 
-import {getPrimitiveResourceClass} from './primitives';
-import {shiftArguments, takeArgument} from './arguments';
-import Runtime from './runtime';
+import {shiftArguments, takeArgument} from '../arguments';
+import Runtime from '../runtime';
 
 const RUN_CLIENT_ID = 'RUN_CLI';
 const RUN_CLIENT_DIRECTORY = join(homedir(), '.run');
@@ -1418,13 +1417,6 @@ function findSubclass(A, B) {
   throw new Error(`Can't mix a ${A.name} with a ${B.name}`);
 }
 
-function getResourceClass(type) {
-  if (type === 'resource') {
-    return Resource;
-  }
-  return getPrimitiveResourceClass(type);
-}
-
 function searchResourceFile(directoryOrFile, {searchInParentDirectories = false} = {}) {
   let directory;
 
@@ -1513,6 +1505,31 @@ function searchImplementationFile(file) {
     }
   }
   return undefined;
+}
+
+function getResourceClass(type) {
+  switch (type) {
+    case 'resource':
+      return Resource;
+    case 'boolean':
+      return require('./boolean').default;
+    case 'number':
+      return require('./number').default;
+    case 'string':
+      return require('./string').default;
+    case 'array':
+      return require('./array').default;
+    case 'object':
+      return require('./object').default;
+    case 'binary':
+      return require('./binary').default;
+    case 'method':
+      return require('./method').default;
+    case 'macro':
+      return require('./macro').default;
+    default:
+      return undefined;
+  }
 }
 
 export default Resource;

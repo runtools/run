@@ -1,4 +1,4 @@
-import BinaryResource from '../../../dist/primitives/binary';
+import BinaryResource from '../../../dist/resource/binary';
 
 describe('BinaryResource', () => {
   test('creation', async () => {

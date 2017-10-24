@@ -1,5 +1,5 @@
 import Resource from '../../../dist/resource';
-import MacroResource from '../../../dist/primitives/macro';
+import MacroResource from '../../../dist/resource/macro';
 
 describe('MacroResource', () => {
   test('creation', async () => {

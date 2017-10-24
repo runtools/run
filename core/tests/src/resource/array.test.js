@@ -1,4 +1,4 @@
-import ArrayResource from '../../../dist/primitives/array';
+import ArrayResource from '../../../dist/resource/array';
 
 describe('ArrayResource', () => {
   test('creation', async () => {

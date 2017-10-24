@@ -1,5 +1,5 @@
 import Resource from '../../../dist/resource';
-import MethodResource from '../../../dist/primitives/method';
+import MethodResource from '../../../dist/resource/method';
 
 describe('MethodResource', () => {
   test('creation', async () => {

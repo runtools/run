@@ -1,4 +1,4 @@
-import ObjectResource from '../../../dist/primitives/object';
+import ObjectResource from '../../../dist/resource/object';
 
 describe('ObjectResource', () => {
   test('creation', async () => {
