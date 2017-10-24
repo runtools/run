@@ -1031,11 +1031,11 @@ export class Resource {
         }
 
         const resource = await Resource.$create(definition, {directory});
-        await resource.$save();
         const initialize = resource.$getChild('@initialize');
         if (initialize) {
           await initialize.$invoke(args, {parent: resource});
         }
+        await resource.$save();
 
         return resource;
       },
@@ -1096,12 +1096,11 @@ export class Resource {
         }
 
         child = await this.$setChild(key, definition);
-        await this.$save();
-
         const initialize = child.$getChild('@initialize');
         if (initialize) {
           await initialize.$invoke(args, {parent: child});
         }
+        await this.$save();
 
         return child;
       },
