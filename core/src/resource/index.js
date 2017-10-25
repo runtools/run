@@ -1,4 +1,4 @@
-import {join, resolve, basename, dirname, extname, isAbsolute} from 'path';
+import {join, resolve, dirname, extname, isAbsolute} from 'path';
 import {existsSync, unlinkSync} from 'fs';
 import {homedir} from 'os';
 import {isPlainObject, isEmpty, union, entries} from 'lodash';
@@ -1427,8 +1427,8 @@ function searchResourceFile(directoryOrFile, {searchInParentDirectories = false}
   if (!directory) {
     if (existsSync(directoryOrFile)) {
       const file = directoryOrFile;
-      const filename = basename(file);
-      if (RESOURCE_FILE_FORMATS.find(format => filename === RESOURCE_FILE_NAME + '.' + format)) {
+      const extension = extname(file).slice(1);
+      if (RESOURCE_FILE_FORMATS.includes(extension)) {
         return file;
       }
     }
