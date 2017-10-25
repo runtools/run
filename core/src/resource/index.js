@@ -53,7 +53,7 @@ const RESDIR_REGISTRY_RESOURCE = 'resdir/registry';
 export class Resource {
   async $construct(
     definition = {},
-    {bases = [], parent, key, directory, file, private: privateOption} = {}
+    {bases = [], parent, key, directory, file, unpublishable} = {}
   ) {
     await catchContext(this, async () => {
       if (parent !== undefined) {
@@ -72,8 +72,8 @@ export class Resource {
         this.$setResourceFile(file);
       }
 
-      if (privateOption) {
-        this.$private = true;
+      if (unpublishable) {
+        this.$unpublishable = true;
       }
 
       const set = (target, source, aliases) => {
@@ -105,15 +105,17 @@ export class Resource {
         await this._inherit(base);
       }
 
-      const privateDefinition = getProperty(definition, '@private');
-      if (privateDefinition !== undefined) {
-        for (const key of Object.keys(privateDefinition)) {
+      const unpublishableDefinition = getProperty(definition, '@unpublishable');
+      if (unpublishableDefinition !== undefined) {
+        for (const key of Object.keys(unpublishableDefinition)) {
           if (key.startsWith('@')) {
             throw new Error(
-              `The ${formatCode('@private')} section cannot contain ${formatCode(key)} property`
+              `The ${formatCode('@unpublishable')} section cannot contain ${formatCode(
+                key
+              )} property`
             );
           }
-          await this.$setChild(key, privateDefinition[key], {private: true});
+          await this.$setChild(key, unpublishableDefinition[key], {unpublishable: true});
         }
       }
 
@@ -137,7 +139,7 @@ export class Resource {
 
   static async $create(
     definition,
-    {base, parent, key, directory, file, parse, private: privateOption} = {}
+    {base, parent, key, directory, file, parse, unpublishable} = {}
   ) {
     let normalizedDefinition;
     if (isPlainObject(definition)) {
@@ -235,7 +237,7 @@ export class Resource {
       directory,
       file,
       parse,
-      private: privateOption
+      unpublishable
     });
 
     return resource;
@@ -724,12 +726,12 @@ export class Resource {
     this._hidden = hidden;
   }
 
-  get $private() {
-    return this._getInheritedValue('_private');
+  get $unpublishable() {
+    return this._getInheritedValue('_unpublishable');
   }
 
-  set $private(value) {
-    this._private = value;
+  set $unpublishable(value) {
+    this._unpublishable = value;
   }
 
   $defaultAutoBoxing = false;
@@ -824,7 +826,7 @@ export class Resource {
     return result;
   }
 
-  async $setChild(key, definition, {private: privateOption} = {}) {
+  async $setChild(key, definition, {unpublishable} = {}) {
     const removedChildIndex = this.$removeChild(key);
 
     const base = this.$getChildFromBases(key);
@@ -833,7 +835,7 @@ export class Resource {
       key,
       directory: this.$getCurrentDirectory({throwIfUndefined: false}),
       parent: this,
-      private: privateOption
+      unpublishable
     });
 
     if (removedChildIndex !== undefined) {
@@ -1340,26 +1342,26 @@ export class Resource {
   }
 
   _serializeChildren(definition, options) {
-    const privateDefinition = {};
+    const unpublishableDefinition = {};
 
     this.$forEachChild(child => {
       const publishing = options && options.publishing;
-      if (publishing && child.$private) {
+      if (publishing && child.$unpublishable) {
         return;
       }
       const childDefinition = child.$serialize(options);
       if (childDefinition === undefined) {
         return;
       }
-      if (child.$private) {
-        privateDefinition[child.$getKey()] = childDefinition;
+      if (child.$unpublishable) {
+        unpublishableDefinition[child.$getKey()] = childDefinition;
       } else {
         definition[child.$getKey()] = childDefinition;
       }
     });
 
-    if (!isEmpty(privateDefinition)) {
-      definition['@private'] = privateDefinition;
+    if (!isEmpty(unpublishableDefinition)) {
+      definition['@unpublishable'] = unpublishableDefinition;
     }
   }
 
