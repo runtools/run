@@ -1,5 +1,5 @@
 {
-  "@import": "js/package",
+  "@import": "js/npm-package",
   name: "run-core",
   version: "0.10.55",
   description: "Resdir resources runner",

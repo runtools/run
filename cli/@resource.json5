@@ -1,5 +1,5 @@
 {
-  "@import": "js/package",
+  "@import": "js/npm-package",
   name: "run-cli",
   version: "0.10.11",
   description: "One tool to run them all",
