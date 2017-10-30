@@ -128,7 +128,7 @@ export class Resource {
 
       const exportDefinition = getProperty(definition, '@export');
       if (exportDefinition !== undefined) {
-        const resource = await this.constructor.$create(exportDefinition, {
+        const resource = await Resource.$create(exportDefinition, {
           directory: this.$getCurrentDirectory({throwIfUndefined: false})
         });
         this.$setExport(resource);

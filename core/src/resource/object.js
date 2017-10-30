@@ -14,7 +14,13 @@ export class ObjectResource extends ValueResource {
   }
 
   static $normalize(definition, options) {
-    if (isPlainObject(definition) && definition['@type'] !== 'object') {
+    if (
+      isPlainObject(definition) &&
+      definition['@type'] === undefined &&
+      definition['@import'] === undefined &&
+      definition['@implementation'] === undefined &&
+      definition['@value'] === undefined
+    ) {
       definition = {'@value': definition};
     }
     return super.$normalize(definition, options);

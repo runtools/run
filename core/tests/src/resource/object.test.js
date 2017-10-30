@@ -6,7 +6,6 @@ describe('ObjectResource', () => {
     expect((await ObjectResource.$create()).$value).toBeUndefined();
     expect((await ObjectResource.$create({})).$value).toEqual({});
     expect((await ObjectResource.$create({name: 'Manu'})).$value).toEqual({name: 'Manu'});
-    expect((await ObjectResource.$create({'@value': 123})).$value).toEqual({'@value': 123});
     expect((await ObjectResource.$create({'@type': 'object', '@value': {}})).$value).toEqual({});
     expect(
       (await ObjectResource.$create({'@type': 'object', '@value': {name: 'Manu'}})).$value
@@ -23,6 +22,7 @@ describe('ObjectResource', () => {
       '@xyz': 123
     });
     await expect(ObjectResource.$create('hello')).rejects.toBeInstanceOf(Error);
+    await expect(ObjectResource.$create({'@value': 123})).rejects.toBeInstanceOf(Error);
     await expect(
       ObjectResource.$create({'@type': 'object', '@value': 'hello'})
     ).rejects.toBeInstanceOf(Error);
