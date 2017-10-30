@@ -1,5 +1,5 @@
 {
-  _test: {
+  "_test": {
     "@type": "macro",
     "@hidden": true,
     "@listen": "after:@test",

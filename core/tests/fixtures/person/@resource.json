@@ -1,50 +1,50 @@
 {
   "@export": {
     "@parameters": {
-      shout: false
+      "shout": false
     },
     "@runtime": "node#>=6.10.0",
     "@implementation": "./",
-    name: {
+    "name": {
       "@type": "string"
     },
-    age: {
+    "age": {
       "@type": "number"
     },
-    formatGreetingMethod: {
+    "formatGreetingMethod": {
       "@type": "method",
       "@parameters": {
-        verb: {
+        "verb": {
           "@position": 0,
           "@value": "Hello"
         }
       }
     },
-    formatGreetingMacro: {
+    "formatGreetingMacro": {
       "@type": "macro",
       "@parameters": {
-        verb: {
+        "verb": {
           "@position": 0,
           "@value": "Hi"
         }
       },
       "@expression": "formatGreetingMethod $verb"
     },
-    address: {
+    "address": {
       "@implementation": "./address",
-      city: {
+      "city": {
         "@type": "string"
       },
-      country: {
+      "country": {
         "@type": "string"
       }
     },
-    hasBeenBuilt: false,
-    build: {
+    "hasBeenBuilt": false,
+    "build": {
       "@type": "method",
       "@listen": "before:publish"
     },
-    publish: {
+    "publish": {
       "@type": "method",
       "@emit": "*:publish"
     }

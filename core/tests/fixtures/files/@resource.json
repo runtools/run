@@ -1,5 +1,5 @@
 {
-  files: [
+  "files": [
     "./file.txt",
     "./directory"
   ]

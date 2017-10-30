@@ -18,7 +18,6 @@ import {load, save} from '@resdir/file-manager';
 import {parseResourceIdentifier} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, formatResourceSpecifier} from '@resdir/resource-specifier';
 import RegistryClient from '@resdir/registry-client';
-import JSON5 from 'json5';
 
 import {shiftArguments, takeArgument} from '../arguments';
 import Runtime from '../runtime';
@@ -27,8 +26,8 @@ const RUN_CLIENT_ID = 'RUN_CLI';
 const RUN_CLIENT_DIRECTORY = join(homedir(), '.run');
 
 const RESOURCE_FILE_NAME = '@resource';
-const RESOURCE_FILE_FORMATS = ['json5', 'json', 'yaml', 'yml'];
-const DEFAULT_RESOURCE_FILE_FORMAT = 'json5';
+const RESOURCE_FILE_FORMATS = ['json', 'json5', 'yaml', 'yml'];
+const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
 
 const BUILTIN_COMMANDS = [
   '@add',
@@ -939,7 +938,7 @@ export class Resource {
       output = output.$serialize();
     }
     if (output !== undefined) {
-      print(JSON5.stringify(output, undefined, 2));
+      print(JSON.stringify(output, undefined, 2));
     }
   }
 
@@ -1198,19 +1197,27 @@ export class Resource {
     await this.$broadcastEvent('after:@test', args, {parseArguments: true});
   }
 
-  async '@normalizeResourceFile'({json5}) {
+  async '@normalizeResourceFile'({json5, json}) {
+    // find . -name "@resource.json5" -exec /Users/mvila/Projects/run/cli/dist/bin/index.js {} @normalizeResourceFile --json \;
     const file = this.$getResourceFile();
     if (!file) {
       throw new Error('Resource file is undefined');
     }
+    let newFile;
     const extension = extname(file);
     const convertToJSON5 = json5 && extension !== '.json5';
     if (convertToJSON5) {
-      const newFile = file.slice(0, -extension.length) + '.json5';
+      newFile = file.slice(0, -extension.length) + '.json5';
+    }
+    const convertToJSON = json && extension !== '.json';
+    if (convertToJSON) {
+      newFile = file.slice(0, -extension.length) + '.json';
+    }
+    if (newFile) {
       this.$setResourceFile(newFile);
     }
     await this.$save();
-    if (convertToJSON5) {
+    if (newFile) {
       unlinkSync(file);
     }
     printSuccess('Resource file normalized');

@@ -2,10 +2,10 @@
   "@export": {
     "@runtime": "node#>=6.10.0",
     "@implementation": "./",
-    mixinProperty: {
+    "mixinProperty": {
       "@type": "string"
     },
-    mixinMethod: {
+    "mixinMethod": {
       "@type": "method"
     }
   }
