@@ -1534,8 +1534,6 @@ function getResourceClass(type) {
       return require('./binary').default;
     case 'method':
       return require('./method').default;
-    case 'macro':
-      return require('./macro').default;
     default:
       return undefined;
   }

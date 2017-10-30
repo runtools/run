@@ -1,15 +1,22 @@
+import {isAbsolute} from 'path';
 import {isEmpty, isPlainObject} from 'lodash';
 import {getProperty} from '@resdir/util';
 import {catchContext, formatString, formatCode} from '@resdir/console';
 import {getPropertyKeyAndValue} from '@resdir/util';
+import {parse} from 'shell-quote';
 
 import {Resource, getCommonParameters} from '../resource';
-import {makePositionalArgumentKey} from '../arguments';
+import {makePositionalArgumentKey, getFirstArgument, shiftArguments} from '../arguments';
 
 export class MethodResource extends Resource {
   async $construct(definition, options) {
     await super.$construct(definition, options);
     await catchContext(this, async () => {
+      const expression = getProperty(definition, '@expression');
+      if (expression !== undefined) {
+        this.$expression = expression;
+      }
+
       const listenedEvents = getProperty(definition, '@listen');
       if (listenedEvents !== undefined) {
         this.$setListenedEvents(listenedEvents);
@@ -20,6 +27,17 @@ export class MethodResource extends Resource {
         this.$setEmittedEvents(emittedEvents);
       }
     });
+  }
+
+  get $expression() {
+    return this._getInheritedValue('_expression');
+  }
+
+  set $expression(expression) {
+    if (typeof expression === 'string') {
+      expression = [expression];
+    }
+    this._expression = expression;
   }
 
   $getListenedEvents() {
@@ -177,6 +195,13 @@ export class MethodResource extends Resource {
   }
 
   _getImplementation() {
+    if (this.$expression) {
+      const methodResource = this;
+      return function (args) {
+        return methodResource._runExpression(args, {parent: this});
+      };
+    }
+
     let implementation;
     const parent = this.$getParent();
     if (parent) {
@@ -194,6 +219,58 @@ export class MethodResource extends Resource {
     return implementation;
   }
 
+  async _runExpression(args, {parent} = {}) {
+    let result;
+
+    for (const expression of this.$expression || []) {
+      // TODO: Replace 'shell-quote' with something more suitable
+
+      // // Prevent 'shell-quote' from interpreting operators:
+      // for (const operator of '|&;()<>') {
+      //   expression = expression.replace(
+      //     new RegExp('\\' + operator, 'g'),
+      //     '\\' + operator
+      //   );
+      // }
+
+      let expressionArguments = parse(expression, variable => {
+        if (!(variable in args)) {
+          throw new Error(`Invalid variable found in a method expression: ${formatCode(variable)}`);
+        }
+        return String(args[variable]);
+      });
+
+      expressionArguments = expressionArguments.map(arg => {
+        if (typeof arg === 'string') {
+          return arg;
+        }
+        throw new Error(`Argument parsing failed (arg: ${JSON.stringify(arg)})`);
+      });
+
+      expressionArguments = parseCommandLineArguments(expressionArguments);
+
+      result = await this._runParsedExpression(expressionArguments, {parent});
+    }
+
+    return result;
+  }
+
+  async _runParsedExpression(args, {parent}) {
+    const firstArgument = getFirstArgument(args);
+    if (
+      firstArgument !== undefined &&
+      (firstArgument.startsWith('.') || firstArgument.includes('/') || isAbsolute(firstArgument))
+    ) {
+      // The fist arguments looks like a resource identifier
+      parent = await Resource.$load(firstArgument, {
+        directory: this.$getCurrentDirectory({throwIfUndefined: false})
+      });
+      args = {...args};
+      shiftArguments(args);
+    }
+    return await parent.$invoke(args);
+  }
+
   async $invoke(args, {parent} = {}) {
     const fn = this.$getFunction({parseArguments: true});
     return await fn.call(parent, args);
@@ -204,6 +281,15 @@ export class MethodResource extends Resource {
 
     if (definition === undefined) {
       definition = {};
+    }
+
+    const expression = this._expression;
+    if (expression !== undefined) {
+      if (expression.length === 1) {
+        definition['@expression'] = expression[0];
+      } else if (expression.length > 1) {
+        definition['@expression'] = expression;
+      }
     }
 
     let listenedEvents = this._listenedEvents;
@@ -254,6 +340,77 @@ async function extractArgument(args, parameter, {parse}) {
   }
   const normalizedValue = (await parameter.$extend(value, {parse})).$autoUnbox();
   return {key: parameter.$getKey(), value: normalizedValue};
+}
+
+function parseCommandLineArguments(argsAndOpts) {
+  if (!Array.isArray(argsAndOpts)) {
+    throw new TypeError('\'argsAndOpts\' must be an array');
+  }
+
+  const result = {};
+
+  for (let i = 0, position = 0; i < argsAndOpts.length; i++) {
+    const argOrOpt = argsAndOpts[i];
+
+    if (typeof argOrOpt === 'string' && argOrOpt.startsWith('--')) {
+      let opt = argOrOpt.slice(2);
+      let val;
+
+      const index = opt.indexOf('=');
+      if (index !== -1) {
+        val = opt.slice(index + 1);
+        opt = opt.slice(0, index);
+      }
+
+      if (val === undefined) {
+        if (opt.startsWith('no-')) {
+          val = 'false';
+          opt = opt.slice(3);
+        } else if (opt.startsWith('non-')) {
+          val = 'false';
+          opt = opt.slice(4);
+        } else if (opt.startsWith('@no-')) {
+          val = 'false';
+          opt = '@' + opt.slice(4);
+        } else if (opt.startsWith('@non-')) {
+          val = 'false';
+          opt = '@' + opt.slice(5);
+        }
+      }
+
+      if (val === undefined && i + 1 < argsAndOpts.length) {
+        const nextArgOrOpt = argsAndOpts[i + 1];
+        if (typeof nextArgOrOpt !== 'string' || !nextArgOrOpt.startsWith('-')) {
+          val = nextArgOrOpt;
+          i++;
+        }
+      }
+
+      if (val === undefined) {
+        val = 'true';
+      }
+
+      result[opt] = val;
+      continue;
+    }
+
+    if (typeof argOrOpt === 'string' && argOrOpt.startsWith('-')) {
+      const opts = argOrOpt.slice(1);
+      for (let i = 0; i < opts.length; i++) {
+        const opt = opts[i];
+        if (!/[\w\d]/.test(opt)) {
+          throw new Error(`Invalid command line option: ${formatCode(argOrOpt)}`);
+        }
+        result[opt] = 'true';
+      }
+      continue;
+    }
+
+    result[makePositionalArgumentKey(position)] = argOrOpt;
+    position++;
+  }
+
+  return result;
 }
 
 export default MethodResource;

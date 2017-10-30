@@ -20,8 +20,8 @@
         }
       }
     },
-    "formatGreetingMacro": {
-      "@type": "macro",
+    "formatGreetingExpression": {
+      "@type": "method",
       "@parameters": {
         "verb": {
           "@position": 0,

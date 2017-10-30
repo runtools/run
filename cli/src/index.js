@@ -15,7 +15,10 @@ export async function run(expression = '', {directory} = {}) {
     resource = await Resource.$create(undefined, {directory});
   }
 
-  const macro = await Resource.$create({'@type': 'macro', '@expression': expression}, {directory});
+  const method = await Resource.$create(
+    {'@type': 'method', '@expression': expression},
+    {directory}
+  );
 
-  return await macro.$invoke(undefined, {parent: resource});
+  return await method.$invoke(undefined, {parent: resource});
 }

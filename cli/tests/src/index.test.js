@@ -51,18 +51,16 @@ describe('CLI', () => {
     await expect(
       run('formatGreetingMethod Hi extraArgument', {directory: personInstanceDirectory})
     ).rejects.toBeInstanceOf(Error);
-  });
 
-  test('can run a macro', async () => {
-    let greeting;
-
-    greeting = await run('formatGreetingMacro', {directory: personInstanceDirectory});
+    greeting = await run('formatGreetingExpression', {directory: personInstanceDirectory});
     expect(greeting).toBe('Hi Manu!');
 
-    greeting = await run('formatGreetingMacro --verb=Hello', {directory: personInstanceDirectory});
+    greeting = await run('formatGreetingExpression --verb=Hello', {
+      directory: personInstanceDirectory
+    });
     expect(greeting).toBe('Hello Manu!');
 
-    greeting = await run('formatGreetingMacro Bonjour', {directory: personInstanceDirectory});
+    greeting = await run('formatGreetingExpression Bonjour', {directory: personInstanceDirectory});
     expect(greeting).toBe('Bonjour Manu!');
   });
 });
