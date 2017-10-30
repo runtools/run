@@ -1198,7 +1198,7 @@ export class Resource {
   }
 
   async '@normalizeResourceFile'({json5, json}) {
-    // find . -name "@resource.json5" -exec /Users/mvila/Projects/run/cli/dist/bin/index.js {} @normalizeResourceFile --json \;
+    // find . -name "@resource.json5" -exec run {} @normalizeResourceFile --json \;
     const file = this.$getResourceFile();
     if (!file) {
       throw new Error('Resource file is undefined');

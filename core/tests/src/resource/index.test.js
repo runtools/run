@@ -370,20 +370,4 @@ describe('Resource', () => {
       {directory: __dirname}
     );
   });
-
-  test('customized normalization and serialization', async () => {
-    const Person = await Resource.$import('../../fixtures/person', {directory: __dirname});
-    const person = await Person.$extend({address: {city: 'Paris', country: 'France'}});
-    expect(person.address.city).toBe('Paris');
-    expect(person.address.country).toBe('France');
-    expect(person.$serialize()).toEqual({address: 'Paris, France'});
-    await person.$setChild('address', 'Paris, France');
-    expect(person.address.city).toBe('Paris');
-    expect(person.address.country).toBe('France');
-    expect(person.$serialize()).toEqual({address: 'Paris, France'});
-    await person.$setChild('address', 'Tokyo');
-    expect(person.address.city).toBe('Tokyo');
-    expect(person.address.country).toBeUndefined();
-    expect(person.$serialize()).toEqual({address: 'Tokyo'});
-  });
 });

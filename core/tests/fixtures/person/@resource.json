@@ -31,7 +31,6 @@
       "@expression": "formatGreetingMethod $verb"
     },
     "address": {
-      "@implementation": "./address",
       "city": {
         "@type": "string"
       },
