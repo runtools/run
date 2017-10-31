@@ -3,8 +3,12 @@
   "@implementation": "./",
   "name": "Manu",
   "age": 44,
-  "instanceHasBeenBuilt": false,
-  "instanceBuild": {
+  "hasBeenBuiltByInstance": false,
+  "build": {
+    "@type": "method"
+  },
+  "hasBeenTested": false,
+  "test": {
     "@type": "method",
     "@listen": "publishRequested"
   },

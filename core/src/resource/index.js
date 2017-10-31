@@ -403,7 +403,7 @@ export class Resource {
   }
 
   async $save({directory, ensureDirectory} = {}) {
-    await this.$emitEvent('@saveRequested');
+    await this.$emit('@saveRequested');
 
     if (!this.$isRoot()) {
       throw new Error('Can\'t save a child resource');
@@ -433,7 +433,7 @@ export class Resource {
 
     save(file, definition);
 
-    await this.$emitEvent('@saveCompleted');
+    await this.$emit('@saveCompleted');
   }
 
   _bases = [];
@@ -942,21 +942,28 @@ export class Resource {
     }
   }
 
-  $listenEvent(event, method) {
-    if (typeof event !== 'string') {
-      throw new TypeError('\'event\' argument must be a string');
-    }
-
-    if (!this._listeners) {
+  _getAllListeners() {
+    if (!Object.prototype.hasOwnProperty.call(this, '_listeners')) {
       this._listeners = {};
+      this.$forEachChild(child => {
+        if (typeof child.$getAllListenedEvents === 'function') {
+          for (const event of child.$getAllListenedEvents()) {
+            if (!this._listeners[event]) {
+              this._listeners[event] = [];
+            }
+            this._listeners[event].push(child);
+          }
+        }
+      });
     }
-    if (!this._listeners[event]) {
-      this._listeners[event] = [];
-    }
-    this._listeners[event].push(method);
+    return this._listeners;
   }
 
-  async $emitEvent(event, args = {}, {parseArguments} = {}) {
+  _getAllListenersForEvent(event) {
+    return this._getAllListeners()[event] || [];
+  }
+
+  async $emit(event, args = {}, {parseArguments} = {}) {
     if (typeof event !== 'string') {
       throw new TypeError('\'event\' argument must be a string');
     }
@@ -965,28 +972,17 @@ export class Resource {
       throw new TypeError('\'args\' argument must be a plain object');
     }
 
-    const methods = [];
-    this.$forSelfAndEachBase(
-      resource => {
-        if (resource._listeners && resource._listeners[event]) {
-          methods.unshift(...resource._listeners[event]);
-        }
-      },
-      {deepSearch: true}
-    );
-
     const environment = {event: {name: event, arguments: args}};
-
-    for (const method of methods) {
-      const fn = method.$getFunction({parseArguments});
+    for (const listener of this._getAllListenersForEvent(event)) {
+      const fn = listener.$getFunction({parseArguments});
       await fn.call(this, undefined, environment);
     }
   }
 
-  async $broadcastEvent(event, args, {parseArguments} = {}) {
-    await this.$emitEvent(event, args, {parseArguments});
+  async $broadcast(event, args, {parseArguments} = {}) {
+    await this.$emit(event, args, {parseArguments});
     await this.$forEachChildAsync(async child => {
-      await child.$broadcastEvent(event, args, {parseArguments});
+      await child.$broadcast(event, args, {parseArguments});
     });
   }
 
@@ -1163,11 +1159,11 @@ export class Resource {
   async '@initialize'() {}
 
   async '@install'(args) {
-    await this.$broadcastEvent('@installRequested', args, {parseArguments: true});
+    await this.$broadcast('@installRequested', args, {parseArguments: true});
   }
 
   async '@build'(args) {
-    await this.$broadcastEvent('@buildRequested', args, {parseArguments: true});
+    await this.$broadcast('@buildRequested', args, {parseArguments: true});
   }
 
   async '@print'() {
@@ -1186,11 +1182,11 @@ export class Resource {
   }
 
   async '@lint'(args) {
-    await this.$broadcastEvent('@lintRequested', args, {parseArguments: true});
+    await this.$broadcast('@lintRequested', args, {parseArguments: true});
   }
 
   async '@test'(args) {
-    await this.$broadcastEvent('@testRequested', args, {parseArguments: true});
+    await this.$broadcast('@testRequested', args, {parseArguments: true});
   }
 
   async '@normalizeResourceFile'({json5, json}) {
@@ -1240,7 +1236,7 @@ export class Resource {
       eventArguments = JSON.parse(eventArguments);
     }
 
-    return await this.$emitEvent(event, eventArguments, {parseArguments: true});
+    return await this.$emit(event, eventArguments, {parseArguments: true});
   }
 
   async '@broadcast'(args) {
@@ -1259,7 +1255,7 @@ export class Resource {
       eventArguments = JSON.parse(eventArguments);
     }
 
-    return await this.$broadcastEvent(event, eventArguments, {parseArguments: true});
+    return await this.$broadcast(event, eventArguments, {parseArguments: true});
   }
 
   static $normalize(definition, _options) {

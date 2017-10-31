@@ -1,5 +1,5 @@
 import {isAbsolute} from 'path';
-import {isEmpty, isPlainObject} from 'lodash';
+import {isEmpty, isPlainObject, difference} from 'lodash';
 import {getProperty} from '@resdir/util';
 import {catchContext, formatString, formatCode} from '@resdir/console';
 import {getPropertyKeyAndValue} from '@resdir/util';
@@ -33,7 +33,12 @@ export class MethodResource extends Resource {
 
       const listenedEvents = getProperty(definition, '@listen');
       if (listenedEvents !== undefined) {
-        this.$setListenedEvents(listenedEvents);
+        this.$listenedEvents = listenedEvents;
+      }
+
+      const unlistenedEvents = getProperty(definition, '@unlisten');
+      if (unlistenedEvents !== undefined) {
+        this.$unlistenedEvents = unlistenedEvents;
       }
     });
   }
@@ -60,7 +65,7 @@ export class MethodResource extends Resource {
     this._beforeExpression = beforeExpression;
   }
 
-  $getAllBefore() {
+  $getAllBeforeExpressions() {
     const expression = [];
     this.$forSelfAndEachBase(
       method => {
@@ -84,7 +89,7 @@ export class MethodResource extends Resource {
     this._afterExpression = afterExpression;
   }
 
-  $getAllAfter() {
+  $getAllAfterExpressions() {
     const expression = [];
     this.$forSelfAndEachBase(
       method => {
@@ -97,27 +102,51 @@ export class MethodResource extends Resource {
     return expression;
   }
 
-  $getListenedEvents() {
-    return this._getInheritedValue('_listenedEvents');
+  get $listenedEvents() {
+    return this._listenedEvents;
   }
 
-  $setListenedEvents(events) {
-    if (!events) {
-      throw new Error('\'events\' argument is missing');
-    }
-
+  set $listenedEvents(events) {
     if (!Array.isArray(events)) {
       events = [events];
     }
-
-    const parent = this.$getParent();
-    if (parent) {
-      for (const event of events) {
-        parent.$listenEvent(event, this);
-      }
-    }
-
     this._listenedEvents = events;
+  }
+
+  get $unlistenedEvents() {
+    return this._unlistenedEvents;
+  }
+
+  set $unlistenedEvents(events) {
+    if (!Array.isArray(events)) {
+      events = [events];
+    }
+    this._unlistenedEvents = events;
+  }
+
+  $getAllListenedEvents() {
+    const listenedEvents = [];
+    const unlistenedEvents = [];
+    this.$forSelfAndEachBase(
+      method => {
+        if (method._listenedEvents) {
+          for (const event of method._listenedEvents) {
+            if (!listenedEvents.includes(event)) {
+              listenedEvents.push(event);
+            }
+          }
+        }
+        if (method._unlistenedEvents) {
+          for (const event of method._unlistenedEvents) {
+            if (!unlistenedEvents.includes(event)) {
+              unlistenedEvents.push(event);
+            }
+          }
+        }
+      },
+      {deepSearch: true}
+    );
+    return difference(listenedEvents, unlistenedEvents);
   }
 
   $defaultAutoUnboxing = true;
@@ -153,14 +182,14 @@ export class MethodResource extends Resource {
         throw new Error(`Can't find implementation for ${formatCode(methodResource.$getKey())}`);
       }
 
-      const beforeExpression = methodResource.$getAllBefore();
+      const beforeExpression = methodResource.$getAllBeforeExpressions();
       if (beforeExpression.length) {
         await methodResource._run(beforeExpression, normalizedArguments, {parent: this});
       }
 
       const result = await implementation.call(this, normalizedArguments, environment);
 
-      const afterExpression = methodResource.$getAllAfter();
+      const afterExpression = methodResource.$getAllAfterExpressions();
       if (afterExpression.length) {
         await methodResource._run(afterExpression, normalizedArguments, {parent: this});
       }
@@ -347,6 +376,14 @@ export class MethodResource extends Resource {
         listenedEvents = listenedEvents[0];
       }
       definition['@listen'] = listenedEvents;
+    }
+
+    let unlistenedEvents = this._unlistenedEvents;
+    if (unlistenedEvents && unlistenedEvents.length) {
+      if (unlistenedEvents.length === 1) {
+        unlistenedEvents = unlistenedEvents[0];
+      }
+      definition['@unlisten'] = unlistenedEvents;
     }
 
     if (isEmpty(definition)) {

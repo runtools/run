@@ -7,14 +7,15 @@ describe('MethodResource', () => {
       '@before': '@console print Deploying...',
       '@run': 'frontend deploy --@verbose',
       '@after': '@console print Depoyment completed',
-      '@listen': 'buildRequested'
+      '@listen': 'buildRequested',
+      '@unlisten': 'testRequested'
     });
     expect(method).toBeInstanceOf(MethodResource);
     expect(method.$beforeExpression).toEqual(['@console print Deploying...']);
     expect(method.$runExpression).toEqual(['frontend deploy --@verbose']);
     expect(method.$afterExpression).toEqual(['@console print Depoyment completed']);
-    expect(method.$getListenedEvents()).toHaveLength(1);
-    expect(method.$getListenedEvents()[0]).toBe('buildRequested');
+    expect(method.$listenedEvents).toEqual(['buildRequested']);
+    expect(method.$unlistenedEvents).toEqual(['testRequested']);
   });
 
   test('invocation', async () => {
@@ -46,10 +47,22 @@ describe('MethodResource', () => {
   test('inherited events', async () => {
     const person = await Resource.$load('../../fixtures/person-instance', {directory: __dirname});
     expect(person.hasBeenBuilt).toBe(false);
-    expect(person.instanceHasBeenBuilt).toBe(false);
+    expect(person.hasBeenBuiltByInstance).toBe(false);
+    expect(person.hasBeenTested).toBe(false);
     await person.publish();
     expect(person.hasBeenBuilt).toBe(true);
-    expect(person.instanceHasBeenBuilt).toBe(true);
+    expect(person.hasBeenBuiltByInstance).toBe(true);
+    expect(person.hasBeenTested).toBe(true);
+  });
+
+  test('unlistened events', async () => {
+    const person = await Resource.$create(
+      {'@import': '../../fixtures/person', build: {'@unlisten': 'publishRequested'}},
+      {directory: __dirname}
+    );
+    expect(person.hasBeenBuilt).toBe(false);
+    await person.publish();
+    expect(person.hasBeenBuilt).toBe(false);
   });
 
   test('before and after hooks', async () => {
@@ -112,5 +125,9 @@ describe('MethodResource', () => {
         '@listen': ['buildRequested', 'installRequested']
       })).$serialize()
     ).toEqual({'@listen': ['buildRequested', 'installRequested']});
+
+    expect((await MethodResource.$create({'@unlisten': 'buildRequested'})).$serialize()).toEqual({
+      '@unlisten': 'buildRequested'
+    });
   });
 });
