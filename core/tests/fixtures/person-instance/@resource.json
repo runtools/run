@@ -6,7 +6,7 @@
   "instanceHasBeenBuilt": false,
   "instanceBuild": {
     "@type": "method",
-    "@listen": "beforePublish"
+    "@listen": "publishRequested"
   },
   "hookTest": {
     "@before": "instanceBeforeHookTest",

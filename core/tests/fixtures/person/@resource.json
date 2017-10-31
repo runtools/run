@@ -41,11 +41,11 @@
     "hasBeenBuilt": false,
     "build": {
       "@type": "method",
-      "@listen": "beforePublish"
+      "@listen": "publishRequested"
     },
     "publish": {
       "@type": "method",
-      "@run": "@emit beforePublish"
+      "@run": "@emit publishRequested"
     },
     "hookTestResults": [],
     "hookTest": {
