@@ -28,7 +28,7 @@
           "@value": "Hi"
         }
       },
-      "@expression": "formatGreetingMethod $verb"
+      "@run": "formatGreetingMethod $verb"
     },
     "address": {
       "city": {
@@ -45,7 +45,7 @@
     },
     "publish": {
       "@type": "method",
-      "@expression": "@emit beforePublish"
+      "@run": "@emit beforePublish"
     },
     "hookTestResults": [],
     "hookTest": {

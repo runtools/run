@@ -1,10 +1,15 @@
 {
   "@import": "js/npm-package",
-  "author": "Manuel Vila <mvila@3base.com>",
+  "name": "run-core",
+  "version": "0.10.61",
   "description": "Resdir resources runner",
-  "main": "./dist/index.js",
+  "author": "Manuel Vila <mvila@3base.com>",
   "repository": "https://github.com/resdir/resdir.git",
-  "version": "0.10.59",
+  "license": "MIT",
+  "files": [
+    "./dist"
+  ],
+  "main": "./dist/index.js",
   "dependencies": {
     "child-process-promise": "^2.2.1",
     "core-decorators": "^0.19.0",
@@ -39,11 +44,6 @@
     "sync-request": "^4.1.0",
     "then-request": "^2.2.0"
   },
-  "license": "MIT",
-  "name": "run-core",
-  "files": [
-    "./dist"
-  ],
   "@unpublishable": {
     "transpiler": {
       "@import": "resdir/esnext-transpiler"

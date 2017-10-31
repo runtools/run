@@ -3,6 +3,6 @@
     "@type": "method",
     "@hidden": true,
     "@listen": "after:@test",
-    "@expression": ["./core @test", "./cli @test"]
+    "@run": ["./core @test", "./cli @test"]
   }
 }

@@ -5,14 +5,14 @@ describe('MethodResource', () => {
   test('creation', async () => {
     const method = await MethodResource.$create({
       '@before': '@console print Deploying...',
-      '@expression': 'frontend deploy --@verbose',
+      '@run': 'frontend deploy --@verbose',
       '@after': '@console print Depoyment completed',
       '@listen': 'before:build'
     });
     expect(method).toBeInstanceOf(MethodResource);
-    expect(method.$before).toEqual(['@console print Deploying...']);
-    expect(method.$expression).toEqual(['frontend deploy --@verbose']);
-    expect(method.$after).toEqual(['@console print Depoyment completed']);
+    expect(method.$beforeExpression).toEqual(['@console print Deploying...']);
+    expect(method.$runExpression).toEqual(['frontend deploy --@verbose']);
+    expect(method.$afterExpression).toEqual(['@console print Depoyment completed']);
     expect(method.$getListenedEvents()).toHaveLength(1);
     expect(method.$getListenedEvents()[0]).toBe('before:build');
   });
@@ -89,12 +89,12 @@ describe('MethodResource', () => {
     });
 
     expect(
-      (await MethodResource.$create({'@expression': 'frontend deploy --@verbose'})).$serialize()
-    ).toEqual({'@expression': 'frontend deploy --@verbose'});
+      (await MethodResource.$create({'@run': 'frontend deploy --@verbose'})).$serialize()
+    ).toEqual({'@run': 'frontend deploy --@verbose'});
 
-    expect(
-      (await MethodResource.$create({'@expression': ['build', 'deploy']})).$serialize()
-    ).toEqual({'@expression': ['build', 'deploy']});
+    expect((await MethodResource.$create({'@run': ['build', 'deploy']})).$serialize()).toEqual({
+      '@run': ['build', 'deploy']
+    });
 
     expect(
       (await MethodResource.$create({'@before': '@console print Deploying...'})).$serialize()

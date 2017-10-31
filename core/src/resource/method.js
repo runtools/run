@@ -16,19 +16,19 @@ export class MethodResource extends Resource {
   async $construct(definition, options) {
     await super.$construct(definition, options);
     await catchContext(this, async () => {
-      const expression = getProperty(definition, '@expression');
-      if (expression !== undefined) {
-        this.$expression = expression;
+      const runExpression = getProperty(definition, '@run');
+      if (runExpression !== undefined) {
+        this.$runExpression = runExpression;
       }
 
-      const before = getProperty(definition, '@before');
-      if (before !== undefined) {
-        this.$before = before;
+      const beforeExpression = getProperty(definition, '@before');
+      if (beforeExpression !== undefined) {
+        this.$beforeExpression = beforeExpression;
       }
 
-      const after = getProperty(definition, '@after');
-      if (after !== undefined) {
-        this.$after = after;
+      const afterExpression = getProperty(definition, '@after');
+      if (afterExpression !== undefined) {
+        this.$afterExpression = afterExpression;
       }
 
       const listenedEvents = getProperty(definition, '@listen');
@@ -38,34 +38,34 @@ export class MethodResource extends Resource {
     });
   }
 
-  get $expression() {
-    return this._getInheritedValue('_expression');
+  get $runExpression() {
+    return this._getInheritedValue('_runExpression');
   }
 
-  set $expression(expression) {
-    if (typeof expression === 'string') {
-      expression = [expression];
+  set $runExpression(runExpression) {
+    if (typeof runExpression === 'string') {
+      runExpression = [runExpression];
     }
-    this._expression = expression;
+    this._runExpression = runExpression;
   }
 
-  get $before() {
-    return this._before;
+  get $beforeExpression() {
+    return this._beforeExpression;
   }
 
-  set $before(before) {
-    if (typeof before === 'string') {
-      before = [before];
+  set $beforeExpression(beforeExpression) {
+    if (typeof beforeExpression === 'string') {
+      beforeExpression = [beforeExpression];
     }
-    this._before = before;
+    this._beforeExpression = beforeExpression;
   }
 
   $getAllBefore() {
     const expression = [];
     this.$forSelfAndEachBase(
       method => {
-        if (method._before) {
-          expression.unshift(...method._before);
+        if (method._beforeExpression) {
+          expression.unshift(...method._beforeExpression);
         }
       },
       {deepSearch: true}
@@ -73,23 +73,23 @@ export class MethodResource extends Resource {
     return expression;
   }
 
-  get $after() {
-    return this._after;
+  get $afterExpression() {
+    return this._afterExpression;
   }
 
-  set $after(after) {
-    if (typeof after === 'string') {
-      after = [after];
+  set $afterExpression(afterExpression) {
+    if (typeof afterExpression === 'string') {
+      afterExpression = [afterExpression];
     }
-    this._after = after;
+    this._afterExpression = afterExpression;
   }
 
   $getAllAfter() {
     const expression = [];
     this.$forSelfAndEachBase(
       method => {
-        if (method._after) {
-          expression.push(...method._after);
+        if (method._afterExpression) {
+          expression.push(...method._afterExpression);
         }
       },
       {deepSearch: true}
@@ -153,16 +153,16 @@ export class MethodResource extends Resource {
         throw new Error(`Can't find implementation for ${formatCode(methodResource.$getKey())}`);
       }
 
-      const before = methodResource.$getAllBefore();
-      if (before.length) {
-        await methodResource._runExpression(before, normalizedArguments, {parent: this});
+      const beforeExpression = methodResource.$getAllBefore();
+      if (beforeExpression.length) {
+        await methodResource._run(beforeExpression, normalizedArguments, {parent: this});
       }
 
       const result = await implementation.call(this, normalizedArguments, environment);
 
-      const after = methodResource.$getAllAfter();
-      if (after.length) {
-        await methodResource._runExpression(after, normalizedArguments, {parent: this});
+      const afterExpression = methodResource.$getAllAfter();
+      if (afterExpression.length) {
+        await methodResource._run(afterExpression, normalizedArguments, {parent: this});
       }
 
       return result;
@@ -225,11 +225,11 @@ export class MethodResource extends Resource {
   }
 
   _getImplementation() {
-    const expression = this.$expression;
+    const expression = this.$runExpression;
     if (expression) {
       const methodResource = this;
       return function (args) {
-        return methodResource._runExpression(expression, args, {parent: this});
+        return methodResource._run(expression, args, {parent: this});
       };
     }
 
@@ -250,7 +250,7 @@ export class MethodResource extends Resource {
     return implementation;
   }
 
-  async _runExpression(expressionProperty, args, {parent} = {}) {
+  async _run(expressionProperty, args, {parent} = {}) {
     let result;
 
     for (const expression of expressionProperty) {
@@ -314,30 +314,30 @@ export class MethodResource extends Resource {
       definition = {};
     }
 
-    const expression = this._expression;
-    if (expression !== undefined) {
-      if (expression.length === 1) {
-        definition['@expression'] = expression[0];
-      } else if (expression.length > 1) {
-        definition['@expression'] = expression;
+    const runExpression = this._runExpression;
+    if (runExpression !== undefined) {
+      if (runExpression.length === 1) {
+        definition['@run'] = runExpression[0];
+      } else if (runExpression.length > 1) {
+        definition['@run'] = runExpression;
       }
     }
 
-    const before = this._before;
-    if (before !== undefined) {
-      if (before.length === 1) {
-        definition['@before'] = before[0];
-      } else if (before.length > 1) {
-        definition['@before'] = before;
+    const beforeExpression = this._beforeExpression;
+    if (beforeExpression !== undefined) {
+      if (beforeExpression.length === 1) {
+        definition['@before'] = beforeExpression[0];
+      } else if (beforeExpression.length > 1) {
+        definition['@before'] = beforeExpression;
       }
     }
 
-    const after = this._after;
-    if (after !== undefined) {
-      if (after.length === 1) {
-        definition['@after'] = after[0];
-      } else if (after.length > 1) {
-        definition['@after'] = after;
+    const afterExpression = this._afterExpression;
+    if (afterExpression !== undefined) {
+      if (afterExpression.length === 1) {
+        definition['@after'] = afterExpression[0];
+      } else if (afterExpression.length > 1) {
+        definition['@after'] = afterExpression;
       }
     }
 
