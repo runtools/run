@@ -7,8 +7,7 @@ describe('MethodResource', () => {
       '@before': '@console print Deploying...',
       '@expression': 'frontend deploy --@verbose',
       '@after': '@console print Depoyment completed',
-      '@listen': 'before:build',
-      '@emit': '*:test'
+      '@listen': 'before:build'
     });
     expect(method).toBeInstanceOf(MethodResource);
     expect(method.$before).toEqual(['@console print Deploying...']);
@@ -16,7 +15,6 @@ describe('MethodResource', () => {
     expect(method.$after).toEqual(['@console print Depoyment completed']);
     expect(method.$getListenedEvents()).toHaveLength(1);
     expect(method.$getListenedEvents()[0]).toBe('before:build');
-    expect(method.$getEmittedEvents()).toEqual({before: 'before:test', after: 'after:test'});
   });
 
   test('invocation', async () => {
@@ -112,9 +110,5 @@ describe('MethodResource', () => {
     expect(
       (await MethodResource.$create({'@listen': ['before:build', 'after:install']})).$serialize()
     ).toEqual({'@listen': ['before:build', 'after:install']});
-
-    expect((await MethodResource.$create({'@emit': '*:build'})).$serialize()).toEqual({
-      '@emit': '*:build'
-    });
   });
 });

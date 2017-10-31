@@ -35,11 +35,6 @@ export class MethodResource extends Resource {
       if (listenedEvents !== undefined) {
         this.$setListenedEvents(listenedEvents);
       }
-
-      const emittedEvents = getProperty(definition, '@emit');
-      if (emittedEvents !== undefined) {
-        this.$setEmittedEvents(emittedEvents);
-      }
     });
   }
 
@@ -125,33 +120,6 @@ export class MethodResource extends Resource {
     this._listenedEvents = events;
   }
 
-  $getEmittedEvents() {
-    return this._getInheritedValue('_emittedEvents');
-  }
-
-  $setEmittedEvents(events) {
-    if (!events) {
-      throw new Error('\'events\' argument is missing');
-    }
-
-    // TODO: handle event definition such as:
-    // { before: 'will-build' } (custom before event name and no after)
-
-    if (!events.startsWith('*:')) {
-      throw new Error(
-        `Invalid event name: ${formatString(events)}. It should be prefixed by ${formatString(
-          '*:'
-        )}.`
-      );
-    }
-
-    const event = events.slice(2);
-    this._emittedEvents = {
-      before: 'before:' + event,
-      after: 'after:' + event
-    };
-  }
-
   $defaultAutoUnboxing = true;
 
   $unbox() {
@@ -185,12 +153,6 @@ export class MethodResource extends Resource {
         throw new Error(`Can't find implementation for ${formatCode(methodResource.$getKey())}`);
       }
 
-      const emittedEvents = methodResource.$getEmittedEvents();
-
-      if (emittedEvents && emittedEvents.before) {
-        await this.$emitEvent(emittedEvents.before);
-      }
-
       const before = methodResource.$getAllBefore();
       if (before.length) {
         await methodResource._runExpression(before, normalizedArguments, {parent: this});
@@ -201,10 +163,6 @@ export class MethodResource extends Resource {
       const after = methodResource.$getAllAfter();
       if (after.length) {
         await methodResource._runExpression(after, normalizedArguments, {parent: this});
-      }
-
-      if (emittedEvents && emittedEvents.after) {
-        await this.$emitEvent(emittedEvents.after);
       }
 
       return result;
@@ -389,14 +347,6 @@ export class MethodResource extends Resource {
         listenedEvents = listenedEvents[0];
       }
       definition['@listen'] = listenedEvents;
-    }
-
-    const emittedEvents = this._emittedEvents;
-    if (emittedEvents) {
-      // TODO: handle custom event definitions
-      let event = emittedEvents.before;
-      event = event.slice('before:'.length);
-      definition['@emit'] = '*:' + event;
     }
 
     if (isEmpty(definition)) {
