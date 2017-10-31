@@ -46,10 +46,10 @@
   },
   "@unpublishable": {
     "transpiler": {
-      "@import": "resdir/esnext-transpiler"
+      "@import": "1place/esnext-transpiler"
     },
     "tests": {
-      "@import": "resdir/esnext-jest",
+      "@import": "1place/esnext-jest",
       "@directory": "./tests"
     }
   }
