@@ -19,7 +19,7 @@ import {parseResourceIdentifier} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, formatResourceSpecifier} from '@resdir/resource-specifier';
 import RegistryClient from '@resdir/registry-client';
 
-import {shiftArguments, takeArgument} from '../arguments';
+import {shiftPositionalArguments, takeArgument} from '@resdir/method-arguments';
 import Runtime from '../runtime';
 
 const RUN_CLIENT_ID = 'RUN_CLI';
@@ -914,7 +914,7 @@ export class Resource {
   async $invoke(args, {_parent} = {}) {
     return await catchContext(this, async () => {
       args = {...args};
-      const key = shiftArguments(args);
+      const key = shiftPositionalArguments(args);
       if (key === undefined) {
         return this;
       }
@@ -995,7 +995,7 @@ export class Resource {
 
     let importArg = takeArgument(args, '@import');
     if (importArg === undefined) {
-      importArg = shiftArguments(args);
+      importArg = shiftPositionalArguments(args);
     }
 
     const type = takeArgument(args, '@type', ['@t']);
@@ -1053,7 +1053,7 @@ export class Resource {
 
     let key = takeArgument(args, '@key');
     if (key === undefined) {
-      key = shiftArguments(args);
+      key = shiftPositionalArguments(args);
     }
 
     if (!key) {
@@ -1067,7 +1067,7 @@ export class Resource {
 
     let importArg = takeArgument(args, '@import');
     if (importArg === undefined) {
-      importArg = shiftArguments(args);
+      importArg = shiftPositionalArguments(args);
     }
 
     const type = takeArgument(args, '@type', ['@t']);
@@ -1118,7 +1118,7 @@ export class Resource {
 
     let key = takeArgument(args, '@key');
     if (key === undefined) {
-      key = shiftArguments(args);
+      key = shiftPositionalArguments(args);
     }
 
     if (!key) {
@@ -1178,9 +1178,9 @@ export class Resource {
 
   async '@console'(args) {
     args = {...args};
-    const key = shiftArguments(args);
+    const key = shiftPositionalArguments(args);
     if (key === 'print') {
-      const message = shiftArguments(args);
+      const message = shiftPositionalArguments(args);
       print(message || '');
     } else {
       throw new Error('UNIMPLEMENTED');
@@ -1228,16 +1228,42 @@ export class Resource {
     await registry.$invoke(args);
   }
 
-  async '@emit'({event, arguments: args}) {
-    // TODO: improve parameters handling
-    args = JSON.parse(args);
-    return await this.$emitEvent(event, args, {parseArguments: true});
+  async '@emit'(args) {
+    args = {...args};
+
+    let event = takeArgument(args, 'event');
+    if (event === undefined) {
+      event = shiftPositionalArguments(args);
+    }
+
+    let eventArguments = takeArgument(args, 'arguments');
+    if (eventArguments === undefined) {
+      eventArguments = shiftPositionalArguments(args);
+    }
+    if (eventArguments !== undefined) {
+      eventArguments = JSON.parse(eventArguments);
+    }
+
+    return await this.$emitEvent(event, eventArguments, {parseArguments: true});
   }
 
-  async '@broadcast'({event, arguments: args}) {
-    // TODO: improve parameters handling
-    args = JSON.parse(args);
-    return await this.$broadcastEvent(event, args, {parseArguments: true});
+  async '@broadcast'(args) {
+    args = {...args};
+
+    let event = takeArgument(args, 'event');
+    if (event === undefined) {
+      event = shiftPositionalArguments(args);
+    }
+
+    let eventArguments = takeArgument(args, 'arguments');
+    if (eventArguments === undefined) {
+      eventArguments = shiftPositionalArguments(args);
+    }
+    if (eventArguments !== undefined) {
+      eventArguments = JSON.parse(eventArguments);
+    }
+
+    return await this.$broadcastEvent(event, eventArguments, {parseArguments: true});
   }
 
   static $normalize(definition, _options) {

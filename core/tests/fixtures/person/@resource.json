@@ -41,11 +41,23 @@
     "hasBeenBuilt": false,
     "build": {
       "@type": "method",
-      "@listen": "before:publish"
+      "@listen": "beforePublish"
     },
     "publish": {
       "@type": "method",
-      "@emit": "*:publish"
+      "@expression": "@emit beforePublish"
+    },
+    "hookTestResults": [],
+    "hookTest": {
+      "@type": "method",
+      "@before": "beforeHookTest",
+      "@after": "afterHookTest"
+    },
+    "beforeHookTest": {
+      "@type": "method"
+    },
+    "afterHookTest": {
+      "@type": "method"
     }
   }
 }

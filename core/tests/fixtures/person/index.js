@@ -13,5 +13,15 @@ module.exports = base =>
       this.hasBeenBuilt = true;
     }
 
-    async publish() {}
+    async hookTest() {
+      this.hookTestResults = [...this.hookTestResults, 'hookTest'];
+    }
+
+    async beforeHookTest() {
+      this.hookTestResults = [...this.hookTestResults, 'beforeHookTest'];
+    }
+
+    async afterHookTest() {
+      this.hookTestResults = [...this.hookTestResults, 'afterHookTest'];
+    }
   };

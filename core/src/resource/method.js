@@ -6,7 +6,11 @@ import {getPropertyKeyAndValue} from '@resdir/util';
 import {parse} from 'shell-quote';
 
 import {Resource, getCommonParameters} from '../resource';
-import {makePositionalArgumentKey, getFirstArgument, shiftArguments} from '../arguments';
+import {
+  makePositionalArgumentKey,
+  getPositionalArgument,
+  shiftPositionalArguments
+} from '@resdir/method-arguments';
 
 export class MethodResource extends Resource {
   async $construct(definition, options) {
@@ -15,6 +19,16 @@ export class MethodResource extends Resource {
       const expression = getProperty(definition, '@expression');
       if (expression !== undefined) {
         this.$expression = expression;
+      }
+
+      const before = getProperty(definition, '@before');
+      if (before !== undefined) {
+        this.$before = before;
+      }
+
+      const after = getProperty(definition, '@after');
+      if (after !== undefined) {
+        this.$after = after;
       }
 
       const listenedEvents = getProperty(definition, '@listen');
@@ -38,6 +52,54 @@ export class MethodResource extends Resource {
       expression = [expression];
     }
     this._expression = expression;
+  }
+
+  get $before() {
+    return this._before;
+  }
+
+  set $before(before) {
+    if (typeof before === 'string') {
+      before = [before];
+    }
+    this._before = before;
+  }
+
+  $getAllBefore() {
+    const expression = [];
+    this.$forSelfAndEachBase(
+      method => {
+        if (method._before) {
+          expression.unshift(...method._before);
+        }
+      },
+      {deepSearch: true}
+    );
+    return expression;
+  }
+
+  get $after() {
+    return this._after;
+  }
+
+  set $after(after) {
+    if (typeof after === 'string') {
+      after = [after];
+    }
+    this._after = after;
+  }
+
+  $getAllAfter() {
+    const expression = [];
+    this.$forSelfAndEachBase(
+      method => {
+        if (method._after) {
+          expression.push(...method._after);
+        }
+      },
+      {deepSearch: true}
+    );
+    return expression;
   }
 
   $getListenedEvents() {
@@ -129,7 +191,17 @@ export class MethodResource extends Resource {
         await this.$emitEvent(emittedEvents.before);
       }
 
+      const before = methodResource.$getAllBefore();
+      if (before.length) {
+        await methodResource._runExpression(before, normalizedArguments, {parent: this});
+      }
+
       const result = await implementation.call(this, normalizedArguments, environment);
+
+      const after = methodResource.$getAllAfter();
+      if (after.length) {
+        await methodResource._runExpression(after, normalizedArguments, {parent: this});
+      }
 
       if (emittedEvents && emittedEvents.after) {
         await this.$emitEvent(emittedEvents.after);
@@ -195,10 +267,11 @@ export class MethodResource extends Resource {
   }
 
   _getImplementation() {
-    if (this.$expression) {
+    const expression = this.$expression;
+    if (expression) {
       const methodResource = this;
       return function (args) {
-        return methodResource._runExpression(args, {parent: this});
+        return methodResource._runExpression(expression, args, {parent: this});
       };
     }
 
@@ -219,10 +292,10 @@ export class MethodResource extends Resource {
     return implementation;
   }
 
-  async _runExpression(args, {parent} = {}) {
+  async _runExpression(expressionProperty, args, {parent} = {}) {
     let result;
 
-    for (const expression of this.$expression || []) {
+    for (const expression of expressionProperty) {
       // TODO: Replace 'shell-quote' with something more suitable
 
       // // Prevent 'shell-quote' from interpreting operators:
@@ -233,30 +306,30 @@ export class MethodResource extends Resource {
       //   );
       // }
 
-      let expressionArguments = parse(expression, variable => {
+      let parsedExpression = parse(expression, variable => {
         if (!(variable in args)) {
           throw new Error(`Invalid variable found in a method expression: ${formatCode(variable)}`);
         }
         return String(args[variable]);
       });
 
-      expressionArguments = expressionArguments.map(arg => {
+      parsedExpression = parsedExpression.map(arg => {
         if (typeof arg === 'string') {
           return arg;
         }
         throw new Error(`Argument parsing failed (arg: ${JSON.stringify(arg)})`);
       });
 
-      expressionArguments = parseCommandLineArguments(expressionArguments);
+      parsedExpression = parseCommandLineArguments(parsedExpression);
 
-      result = await this._runParsedExpression(expressionArguments, {parent});
+      result = await this._runParsedExpression(parsedExpression, {parent});
     }
 
     return result;
   }
 
   async _runParsedExpression(args, {parent}) {
-    const firstArgument = getFirstArgument(args);
+    const firstArgument = getPositionalArgument(args, 0);
     if (
       firstArgument !== undefined &&
       (firstArgument.startsWith('.') || firstArgument.includes('/') || isAbsolute(firstArgument))
@@ -266,7 +339,7 @@ export class MethodResource extends Resource {
         directory: this.$getCurrentDirectory({throwIfUndefined: false})
       });
       args = {...args};
-      shiftArguments(args);
+      shiftPositionalArguments(args);
     }
     return await parent.$invoke(args);
   }
@@ -289,6 +362,24 @@ export class MethodResource extends Resource {
         definition['@expression'] = expression[0];
       } else if (expression.length > 1) {
         definition['@expression'] = expression;
+      }
+    }
+
+    const before = this._before;
+    if (before !== undefined) {
+      if (before.length === 1) {
+        definition['@before'] = before[0];
+      } else if (before.length > 1) {
+        definition['@before'] = before;
+      }
+    }
+
+    const after = this._after;
+    if (after !== undefined) {
+      if (after.length === 1) {
+        definition['@after'] = after[0];
+      } else if (after.length > 1) {
+        definition['@after'] = after;
       }
     }
 

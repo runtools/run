@@ -1,5 +1,21 @@
 {
   "@import": "../person",
+  "@implementation": "./",
   "name": "Manu",
-  "age": 44
+  "age": 44,
+  "instanceHasBeenBuilt": false,
+  "instanceBuild": {
+    "@type": "method",
+    "@listen": "beforePublish"
+  },
+  "hookTest": {
+    "@before": "instanceBeforeHookTest",
+    "@after": "instanceAfterHookTest"
+  },
+  "instanceBeforeHookTest": {
+    "@type": "method"
+  },
+  "instanceAfterHookTest": {
+    "@type": "method"
+  }
 }
