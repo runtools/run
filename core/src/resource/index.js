@@ -403,7 +403,7 @@ export class Resource {
   }
 
   async $save({directory, ensureDirectory} = {}) {
-    await this.$emit('@saveRequested');
+    await this.$emit('@save');
 
     if (!this.$isRoot()) {
       throw new Error('Can\'t save a child resource');
@@ -433,7 +433,7 @@ export class Resource {
 
     save(file, definition);
 
-    await this.$emit('@saveCompleted');
+    await this.$emit('@saved');
   }
 
   _bases = [];
@@ -1159,11 +1159,13 @@ export class Resource {
   async '@initialize'() {}
 
   async '@install'(args) {
-    await this.$broadcast('@installRequested', args, {parseArguments: true});
+    await this.$broadcast('@install', args, {parseArguments: true});
+    await this.$broadcast('@installed', args, {parseArguments: true});
   }
 
   async '@build'(args) {
-    await this.$broadcast('@buildRequested', args, {parseArguments: true});
+    await this.$broadcast('@build', args, {parseArguments: true});
+    await this.$broadcast('@built', args, {parseArguments: true});
   }
 
   async '@print'() {
@@ -1182,11 +1184,13 @@ export class Resource {
   }
 
   async '@lint'(args) {
-    await this.$broadcast('@lintRequested', args, {parseArguments: true});
+    await this.$broadcast('@lint', args, {parseArguments: true});
+    await this.$broadcast('@linted', args, {parseArguments: true});
   }
 
   async '@test'(args) {
-    await this.$broadcast('@testRequested', args, {parseArguments: true});
+    await this.$broadcast('@test', args, {parseArguments: true});
+    await this.$broadcast('@tested', args, {parseArguments: true});
   }
 
   async '@normalizeResourceFile'({json5, json}) {

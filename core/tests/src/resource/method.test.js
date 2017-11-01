@@ -7,15 +7,15 @@ describe('MethodResource', () => {
       '@before': '@console print Deploying...',
       '@run': 'frontend deploy --@verbose',
       '@after': '@console print Depoyment completed',
-      '@listen': 'buildRequested',
-      '@unlisten': 'testRequested'
+      '@listen': 'build',
+      '@unlisten': 'test'
     });
     expect(method).toBeInstanceOf(MethodResource);
     expect(method.$beforeExpression).toEqual(['@console print Deploying...']);
     expect(method.$runExpression).toEqual(['frontend deploy --@verbose']);
     expect(method.$afterExpression).toEqual(['@console print Depoyment completed']);
-    expect(method.$listenedEvents).toEqual(['buildRequested']);
-    expect(method.$unlistenedEvents).toEqual(['testRequested']);
+    expect(method.$listenedEvents).toEqual(['build']);
+    expect(method.$unlistenedEvents).toEqual(['test']);
   });
 
   test('invocation', async () => {
@@ -57,7 +57,7 @@ describe('MethodResource', () => {
 
   test('unlistened events', async () => {
     const person = await Resource.$create(
-      {'@import': '../../fixtures/person', build: {'@unlisten': 'publishRequested'}},
+      {'@import': '../../fixtures/person', build: {'@unlisten': 'publish'}},
       {directory: __dirname}
     );
     expect(person.hasBeenBuilt).toBe(false);
@@ -117,17 +117,17 @@ describe('MethodResource', () => {
       (await MethodResource.$create({'@after': '@console print Depoyment completed'})).$serialize()
     ).toEqual({'@after': '@console print Depoyment completed'});
 
-    expect((await MethodResource.$create({'@listen': 'buildRequested'})).$serialize()).toEqual({
-      '@listen': 'buildRequested'
+    expect((await MethodResource.$create({'@listen': 'build'})).$serialize()).toEqual({
+      '@listen': 'build'
     });
     expect(
       (await MethodResource.$create({
-        '@listen': ['buildRequested', 'installRequested']
+        '@listen': ['build', 'installRequested']
       })).$serialize()
-    ).toEqual({'@listen': ['buildRequested', 'installRequested']});
+    ).toEqual({'@listen': ['build', 'installRequested']});
 
-    expect((await MethodResource.$create({'@unlisten': 'buildRequested'})).$serialize()).toEqual({
-      '@unlisten': 'buildRequested'
+    expect((await MethodResource.$create({'@unlisten': 'build'})).$serialize()).toEqual({
+      '@unlisten': 'build'
     });
   });
 });

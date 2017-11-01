@@ -2,7 +2,7 @@
   "_test": {
     "@type": "method",
     "@hidden": true,
-    "@listen": "@testRequested",
+    "@listen": "@test",
     "@run": ["./core @test", "./cli @test"]
   }
 }

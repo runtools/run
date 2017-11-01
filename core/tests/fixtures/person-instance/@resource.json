@@ -10,7 +10,7 @@
   "hasBeenTested": false,
   "test": {
     "@type": "method",
-    "@listen": "publishRequested"
+    "@listen": "publish"
   },
   "hookTest": {
     "@before": "instanceBeforeHookTest",
