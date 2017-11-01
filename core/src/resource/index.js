@@ -39,6 +39,7 @@ const BUILTIN_COMMANDS = [
   '@lint',
   '@install',
   '@normalizeResourceFile',
+  '@parent',
   '@print',
   '@registry',
   '@remove',
@@ -1156,6 +1157,14 @@ export class Resource {
   async '@build'(args) {
     await this.$broadcast('@build', args, {parseArguments: true});
     await this.$broadcast('@built', args, {parseArguments: true});
+  }
+
+  async '@parent'(args) {
+    const parent = this.$getParent();
+    if (!parent) {
+      throw new Error(`${formatCode('@parent')} can't be invoked from the resource's root`);
+    }
+    await parent.$invoke(args);
   }
 
   async '@print'() {
