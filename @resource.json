@@ -1,7 +1,6 @@
 {
-  "_test": {
+  "test": {
     "@type": "method",
-    "@hidden": true,
     "@listen": "@test",
     "@run": ["./core @test", "./cli @test"]
   }

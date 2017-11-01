@@ -36,7 +36,6 @@ const BUILTIN_COMMANDS = [
   '@console',
   '@create',
   '@emit',
-  '@initialize',
   '@lint',
   '@install',
   '@normalizeResourceFile',
@@ -972,10 +971,9 @@ export class Resource {
       throw new TypeError('\'args\' argument must be a plain object');
     }
 
-    const environment = {event: {name: event, arguments: args}};
     for (const listener of this._getAllListenersForEvent(event)) {
       const fn = listener.$getFunction({parseArguments});
-      await fn.call(this, undefined, environment);
+      await fn.call(this, args);
     }
   }
 
@@ -1027,10 +1025,7 @@ export class Resource {
         }
 
         const resource = await Resource.$create(definition, {directory});
-        const initialize = resource.$getChild('@initialize');
-        if (initialize) {
-          await initialize.$invoke(args, {parent: resource});
-        }
+        await resource.$emit('@created', args, {parseArguments: true});
         await resource.$save();
 
         return resource;
@@ -1092,10 +1087,7 @@ export class Resource {
         }
 
         child = await this.$setChild(key, definition);
-        const initialize = child.$getChild('@initialize');
-        if (initialize) {
-          await initialize.$invoke(args, {parent: child});
-        }
+        await child.$emit('@added', args, {parseArguments: true});
         await this.$save();
 
         return child;
@@ -1155,8 +1147,6 @@ export class Resource {
     }
     return specifier;
   }
-
-  async '@initialize'() {}
 
   async '@install'(args) {
     await this.$broadcast('@install', args, {parseArguments: true});
@@ -1232,15 +1222,7 @@ export class Resource {
       event = shiftPositionalArguments(args);
     }
 
-    let eventArguments = takeArgument(args, 'arguments');
-    if (eventArguments === undefined) {
-      eventArguments = shiftPositionalArguments(args);
-    }
-    if (eventArguments !== undefined) {
-      eventArguments = JSON.parse(eventArguments);
-    }
-
-    return await this.$emit(event, eventArguments, {parseArguments: true});
+    return await this.$emit(event, args, {parseArguments: true});
   }
 
   async '@broadcast'(args) {
@@ -1251,15 +1233,7 @@ export class Resource {
       event = shiftPositionalArguments(args);
     }
 
-    let eventArguments = takeArgument(args, 'arguments');
-    if (eventArguments === undefined) {
-      eventArguments = shiftPositionalArguments(args);
-    }
-    if (eventArguments !== undefined) {
-      eventArguments = JSON.parse(eventArguments);
-    }
-
-    return await this.$broadcast(event, eventArguments, {parseArguments: true});
+    return await this.$broadcast(event, args, {parseArguments: true});
   }
 
   static $normalize(definition, _options) {

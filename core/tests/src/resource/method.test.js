@@ -122,9 +122,9 @@ describe('MethodResource', () => {
     });
     expect(
       (await MethodResource.$create({
-        '@listen': ['build', 'installRequested']
+        '@listen': ['build', 'install']
       })).$serialize()
-    ).toEqual({'@listen': ['build', 'installRequested']});
+    ).toEqual({'@listen': ['build', 'install']});
 
     expect((await MethodResource.$create({'@unlisten': 'build'})).$serialize()).toEqual({
       '@unlisten': 'build'
