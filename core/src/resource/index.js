@@ -150,6 +150,15 @@ export class Resource {
       }
     }
 
+    if (file) {
+      directory = dirname(file);
+    }
+
+    const directoryProperty = getProperty(normalizedDefinition, '@directory');
+    if (directoryProperty) {
+      directory = resolve(directory, directoryProperty);
+    }
+
     let types = getProperty(normalizedDefinition, '@type', ['@import']);
     types = Resource.$normalizeTypes(types);
 
@@ -163,10 +172,6 @@ export class Resource {
       normalizedDefinition['@value'] !== undefined
     ) {
       types = [inferType(normalizedDefinition['@value'])];
-    }
-
-    if (file) {
-      directory = dirname(file);
     }
 
     let NativeClass;
@@ -544,23 +549,11 @@ export class Resource {
       }
     }
 
-    const directory = this.$directory;
-
-    if (directory) {
-      if (isAbsolute(directory)) {
-        currentDirectory = directory;
-      }
-    }
-
     if (!currentDirectory) {
       if (throwIfUndefined) {
         throw new Error('Can\'t determine the current directory');
       }
       return undefined;
-    }
-
-    if (directory) {
-      currentDirectory = resolve(currentDirectory, directory);
     }
 
     return currentDirectory;
