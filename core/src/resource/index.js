@@ -28,6 +28,7 @@ const RUN_CLIENT_DIRECTORY = join(homedir(), '.run');
 const RESOURCE_FILE_NAME = '@resource';
 const RESOURCE_FILE_FORMATS = ['json', 'json5', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
+const PRIVATE_DEV_RESOURCE_FILE_NAME = '@resource.dev.private';
 
 const BUILTIN_COMMANDS = [
   '@add',
@@ -1443,7 +1444,11 @@ function searchResourceFile(directoryOrFile, {searchInParentDirectories = false}
   }
 
   for (const format of RESOURCE_FILE_FORMATS) {
-    const file = join(directory, RESOURCE_FILE_NAME + '.' + format);
+    let file = join(directory, PRIVATE_DEV_RESOURCE_FILE_NAME + '.' + format);
+    if (existsSync(file)) {
+      return file;
+    }
+    file = join(directory, RESOURCE_FILE_NAME + '.' + format);
     if (existsSync(file)) {
       return file;
     }
