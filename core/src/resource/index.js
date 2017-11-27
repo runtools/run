@@ -4,7 +4,7 @@ import {homedir} from 'os';
 import {isPlainObject, isEmpty, union, entries} from 'lodash';
 import isDirectory from 'is-directory';
 import {ensureDirSync, ensureFileSync} from 'fs-extra';
-import {getProperty} from '@resdir/util';
+import {getProperty, takeProperty} from '@resdir/util';
 import {
   catchContext,
   task,
@@ -15,6 +15,7 @@ import {
   printSuccess
 } from '@resdir/console';
 import {load, save} from '@resdir/file-manager';
+import {validateResourceKey} from '@resdir/resource-key';
 import {parseResourceIdentifier} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, formatResourceSpecifier} from '@resdir/resource-specifier';
 import RegistryClient from '@resdir/registry-client';
@@ -51,11 +52,10 @@ const BUILTIN_COMMANDS = [
 const RESDIR_REGISTRY_RESOURCE = 'resdir/registry';
 
 export class Resource {
-  async $construct(
-    definition = {},
-    {bases = [], parent, key, directory, file, unpublishable} = {}
-  ) {
+  async $construct(definition, {bases = [], parent, key, directory, file, unpublishable} = {}) {
     await catchContext(this, async () => {
+      definition = {...definition};
+
       if (parent !== undefined) {
         this.$setParent(parent);
       }
@@ -77,7 +77,7 @@ export class Resource {
       }
 
       const set = (target, source, aliases) => {
-        const value = getProperty(definition, source, aliases);
+        const value = takeProperty(definition, source, aliases);
         if (value !== undefined) {
           this[target] = value;
         }
@@ -89,7 +89,7 @@ export class Resource {
       set('$aliases', '@aliases');
       set('$help', '@help');
 
-      const parameters = getProperty(definition, '@parameters');
+      const parameters = takeProperty(definition, '@parameters');
       if (parameters !== undefined) {
         await this.$setParameters(parameters);
       }
@@ -105,7 +105,7 @@ export class Resource {
         await this._inherit(base);
       }
 
-      const unpublishableDefinition = getProperty(definition, '@unpublishable');
+      const unpublishableDefinition = takeProperty(definition, '@unpublishable');
       if (unpublishableDefinition !== undefined) {
         for (const key of Object.keys(unpublishableDefinition)) {
           if (key.startsWith('@')) {
@@ -119,20 +119,16 @@ export class Resource {
         }
       }
 
-      for (const key of Object.keys(definition)) {
-        if (key.startsWith('@') && !BUILTIN_COMMANDS.includes(key)) {
-          // TODO: Remove this particular case
-          continue;
-        }
-        await this.$setChild(key, definition[key]);
-      }
-
-      const exportDefinition = getProperty(definition, '@export');
+      const exportDefinition = takeProperty(definition, '@export');
       if (exportDefinition !== undefined) {
         const resource = await Resource.$create(exportDefinition, {
           directory: this.$getCurrentDirectory({throwIfUndefined: false})
         });
         this.$setExport(resource);
+      }
+
+      for (const key of Object.keys(definition)) {
+        await this.$setChild(key, definition[key]);
       }
     });
   }
@@ -820,6 +816,8 @@ export class Resource {
   }
 
   async $setChild(key, definition, {unpublishable} = {}) {
+    validateResourceKey(key);
+
     const removedChildIndex = this.$removeChild(key);
 
     const base = this.$getChildFromBases(key);

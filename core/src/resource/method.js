@@ -1,42 +1,41 @@
 import {isAbsolute} from 'path';
 import {isEmpty, isPlainObject, difference} from 'lodash';
-import {getProperty} from '@resdir/util';
+import {takeProperty, getPropertyKeyAndValue} from '@resdir/util';
 import {catchContext, formatString, formatCode} from '@resdir/console';
-import {getPropertyKeyAndValue} from '@resdir/util';
-import {parse} from 'shell-quote';
-
-import {Resource, getCommonParameters} from '../resource';
 import {
   makePositionalArgumentKey,
   getPositionalArgument,
   shiftPositionalArguments
 } from '@resdir/method-arguments';
+import {parse} from 'shell-quote';
+
+import {Resource, getCommonParameters} from '../resource';
 
 export class MethodResource extends Resource {
   async $construct(definition, options) {
+    definition = {...definition};
+
+    const runExpression = takeProperty(definition, '@run');
+    const beforeExpression = takeProperty(definition, '@before');
+    const afterExpression = takeProperty(definition, '@after');
+    const listenedEvents = takeProperty(definition, '@listen');
+    const unlistenedEvents = takeProperty(definition, '@unlisten');
+
     await super.$construct(definition, options);
+
     await catchContext(this, async () => {
-      const runExpression = getProperty(definition, '@run');
       if (runExpression !== undefined) {
         this.$runExpression = runExpression;
       }
-
-      const beforeExpression = getProperty(definition, '@before');
       if (beforeExpression !== undefined) {
         this.$beforeExpression = beforeExpression;
       }
-
-      const afterExpression = getProperty(definition, '@after');
       if (afterExpression !== undefined) {
         this.$afterExpression = afterExpression;
       }
-
-      const listenedEvents = getProperty(definition, '@listen');
       if (listenedEvents !== undefined) {
         this.$listenedEvents = listenedEvents;
       }
-
-      const unlistenedEvents = getProperty(definition, '@unlisten');
       if (unlistenedEvents !== undefined) {
         this.$unlistenedEvents = unlistenedEvents;
       }
@@ -159,12 +158,12 @@ export class MethodResource extends Resource {
     const methodResource = this;
 
     return async function (args, environment, ...rest) {
-      const {
-        normalizedArguments,
-        environmentArguments
-      } = await methodResource._normalizeArguments(args, {
-        parse: parseArguments
-      });
+      const {normalizedArguments, environmentArguments} = await methodResource._normalizeArguments(
+        args,
+        {
+          parse: parseArguments
+        }
+      );
 
       environment = methodResource._normalizeEnvironement(environment);
       environment = {...environment, ...environmentArguments};

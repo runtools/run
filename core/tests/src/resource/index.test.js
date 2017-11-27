@@ -146,6 +146,8 @@ describe('Resource', () => {
     expect(person.name).toBe('Manu');
     person.name = 'Manuel';
     expect(person.name).toBe('Manuel');
+
+    await expect(Resource.$create({'@invalidKey': 'value'})).rejects.toBeInstanceOf(Error);
   });
 
   test('properties defined from literals', async () => {
