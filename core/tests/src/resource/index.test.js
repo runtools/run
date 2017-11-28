@@ -44,31 +44,6 @@ describe('Resource', () => {
     expect(res.$hasAlias('hi')).toBe(false);
   });
 
-  test.skip('@id', async () => {
-    const res = await Resource.$create();
-    expect(res.$identifier).toBeUndefined();
-    expect(res.$getNamespace()).toBeUndefined();
-    expect(res.$getName()).toBeUndefined();
-    res.$identifier = 'run/hello';
-    expect(res.$identifier).toBe('run/hello');
-    expect(res.$getNamespace()).toBe('run');
-    expect(res.$getName()).toBe('hello');
-  });
-
-  test.skip('@id validation', async () => {
-    await expect(Resource.$create({'@id': ''})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@id': 'hello'})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@id': 'run/hello'})).resolves.toBeInstanceOf(Resource);
-    await expect(Resource.$create({'@id': 'run/hello-world'})).resolves.toBeInstanceOf(Resource);
-    await expect(Resource.$create({'@id': 'run/hello-'})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@id': 'run/hello*world'})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@id': 'run/-hello'})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@id': 'run/hello--world'})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@id': 'run/'})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@id': '/hello'})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@id': 'run/hello/hi'})).rejects.toBeInstanceOf(Error);
-  });
-
   test('@aliases', async () => {
     const res = await Resource.$create({'@aliases': ['hi']});
     expect(res.$hasAlias('hi')).toBe(true);
@@ -91,24 +66,11 @@ describe('Resource', () => {
     expect(params[1].$position).toBeUndefined();
   });
 
-  test.skip('@version', async () => {
-    expect((await Resource.$create()).$version).toBeUndefined();
-    expect((await Resource.$create({'@version': '1.2.3'})).$version.toString()).toBe('1.2.3');
-    await expect(Resource.$create({'@version': '1.2.3.4'})).rejects.toBeInstanceOf(Error);
-  });
-
   test('@help', async () => {
     expect((await Resource.$create()).$help).toBeUndefined();
     expect((await Resource.$create({'@help': 'This is a resource'})).$help).toBe(
       'This is a resource'
     );
-  });
-
-  test.skip('@repository', async () => {
-    expect((await Resource.$create()).$repository).toBeUndefined();
-    expect(
-      (await Resource.$create({'@repository': 'git://github.com/user/repo'})).$repository
-    ).toBe('git://github.com/user/repo');
   });
 
   test('@runtime', async () => {
@@ -126,11 +88,6 @@ describe('Resource', () => {
         {directory: __dirname}
       )).$implementation
     ).toBe('../../fixtures/person/index.js');
-  });
-
-  test.skip('@files', async () => {
-    expect((await Resource.$create()).$files).toBeUndefined();
-    expect((await Resource.$create({'@files': ['./dist']})).$files).toEqual(['./dist']);
   });
 
   test('@hidden', async () => {
