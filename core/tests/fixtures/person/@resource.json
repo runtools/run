@@ -10,7 +10,7 @@
     },
     "formatGreetingMethod": {
       "@type": "method",
-      "@parameters": {
+      "@input": {
         "verb": {
           "@position": 0,
           "@value": "Hello"
@@ -20,7 +20,7 @@
     },
     "formatGreetingExpression": {
       "@type": "method",
-      "@parameters": {
+      "@input": {
         "verb": {
           "@position": 0,
           "@value": "Hi"

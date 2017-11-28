@@ -15,7 +15,7 @@ export class MethodResource extends Resource {
   async $construct(definition, options) {
     definition = {...definition};
 
-    const parameters = takeProperty(definition, '@parameters');
+    const input = takeProperty(definition, '@input');
     const runExpression = takeProperty(definition, '@run');
     const beforeExpression = takeProperty(definition, '@before');
     const afterExpression = takeProperty(definition, '@after');
@@ -25,8 +25,8 @@ export class MethodResource extends Resource {
     await super.$construct(definition, options);
 
     await catchContext(this, async () => {
-      if (parameters !== undefined) {
-        await this.$setParameters(parameters);
+      if (input !== undefined) {
+        await this.$setInput(input);
       }
       if (runExpression !== undefined) {
         this.$runExpression = runExpression;
@@ -46,26 +46,26 @@ export class MethodResource extends Resource {
     });
   }
 
-  $getParameters() {
-    return this._getInheritedValue('_parameters');
+  $getInput() {
+    return this._getInheritedValue('_input');
   }
 
-  async $setParameters(parameters) {
-    this._parameters = undefined;
-    if (parameters === undefined) {
+  async $setInput(input) {
+    this._input = undefined;
+    if (input === undefined) {
       return;
     }
-    if (!isPlainObject(parameters)) {
-      throw new Error(`${formatCode('parameters')} property must be an object`);
+    if (!isPlainObject(input)) {
+      throw new Error(`${formatCode('input')} property must be an object`);
     }
-    for (const [key, definition] of entries(parameters)) {
+    for (const [key, definition] of entries(input)) {
       const parameter = await createParameter(key, definition, {
         directory: this.$getCurrentDirectory({throwIfUndefined: false})
       });
-      if (this._parameters === undefined) {
-        this._parameters = [];
+      if (this._input === undefined) {
+        this._input = [];
       }
-      this._parameters.push(parameter);
+      this._input.push(parameter);
     }
   }
 
@@ -240,7 +240,7 @@ export class MethodResource extends Resource {
     const remainingArguments = {...args};
 
     const normalizedArguments = {};
-    for (const parameter of this.$getParameters() || []) {
+    for (const parameter of this.$getInput() || []) {
       const {key, value} = await extractArgument(remainingArguments, parameter, {parse});
       if (value !== undefined) {
         normalizedArguments[key] = value;
@@ -248,7 +248,7 @@ export class MethodResource extends Resource {
     }
 
     const environmentArguments = {};
-    for (const parameter of await getCommonParameters()) {
+    for (const parameter of await getEnvironmentParameters()) {
       const {key, value} = await extractArgument(remainingArguments, parameter, {parse});
       if (value !== undefined) {
         environmentArguments[key.slice(1)] = value;
@@ -369,7 +369,7 @@ export class MethodResource extends Resource {
       definition = {};
     }
 
-    this._serializeParameters(definition, options);
+    this._serializeInput(definition, options);
 
     const runExpression = this._runExpression;
     if (runExpression !== undefined) {
@@ -421,20 +421,20 @@ export class MethodResource extends Resource {
     return definition;
   }
 
-  _serializeParameters(definition, _options) {
-    const parameters = this._parameters;
-    if (parameters) {
-      const serializedParameters = {};
+  _serializeInput(definition, _options) {
+    const input = this._input;
+    if (input) {
+      const serializedInput = {};
       let count = 0;
-      for (const parameter of parameters) {
+      for (const parameter of input) {
         const parameterDefinition = parameter.$serialize();
         if (parameterDefinition !== undefined) {
-          serializedParameters[parameter.$getKey()] = parameterDefinition;
+          serializedInput[parameter.$getKey()] = parameterDefinition;
           count++;
         }
       }
       if (count > 0) {
-        definition['@parameters'] = serializedParameters;
+        definition['@input'] = serializedInput;
       }
     }
   }
@@ -444,16 +444,16 @@ async function createParameter(key, definition, {directory} = {}) {
   return await Resource.$create(definition, {key, directory});
 }
 
-let _commonParameters;
-async function getCommonParameters() {
-  if (!_commonParameters) {
-    _commonParameters = [
+let _environmentParameters;
+async function getEnvironmentParameters() {
+  if (!_environmentParameters) {
+    _environmentParameters = [
       await createParameter('@verbose', {'@type': 'boolean', '@aliases': ['@v']}),
       await createParameter('@quiet', {'@type': 'boolean', '@aliases': ['@q']}),
       await createParameter('@debug', {'@type': 'boolean', '@aliases': ['@d']})
     ];
   }
-  return _commonParameters;
+  return _environmentParameters;
 }
 
 function findArgument(args, parameter) {

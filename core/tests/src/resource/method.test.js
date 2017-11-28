@@ -6,7 +6,7 @@ import NumberResource from '../../../dist/resource/number';
 describe('MethodResource', () => {
   test('creation', async () => {
     const method = await MethodResource.$create({
-      '@parameters': {name: {'@type': 'string', '@position': 0}, age: {'@type': 'number'}},
+      '@input': {name: {'@type': 'string', '@position': 0}, age: {'@type': 'number'}},
       '@before': '@console print Deploying...',
       '@run': 'frontend deploy --@verbose',
       '@after': '@console print Depoyment completed',
@@ -16,14 +16,14 @@ describe('MethodResource', () => {
 
     expect(method).toBeInstanceOf(MethodResource);
 
-    const params = method.$getParameters();
-    expect(params).toHaveLength(2);
-    expect(params[0]).toBeInstanceOf(StringResource);
-    expect(params[0].$getKey()).toBe('name');
-    expect(params[0].$position).toBe(0);
-    expect(params[1]).toBeInstanceOf(NumberResource);
-    expect(params[1].$getKey()).toBe('age');
-    expect(params[1].$position).toBeUndefined();
+    const input = method.$getInput();
+    expect(input).toHaveLength(2);
+    expect(input[0]).toBeInstanceOf(StringResource);
+    expect(input[0].$getKey()).toBe('name');
+    expect(input[0].$position).toBe(0);
+    expect(input[1]).toBeInstanceOf(NumberResource);
+    expect(input[1].$getKey()).toBe('age');
+    expect(input[1].$position).toBeUndefined();
 
     expect(method.$beforeExpression).toEqual(['@console print Deploying...']);
     expect(method.$runExpression).toEqual(['frontend deploy --@verbose']);
@@ -117,10 +117,10 @@ describe('MethodResource', () => {
 
     expect(
       (await MethodResource.$create({
-        '@parameters': {name: {'@type': 'string', '@position': 0}, age: {'@type': 'number'}}
+        '@input': {name: {'@type': 'string', '@position': 0}, age: {'@type': 'number'}}
       })).$serialize()
     ).toEqual({
-      '@parameters': {name: {'@type': 'string', '@position': 0}, age: {'@type': 'number'}}
+      '@input': {name: {'@type': 'string', '@position': 0}, age: {'@type': 'number'}}
     });
 
     expect(
