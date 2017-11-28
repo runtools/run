@@ -83,6 +83,7 @@ export class Resource {
         }
       };
 
+      set('$comment', '@comment');
       set('$types', '@type', ['@import']); // TODO: @type and @import should be handled separately
       set('$location', '@load');
       set('$directory', '@directory');
@@ -102,13 +103,6 @@ export class Resource {
       const unpublishableDefinition = takeProperty(definition, '@unpublishable');
       if (unpublishableDefinition !== undefined) {
         for (const key of Object.keys(unpublishableDefinition)) {
-          if (key.startsWith('@')) {
-            throw new Error(
-              `The ${formatCode('@unpublishable')} section cannot contain ${formatCode(
-                key
-              )} property`
-            );
-          }
           await this.$setChild(key, unpublishableDefinition[key], {unpublishable: true});
         }
       }
@@ -552,6 +546,14 @@ export class Resource {
 
   $setCurrentDirectory(directory) {
     this._currentDirectory = directory;
+  }
+
+  get $comment() {
+    return this._comment;
+  }
+
+  set $comment(comment) {
+    this._comment = comment;
   }
 
   get $types() {
@@ -1200,6 +1202,10 @@ export class Resource {
 
   $serialize(options) {
     let definition = {};
+
+    if (this._comment !== undefined) {
+      definition['@comment'] = this._comment;
+    }
 
     this._serializeTypes(definition, options);
 

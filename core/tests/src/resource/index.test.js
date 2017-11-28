@@ -44,6 +44,13 @@ describe('Resource', () => {
     expect(res.$hasAlias('hi')).toBe(false);
   });
 
+  test('@comment', async () => {
+    expect((await Resource.$create()).$comment).toBeUndefined();
+    expect((await Resource.$create({'@comment': 'This is a comment'})).$comment).toBe(
+      'This is a comment'
+    );
+  });
+
   test('@aliases', async () => {
     const res = await Resource.$create({'@aliases': ['hi']});
     expect(res.$hasAlias('hi')).toBe(true);
@@ -294,6 +301,7 @@ describe('Resource', () => {
     await testSerialization({'@type': 'object', '@value': {}});
     await testSerialization({'@type': 'object', '@value': {name: 'Manu'}});
     await testSerialization({
+      '@comment': 'This is a comment',
       '@aliases': ['hi', 'bonjour'],
       '@help': 'This is a resource',
       '@hidden': true
