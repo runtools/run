@@ -1,16 +1,30 @@
 import Resource from '../../../dist/resource';
 import MethodResource from '../../../dist/resource/method';
+import StringResource from '../../../dist/resource/string';
+import NumberResource from '../../../dist/resource/number';
 
 describe('MethodResource', () => {
   test('creation', async () => {
     const method = await MethodResource.$create({
+      '@parameters': {name: {'@type': 'string', '@position': 0}, age: {'@type': 'number'}},
       '@before': '@console print Deploying...',
       '@run': 'frontend deploy --@verbose',
       '@after': '@console print Depoyment completed',
       '@listen': 'build',
       '@unlisten': 'test'
     });
+
     expect(method).toBeInstanceOf(MethodResource);
+
+    const params = method.$getParameters();
+    expect(params).toHaveLength(2);
+    expect(params[0]).toBeInstanceOf(StringResource);
+    expect(params[0].$getKey()).toBe('name');
+    expect(params[0].$position).toBe(0);
+    expect(params[1]).toBeInstanceOf(NumberResource);
+    expect(params[1].$getKey()).toBe('age');
+    expect(params[1].$position).toBeUndefined();
+
     expect(method.$beforeExpression).toEqual(['@console print Deploying...']);
     expect(method.$runExpression).toEqual(['frontend deploy --@verbose']);
     expect(method.$afterExpression).toEqual(['@console print Depoyment completed']);
@@ -99,6 +113,14 @@ describe('MethodResource', () => {
 
     expect((await MethodResource.$create({'@type': 'method'})).$serialize()).toEqual({
       '@type': 'method'
+    });
+
+    expect(
+      (await MethodResource.$create({
+        '@parameters': {name: {'@type': 'string', '@position': 0}, age: {'@type': 'number'}}
+      })).$serialize()
+    ).toEqual({
+      '@parameters': {name: {'@type': 'string', '@position': 0}, age: {'@type': 'number'}}
     });
 
     expect(

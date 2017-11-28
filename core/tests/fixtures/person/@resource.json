@@ -1,8 +1,5 @@
 {
   "@export": {
-    "@parameters": {
-      "shout": false
-    },
     "@runtime": "node#>=6.10.0",
     "@implementation": "./",
     "name": {
@@ -17,7 +14,8 @@
         "verb": {
           "@position": 0,
           "@value": "Hello"
-        }
+        },
+        "shout": false
       }
     },
     "formatGreetingExpression": {

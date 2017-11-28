@@ -52,20 +52,6 @@ describe('Resource', () => {
     expect(res.$hasAlias('bonjour')).toBe(true);
   });
 
-  test('@parameters', async () => {
-    const res = await Resource.$create({
-      '@parameters': {name: {'@type': 'string', '@position': 0}, age: {'@type': 'number'}}
-    });
-    const params = res.$getParameters();
-    expect(params).toHaveLength(2);
-    expect(params[0]).toBeInstanceOf(StringResource);
-    expect(params[0].$getKey()).toBe('name');
-    expect(params[0].$position).toBe(0);
-    expect(params[1]).toBeInstanceOf(NumberResource);
-    expect(params[1].$getKey()).toBe('age');
-    expect(params[1].$position).toBeUndefined();
-  });
-
   test('@help', async () => {
     expect((await Resource.$create()).$help).toBeUndefined();
     expect((await Resource.$create({'@help': 'This is a resource'})).$help).toBe(
@@ -309,7 +295,6 @@ describe('Resource', () => {
     await testSerialization({'@type': 'object', '@value': {name: 'Manu'}});
     await testSerialization({
       '@aliases': ['hi', 'bonjour'],
-      '@parameters': {name: {'@type': 'string', '@position': 0}, age: {'@type': 'number'}},
       '@help': 'This is a resource',
       '@hidden': true
     });

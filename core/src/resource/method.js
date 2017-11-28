@@ -1,5 +1,5 @@
 import {isAbsolute} from 'path';
-import {isEmpty, isPlainObject, difference} from 'lodash';
+import {isEmpty, isPlainObject, difference, entries} from 'lodash';
 import {takeProperty, getPropertyKeyAndValue} from '@resdir/util';
 import {catchContext, formatString, formatCode} from '@resdir/console';
 import {
@@ -9,12 +9,13 @@ import {
 } from '@resdir/method-arguments';
 import {parse} from 'shell-quote';
 
-import {Resource, getCommonParameters} from '../resource';
+import Resource from '../resource';
 
 export class MethodResource extends Resource {
   async $construct(definition, options) {
     definition = {...definition};
 
+    const parameters = takeProperty(definition, '@parameters');
     const runExpression = takeProperty(definition, '@run');
     const beforeExpression = takeProperty(definition, '@before');
     const afterExpression = takeProperty(definition, '@after');
@@ -24,6 +25,9 @@ export class MethodResource extends Resource {
     await super.$construct(definition, options);
 
     await catchContext(this, async () => {
+      if (parameters !== undefined) {
+        await this.$setParameters(parameters);
+      }
       if (runExpression !== undefined) {
         this.$runExpression = runExpression;
       }
@@ -40,6 +44,29 @@ export class MethodResource extends Resource {
         this.$unlistenedEvents = unlistenedEvents;
       }
     });
+  }
+
+  $getParameters() {
+    return this._getInheritedValue('_parameters');
+  }
+
+  async $setParameters(parameters) {
+    this._parameters = undefined;
+    if (parameters === undefined) {
+      return;
+    }
+    if (!isPlainObject(parameters)) {
+      throw new Error(`${formatCode('parameters')} property must be an object`);
+    }
+    for (const [key, definition] of entries(parameters)) {
+      const parameter = await createParameter(key, definition, {
+        directory: this.$getCurrentDirectory({throwIfUndefined: false})
+      });
+      if (this._parameters === undefined) {
+        this._parameters = [];
+      }
+      this._parameters.push(parameter);
+    }
   }
 
   get $runExpression() {
@@ -213,7 +240,7 @@ export class MethodResource extends Resource {
     const remainingArguments = {...args};
 
     const normalizedArguments = {};
-    for (const parameter of this.$getAllParameters()) {
+    for (const parameter of this.$getParameters() || []) {
       const {key, value} = await extractArgument(remainingArguments, parameter, {parse});
       if (value !== undefined) {
         normalizedArguments[key] = value;
@@ -342,6 +369,8 @@ export class MethodResource extends Resource {
       definition = {};
     }
 
+    this._serializeParameters(definition, options);
+
     const runExpression = this._runExpression;
     if (runExpression !== undefined) {
       if (runExpression.length === 1) {
@@ -391,6 +420,40 @@ export class MethodResource extends Resource {
 
     return definition;
   }
+
+  _serializeParameters(definition, _options) {
+    const parameters = this._parameters;
+    if (parameters) {
+      const serializedParameters = {};
+      let count = 0;
+      for (const parameter of parameters) {
+        const parameterDefinition = parameter.$serialize();
+        if (parameterDefinition !== undefined) {
+          serializedParameters[parameter.$getKey()] = parameterDefinition;
+          count++;
+        }
+      }
+      if (count > 0) {
+        definition['@parameters'] = serializedParameters;
+      }
+    }
+  }
+}
+
+async function createParameter(key, definition, {directory} = {}) {
+  return await Resource.$create(definition, {key, directory});
+}
+
+let _commonParameters;
+async function getCommonParameters() {
+  if (!_commonParameters) {
+    _commonParameters = [
+      await createParameter('@verbose', {'@type': 'boolean', '@aliases': ['@v']}),
+      await createParameter('@quiet', {'@type': 'boolean', '@aliases': ['@q']}),
+      await createParameter('@debug', {'@type': 'boolean', '@aliases': ['@d']})
+    ];
+  }
+  return _commonParameters;
 }
 
 function findArgument(args, parameter) {

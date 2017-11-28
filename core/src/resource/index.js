@@ -1,7 +1,7 @@
 import {join, resolve, dirname, extname, isAbsolute} from 'path';
 import {existsSync, unlinkSync} from 'fs';
 import {homedir} from 'os';
-import {isPlainObject, isEmpty, union, entries} from 'lodash';
+import {isPlainObject, isEmpty, union} from 'lodash';
 import isDirectory from 'is-directory';
 import {ensureDirSync, ensureFileSync} from 'fs-extra';
 import {getProperty, takeProperty} from '@resdir/util';
@@ -88,12 +88,6 @@ export class Resource {
       set('$directory', '@directory');
       set('$aliases', '@aliases');
       set('$help', '@help');
-
-      const parameters = takeProperty(definition, '@parameters');
-      if (parameters !== undefined) {
-        await this.$setParameters(parameters);
-      }
-
       set('$position', '@position');
       set('$runtime', '@runtime');
       set('$implementation', '@implementation');
@@ -635,46 +629,6 @@ export class Resource {
 
   set $help(help) {
     this._help = help;
-  }
-
-  $getParameters() {
-    return this._getInheritedValue('_parameters');
-  }
-
-  async $setParameters(parameters) {
-    this._parameters = undefined;
-    if (parameters === undefined) {
-      return;
-    }
-    if (!isPlainObject(parameters)) {
-      throw new Error(`${formatCode('parameters')} property must be an object`);
-    }
-    for (const [key, definition] of entries(parameters)) {
-      const parameter = await createParameter(key, definition, {
-        directory: this.$getCurrentDirectory({throwIfUndefined: false})
-      });
-      if (this._parameters === undefined) {
-        this._parameters = [];
-      }
-      this._parameters.push(parameter);
-    }
-  }
-
-  $getAllParameters() {
-    const allParameters = [];
-    let resource = this;
-    while (resource) {
-      const parameters = resource.$getParameters && resource.$getParameters();
-      if (parameters) {
-        for (const parameter of parameters) {
-          if (!allParameters.find(param => param.$getKey() === parameter.$getKey())) {
-            allParameters.push(parameter);
-          }
-        }
-      }
-      resource = resource.$getParent();
-    }
-    return allParameters;
   }
 
   get $position() {
@@ -1263,8 +1217,6 @@ export class Resource {
       definition['@help'] = this._help;
     }
 
-    this._serializeParameters(definition, options);
-
     if (this._position !== undefined) {
       definition['@position'] = this._position;
     }
@@ -1327,24 +1279,6 @@ export class Resource {
     }
   }
 
-  _serializeParameters(definition, _options) {
-    const parameters = this._parameters;
-    if (parameters) {
-      const serializedParameters = {};
-      let count = 0;
-      for (const parameter of parameters) {
-        const parameterDefinition = parameter.$serialize();
-        if (parameterDefinition !== undefined) {
-          serializedParameters[parameter.$getKey()] = parameterDefinition;
-          count++;
-        }
-      }
-      if (count > 0) {
-        definition['@parameters'] = serializedParameters;
-      }
-    }
-  }
-
   _serializeChildren(definition, options) {
     const unpublishableDefinition = {};
 
@@ -1396,22 +1330,6 @@ export class Resource {
     }
     return builders;
   }
-}
-
-async function createParameter(key, definition, {directory} = {}) {
-  return await Resource.$create(definition, {key, directory});
-}
-
-let _commonParameters;
-export async function getCommonParameters() {
-  if (!_commonParameters) {
-    _commonParameters = [
-      await createParameter('@verbose', {'@type': 'boolean', '@aliases': ['@v']}),
-      await createParameter('@quiet', {'@type': 'boolean', '@aliases': ['@q']}),
-      await createParameter('@debug', {'@type': 'boolean', '@aliases': ['@d']})
-    ];
-  }
-  return _commonParameters;
 }
 
 function findSubclass(A, B) {
