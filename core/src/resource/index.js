@@ -991,6 +991,30 @@ export class Resource {
   async '@add'(args) {
     args = {...args};
 
+    let importArg = takeArgument(args, '@import');
+    if (importArg === undefined) {
+      importArg = shiftPositionalArguments(args);
+    }
+
+    let type = takeArgument(args, '@type', ['@t']);
+
+    if (importArg && type) {
+      throw new Error(
+        `You cannot specify both ${formatCode('@import')} and ${formatCode('@type')} arguments`
+      );
+    }
+
+    if (!(importArg || type)) {
+      throw new Error(
+        `Please specify either ${formatCode('@import')} or ${formatCode('@type')} argument`
+      );
+    }
+
+    if (importArg && getResourceClass(importArg)) {
+      type = importArg;
+      importArg = undefined;
+    }
+
     let key = takeArgument(args, '@key');
     if (key === undefined) {
       key = shiftPositionalArguments(args);
@@ -1003,25 +1027,6 @@ export class Resource {
     let child = this.$getChild(key);
     if (child) {
       throw new Error(`A property with the same key (${formatCode(key)}) already exists`);
-    }
-
-    let importArg = takeArgument(args, '@import');
-    if (importArg === undefined) {
-      importArg = shiftPositionalArguments(args);
-    }
-
-    const type = takeArgument(args, '@type', ['@t']);
-
-    if (importArg && type) {
-      throw new Error(
-        `You cannot specify both ${formatCode('@import')} and ${formatCode('@type')} arguments`
-      );
-    }
-
-    if (!(importArg || type)) {
-      throw new Error(
-        `Please specify either ${formatCode('@import')} or ${formatCode('@type')} argument`
-      );
     }
 
     child = await task(
