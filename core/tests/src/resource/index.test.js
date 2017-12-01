@@ -59,10 +59,17 @@ describe('Resource', () => {
     expect(res.$hasAlias('bonjour')).toBe(true);
   });
 
-  test('@help', async () => {
-    expect((await Resource.$create()).$help).toBeUndefined();
-    expect((await Resource.$create({'@help': 'This is a resource'})).$help).toBe(
+  test('@description', async () => {
+    expect((await Resource.$create()).$description).toBeUndefined();
+    expect((await Resource.$create({'@description': 'This is a resource'})).$description).toBe(
       'This is a resource'
+    );
+  });
+
+  test('@example', async () => {
+    expect((await Resource.$create()).$example).toBeUndefined();
+    expect((await Resource.$create({'@example': 'aturing/nice-tool'})).$example).toBe(
+      'aturing/nice-tool'
     );
   });
 
@@ -113,18 +120,18 @@ describe('Resource', () => {
 
   test('properties redefined', async () => {
     const person = await Resource.$create({
-      name: {'@type': 'string', '@help': 'Name', '@value': 'Manu'}
+      name: {'@type': 'string', '@description': 'Name', '@value': 'Manu'}
     });
     expect(person.$getChild('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('Manu');
-    expect(person.$getChild('name').$help).toBe('Name');
+    expect(person.$getChild('name').$description).toBe('Name');
     await person.$setChild('name', 'Manuel');
     expect(person.$getChild('name')).toBeInstanceOf(StringResource);
     expect(person.name).toBe('Manuel');
-    expect(person.$getChild('name').$help).toBeUndefined();
-    await person.$setChild('name', {'@value': 'mvila', '@help': 'The name'});
+    expect(person.$getChild('name').$description).toBeUndefined();
+    await person.$setChild('name', {'@value': 'mvila', '@description': 'The name'});
     expect(person.name).toBe('mvila');
-    expect(person.$getChild('name').$help).toBe('The name');
+    expect(person.$getChild('name').$description).toBe('The name');
     await person.$setChild('name', 123); // Since there is no parent, we can change the type
     expect(person.$getChild('name')).toBeInstanceOf(NumberResource);
     expect(person.name).toBe(123);
@@ -190,7 +197,7 @@ describe('Resource', () => {
   test('inherited composed properties with a value', async () => {
     const definition = {
       '@export': {
-        address: {'@import': {'@export': {city: {'@value': 'unknown', '@help': 'The city'}}}}
+        address: {'@import': {'@export': {city: {'@value': 'unknown', '@description': 'The city'}}}}
       }
     };
     const person = await Resource.$create({
@@ -199,15 +206,15 @@ describe('Resource', () => {
     });
     const parent = person.$findBase(() => true);
     expect(parent.address.city).toBe('unknown');
-    expect(parent.address.$getChild('city').$help).toBe('The city');
+    expect(parent.address.$getChild('city').$description).toBe('The city');
     expect(person.address.city).toBe('Tokyo');
-    expect(person.address.$getChild('city').$help).toBe('The city');
+    expect(person.address.$getChild('city').$description).toBe('The city');
     person.address.city = 'Paris';
     expect(person.address.city).toBe('Paris');
     expect(parent.address.city).toBe('unknown');
-    person.address.$getChild('city').$help = 'La ville';
-    expect(person.address.$getChild('city').$help).toBe('La ville');
-    expect(parent.address.$getChild('city').$help).toBe('The city');
+    person.address.$getChild('city').$description = 'La ville';
+    expect(person.address.$getChild('city').$description).toBe('La ville');
+    expect(parent.address.$getChild('city').$description).toBe('The city');
   });
 
   test('Resource loaded from a file', async () => {
@@ -303,7 +310,8 @@ describe('Resource', () => {
     await testSerialization({
       '@comment': 'This is a comment',
       '@aliases': ['hi', 'bonjour'],
-      '@help': 'This is a resource',
+      '@description': 'This is a resource',
+      '@example': 'aturing/nice-tool',
       '@hidden': true
     });
 

@@ -3,6 +3,8 @@ import ValueResource from './value';
 const BASE64_PREFIX = 'data:;base64,';
 
 export class BinaryResource extends ValueResource {
+  static $RESOURCE_TYPE = 'binary';
+
   static $normalizeValue(value) {
     if (typeof value === 'string') {
       return this.$parse(value);

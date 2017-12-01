@@ -3,6 +3,8 @@ import {formatString} from '@resdir/console';
 import ValueResource from './value';
 
 export class NumberResource extends ValueResource {
+  static $RESOURCE_TYPE = 'number';
+
   static $normalizeValue(value) {
     if (typeof value !== 'number') {
       throw new Error('Invalid value type');

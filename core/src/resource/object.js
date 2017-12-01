@@ -4,6 +4,8 @@ import deepFreeze from 'deep-freeze';
 import ValueResource from './value';
 
 export class ObjectResource extends ValueResource {
+  static $RESOURCE_TYPE = 'object';
+
   static $normalizeValue(value) {
     if (!isPlainObject(value)) {
       throw new Error('Invalid value type');

@@ -1,7 +1,8 @@
 import {join, resolve, dirname, extname, isAbsolute} from 'path';
 import {existsSync, unlinkSync} from 'fs';
 import {homedir} from 'os';
-import {isPlainObject, isEmpty, union} from 'lodash';
+import assert from 'assert';
+import {isPlainObject, isEmpty, union, pull} from 'lodash';
 import isDirectory from 'is-directory';
 import {ensureDirSync, ensureFileSync} from 'fs-extra';
 import {getProperty, takeProperty} from '@resdir/util';
@@ -11,16 +12,20 @@ import {
   formatString,
   formatPath,
   formatCode,
+  formatBold,
+  formatDim,
   print,
-  printSuccess
+  printSuccess,
+  emptyLine,
+  formatTable
 } from '@resdir/console';
 import {load, save} from '@resdir/file-manager';
 import {validateResourceKey} from '@resdir/resource-key';
 import {parseResourceIdentifier} from '@resdir/resource-identifier';
-import {parseResourceSpecifier, formatResourceSpecifier} from '@resdir/resource-specifier';
+import {parseResourceSpecifier, stringifyResourceSpecifier} from '@resdir/resource-specifier';
 import RegistryClient from '@resdir/registry-client';
-
 import {shiftPositionalArguments, takeArgument} from '@resdir/method-arguments';
+
 import Runtime from '../runtime';
 
 const RUN_CLIENT_ID = 'RUN_CLI';
@@ -38,6 +43,7 @@ const BUILTIN_COMMANDS = [
   '@console',
   '@create',
   '@emit',
+  '@help',
   '@lint',
   '@install',
   '@normalizeResourceFile',
@@ -52,7 +58,12 @@ const BUILTIN_COMMANDS = [
 const RESDIR_REGISTRY_RESOURCE = 'resdir/registry';
 
 export class Resource {
-  async $construct(definition, {bases = [], parent, key, directory, file, unpublishable} = {}) {
+  static $RESOURCE_TYPE = 'resource';
+
+  async $construct(
+    definition,
+    {bases = [], parent, key, directory, file, specifier, unpublishable} = {}
+  ) {
     await catchContext(this, async () => {
       definition = {...definition};
 
@@ -72,6 +83,10 @@ export class Resource {
         this.$setResourceFile(file);
       }
 
+      if (specifier !== undefined) {
+        this.$setResourceSpecifier(specifier);
+      }
+
       if (unpublishable) {
         this.$unpublishable = true;
       }
@@ -87,8 +102,9 @@ export class Resource {
       set('$types', '@type', ['@import']); // TODO: @type and @import should be handled separately
       set('$location', '@load');
       set('$directory', '@directory');
+      set('$description', '@description');
       set('$aliases', '@aliases');
-      set('$help', '@help');
+      set('$example', '@example');
       set('$position', '@position');
       set('$runtime', '@runtime');
       set('$implementation', '@implementation');
@@ -101,29 +117,31 @@ export class Resource {
       }
 
       const unpublishableDefinition = takeProperty(definition, '@unpublishable');
+      const exportDefinition = takeProperty(definition, '@export');
+
+      for (const key of Object.keys(definition)) {
+        await this.$setChild(key, definition[key]);
+      }
+
       if (unpublishableDefinition !== undefined) {
         for (const key of Object.keys(unpublishableDefinition)) {
           await this.$setChild(key, unpublishableDefinition[key], {unpublishable: true});
         }
       }
 
-      const exportDefinition = takeProperty(definition, '@export');
       if (exportDefinition !== undefined) {
         const resource = await Resource.$create(exportDefinition, {
-          directory: this.$getCurrentDirectory({throwIfUndefined: false})
+          directory: this.$getCurrentDirectory({throwIfUndefined: false}),
+          specifier
         });
         this.$setExport(resource);
-      }
-
-      for (const key of Object.keys(definition)) {
-        await this.$setChild(key, definition[key]);
       }
     });
   }
 
   static async $create(
     definition,
-    {base, parent, key, directory, file, parse, unpublishable} = {}
+    {base, parent, key, directory, file, specifier, parse, unpublishable} = {}
   ) {
     let normalizedDefinition;
     if (isPlainObject(definition)) {
@@ -201,7 +219,7 @@ export class Resource {
     if (implementation) {
       if (location) {
         throw new Error(
-          `Can't have both ${formatCode('@load')} and ${formatCode('@implementation')} properties`
+          `Can't have both ${formatCode('@load')} and ${formatCode('@implementation')} attributes`
         );
       }
       const builder = requireImplementation(implementation, {directory});
@@ -225,6 +243,7 @@ export class Resource {
       key,
       directory,
       file,
+      specifier,
       parse,
       unpublishable
     });
@@ -240,6 +259,7 @@ export class Resource {
 
     if (isPlainObject(specifier)) {
       result = {definition: specifier};
+      specifier = undefined;
     } else {
       const {location} = parseResourceSpecifier(specifier);
       if (location) {
@@ -269,7 +289,7 @@ export class Resource {
       }
     }
 
-    const resource = await this.$create(definition, {file, directory});
+    const resource = await this.$create(definition, {file, directory, specifier});
 
     return resource;
   }
@@ -357,7 +377,7 @@ export class Resource {
     if (!existsSync(installedFlagFile) && !existsSync(installingFlagFile)) {
       ensureFileSync(installingFlagFile);
       try {
-        const idAndVersion = formatResourceSpecifier({
+        const idAndVersion = stringifyResourceSpecifier({
           identifier: definition.id,
           versionRange: definition.version
         });
@@ -493,6 +513,14 @@ export class Resource {
     this._parent = parent;
   }
 
+  $getCreator() {
+    return this._getInheritedValue('_creator');
+  }
+
+  $setCreator(creator) {
+    this._creator = creator;
+  }
+
   $getKey() {
     return this._key;
   }
@@ -522,6 +550,14 @@ export class Resource {
 
   $setResourceFile(file) {
     this._resourceFile = file;
+  }
+
+  $getResourceSpecifier() {
+    return this._resourceSpecifier;
+  }
+
+  $setResourceSpecifier(specifier) {
+    this._resourceSpecifier = specifier;
   }
 
   $getCurrentDirectory({throwIfUndefined = true} = {}) {
@@ -625,12 +661,20 @@ export class Resource {
     return Boolean(aliases && aliases.has(alias));
   }
 
-  get $help() {
-    return this._getInheritedValue('_help');
+  get $description() {
+    return this._getInheritedValue('_description');
   }
 
-  set $help(help) {
-    this._help = help;
+  set $description(description) {
+    this._description = description;
+  }
+
+  get $example() {
+    return this._getInheritedValue('_example');
+  }
+
+  set $example(example) {
+    this._example = example;
   }
 
   get $position() {
@@ -639,7 +683,7 @@ export class Resource {
 
   set $position(position) {
     if (position !== undefined && typeof position !== 'number') {
-      throw new TypeError(`Property ${formatCode('@position')} must be a number`);
+      throw new TypeError(`${formatCode('@position')} attribute must be a number`);
     }
     this._position = position;
   }
@@ -777,6 +821,7 @@ export class Resource {
     const removedChildIndex = this.$removeChild(key);
 
     const base = this.$getChildFromBases(key);
+
     const child = await Resource.$create(definition, {
       base,
       key,
@@ -784,6 +829,10 @@ export class Resource {
       parent: this,
       unpublishable
     });
+
+    if (!base) {
+      child.$setCreator(this);
+    }
 
     if (removedChildIndex !== undefined) {
       // Try to not change the order of children
@@ -802,7 +851,7 @@ export class Resource {
           throw new Error(
             `Can't change ${formatCode(
               key
-            )} synchronously with a property setter. Please use the $setChild() asynchronous method.`
+            )} synchronously with an attribute setter. Please use the $setChild() asynchronous method.`
           );
         }
       },
@@ -873,7 +922,7 @@ export class Resource {
 
       const child = this.$findChild(key);
       if (!child) {
-        throw new Error(`No property or method found with this key: ${formatCode(key)}`);
+        throw new Error(`No attribute or method found with this key: ${formatCode(key)}`);
       }
 
       return await child.$invoke(args, {parent: this});
@@ -1096,7 +1145,7 @@ export class Resource {
     if (versionRange.toJSON() === undefined) {
       const resource = await Resource.$load(identifier);
       if (resource.version) {
-        specifier = formatResourceSpecifier({identifier, versionRange: '^' + resource.version});
+        specifier = stringifyResourceSpecifier({identifier, versionRange: '^' + resource.version});
       }
     }
     return specifier;
@@ -1198,6 +1247,106 @@ export class Resource {
     return await this.$broadcast(event, args, {parseArguments: true});
   }
 
+  async '@help'() {
+    const sections = [];
+    const allData = [];
+
+    this.$forEachChild(child => {
+      if (child.$hidden) {
+        return;
+      }
+
+      const creator = child.$getCreator();
+      assert(creator, 'A resource child should always have a creator');
+
+      let section = sections.find(section => section.creator === creator);
+      if (!section) {
+        section = {creator, attributes: [], methods: []};
+        sections.push(section);
+      }
+
+      const type = child.constructor.$RESOURCE_TYPE;
+
+      const key = child.$getKey();
+      let formattedKey = formatCode(key, {addBackticks: false});
+      if (type !== 'method') {
+        formattedKey += ' ' + formatDim(`(${type})`);
+      }
+
+      const description = child.$description;
+      let formattedDescription = description;
+      const aliases = child._formatAliases({removeKey: true});
+      if (aliases) {
+        formattedDescription += ' ' + formatDim(`(${aliases})`);
+      }
+
+      const pair = [formattedKey, formattedDescription];
+      section[type === 'method' ? 'methods' : 'attributes'].push(pair);
+      allData.push(pair);
+    });
+
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i];
+
+      if (i > 0) {
+        emptyLine();
+      }
+
+      const specifier = section.creator._formatResourceSpecifier({directory: process.cwd()});
+      print(formatBold(specifier));
+
+      if (section.attributes.length) {
+        emptyLine();
+        print(formatBold('Attributes'));
+        print(formatTable(section.attributes, {allData, columnGap: 2, margins: {left: 2}}));
+      }
+
+      if (section.methods.length) {
+        emptyLine();
+        print(formatBold('Methods'));
+        print(formatTable(section.methods, {allData, columnGap: 2, margins: {left: 2}}));
+      }
+    }
+  }
+
+  _formatResourceSpecifier({directory}) {
+    const specifier = this.$getResourceSpecifier();
+    if (!specifier) {
+      return formatDim('<undefined-specifier>');
+    }
+
+    const parsedSpecifier = parseResourceSpecifier(specifier);
+    if (parsedSpecifier.location) {
+      const file = this.$getResourceFile();
+      if (!file) {
+        return formatDim('<undefined-file>');
+      }
+      return formatPath(file, {addQuotes: false, baseDirectory: directory, relativize: true});
+    }
+
+    return formatString(specifier, {addQuotes: false});
+  }
+
+  _formatAliases({removeKey} = {}) {
+    let aliases = this.$aliases;
+    if (aliases === undefined) {
+      return '';
+    }
+    aliases = Array.from(aliases);
+    if (removeKey) {
+      const key = this.$getKey();
+      pull(aliases, key);
+    }
+    if (aliases.length === 0) {
+      return '';
+    }
+    aliases = aliases.map(alias => formatCode(alias, {addBackticks: false}));
+    if (aliases.length === 1) {
+      return 'alias: ' + aliases[0];
+    }
+    return 'aliases: ' + aliases.join(', ');
+  }
+
   static $normalize(definition, _options) {
     if (definition !== undefined && !isPlainObject(definition)) {
       throw new Error('Invalid resource definition');
@@ -1222,10 +1371,14 @@ export class Resource {
       definition['@directory'] = this._directory;
     }
 
+    if (this._description !== undefined) {
+      definition['@description'] = this._description;
+    }
+
     this._serializeAliases(definition, options);
 
-    if (this._help !== undefined) {
-      definition['@help'] = this._help;
+    if (this._example !== undefined) {
+      definition['@example'] = this._example;
     }
 
     if (this._position !== undefined) {

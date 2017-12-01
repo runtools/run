@@ -3,6 +3,8 @@ import {formatString} from '@resdir/console';
 import ValueResource from './value';
 
 export class BooleanResource extends ValueResource {
+  static $RESOURCE_TYPE = 'boolean';
+
   static $normalizeValue(value) {
     if (typeof value !== 'boolean') {
       throw new Error('Invalid value type');

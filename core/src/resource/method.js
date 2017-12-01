@@ -12,6 +12,8 @@ import {parse} from 'shell-quote';
 import Resource from '../resource';
 
 export class MethodResource extends Resource {
+  static $RESOURCE_TYPE = 'method';
+
   async $construct(definition, options) {
     definition = {...definition};
 

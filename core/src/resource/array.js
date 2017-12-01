@@ -6,6 +6,8 @@ import {formatString} from '@resdir/console';
 import ValueResource from './value';
 
 export class ArrayResource extends ValueResource {
+  static $RESOURCE_TYPE = 'array';
+
   static $normalizeValue(value) {
     if (!Array.isArray(value)) {
       throw new Error('Invalid value type');
