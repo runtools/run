@@ -2,29 +2,36 @@ import {join, resolve, dirname, extname, isAbsolute} from 'path';
 import {existsSync, unlinkSync} from 'fs';
 import {homedir} from 'os';
 import assert from 'assert';
-import {isPlainObject, isEmpty, union, pull} from 'lodash';
+import {isPlainObject, isEmpty, union, pull, upperFirst} from 'lodash';
 import isDirectory from 'is-directory';
 import {ensureDirSync, ensureFileSync} from 'fs-extra';
 import {getProperty, takeProperty} from '@resdir/util';
 import {
   catchContext,
   task,
+  formatValue,
   formatString,
   formatPath,
   formatCode,
   formatBold,
   formatDim,
+  formatUndefined,
   print,
   printSuccess,
   emptyLine,
   formatTable
 } from '@resdir/console';
+import indentString from 'indent-string';
 import {load, save} from '@resdir/file-manager';
 import {validateResourceKey} from '@resdir/resource-key';
 import {parseResourceIdentifier} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, stringifyResourceSpecifier} from '@resdir/resource-specifier';
 import RegistryClient from '@resdir/registry-client';
-import {shiftPositionalArguments, takeArgument} from '@resdir/method-arguments';
+import {
+  getPositionalArgument,
+  shiftPositionalArguments,
+  takeArgument
+} from '@resdir/method-arguments';
 
 import Runtime from '../runtime';
 
@@ -44,6 +51,7 @@ const BUILTIN_COMMANDS = [
   '@create',
   '@emit',
   '@help',
+  '@inspect',
   '@lint',
   '@install',
   '@normalizeResourceFile',
@@ -782,6 +790,15 @@ export class Resource {
     }
   }
 
+  $hasChildren() {
+    let result = false;
+    this.$forEachChild(() => {
+      result = true;
+      return false;
+    });
+    return result;
+  }
+
   $getChild(key) {
     let result;
     this.$forEachChild(child => {
@@ -925,18 +942,26 @@ export class Resource {
         throw new Error(`No attribute or method found with this key: ${formatCode(key)}`);
       }
 
+      const nextKey = getPositionalArgument(args, 0);
+      if (nextKey === '@help') {
+        shiftPositionalArguments(args);
+        return await child['@help'](args);
+      }
+
       return await child.$invoke(args, {parent: this});
     });
   }
 
   $print() {
-    let output = this.$autoUnbox();
-    if (output instanceof Resource) {
-      output = output.$serialize();
-    }
-    if (output !== undefined) {
-      print(JSON.stringify(output, undefined, 2));
-    }
+    print(this.$format());
+  }
+
+  $format() {
+    return formatValue(this.$serialize());
+  }
+
+  $inspect() {
+    print(formatValue(this.$serialize()));
   }
 
   _getAllListeners() {
@@ -1173,6 +1198,10 @@ export class Resource {
     this.$print();
   }
 
+  async '@inspect'() {
+    this.$inspect();
+  }
+
   async '@console'(args) {
     args = {...args};
     const key = shiftPositionalArguments(args);
@@ -1247,7 +1276,50 @@ export class Resource {
     return await this.$broadcast(event, args, {parseArguments: true});
   }
 
-  async '@help'() {
+  async '@help'(args) {
+    args = {...args};
+
+    const argument = shiftPositionalArguments(args);
+    if (argument) {
+      const child = this.$findChild(argument);
+      if (!child) {
+        throw new Error(`No attribute or method found with this key: ${formatCode(argument)}`);
+      }
+      return await child['@help'](args);
+    }
+
+    const key = this.$getKey();
+    if (key) {
+      const formattedType = this._formatType();
+      emptyLine();
+      print(
+        formatBold(formatCode(key, {addBackticks: false}) + ' ' + formatDim(`(${formattedType})`))
+      );
+    }
+
+    const description = this.$description;
+    if (description) {
+      print(description);
+    }
+
+    const aliases = this._formatAliases({removeKey: true});
+    if (aliases) {
+      emptyLine();
+      print(upperFirst(aliases) + '.');
+    }
+
+    const example = this.$example;
+    if (example !== undefined) {
+      let formattedExample = formatValue(example, {maxWidth: 78});
+      if (formattedExample.includes('\n')) {
+        formattedExample = 'Example:\n' + indentString(formattedExample, 2);
+      } else {
+        formattedExample = 'Example: ' + formattedExample + '.';
+      }
+      emptyLine();
+      print(formattedExample);
+    }
+
     const sections = [];
     const allData = [];
 
@@ -1265,19 +1337,24 @@ export class Resource {
         sections.push(section);
       }
 
-      const type = child.constructor.$RESOURCE_TYPE;
+      const type = child._getType();
 
       const key = child.$getKey();
       let formattedKey = formatCode(key, {addBackticks: false});
       if (type !== 'method') {
-        formattedKey += ' ' + formatDim(`(${type})`);
+        let formattedType = child._formatType();
+        formattedType = formatDim(`(${formattedType})`);
+        formattedKey += ' ' + formattedType;
       }
 
       const description = child.$description;
-      let formattedDescription = description;
+      let formattedDescription = description || '';
       const aliases = child._formatAliases({removeKey: true});
       if (aliases) {
-        formattedDescription += ' ' + formatDim(`(${aliases})`);
+        if (formattedDescription) {
+          formattedDescription += ' ';
+        }
+        formattedDescription += formatDim(`(${aliases})`);
       }
 
       const pair = [formattedKey, formattedDescription];
@@ -1288,38 +1365,49 @@ export class Resource {
     for (let i = 0; i < sections.length; i++) {
       const section = sections[i];
 
-      if (i > 0) {
-        emptyLine();
-      }
-
       const specifier = section.creator._formatResourceSpecifier({directory: process.cwd()});
-      print(formatBold(specifier));
+      if (specifier !== undefined) {
+        emptyLine();
+        print(formatBold(specifier));
+      }
 
       if (section.attributes.length) {
         emptyLine();
-        print(formatBold('Attributes'));
+        print('Attributes:');
         print(formatTable(section.attributes, {allData, columnGap: 2, margins: {left: 2}}));
       }
 
       if (section.methods.length) {
         emptyLine();
-        print(formatBold('Methods'));
+        print('Methods:');
         print(formatTable(section.methods, {allData, columnGap: 2, margins: {left: 2}}));
       }
     }
   }
 
+  _getType() {
+    return this.constructor.$RESOURCE_TYPE;
+  }
+
+  _formatType() {
+    let type = this._getType();
+    if (type !== 'method' && type !== 'resource' && this.$hasChildren()) {
+      type += '*';
+    }
+    return type;
+  }
+
   _formatResourceSpecifier({directory}) {
     const specifier = this.$getResourceSpecifier();
     if (!specifier) {
-      return formatDim('<undefined-specifier>');
+      return undefined;
     }
 
     const parsedSpecifier = parseResourceSpecifier(specifier);
     if (parsedSpecifier.location) {
       const file = this.$getResourceFile();
       if (!file) {
-        return formatDim('<undefined-file>');
+        return formatUndefined('file');
       }
       return formatPath(file, {addQuotes: false, baseDirectory: directory, relativize: true});
     }
@@ -1335,7 +1423,9 @@ export class Resource {
     aliases = Array.from(aliases);
     if (removeKey) {
       const key = this.$getKey();
-      pull(aliases, key);
+      if (key) {
+        pull(aliases, key);
+      }
     }
     if (aliases.length === 0) {
       return '';

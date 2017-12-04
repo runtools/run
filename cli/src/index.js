@@ -1,4 +1,5 @@
 import {Resource} from 'run-core';
+import {session} from '@resdir/console';
 
 export async function run(expression = '', {directory} = {}) {
   let userResource;
@@ -17,5 +18,7 @@ export async function run(expression = '', {directory} = {}) {
 
   const method = await Resource.$create({'@type': 'method', '@run': expression}, {directory});
 
-  return await method.$invoke(undefined, {parent: resource});
+  return await session(async () => {
+    return await method.$invoke(undefined, {parent: resource});
+  });
 }

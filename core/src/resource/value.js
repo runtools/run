@@ -1,6 +1,6 @@
 import {isPlainObject} from 'lodash';
 import {takeProperty} from '@resdir/util';
-import {catchContext} from '@resdir/console';
+import {formatValue, catchContext} from '@resdir/console';
 
 import Resource from '../resource';
 
@@ -46,12 +46,9 @@ export class ValueResource extends Resource {
     return this.$value;
   }
 
-  // async $invoke(expression = {arguments: [], options: {}}, {parent} = {}) {
-  //   if (expression.arguments.length || !isEmpty(expression.options)) {
-  //     throw new Error('A ValueResource cannot be invoked with arguments or options');
-  //   }
-  //   return this.$value;
-  // }
+  $format() {
+    return formatValue(this.$value);
+  }
 
   static $normalize(definition, options) {
     if (definition !== undefined && !isPlainObject(definition)) {
