@@ -66,11 +66,14 @@ describe('Resource', () => {
     );
   });
 
-  test('@example', async () => {
-    expect((await Resource.$create()).$example).toBeUndefined();
-    expect((await Resource.$create({'@example': 'aturing/nice-tool'})).$example).toBe(
+  test('@examples', async () => {
+    expect((await Resource.$create()).$examples).toBeUndefined();
+    expect((await Resource.$create({'@examples': ['aturing/nice-tool']})).$examples).toEqual([
       'aturing/nice-tool'
-    );
+    ]);
+    expect((await Resource.$create({'@examples': 'aturing/nice-tool'})).$examples).toEqual([
+      'aturing/nice-tool'
+    ]);
   });
 
   test('@runtime', async () => {
@@ -311,7 +314,7 @@ describe('Resource', () => {
       '@comment': 'This is a comment',
       '@aliases': ['hi', 'bonjour'],
       '@description': 'This is a resource',
-      '@example': 'aturing/nice-tool',
+      '@examples': ['aturing/nice-tool', 'resdir/hello'],
       '@hidden': true
     });
 

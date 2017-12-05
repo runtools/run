@@ -112,8 +112,8 @@ export class Resource {
       set('$directory', '@directory');
       set('$description', '@description');
       set('$aliases', '@aliases');
-      set('$example', '@example');
       set('$position', '@position');
+      set('$examples', '@examples');
       set('$runtime', '@runtime');
       set('$implementation', '@implementation');
       set('$hidden', '@hidden');
@@ -677,14 +677,6 @@ export class Resource {
     this._description = description;
   }
 
-  get $example() {
-    return this._getInheritedValue('_example');
-  }
-
-  set $example(example) {
-    this._example = example;
-  }
-
   get $position() {
     return this._getInheritedValue('_position');
   }
@@ -694,6 +686,17 @@ export class Resource {
       throw new TypeError(`${formatCode('@position')} attribute must be a number`);
     }
     this._position = position;
+  }
+
+  get $examples() {
+    return this._getInheritedValue('_examples');
+  }
+
+  set $examples(examples) {
+    if (examples !== undefined && !Array.isArray(examples)) {
+      examples = [examples];
+    }
+    this._examples = examples;
   }
 
   get $runtime() {
@@ -1279,15 +1282,34 @@ export class Resource {
   async '@help'(args) {
     args = {...args};
 
+    const type = this._getType();
+
     const argument = shiftPositionalArguments(args);
     if (argument) {
-      const child = this.$findChild(argument);
-      if (!child) {
-        throw new Error(`No attribute or method found with this key: ${formatCode(argument)}`);
+      let child;
+      if (type === 'method') {
+        throw new Error('UNIMPLEMENTED');
+      } else {
+        child = this.$findChild(argument);
+        if (!child) {
+          throw new Error(`No attribute or method found with this key: ${formatCode(argument)}`);
+        }
       }
       return await child['@help'](args);
     }
 
+    this._printKeyAndType();
+    this._printDescription();
+    this._printAliases();
+    this._printPosition();
+    this._printExamples();
+    if (type === 'method') {
+      this._printMethodInput();
+    }
+    this._printChildren();
+  }
+
+  _printKeyAndType() {
     const key = this.$getKey();
     if (key) {
       const formattedType = this._formatType();
@@ -1296,30 +1318,85 @@ export class Resource {
         formatBold(formatCode(key, {addBackticks: false}) + ' ' + formatDim(`(${formattedType})`))
       );
     }
+  }
 
+  _printDescription() {
     const description = this.$description;
     if (description) {
       print(description);
     }
+  }
 
+  _printAliases() {
     const aliases = this._formatAliases({removeKey: true});
     if (aliases) {
       emptyLine();
-      print(upperFirst(aliases) + '.');
+      print(upperFirst(aliases));
     }
+  }
 
-    const example = this.$example;
-    if (example !== undefined) {
-      let formattedExample = formatValue(example, {maxWidth: 78});
-      if (formattedExample.includes('\n')) {
-        formattedExample = 'Example:\n' + indentString(formattedExample, 2);
-      } else {
-        formattedExample = 'Example: ' + formattedExample + '.';
-      }
+  _printPosition() {
+    const position = this._formatPosition();
+    if (position) {
       emptyLine();
-      print(formattedExample);
+      print(upperFirst(position));
+    }
+  }
+
+  _printExamples() {
+    let formattedExamples;
+
+    const examples = this.$examples;
+    if (examples && examples.length === 1) {
+      formattedExamples = 'Example:';
+      const example = this._formatExample(examples[0]);
+      if (example.includes('\n')) {
+        formattedExamples += '\n' + indentString(example, 2);
+      } else {
+        formattedExamples += ' ' + example;
+      }
+    } else if (examples && examples.length > 1) {
+      formattedExamples = 'Examples:';
+      for (let example of examples) {
+        example = this._formatExample(example);
+        formattedExamples += '\n' + indentString(example, 2);
+      }
     }
 
+    if (formattedExamples !== undefined) {
+      emptyLine();
+      print(formattedExamples);
+    }
+  }
+
+  _formatExample(example) {
+    const type = this._getType();
+    if (type === 'method') {
+      return formatCode(example, {addBackticks: false});
+    }
+    return formatValue(example, {maxWidth: 78});
+  }
+
+  _printMethodInput() {
+    const input = this.$getInput() || [];
+
+    const params = [];
+    for (const param of input) {
+      if (param.$hidden) {
+        continue;
+      }
+      const formattedParam = param._formatChild();
+      params.push(formattedParam);
+    }
+
+    if (params.length) {
+      emptyLine();
+      print('Input:');
+      print(formatTable(params, {columnGap: 2, margins: {left: 2}}));
+    }
+  }
+
+  _printChildren() {
     const sections = [];
     const allData = [];
 
@@ -1337,29 +1414,10 @@ export class Resource {
         sections.push(section);
       }
 
+      const formattedChild = child._formatChild();
       const type = child._getType();
-
-      const key = child.$getKey();
-      let formattedKey = formatCode(key, {addBackticks: false});
-      if (type !== 'method') {
-        let formattedType = child._formatType();
-        formattedType = formatDim(`(${formattedType})`);
-        formattedKey += ' ' + formattedType;
-      }
-
-      const description = child.$description;
-      let formattedDescription = description || '';
-      const aliases = child._formatAliases({removeKey: true});
-      if (aliases) {
-        if (formattedDescription) {
-          formattedDescription += ' ';
-        }
-        formattedDescription += formatDim(`(${aliases})`);
-      }
-
-      const pair = [formattedKey, formattedDescription];
-      section[type === 'method' ? 'methods' : 'attributes'].push(pair);
-      allData.push(pair);
+      section[type === 'method' ? 'methods' : 'attributes'].push(formattedChild);
+      allData.push(formattedChild);
     });
 
     for (let i = 0; i < sections.length; i++) {
@@ -1383,6 +1441,44 @@ export class Resource {
         print(formatTable(section.methods, {allData, columnGap: 2, margins: {left: 2}}));
       }
     }
+  }
+
+  _formatChild() {
+    const type = this._getType();
+
+    const key = this.$getKey();
+    let formattedKey = formatCode(key, {addBackticks: false});
+    if (type !== 'method') {
+      let formattedType = this._formatType();
+      formattedType = formatDim(`(${formattedType})`);
+      formattedKey += ' ' + formattedType;
+    }
+
+    const description = this.$description;
+    let formattedDescription = description || '';
+    let aliasesAndPosition = '';
+
+    const aliases = this._formatAliases({removeKey: true});
+    if (aliases) {
+      aliasesAndPosition += aliases;
+    }
+
+    const position = this._formatPosition();
+    if (position) {
+      if (aliasesAndPosition) {
+        aliasesAndPosition += '; ';
+      }
+      aliasesAndPosition += position;
+    }
+
+    if (aliasesAndPosition) {
+      if (formattedDescription) {
+        formattedDescription += ' ';
+      }
+      formattedDescription += formatDim(`(${aliasesAndPosition})`);
+    }
+
+    return [formattedKey, formattedDescription];
   }
 
   _getType() {
@@ -1437,6 +1533,14 @@ export class Resource {
     return 'aliases: ' + aliases.join(', ');
   }
 
+  _formatPosition() {
+    const position = this.$position;
+    if (position === undefined) {
+      return '';
+    }
+    return 'position: ' + formatValue(position);
+  }
+
   static $normalize(definition, _options) {
     if (definition !== undefined && !isPlainObject(definition)) {
       throw new Error('Invalid resource definition');
@@ -1467,13 +1571,11 @@ export class Resource {
 
     this._serializeAliases(definition, options);
 
-    if (this._example !== undefined) {
-      definition['@example'] = this._example;
-    }
-
     if (this._position !== undefined) {
       definition['@position'] = this._position;
     }
+
+    this._serializeExamples(definition, options);
 
     if (this._runtime !== undefined) {
       definition['@runtime'] = this._runtime.toJSON();
@@ -1530,6 +1632,13 @@ export class Resource {
       if (aliases.length > 0) {
         definition['@aliases'] = aliases;
       }
+    }
+  }
+
+  _serializeExamples(definition, _options) {
+    const examples = this._examples;
+    if (examples && examples.length > 0) {
+      definition['@examples'] = examples;
     }
   }
 
