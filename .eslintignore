@@ -1,6 +1,7 @@
 node_modules
 dist
 vendor
+@resource*.json
 *.json5
 old
 _drafts
