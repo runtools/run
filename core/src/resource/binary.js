@@ -8,7 +8,8 @@ export class BinaryResource extends ValueResource {
   static $normalizeValue(value) {
     if (typeof value === 'string') {
       return this.$parse(value);
-    } else if (Buffer.isBuffer(value)) {
+    }
+    if (Buffer.isBuffer(value)) {
       return value;
     }
     throw new Error('Invalid value type');

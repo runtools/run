@@ -29,9 +29,7 @@ describe('Resource', () => {
     expect(await Resource.$create({'@value': []})).toBeInstanceOf(ArrayResource);
 
     expect(await Resource.$create({'@type': 'object'})).toBeInstanceOf(ObjectResource);
-    expect(await Resource.$create({'@type': 'object', '@value': {name: 'Manu'}})).toBeInstanceOf(
-      ObjectResource
-    );
+    expect(await Resource.$create({'@type': 'object', '@value': {name: 'Manu'}})).toBeInstanceOf(ObjectResource);
     expect((await Resource.$create({'@type': 'object', '@value': {name: 'Manu'}})).$value).toEqual({
       name: 'Manu'
     });
@@ -46,9 +44,7 @@ describe('Resource', () => {
 
   test('@comment', async () => {
     expect((await Resource.$create()).$comment).toBeUndefined();
-    expect((await Resource.$create({'@comment': 'This is a comment'})).$comment).toBe(
-      'This is a comment'
-    );
+    expect((await Resource.$create({'@comment': 'This is a comment'})).$comment).toBe('This is a comment');
   });
 
   test('@aliases', async () => {
@@ -61,9 +57,7 @@ describe('Resource', () => {
 
   test('@description', async () => {
     expect((await Resource.$create()).$description).toBeUndefined();
-    expect((await Resource.$create({'@description': 'This is a resource'})).$description).toBe(
-      'This is a resource'
-    );
+    expect((await Resource.$create({'@description': 'This is a resource'})).$description).toBe('This is a resource');
   });
 
   test('@examples', async () => {
@@ -78,19 +72,15 @@ describe('Resource', () => {
 
   test('@runtime', async () => {
     expect((await Resource.$create()).$runtime).toBeUndefined();
-    expect((await Resource.$create({'@runtime': 'node#>=6.10.0'})).$runtime.toJSON()).toBe(
-      'node#>=6.10.0'
-    );
+    expect((await Resource.$create({'@runtime': 'node#>=6.10.0'})).$runtime.toJSON()).toBe('node#>=6.10.0');
   });
 
   test('@implementation', async () => {
     expect((await Resource.$create()).$implementation).toBeUndefined();
-    expect(
-      (await Resource.$create(
-        {'@implementation': '../../fixtures/person/index.js'},
-        {directory: __dirname}
-      )).$implementation
-    ).toBe('../../fixtures/person/index.js');
+    expect((await Resource.$create(
+      {'@implementation': '../../fixtures/person/index.js'},
+      {directory: __dirname}
+    )).$implementation).toBe('../../fixtures/person/index.js');
   });
 
   test('@hidden', async () => {

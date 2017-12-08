@@ -16,9 +16,7 @@ describe('StringResource', () => {
     expect((await StringResource.$create({'@aliases': ['colour']})).$serialize()).toEqual({
       '@aliases': ['colour']
     });
-    expect(
-      (await StringResource.$create({'@aliases': ['colour'], '@value': 'green'})).$serialize()
-    ).toEqual({
+    expect((await StringResource.$create({'@aliases': ['colour'], '@value': 'green'})).$serialize()).toEqual({
       '@aliases': ['colour'],
       '@value': 'green'
     });

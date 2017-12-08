@@ -22,9 +22,7 @@ describe('CLI', () => {
   test('can get a property', async () => {
     const name = await run('name', {directory: personInstanceDirectory});
     expect(name.$value).toBe('Manu');
-    await expect(
-      run('invalidProperty', {directory: personInstanceDirectory})
-    ).rejects.toBeInstanceOf(Error);
+    await expect(run('invalidProperty', {directory: personInstanceDirectory})).rejects.toBeInstanceOf(Error);
   });
 
   test('can run a method', async () => {
@@ -48,9 +46,7 @@ describe('CLI', () => {
     });
     expect(greeting).toBe('BONJOUR MANU!');
 
-    await expect(
-      run('formatGreetingMethod Hi extraArgument', {directory: personInstanceDirectory})
-    ).rejects.toBeInstanceOf(Error);
+    await expect(run('formatGreetingMethod Hi extraArgument', {directory: personInstanceDirectory})).rejects.toBeInstanceOf(Error);
 
     greeting = await run('formatGreetingExpression', {directory: personInstanceDirectory});
     expect(greeting).toBe('Hi Manu!');

@@ -17,9 +17,7 @@ describe('ArrayResource', () => {
     expect((await ArrayResource.$create('[1, 2]', {parse: true})).$value).toEqual([1, 2]);
     await expect(ArrayResource.$create('', {parse: true})).rejects.toBeInstanceOf(Error);
     await expect(ArrayResource.$create('{}', {parse: true})).rejects.toBeInstanceOf(Error);
-    await expect(ArrayResource.$create('Invalid JSON', {parse: true})).rejects.toBeInstanceOf(
-      Error
-    );
+    await expect(ArrayResource.$create('Invalid JSON', {parse: true})).rejects.toBeInstanceOf(Error);
   });
 
   test('immutability', async () => {

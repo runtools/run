@@ -226,9 +226,7 @@ export class Resource {
     const implementation = getProperty(normalizedDefinition, '@implementation');
     if (implementation) {
       if (location) {
-        throw new Error(
-          `Can't have both ${formatCode('@load')} and ${formatCode('@implementation')} attributes`
-        );
+        throw new Error(`Can't have both ${formatCode('@load')} and ${formatCode('@implementation')} attributes`);
       }
       const builder = requireImplementation(implementation, {directory});
       if (builder && !builders.includes(builder)) {
@@ -868,11 +866,7 @@ export class Resource {
       set(value) {
         const promise = child.$autoBox(value);
         if (promise) {
-          throw new Error(
-            `Can't change ${formatCode(
-              key
-            )} synchronously with an attribute setter. Please use the $setChild() asynchronous method.`
-          );
+          throw new Error(`Can't change ${formatCode(key)} synchronously with an attribute setter. Please use the $setChild() asynchronous method.`);
         }
       },
       configurable: true
@@ -1021,15 +1015,11 @@ export class Resource {
     const type = takeArgument(args, '@type', ['@t']);
 
     if (importArg && type) {
-      throw new Error(
-        `You cannot specify both ${formatCode('@import')} and ${formatCode('@type')} arguments`
-      );
+      throw new Error(`You cannot specify both ${formatCode('@import')} and ${formatCode('@type')} arguments`);
     }
 
     if (!(importArg || type)) {
-      throw new Error(
-        `Please specify either ${formatCode('@import')} or ${formatCode('@type')} argument`
-      );
+      throw new Error(`Please specify either ${formatCode('@import')} or ${formatCode('@type')} argument`);
     }
 
     const resource = await task(
@@ -1076,15 +1066,11 @@ export class Resource {
     let type = takeArgument(args, '@type', ['@t']);
 
     if (importArg && type) {
-      throw new Error(
-        `You cannot specify both ${formatCode('@import')} and ${formatCode('@type')} arguments`
-      );
+      throw new Error(`You cannot specify both ${formatCode('@import')} and ${formatCode('@type')} arguments`);
     }
 
     if (!(importArg || type)) {
-      throw new Error(
-        `Please specify either ${formatCode('@import')} or ${formatCode('@type')} argument`
-      );
+      throw new Error(`Please specify either ${formatCode('@import')} or ${formatCode('@type')} argument`);
     }
 
     if (importArg && getResourceClass(importArg)) {
@@ -1314,9 +1300,7 @@ export class Resource {
     if (key) {
       const formattedType = this._formatType();
       emptyLine();
-      print(
-        formatBold(formatCode(key, {addBackticks: false}) + ' ' + formatDim(`(${formattedType})`))
-      );
+      print(formatBold(formatCode(key, {addBackticks: false}) + ' ' + formatDim(`(${formattedType})`)));
     }
   }
 
@@ -1698,7 +1682,8 @@ export class Resource {
 function findSubclass(A, B) {
   if (A === B || Object.prototype.isPrototypeOf.call(B, A)) {
     return A;
-  } else if (Object.prototype.isPrototypeOf.call(A, B)) {
+  }
+  if (Object.prototype.isPrototypeOf.call(A, B)) {
     return B;
   }
   throw new Error(`Can't mix a ${A.name} with a ${B.name}`);
@@ -1746,13 +1731,17 @@ function searchResourceFile(directoryOrFile, {searchInParentDirectories = false}
 function inferType(value) {
   if (typeof value === 'boolean') {
     return 'boolean';
-  } else if (typeof value === 'number') {
+  }
+  if (typeof value === 'number') {
     return 'number';
-  } else if (typeof value === 'string') {
+  }
+  if (typeof value === 'string') {
     return 'string';
-  } else if (Array.isArray(value)) {
+  }
+  if (Array.isArray(value)) {
     return 'array';
-  } else if (isPlainObject(value)) {
+  }
+  if (isPlainObject(value)) {
     return 'object';
   }
   throw new Error('Cannot infer the type from @value');
@@ -1772,9 +1761,7 @@ function requireImplementation(implementationFile, {directory} = {}) {
     return result.default || result;
   } catch (err) {
     if (process.env.DEBUG) {
-      console.warn(
-        `An error occured while loading implementation (file: ${formatPath(file)}): ${err.message}`
-      );
+      console.warn(`An error occured while loading implementation (file: ${formatPath(file)}): ${err.message}`);
     }
   }
 }

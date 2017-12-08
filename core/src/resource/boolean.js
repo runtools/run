@@ -24,7 +24,8 @@ export class BooleanResource extends ValueResource {
     str = str.toLowerCase();
     if (str === '1' || str === 'true' || str === 'yes' || str === 'on') {
       return true;
-    } else if (str === '0' || str === 'false' || str === 'no' || str === 'off') {
+    }
+    if (str === '0' || str === 'false' || str === 'no' || str === 'off') {
       return false;
     }
     throw new Error(`Cannot convert a string to a boolean: ${formatString(originalString)}`);

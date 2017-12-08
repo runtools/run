@@ -7,25 +7,19 @@ describe('ObjectResource', () => {
     expect((await ObjectResource.$create({})).$value).toEqual({});
     expect((await ObjectResource.$create({name: 'Manu'})).$value).toEqual({name: 'Manu'});
     expect((await ObjectResource.$create({'@type': 'object', '@value': {}})).$value).toEqual({});
-    expect(
-      (await ObjectResource.$create({'@type': 'object', '@value': {name: 'Manu'}})).$value
-    ).toEqual({
+    expect((await ObjectResource.$create({'@type': 'object', '@value': {name: 'Manu'}})).$value).toEqual({
       name: 'Manu'
     });
-    expect(
-      (await ObjectResource.$create({
-        '@type': 'object',
-        '@value': {'@load': 'abc', '@xyz': 123}
-      })).$value
-    ).toEqual({
+    expect((await ObjectResource.$create({
+      '@type': 'object',
+      '@value': {'@load': 'abc', '@xyz': 123}
+    })).$value).toEqual({
       '@load': 'abc',
       '@xyz': 123
     });
     await expect(ObjectResource.$create('hello')).rejects.toBeInstanceOf(Error);
     await expect(ObjectResource.$create({'@value': 123})).rejects.toBeInstanceOf(Error);
-    await expect(
-      ObjectResource.$create({'@type': 'object', '@value': 'hello'})
-    ).rejects.toBeInstanceOf(Error);
+    await expect(ObjectResource.$create({'@type': 'object', '@value': 'hello'})).rejects.toBeInstanceOf(Error);
   });
 
   test('immutability', async () => {
@@ -48,8 +42,6 @@ describe('ObjectResource', () => {
       name: 'Manu',
       age: 44
     });
-    expect(
-      (await ObjectResource.$create({'@type': 'object', '@value': {name: 'Manu'}})).$serialize()
-    ).toEqual({'@type': 'object', '@value': {name: 'Manu'}});
+    expect((await ObjectResource.$create({'@type': 'object', '@value': {name: 'Manu'}})).$serialize()).toEqual({'@type': 'object', '@value': {name: 'Manu'}});
   });
 });

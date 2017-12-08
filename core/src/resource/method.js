@@ -198,11 +198,7 @@ export class MethodResource extends Resource {
       environment = {...environment, ...environmentArguments};
 
       if (rest.length !== 0) {
-        throw new TypeError(
-          `A resource method must be invoked with a maximum of two arguments (${formatCode(
-            'arguments'
-          )} and ${formatCode('environment')})`
-        );
+        throw new TypeError(`A resource method must be invoked with a maximum of two arguments (${formatCode('arguments')} and ${formatCode('environment')})`);
       }
 
       const implementation = methodResource._getImplementation();
@@ -232,11 +228,7 @@ export class MethodResource extends Resource {
     }
 
     if (!isPlainObject(args)) {
-      throw new TypeError(
-        `A resource method must be invoked with a plain object ${formatCode(
-          'arguments'
-        )} argument (${formatString(typeof args)} received)`
-      );
+      throw new TypeError(`A resource method must be invoked with a plain object ${formatCode('arguments')} argument (${formatString(typeof args)} received)`);
     }
 
     const remainingArguments = {...args};
@@ -271,11 +263,7 @@ export class MethodResource extends Resource {
     }
 
     if (!isPlainObject(environment)) {
-      throw new TypeError(
-        `A resource method must be invoked with a plain object ${formatCode(
-          'environment'
-        )} argument (${formatString(typeof environment)} received)`
-      );
+      throw new TypeError(`A resource method must be invoked with a plain object ${formatCode('environment')} argument (${formatString(typeof environment)} received)`);
     }
 
     return environment;

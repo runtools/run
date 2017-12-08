@@ -3,5 +3,5 @@ dist
 vendor
 @resource*.json
 *.json5
-old
+_old
 _drafts
