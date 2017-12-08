@@ -64,6 +64,7 @@ const BUILTIN_COMMANDS = [
 ];
 
 const RESDIR_REGISTRY_RESOURCE = 'resdir/registry';
+const CONSOLE_TOOL_RESOURCE = 'tool/console';
 
 export class Resource {
   static $RESOURCE_TYPE = 'resource';
@@ -1192,14 +1193,8 @@ export class Resource {
   }
 
   async '@console'(args) {
-    args = {...args};
-    const key = shiftPositionalArguments(args);
-    if (key === 'print') {
-      const message = shiftPositionalArguments(args);
-      print(message || '');
-    } else {
-      throw new Error('UNIMPLEMENTED');
-    }
+    const consoleTool = await this.constructor.$import(CONSOLE_TOOL_RESOURCE);
+    await consoleTool.$invoke(args);
   }
 
   async '@lint'(args) {
