@@ -2,7 +2,7 @@ import {join, resolve, dirname, extname, isAbsolute} from 'path';
 import {existsSync, unlinkSync} from 'fs';
 import {homedir} from 'os';
 import assert from 'assert';
-import {isPlainObject, isEmpty, union, pull, upperFirst} from 'lodash';
+import {isPlainObject, isEmpty, union, pull, upperFirst, entries} from 'lodash';
 import isDirectory from 'is-directory';
 import {ensureDirSync, ensureFileSync} from 'fs-extra';
 import {getProperty, takeProperty} from '@resdir/util';
@@ -44,22 +44,14 @@ const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
 const PRIVATE_DEV_RESOURCE_FILE_NAME = '@resource.dev.private';
 
 const BUILTIN_COMMANDS = [
-  '@add',
   '@broadcast',
   '@build',
   '@console',
-  '@create',
   '@emit',
-  '@help',
-  '@inspect',
   '@lint',
   '@install',
-  '@normalizeResourceFile',
   '@parent',
-  '@print',
   '@registry',
-  '@remove',
-  '@rm',
   '@test'
 ];
 
@@ -71,8 +63,17 @@ export class Resource {
 
   async $construct(
     definition,
-    {bases = [], parent, key, directory, file, specifier, unpublishable} = {}
+    {bases = [], parent, key, directory, file, specifier, isUnpublishable, isNative} = {}
   ) {
+    this._bases = [];
+    this._children = [];
+
+    if (isNative) {
+      this.$setIsNative(true);
+    } else {
+      this._children.push.apply(this._children, await getNativeChildren());
+    }
+
     await catchContext(this, async () => {
       definition = {...definition};
 
@@ -96,8 +97,8 @@ export class Resource {
         this.$setResourceSpecifier(specifier);
       }
 
-      if (unpublishable) {
-        this.$unpublishable = true;
+      if (isUnpublishable) {
+        this.$setIsUnpublishable(true);
       }
 
       const set = (target, source, aliases) => {
@@ -133,8 +134,8 @@ export class Resource {
       }
 
       if (unpublishableDefinition !== undefined) {
-        for (const key of Object.keys(unpublishableDefinition)) {
-          await this.$setChild(key, unpublishableDefinition[key], {unpublishable: true});
+        for (const [key, definition] of entries(unpublishableDefinition)) {
+          await this.$setChild(key, definition, {isUnpublishable: true});
         }
       }
 
@@ -150,7 +151,7 @@ export class Resource {
 
   static async $create(
     definition,
-    {base, parent, key, directory, file, specifier, parse, unpublishable} = {}
+    {base, parent, key, directory, file, specifier, parse, isUnpublishable, isNative} = {}
   ) {
     let normalizedDefinition;
     if (isPlainObject(definition)) {
@@ -252,7 +253,8 @@ export class Resource {
       file,
       specifier,
       parse,
-      unpublishable
+      isUnpublishable,
+      isNative
     });
 
     return resource;
@@ -453,8 +455,6 @@ export class Resource {
     await this.$emit('@saved');
   }
 
-  _bases = [];
-
   async _inherit(base) {
     this._bases.push(base);
     await base.$forEachChildAsync(async child => {
@@ -512,6 +512,14 @@ export class Resource {
     return result;
   }
 
+  $getIsNative() {
+    return this._isNative;
+  }
+
+  $setIsNative(isNative) {
+    this._isNative = isNative;
+  }
+
   $getParent() {
     return this._parent;
   }
@@ -533,6 +541,9 @@ export class Resource {
   }
 
   $setKey(key) {
+    if (!this.$getIsNative()) {
+      validateResourceKey(key);
+    }
     this._key = key;
   }
 
@@ -589,6 +600,14 @@ export class Resource {
 
   $setCurrentDirectory(directory) {
     this._currentDirectory = directory;
+  }
+
+  $getIsUnpublishable() {
+    return this._isUnpublishable;
+  }
+
+  $setIsUnpublishable(isUnpublishable) {
+    this._isUnpublishable = isUnpublishable;
   }
 
   get $comment() {
@@ -725,14 +744,6 @@ export class Resource {
     this._hidden = hidden;
   }
 
-  get $unpublishable() {
-    return this._getInheritedValue('_unpublishable');
-  }
-
-  set $unpublishable(value) {
-    this._unpublishable = value;
-  }
-
   $defaultAutoBoxing = false;
 
   get $autoBoxing() {
@@ -769,11 +780,12 @@ export class Resource {
     this._export = resource;
   }
 
-  _children = [];
-
-  $forEachChild(fn) {
+  $forEachChild(fn, {includeNativeChildren} = {}) {
     for (let i = 0; i < this._children.length; i++) {
       const child = this._children[i];
+      if (!includeNativeChildren && child.$getIsNative()) {
+        continue;
+      }
       const result = fn(child, i);
       if (result === false) {
         break;
@@ -781,9 +793,9 @@ export class Resource {
     }
   }
 
-  async $forEachChildAsync(fn) {
+  async $forEachChildAsync(fn, {includeNativeChildren} = {}) {
     const childs = [];
-    this.$forEachChild(child => childs.push(child));
+    this.$forEachChild(child => childs.push(child), {includeNativeChildren});
     for (const child of childs) {
       const result = await fn(child);
       if (result === false) {
@@ -812,14 +824,17 @@ export class Resource {
     return result;
   }
 
-  $findChild(key) {
+  $findChild(key, {includeNativeChildren} = {}) {
     let result;
-    this.$forEachChild(child => {
-      if (child.$getKey() === key || child.$hasAlias(key)) {
-        result = child;
-        return false;
-      }
-    });
+    this.$forEachChild(
+      child => {
+        if (child.$getKey() === key || child.$hasAlias(key)) {
+          result = child;
+          return false;
+        }
+      },
+      {includeNativeChildren}
+    );
     return result;
   }
 
@@ -834,9 +849,7 @@ export class Resource {
     return result;
   }
 
-  async $setChild(key, definition, {unpublishable} = {}) {
-    validateResourceKey(key);
-
+  async $setChild(key, definition, {isUnpublishable} = {}) {
     const removedChildIndex = this.$removeChild(key);
 
     const base = this.$getChildFromBases(key);
@@ -846,7 +859,7 @@ export class Resource {
       key,
       directory: this.$getCurrentDirectory({throwIfUndefined: false}),
       parent: this,
-      unpublishable
+      isUnpublishable
     });
 
     if (!base) {
@@ -935,15 +948,19 @@ export class Resource {
         return await this[key](args);
       }
 
-      const child = this.$findChild(key);
+      const child = this.$findChild(key, {includeNativeChildren: true});
       if (!child) {
         throw new Error(`No attribute or method found with this key: ${formatCode(key)}`);
       }
 
       const nextKey = getPositionalArgument(args, 0);
-      if (nextKey === '@help') {
+      if (nextKey === '@help' || nextKey === '@h') {
         shiftPositionalArguments(args);
         return await child['@help'](args);
+      }
+      if (nextKey === '@@help' || nextKey === '@@h') {
+        shiftPositionalArguments(args);
+        return await child['@@help'](args);
       }
 
       return await child.$invoke(args, {parent: this});
@@ -1005,22 +1022,17 @@ export class Resource {
     });
   }
 
-  async '@create'(args) {
-    args = {...args};
-
-    let importArg = takeArgument(args, '@import');
-    if (importArg === undefined) {
-      importArg = shiftPositionalArguments(args);
+  async '@create'({typeOrImport}, {verbose, quiet, debug}) {
+    if (!typeOrImport) {
+      throw new Error(`${formatCode('typeOrImport')} argument is missing`);
     }
 
-    const type = takeArgument(args, '@type', ['@t']);
-
-    if (importArg && type) {
-      throw new Error(`You cannot specify both ${formatCode('@import')} and ${formatCode('@type')} arguments`);
-    }
-
-    if (!(importArg || type)) {
-      throw new Error(`Please specify either ${formatCode('@import')} or ${formatCode('@type')} argument`);
+    let type;
+    let importArg;
+    if (getResourceClass(typeOrImport)) {
+      type = typeOrImport;
+    } else {
+      importArg = typeOrImport;
     }
 
     const resource = await task(
@@ -1042,50 +1054,38 @@ export class Resource {
         }
 
         const resource = await Resource.$create(definition, {directory});
-        await resource.$emit('@created', args, {parseArguments: true});
+        await resource.$emit('@created');
         await resource.$save();
 
         return resource;
       },
       {
         intro: `Creating resource...`,
-        outro: `Resource created`
+        outro: `Resource created`,
+        verbose,
+        quiet,
+        debug
       }
     );
 
     return resource;
   }
 
-  async '@add'(args) {
-    args = {...args};
-
-    let importArg = takeArgument(args, '@import');
-    if (importArg === undefined) {
-      importArg = shiftPositionalArguments(args);
+  async '@add'({typeOrImport, key}, {verbose, quiet, debug}) {
+    if (!typeOrImport) {
+      throw new Error(`${formatCode('typeOrImport')} argument is missing`);
     }
 
-    let type = takeArgument(args, '@type', ['@t']);
-
-    if (importArg && type) {
-      throw new Error(`You cannot specify both ${formatCode('@import')} and ${formatCode('@type')} arguments`);
-    }
-
-    if (!(importArg || type)) {
-      throw new Error(`Please specify either ${formatCode('@import')} or ${formatCode('@type')} argument`);
-    }
-
-    if (importArg && getResourceClass(importArg)) {
-      type = importArg;
-      importArg = undefined;
-    }
-
-    let key = takeArgument(args, '@key');
-    if (key === undefined) {
-      key = shiftPositionalArguments(args);
+    let type;
+    let importArg;
+    if (getResourceClass(typeOrImport)) {
+      type = typeOrImport;
+    } else {
+      importArg = typeOrImport;
     }
 
     if (!key) {
-      throw new Error(`${formatCode('@key')} argument is missing`);
+      throw new Error(`${formatCode('key')} argument is missing`);
     }
 
     let child = this.$getChild(key);
@@ -1105,30 +1105,26 @@ export class Resource {
         }
 
         child = await this.$setChild(key, definition);
-        await child.$emit('@added', args, {parseArguments: true});
+        await child.$emit('@added');
         await this.$save();
 
         return child;
       },
       {
         intro: `Adding property...`,
-        outro: `Property added`
+        outro: `Property added`,
+        verbose,
+        quiet,
+        debug
       }
     );
 
     return child;
   }
 
-  async '@remove'(args) {
-    args = {...args};
-
-    let key = takeArgument(args, '@key');
-    if (key === undefined) {
-      key = shiftPositionalArguments(args);
-    }
-
+  async '@remove'({key}, {verbose, quiet, debug}) {
     if (!key) {
-      throw new Error(`${formatCode('@key')} argument is missing`);
+      throw new Error(`${formatCode('key')} argument is missing`);
     }
 
     const child = this.$getChild(key);
@@ -1143,13 +1139,12 @@ export class Resource {
       },
       {
         intro: `Removing property...`,
-        outro: `Property removed`
+        outro: `Property removed`,
+        verbose,
+        quiet,
+        debug
       }
     );
-  }
-
-  async '@rm'(args) {
-    return await this['@remove'](args);
   }
 
   async _pinResource(specifier) {
@@ -1207,29 +1202,38 @@ export class Resource {
     await this.$broadcast('@tested', args, {parseArguments: true});
   }
 
-  async '@normalizeResourceFile'({json5, json}) {
-    // find . -name "@resource.json5" -exec run {} @normalizeResourceFile --json \;
+  async '@normalize'({format}) {
+    // find . -name "@resource.json5" -exec run {} @normalize --json \;
+    format = format.toUpperCase();
+
     const file = this.$getResourceFile();
     if (!file) {
       throw new Error('Resource file is undefined');
     }
+
     let newFile;
     const extension = extname(file);
-    const convertToJSON5 = json5 && extension !== '.json5';
-    if (convertToJSON5) {
-      newFile = file.slice(0, -extension.length) + '.json5';
-    }
-    const convertToJSON = json && extension !== '.json';
+
+    const convertToJSON = format === 'JSON' && extension !== '.json';
     if (convertToJSON) {
       newFile = file.slice(0, -extension.length) + '.json';
     }
+
+    const convertToJSON5 = format === 'JSON5' && extension !== '.json5';
+    if (convertToJSON5) {
+      newFile = file.slice(0, -extension.length) + '.json5';
+    }
+
     if (newFile) {
       this.$setResourceFile(newFile);
     }
+
     await this.$save();
+
     if (newFile) {
       unlinkSync(file);
     }
+
     printSuccess('Resource file normalized');
   }
 
@@ -1260,23 +1264,22 @@ export class Resource {
     return await this.$broadcast(event, args, {parseArguments: true});
   }
 
-  async '@help'(args) {
-    args = {...args};
-
+  async '@help'({keys = [], showNative}) {
     const type = this._getType();
 
-    const argument = shiftPositionalArguments(args);
-    if (argument) {
+    keys = [...keys];
+    const key = keys.shift();
+    if (key) {
       let child;
       if (type === 'method') {
         throw new Error('UNIMPLEMENTED');
       } else {
-        child = this.$findChild(argument);
+        child = this.$findChild(key, {includeNativeChildren: true});
         if (!child) {
-          throw new Error(`No attribute or method found with this key: ${formatCode(argument)}`);
+          throw new Error(`No attribute or method found with this key: ${formatCode(key)}`);
         }
       }
-      return await child['@help'](args);
+      return await child['@help']({keys, showNative});
     }
 
     this._printKeyAndType();
@@ -1287,7 +1290,16 @@ export class Resource {
     if (type === 'method') {
       this._printMethodInput();
     }
-    this._printChildren();
+    this._printChildren({showNative});
+
+    if (!showNative) {
+      emptyLine();
+      print(formatDim(`(use ${formatCode('@@help')} to display native attributes and methods)`));
+    }
+  }
+
+  async '@@help'({keys}) {
+    return await this['@help']({keys, showNative: true});
   }
 
   _printKeyAndType() {
@@ -1375,34 +1387,45 @@ export class Resource {
     }
   }
 
-  _printChildren() {
+  _printChildren({showNative} = {}) {
     const sections = [];
     const allData = [];
 
-    this.$forEachChild(child => {
-      if (child.$hidden) {
-        return;
-      }
+    this.$forEachChild(
+      child => {
+        if (showNative && !child.$getIsNative()) {
+          return;
+        }
 
-      const creator = child.$getCreator();
-      assert(creator, 'A resource child should always have a creator');
+        if (child.$hidden) {
+          return;
+        }
 
-      let section = sections.find(section => section.creator === creator);
-      if (!section) {
-        section = {creator, attributes: [], methods: []};
-        sections.push(section);
-      }
+        let creator;
+        if (!showNative) {
+          creator = child.$getCreator();
+          assert(creator, 'A resource child should always have a creator');
+        }
 
-      const formattedChild = child._formatChild();
-      const type = child._getType();
-      section[type === 'method' ? 'methods' : 'attributes'].push(formattedChild);
-      allData.push(formattedChild);
-    });
+        let section = sections.find(section => section.creator === creator);
+        if (!section) {
+          section = {creator, attributes: [], methods: []};
+          sections.push(section);
+        }
+
+        const formattedChild = child._formatChild();
+        const type = child._getType();
+        section[type === 'method' ? 'methods' : 'attributes'].push(formattedChild);
+        allData.push(formattedChild);
+      },
+      {includeNativeChildren: showNative}
+    );
 
     for (let i = 0; i < sections.length; i++) {
       const section = sections[i];
 
-      const specifier = section.creator._formatResourceSpecifier({directory: process.cwd()});
+      const specifier =
+        section.creator && section.creator._formatResourceSpecifier({directory: process.cwd()});
       if (specifier !== undefined) {
         emptyLine();
         print(formatBold(specifier));
@@ -1410,13 +1433,13 @@ export class Resource {
 
       if (section.attributes.length) {
         emptyLine();
-        print('Attributes:');
+        print(showNative ? 'Native attributes:' : 'Attributes:');
         print(formatTable(section.attributes, {allData, columnGap: 2, margins: {left: 2}}));
       }
 
       if (section.methods.length) {
         emptyLine();
-        print('Methods:');
+        print(showNative ? 'Native methods:' : 'Methods');
         print(formatTable(section.methods, {allData, columnGap: 2, margins: {left: 2}}));
       }
     }
@@ -1465,9 +1488,15 @@ export class Resource {
   }
 
   _formatType() {
-    let type = this._getType();
-    if (type !== 'method' && type !== 'resource' && this.$hasChildren()) {
-      type += '*';
+    const type = this._getType();
+    if (type === 'method') {
+      return this.$getIsNative() ? 'native method' : 'method';
+    }
+    if (type === 'resource') {
+      return 'resource';
+    }
+    if (this.$hasChildren()) {
+      return type + '*';
     }
     return type;
   }
@@ -1622,18 +1651,20 @@ export class Resource {
   }
 
   _serializeChildren(definition, options) {
+    const publishing = options && options.publishing;
+
     const unpublishableDefinition = {};
 
     this.$forEachChild(child => {
-      const publishing = options && options.publishing;
-      if (publishing && child.$unpublishable) {
+      const isUnpublishable = child.$getIsUnpublishable();
+      if (publishing && isUnpublishable) {
         return;
       }
       const childDefinition = child.$serialize(options);
       if (childDefinition === undefined) {
         return;
       }
-      if (child.$unpublishable) {
+      if (isUnpublishable) {
         unpublishableDefinition[child.$getKey()] = childDefinition;
       } else {
         definition[child.$getKey()] = childDefinition;
@@ -1672,6 +1703,107 @@ export class Resource {
     }
     return builders;
   }
+}
+
+let _nativeChildren;
+async function getNativeChildren() {
+  if (_nativeChildren) {
+    return _nativeChildren;
+  }
+
+  const children = {
+    '@create': {
+      '@type': 'method',
+      '@description': 'Create a resource in the current directory',
+      '@input': {
+        typeOrImport: {
+          '@type': 'string',
+          '@aliases': ['type', 'import'],
+          '@position': 0
+        }
+      }
+    },
+    '@add': {
+      '@type': 'method',
+      '@description': 'Add a property',
+      '@input': {
+        typeOrImport: {
+          '@type': 'string',
+          '@aliases': ['type', 'import'],
+          '@position': 0
+        },
+        key: {
+          '@type': 'string',
+          '@position': 1
+        }
+      }
+    },
+    '@remove': {
+      '@type': 'method',
+      '@description': 'Remove a property',
+      '@aliases': ['@rm'],
+      '@input': {
+        key: {
+          '@type': 'string',
+          '@position': 0
+        }
+      }
+    },
+    '@print': {
+      '@type': 'method',
+      '@description': 'Print resource content',
+      '@aliases': ['@p']
+    },
+    '@inspect': {
+      '@type': 'method',
+      '@description': 'Inspect resource definition',
+      '@aliases': ['@i']
+    },
+    '@normalize': {
+      '@type': 'method',
+      '@description': 'Normalize the current resource file',
+      '@input': {
+        format: {
+          '@type': 'string',
+          '@value': 'JSON'
+        }
+      }
+    },
+    '@help': {
+      '@type': 'method',
+      '@description': 'Show resource help',
+      '@aliases': ['@h'],
+      '@input': {
+        keys: {
+          '@type': 'array',
+          '@position': 0
+        },
+        showNative: {
+          '@type': 'boolean',
+          '@aliases': ['native']
+        }
+      }
+    },
+    '@@help': {
+      '@type': 'method',
+      '@description': 'Show native attributes and methods',
+      '@aliases': ['@@h'],
+      '@input': {
+        keys: {
+          '@type': 'array',
+          '@position': 0
+        }
+      }
+    }
+  };
+
+  _nativeChildren = [];
+  for (const [key, definition] of entries(children)) {
+    const child = await Resource.$create(definition, {key, isNative: true});
+    _nativeChildren.push(child);
+  }
+
+  return _nativeChildren;
 }
 
 function findSubclass(A, B) {

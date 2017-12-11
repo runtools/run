@@ -12,12 +12,11 @@ describe('ArrayResource', () => {
   });
 
   test('parsing', async () => {
-    await expect(ArrayResource.$create('[]')).rejects.toBeInstanceOf(Error);
-    expect((await ArrayResource.$create('[]', {parse: true})).$value).toEqual([]);
-    expect((await ArrayResource.$create('[1, 2]', {parse: true})).$value).toEqual([1, 2]);
-    await expect(ArrayResource.$create('', {parse: true})).rejects.toBeInstanceOf(Error);
-    await expect(ArrayResource.$create('{}', {parse: true})).rejects.toBeInstanceOf(Error);
-    await expect(ArrayResource.$create('Invalid JSON', {parse: true})).rejects.toBeInstanceOf(Error);
+    await expect(ArrayResource.$create('a')).rejects.toBeInstanceOf(Error);
+    expect((await ArrayResource.$create('', {parse: true})).$value).toEqual([]);
+    expect((await ArrayResource.$create('a', {parse: true})).$value).toEqual(['a']);
+    expect((await ArrayResource.$create('123', {parse: true})).$value).toEqual(['123']);
+    expect((await ArrayResource.$create('a,b', {parse: true})).$value).toEqual(['a', 'b']);
   });
 
   test('immutability', async () => {

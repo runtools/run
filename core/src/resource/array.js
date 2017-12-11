@@ -1,7 +1,5 @@
 import {cloneDeep} from 'lodash';
 import deepFreeze from 'deep-freeze';
-import JSON5 from 'json5';
-import {formatString} from '@resdir/console';
 
 import ValueResource from './value';
 
@@ -25,16 +23,10 @@ export class ArrayResource extends ValueResource {
   }
 
   static $parse(str) {
-    let array;
-    try {
-      array = JSON5.parse(str);
-    } catch (err) {
-      // NOOP
+    if (!str) {
+      return [];
     }
-    if (!Array.isArray(array)) {
-      throw new Error(`Cannot convert a string to an array: ${formatString(str)}`);
-    }
-    return array;
+    return str.split(',');
   }
 }
 

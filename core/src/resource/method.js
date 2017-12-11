@@ -201,7 +201,7 @@ export class MethodResource extends Resource {
         throw new TypeError(`A resource method must be invoked with a maximum of two arguments (${formatCode('arguments')} and ${formatCode('environment')})`);
       }
 
-      const implementation = methodResource._getImplementation();
+      const implementation = methodResource._getImplementation(this);
       if (!implementation) {
         throw new Error(`Can't find implementation for ${formatCode(methodResource.$getKey())}`);
       }
@@ -269,7 +269,11 @@ export class MethodResource extends Resource {
     return environment;
   }
 
-  _getImplementation() {
+  _getImplementation(parent) {
+    if (this.$getIsNative()) {
+      return parent[this.$getKey()];
+    }
+
     const expression = this.$runExpression;
     if (expression) {
       const methodResource = this;
@@ -279,19 +283,16 @@ export class MethodResource extends Resource {
     }
 
     let implementation;
-    const parent = this.$getParent();
-    if (parent) {
-      parent.$forSelfAndEachBase(
-        resource => {
-          const proto = resource.constructor.prototype;
-          implementation = proto[this.$getKey()];
-          if (implementation) {
-            return false;
-          }
-        },
-        {deepSearch: true}
-      );
-    }
+    parent.$forSelfAndEachBase(
+      resource => {
+        const proto = resource.constructor.prototype;
+        implementation = proto[this.$getKey()];
+        if (implementation) {
+          return false;
+        }
+      },
+      {deepSearch: true}
+    );
     return implementation;
   }
 
@@ -430,17 +431,17 @@ export class MethodResource extends Resource {
   }
 }
 
-async function createParameter(key, definition, {directory} = {}) {
-  return await Resource.$create(definition, {key, directory});
+async function createParameter(key, definition, {directory, isNative} = {}) {
+  return await Resource.$create(definition, {key, directory, isNative});
 }
 
 let _environmentParameters;
 async function getEnvironmentParameters() {
   if (!_environmentParameters) {
     _environmentParameters = [
-      await createParameter('@verbose', {'@type': 'boolean', '@aliases': ['@v']}),
-      await createParameter('@quiet', {'@type': 'boolean', '@aliases': ['@q']}),
-      await createParameter('@debug', {'@type': 'boolean', '@aliases': ['@d']})
+      await createParameter('@verbose', {'@type': 'boolean', '@aliases': ['@v']}, {isNative: true}),
+      await createParameter('@quiet', {'@type': 'boolean', '@aliases': ['@q']}, {isNative: true}),
+      await createParameter('@debug', {'@type': 'boolean', '@aliases': ['@d']}, {isNative: true})
     ];
   }
   return _environmentParameters;
