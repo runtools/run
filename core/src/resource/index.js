@@ -27,11 +27,7 @@ import {validateResourceKey} from '@resdir/resource-key';
 import {parseResourceIdentifier} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, stringifyResourceSpecifier} from '@resdir/resource-specifier';
 import RegistryClient from '@resdir/registry-client';
-import {
-  getPositionalArgument,
-  shiftPositionalArguments,
-  takeArgument
-} from '@resdir/method-arguments';
+import {shiftPositionalArguments, takeArgument} from '@resdir/method-arguments';
 
 import Runtime from '../runtime';
 
@@ -43,17 +39,7 @@ const RESOURCE_FILE_FORMATS = ['json', 'json5', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
 const PRIVATE_DEV_RESOURCE_FILE_NAME = '@resource.dev.private';
 
-const BUILTIN_COMMANDS = [
-  '@broadcast',
-  '@build',
-  '@console',
-  '@emit',
-  '@lint',
-  '@install',
-  '@parent',
-  '@registry',
-  '@test'
-];
+const BUILTIN_COMMANDS = ['@broadcast', '@build', '@emit', '@lint', '@install', '@test'];
 
 const RESDIR_REGISTRY_RESOURCE = 'resdir/registry';
 const CONSOLE_TOOL_RESOURCE = 'tool/console';
@@ -116,6 +102,16 @@ export class Resource {
       set('$aliases', '@aliases');
       set('$position', '@position');
       set('$examples', '@examples');
+
+      const getter = takeProperty(definition, '@getter');
+      if (getter !== undefined) {
+        await this.$setGetter(getter, {
+          key,
+          directory: this.$getCurrentDirectory({throwIfUndefined: false}),
+          isNative
+        });
+      }
+
       set('$runtime', '@runtime');
       set('$implementation', '@implementation');
       set('$hidden', '@hidden');
@@ -717,6 +713,26 @@ export class Resource {
     this._examples = examples;
   }
 
+  $getGetter() {
+    return this._getInheritedValue('_getter');
+  }
+
+  async $setGetter(getter, {key, directory, isNative}) {
+    if (getter === undefined) {
+      this._getter = undefined;
+      return;
+    }
+    this._getter = await Resource.$create(getter, {key, directory, isNative});
+  }
+
+  async $resolveGetter({parent} = {}) {
+    const getter = this.$getGetter();
+    if (!getter) {
+      return this;
+    }
+    return await getter.$invoke(undefined, {parent});
+  }
+
   get $runtime() {
     return this._getInheritedValue('_runtime');
   }
@@ -939,6 +955,7 @@ export class Resource {
   async $invoke(args, {_parent} = {}) {
     return await catchContext(this, async () => {
       args = {...args};
+
       const key = shiftPositionalArguments(args);
       if (key === undefined) {
         return this;
@@ -948,20 +965,22 @@ export class Resource {
         return await this[key](args);
       }
 
-      const child = this.$findChild(key, {includeNativeChildren: true});
+      let child = this.$findChild(key, {includeNativeChildren: true});
       if (!child) {
         throw new Error(`No attribute or method found with this key: ${formatCode(key)}`);
       }
 
-      const nextKey = getPositionalArgument(args, 0);
-      if (nextKey === '@help' || nextKey === '@h') {
-        shiftPositionalArguments(args);
-        return await child['@help'](args);
-      }
-      if (nextKey === '@@help' || nextKey === '@@h') {
-        shiftPositionalArguments(args);
-        return await child['@@help'](args);
-      }
+      child = await child.$resolveGetter({parent: this});
+
+      // const nextKey = getPositionalArgument(args, 0);
+      // if (nextKey === '@help' || nextKey === '@h') {
+      //   shiftPositionalArguments(args);
+      //   return await child['@help'](args);
+      // }
+      // if (nextKey === '@@help' || nextKey === '@@h') {
+      //   shiftPositionalArguments(args);
+      //   return await child['@@help'](args);
+      // }
 
       return await child.$invoke(args, {parent: this});
     });
@@ -1171,12 +1190,12 @@ export class Resource {
     await this.$broadcast('@built', args, {parseArguments: true});
   }
 
-  async '@parent'(args) {
+  async '@parent'() {
     const parent = this.$getParent();
     if (!parent) {
       throw new Error(`${formatCode('@parent')} can't be invoked from the resource's root`);
     }
-    await parent.$invoke(args);
+    return parent;
   }
 
   async '@print'() {
@@ -1199,11 +1218,6 @@ export class Resource {
       throw new Error('\'specifier\' argument is missing');
     }
     return await this.constructor.$import(specifier, {directory: process.cwd()});
-  }
-
-  async '@console'(args) {
-    const consoleTool = await this.constructor.$import(CONSOLE_TOOL_RESOURCE);
-    await consoleTool.$invoke(args);
   }
 
   async '@lint'(args) {
@@ -1251,11 +1265,6 @@ export class Resource {
     printSuccess('Resource file normalized');
   }
 
-  async '@registry'(args) {
-    const registry = await this.constructor.$import(RESDIR_REGISTRY_RESOURCE);
-    await registry.$invoke(args);
-  }
-
   async '@emit'(args) {
     args = {...args};
 
@@ -1292,6 +1301,7 @@ export class Resource {
         if (!child) {
           throw new Error(`No attribute or method found with this key: ${formatCode(key)}`);
         }
+        child = await child.$resolveGetter({parent: this});
       }
       return await child['@help']({keys, showNative});
     }
@@ -1599,6 +1609,8 @@ export class Resource {
 
     this._serializeExamples(definition, options);
 
+    this._serializeGetter(definition, options);
+
     if (this._runtime !== undefined) {
       definition['@runtime'] = this._runtime.toJSON();
     }
@@ -1664,6 +1676,13 @@ export class Resource {
     }
   }
 
+  _serializeGetter(definition, _options) {
+    const getter = this._getter;
+    if (getter) {
+      definition['@getter'] = getter.$serialize();
+    }
+  }
+
   _serializeChildren(definition, options) {
     const publishing = options && options.publishing;
 
@@ -1726,6 +1745,26 @@ async function getNativeChildren() {
   }
 
   const children = {
+    '@parent': {
+      '@description': 'Get the parent of the resource',
+      '@getter': {
+        '@type': 'method'
+      }
+    },
+    '@console': {
+      '@description': 'Shortcut to the console tool (tool/console)',
+      '@getter': {
+        '@type': 'method',
+        '@run': `@import ${CONSOLE_TOOL_RESOURCE}`
+      }
+    },
+    '@registry': {
+      '@description': 'Shortcut to Resdir Registry (resdir/registry)',
+      '@getter': {
+        '@type': 'method',
+        '@run': `@import ${RESDIR_REGISTRY_RESOURCE}`
+      }
+    },
     '@create': {
       '@type': 'method',
       '@description': 'Create a resource in the current directory',

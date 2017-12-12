@@ -270,16 +270,16 @@ export class MethodResource extends Resource {
   }
 
   _getImplementation(parent) {
-    if (this.$getIsNative()) {
-      return parent[this.$getKey()];
-    }
-
     const expression = this.$runExpression;
     if (expression) {
       const methodResource = this;
       return function (args) {
         return methodResource._run(expression, args, {parent: this});
       };
+    }
+
+    if (this.$getIsNative()) {
+      return parent[this.$getKey()];
     }
 
     let implementation;
