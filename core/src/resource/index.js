@@ -1187,6 +1187,20 @@ export class Resource {
     this.$inspect();
   }
 
+  async '@load'({specifier}) {
+    if (!specifier) {
+      throw new Error('\'specifier\' argument is missing');
+    }
+    return await this.constructor.$load(specifier, {directory: process.cwd()});
+  }
+
+  async '@import'({specifier}) {
+    if (!specifier) {
+      throw new Error('\'specifier\' argument is missing');
+    }
+    return await this.constructor.$import(specifier, {directory: process.cwd()});
+  }
+
   async '@console'(args) {
     const consoleTool = await this.constructor.$import(CONSOLE_TOOL_RESOURCE);
     await consoleTool.$invoke(args);
@@ -1758,6 +1772,26 @@ async function getNativeChildren() {
       '@type': 'method',
       '@description': 'Inspect resource definition',
       '@aliases': ['@i']
+    },
+    '@load': {
+      '@type': 'method',
+      '@description': 'Load a resource',
+      '@input': {
+        specifier: {
+          '@type': 'string',
+          '@position': 0
+        }
+      }
+    },
+    '@import': {
+      '@type': 'method',
+      '@description': 'Import a resource',
+      '@input': {
+        specifier: {
+          '@type': 'string',
+          '@position': 0
+        }
+      }
     },
     '@normalize': {
       '@type': 'method',

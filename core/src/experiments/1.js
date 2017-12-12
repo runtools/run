@@ -1,8 +1,20 @@
 /* eslint-disable */
 
-const o1 = {a: 1, b: 2};
+class Person {
+  set age(val) {
+    console.log(val);
+    return 'promise';
+  }
+}
 
-const o2 = {...o1};
+const p = new Person();
+
+const r = (p.age = 40);
+console.log(r);
+
+// const o1 = {a: 1, b: 2};
+//
+// const o2 = {...o1};
 
 // class A {
 //   static a = 123;
