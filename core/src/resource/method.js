@@ -5,7 +5,9 @@ import {catchContext, formatString, formatCode} from '@resdir/console';
 import {
   makePositionalArgumentKey,
   getPositionalArgument,
-  shiftPositionalArguments
+  shiftPositionalArguments,
+  setSubArguments,
+  getSubArgumentsKey
 } from '@resdir/method-arguments';
 import {parse} from 'shell-quote';
 
@@ -461,6 +463,16 @@ function findArgument(args, parameter) {
     }
   }
 
+  if (key === undefined) {
+    if (parameter.$isSubInput) {
+      const subArgumentsKey = getSubArgumentsKey();
+      if (subArgumentsKey in args) {
+        key = subArgumentsKey;
+        value = args[key];
+      }
+    }
+  }
+
   return {key, value};
 }
 
@@ -478,6 +490,24 @@ function parseCommandLineArguments(argsAndOpts) {
     throw new TypeError('\'argsAndOpts\' must be an array');
   }
 
+  let subArgsAndOpts;
+  const index = argsAndOpts.indexOf('--');
+  if (index !== -1) {
+    subArgsAndOpts = argsAndOpts.slice(index + 1);
+    argsAndOpts = argsAndOpts.slice(0, index);
+  }
+
+  const result = _parseCommandLineArguments(argsAndOpts);
+
+  if (subArgsAndOpts) {
+    const subResult = _parseCommandLineArguments(subArgsAndOpts);
+    setSubArguments(result, subResult);
+  }
+
+  return result;
+}
+
+function _parseCommandLineArguments(argsAndOpts) {
   const result = {};
 
   for (let i = 0, position = 0; i < argsAndOpts.length; i++) {

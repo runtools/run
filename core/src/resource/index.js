@@ -27,7 +27,7 @@ import {validateResourceKey} from '@resdir/resource-key';
 import {parseResourceIdentifier} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, stringifyResourceSpecifier} from '@resdir/resource-specifier';
 import RegistryClient from '@resdir/registry-client';
-import {shiftPositionalArguments, takeArgument} from '@resdir/method-arguments';
+import {shiftPositionalArguments} from '@resdir/method-arguments';
 
 import Runtime from '../runtime';
 
@@ -38,8 +38,6 @@ const RESOURCE_FILE_NAME = '@resource';
 const RESOURCE_FILE_FORMATS = ['json', 'json5', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
 const PRIVATE_DEV_RESOURCE_FILE_NAME = '@resource.dev.private';
-
-const BUILTIN_COMMANDS = ['@broadcast', '@build', '@emit', '@lint', '@install', '@test'];
 
 const RESDIR_REGISTRY_RESOURCE = 'resdir/registry';
 const CONSOLE_TOOL_RESOURCE = 'tool/console';
@@ -101,6 +99,7 @@ export class Resource {
       set('$description', '@description');
       set('$aliases', '@aliases');
       set('$position', '@position');
+      set('$isSubInput', '@isSubInput');
       set('$examples', '@examples');
 
       const getter = takeProperty(definition, '@getter');
@@ -611,6 +610,9 @@ export class Resource {
   }
 
   set $comment(comment) {
+    if (comment !== undefined && typeof comment !== 'string') {
+      throw new TypeError(`${formatCode('@comment')} attribute must be a string`);
+    }
     this._comment = comment;
   }
 
@@ -652,6 +654,9 @@ export class Resource {
   }
 
   set $directory(directory) {
+    if (directory !== undefined && typeof directory !== 'string') {
+      throw new TypeError(`${formatCode('@directory')} attribute must be a string`);
+    }
     this._directory = directory;
   }
 
@@ -661,9 +666,12 @@ export class Resource {
 
   set $aliases(aliases) {
     this._aliases = undefined;
-    if (aliases) {
+    if (aliases !== undefined) {
       if (typeof aliases === 'string') {
         aliases = [aliases];
+      }
+      if (!Array.isArray(aliases)) {
+        throw new TypeError(`${formatCode('@aliases')} attribute must be a string or an array of string`);
       }
       for (const alias of aliases) {
         this.$addAlias(alias);
@@ -688,6 +696,9 @@ export class Resource {
   }
 
   set $description(description) {
+    if (description !== undefined && typeof description !== 'string') {
+      throw new TypeError(`${formatCode('@description')} attribute must be a string`);
+    }
     this._description = description;
   }
 
@@ -700,6 +711,17 @@ export class Resource {
       throw new TypeError(`${formatCode('@position')} attribute must be a number`);
     }
     this._position = position;
+  }
+
+  get $isSubInput() {
+    return this._getInheritedValue('_isSubInput');
+  }
+
+  set $isSubInput(isSubInput) {
+    if (isSubInput !== undefined && typeof isSubInput !== 'boolean') {
+      throw new TypeError(`${formatCode('@isSubInput')} attribute must be a boolean`);
+    }
+    this._isSubInput = isSubInput;
   }
 
   get $examples() {
@@ -738,10 +760,10 @@ export class Resource {
   }
 
   set $runtime(runtime) {
-    if (typeof runtime === 'string') {
-      runtime = new Runtime(runtime);
+    if (runtime !== undefined && typeof runtime !== 'string') {
+      throw new TypeError(`${formatCode('@runtime')} attribute must be a string`);
     }
-    this._runtime = runtime;
+    this._runtime = runtime !== undefined ? new Runtime(runtime) : undefined;
   }
 
   get $implementation() {
@@ -749,6 +771,9 @@ export class Resource {
   }
 
   set $implementation(implementation) {
+    if (implementation !== undefined && typeof implementation !== 'string') {
+      throw new TypeError(`${formatCode('@implementation')} attribute must be a string`);
+    }
     this._implementation = implementation;
   }
 
@@ -757,6 +782,9 @@ export class Resource {
   }
 
   set $hidden(hidden) {
+    if (hidden !== undefined && typeof hidden !== 'boolean') {
+      throw new TypeError(`${formatCode('@hidden')} attribute must be a boolean`);
+    }
     this._hidden = hidden;
   }
 
@@ -771,6 +799,9 @@ export class Resource {
   }
 
   set $autoBoxing(autoBoxing) {
+    if (autoBoxing !== undefined && typeof autoBoxing !== 'boolean') {
+      throw new TypeError(`${formatCode('@autoBoxing')} attribute must be a boolean`);
+    }
     this._autoBoxing = autoBoxing;
   }
 
@@ -785,6 +816,9 @@ export class Resource {
   }
 
   set $autoUnboxing(autoUnboxing) {
+    if (autoUnboxing !== undefined && typeof autoUnboxing !== 'boolean') {
+      throw new TypeError(`${formatCode('@autoUnboxing')} attribute must be a boolean`);
+    }
     this._autoUnboxing = autoUnboxing;
   }
 
@@ -961,10 +995,6 @@ export class Resource {
         return this;
       }
 
-      if (BUILTIN_COMMANDS.includes(key)) {
-        return await this[key](args);
-      }
-
       let child = this.$findChild(key, {includeNativeChildren: true});
       if (!child) {
         throw new Error(`No attribute or method found with this key: ${formatCode(key)}`);
@@ -1041,7 +1071,7 @@ export class Resource {
     });
   }
 
-  async '@create'({typeOrImport}, {verbose, quiet, debug}) {
+  async '@create'({typeOrImport} = {}, {verbose, quiet, debug} = {}) {
     if (!typeOrImport) {
       throw new Error(`${formatCode('typeOrImport')} argument is missing`);
     }
@@ -1090,7 +1120,7 @@ export class Resource {
     return resource;
   }
 
-  async '@add'({typeOrImport, key}, {verbose, quiet, debug}) {
+  async '@add'({typeOrImport, key} = {}, {verbose, quiet, debug} = {}) {
     if (!typeOrImport) {
       throw new Error(`${formatCode('typeOrImport')} argument is missing`);
     }
@@ -1141,7 +1171,7 @@ export class Resource {
     return child;
   }
 
-  async '@remove'({key}, {verbose, quiet, debug}) {
+  async '@remove'({key} = {}, {verbose, quiet, debug} = {}) {
     if (!key) {
       throw new Error(`${formatCode('key')} argument is missing`);
     }
@@ -1180,16 +1210,6 @@ export class Resource {
     return specifier;
   }
 
-  async '@install'(args) {
-    await this.$broadcast('@install', args, {parseArguments: true});
-    await this.$broadcast('@installed', args, {parseArguments: true});
-  }
-
-  async '@build'(args) {
-    await this.$broadcast('@build', args, {parseArguments: true});
-    await this.$broadcast('@built', args, {parseArguments: true});
-  }
-
   async '@parent'() {
     const parent = this.$getParent();
     if (!parent) {
@@ -1206,6 +1226,26 @@ export class Resource {
     this.$inspect();
   }
 
+  async '@install'({eventInput} = {}) {
+    await this.$broadcast('@install', eventInput, {parseArguments: true});
+    await this.$broadcast('@installed', undefined, {parseArguments: true});
+  }
+
+  async '@lint'({eventInput} = {}) {
+    await this.$broadcast('@lint', eventInput, {parseArguments: true});
+    await this.$broadcast('@linted', undefined, {parseArguments: true});
+  }
+
+  async '@test'({eventInput} = {}) {
+    await this.$broadcast('@test', eventInput, {parseArguments: true});
+    await this.$broadcast('@tested', undefined, {parseArguments: true});
+  }
+
+  async '@build'({eventInput} = {}) {
+    await this.$broadcast('@build', eventInput, {parseArguments: true});
+    await this.$broadcast('@built', undefined, {parseArguments: true});
+  }
+
   async '@load'({specifier}) {
     if (!specifier) {
       throw new Error('\'specifier\' argument is missing');
@@ -1220,14 +1260,12 @@ export class Resource {
     return await this.constructor.$import(specifier, {directory: process.cwd()});
   }
 
-  async '@lint'(args) {
-    await this.$broadcast('@lint', args, {parseArguments: true});
-    await this.$broadcast('@linted', args, {parseArguments: true});
+  async '@emit'({event, eventInput} = {}) {
+    return await this.$emit(event, eventInput, {parseArguments: true});
   }
 
-  async '@test'(args) {
-    await this.$broadcast('@test', args, {parseArguments: true});
-    await this.$broadcast('@tested', args, {parseArguments: true});
+  async '@broadcast'({event, eventInput} = {}) {
+    return await this.$broadcast(event, eventInput, {parseArguments: true});
   }
 
   async '@normalize'({format}) {
@@ -1265,29 +1303,7 @@ export class Resource {
     printSuccess('Resource file normalized');
   }
 
-  async '@emit'(args) {
-    args = {...args};
-
-    let event = takeArgument(args, 'event');
-    if (event === undefined) {
-      event = shiftPositionalArguments(args);
-    }
-
-    return await this.$emit(event, args, {parseArguments: true});
-  }
-
-  async '@broadcast'(args) {
-    args = {...args};
-
-    let event = takeArgument(args, 'event');
-    if (event === undefined) {
-      event = shiftPositionalArguments(args);
-    }
-
-    return await this.$broadcast(event, args, {parseArguments: true});
-  }
-
-  async '@help'({keys = [], showNative}) {
+  async '@help'({keys = [], showNative} = {}) {
     const type = this._getType();
 
     keys = [...keys];
@@ -1607,6 +1623,10 @@ export class Resource {
       definition['@position'] = this._position;
     }
 
+    if (this._isSubInput !== undefined) {
+      definition['@isSubInput'] = this._isSubInput;
+    }
+
     this._serializeExamples(definition, options);
 
     this._serializeGetter(definition, options);
@@ -1812,6 +1832,46 @@ async function getNativeChildren() {
       '@description': 'Inspect resource definition',
       '@aliases': ['@i']
     },
+    '@install': {
+      '@type': 'method',
+      '@description': 'Broadcast \'@install\' event',
+      '@input': {
+        eventInput: {
+          '@type': 'object',
+          '@isSubInput': true
+        }
+      }
+    },
+    '@lint': {
+      '@type': 'method',
+      '@description': 'Broadcast \'@lint\' event',
+      '@input': {
+        eventInput: {
+          '@type': 'object',
+          '@isSubInput': true
+        }
+      }
+    },
+    '@test': {
+      '@type': 'method',
+      '@description': 'Broadcast \'@test\' event',
+      '@input': {
+        eventInput: {
+          '@type': 'object',
+          '@isSubInput': true
+        }
+      }
+    },
+    '@build': {
+      '@type': 'method',
+      '@description': 'Broadcast \'@build\' event',
+      '@input': {
+        eventInput: {
+          '@type': 'object',
+          '@isSubInput': true
+        }
+      }
+    },
     '@load': {
       '@type': 'method',
       '@description': 'Load a resource',
@@ -1829,6 +1889,34 @@ async function getNativeChildren() {
         specifier: {
           '@type': 'string',
           '@position': 0
+        }
+      }
+    },
+    '@emit': {
+      '@type': 'method',
+      '@description': 'Emit an event',
+      '@input': {
+        event: {
+          '@type': 'string',
+          '@position': 0
+        },
+        eventInput: {
+          '@type': 'object',
+          '@isSubInput': true
+        }
+      }
+    },
+    '@broadcast': {
+      '@type': 'method',
+      '@description': 'Broadcast an event',
+      '@input': {
+        event: {
+          '@type': 'string',
+          '@position': 0
+        },
+        eventInput: {
+          '@type': 'object',
+          '@isSubInput': true
         }
       }
     },
