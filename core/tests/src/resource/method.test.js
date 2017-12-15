@@ -17,13 +17,15 @@ describe('MethodResource', () => {
     expect(method).toBeInstanceOf(MethodResource);
 
     const input = method.$getInput();
-    expect(input).toHaveLength(2);
-    expect(input[0]).toBeInstanceOf(StringResource);
-    expect(input[0].$getKey()).toBe('name');
-    expect(input[0].$position).toBe(0);
-    expect(input[1]).toBeInstanceOf(NumberResource);
-    expect(input[1].$getKey()).toBe('age');
-    expect(input[1].$position).toBeUndefined();
+    expect(input).toBeInstanceOf(Resource);
+    const children = input.$getChildren();
+    expect(children).toHaveLength(2);
+    expect(children[0]).toBeInstanceOf(StringResource);
+    expect(children[0].$getKey()).toBe('name');
+    expect(children[0].$position).toBe(0);
+    expect(children[1]).toBeInstanceOf(NumberResource);
+    expect(children[1].$getKey()).toBe('age');
+    expect(children[1].$position).toBeUndefined();
 
     expect(method.$beforeExpression).toEqual(['@console print Deploying...']);
     expect(method.$runExpression).toEqual(['frontend deploy --@verbose']);

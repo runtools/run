@@ -1,5 +1,5 @@
 import {isAbsolute} from 'path';
-import {isEmpty, isPlainObject, difference, entries} from 'lodash';
+import {isEmpty, isPlainObject, difference} from 'lodash';
 import {takeProperty, getPropertyKeyAndValue} from '@resdir/util';
 import {catchContext, formatString, formatCode} from '@resdir/console';
 import {
@@ -12,6 +12,8 @@ import {
 import {parse} from 'shell-quote';
 
 import Resource from '../resource';
+import EnvironmentResource from './environment';
+import Value from './value';
 
 export class MethodResource extends Resource {
   static $RESOURCE_TYPE = 'method';
@@ -60,17 +62,11 @@ export class MethodResource extends Resource {
       return;
     }
     if (!isPlainObject(input)) {
-      throw new Error(`${formatCode('input')} property must be an object`);
+      throw new Error(`${formatCode('@input')} property must be an object`);
     }
-    for (const [key, definition] of entries(input)) {
-      const parameter = await createParameter(key, definition, {
-        directory: this.$getCurrentDirectory({throwIfUndefined: false})
-      });
-      if (this._input === undefined) {
-        this._input = [];
-      }
-      this._input.push(parameter);
-    }
+    this._input = await Resource.$create(input, {
+      directory: this.$getCurrentDirectory({throwIfUndefined: false})
+    });
   }
 
   get $runExpression() {
@@ -188,19 +184,20 @@ export class MethodResource extends Resource {
   $getFunction({parseArguments} = {}) {
     const methodResource = this;
 
-    return async function (args, environment, ...rest) {
-      const {normalizedArguments, environmentArguments} = await methodResource._normalizeArguments(
-        args,
-        {
-          parse: parseArguments
-        }
-      );
+    return async function (input, environment, ...rest) {
+      const {normalizedInput, extractedEnvironment} = await methodResource._normalizeInput(input, {
+        parse: parseArguments
+      });
 
-      environment = methodResource._normalizeEnvironement(environment);
-      environment = {...environment, ...environmentArguments};
+      let normalizedEnvironment = await methodResource._normalizeEnvironement(environment);
+      if (extractedEnvironment) {
+        normalizedEnvironment = await normalizedEnvironment.$extend(extractedEnvironment, {
+          parse: parseArguments
+        });
+      }
 
       if (rest.length !== 0) {
-        throw new TypeError(`A resource method must be invoked with a maximum of two arguments (${formatCode('arguments')} and ${formatCode('environment')})`);
+        throw new TypeError(`A resource method must be invoked with a maximum of two arguments (${formatCode('input')} and ${formatCode('environment')})`);
       }
 
       const implementation = methodResource._getImplementation(this);
@@ -210,73 +207,107 @@ export class MethodResource extends Resource {
 
       const beforeExpression = methodResource.$getAllBeforeExpressions();
       if (beforeExpression.length) {
-        await methodResource._run(beforeExpression, normalizedArguments, {parent: this});
+        await methodResource._run(beforeExpression, normalizedInput, {parent: this});
       }
 
-      const result = await implementation.call(this, normalizedArguments, environment);
+      const result = await implementation.call(this, normalizedInput, normalizedEnvironment);
 
       const afterExpression = methodResource.$getAllAfterExpressions();
       if (afterExpression.length) {
-        await methodResource._run(afterExpression, normalizedArguments, {parent: this});
+        await methodResource._run(afterExpression, normalizedInput, {parent: this});
       }
 
       return result;
     };
   }
 
-  async _normalizeArguments(args, {parse}) {
-    if (args === undefined) {
-      args = {};
+  async _normalizeInput(input = {}, {parse}) {
+    if (input instanceof Resource) {
+      return {normalizedInput: input};
     }
 
-    if (!isPlainObject(args)) {
-      throw new TypeError(`A resource method must be invoked with a plain object ${formatCode('arguments')} argument (${formatString(typeof args)} received)`);
+    if (!isPlainObject(input)) {
+      throw new TypeError(`A resource method must be invoked with an 'input' argument of type Resource, plain object or undefined (${formatString(typeof input)} received)`);
     }
 
-    const remainingArguments = {...args};
+    input = {...input};
 
-    const normalizedArguments = {};
-    for (const parameter of this.$getInput() || []) {
-      const {key, value} = await extractArgument(remainingArguments, parameter, {parse});
-      if (value !== undefined) {
-        normalizedArguments[key] = value;
+    let normalizedInput = this.$getInput();
+    if (normalizedInput !== undefined) {
+      normalizedInput = await normalizedInput.$extend();
+    } else {
+      normalizedInput = await Resource.$create(input, {
+        directory: this.$getCurrentDirectory({throwIfUndefined: false})
+      });
+    }
+
+    for (const child of normalizedInput.$getChildren()) {
+      const {key, value} = findArgument(input, child);
+      if (key !== undefined) {
+        delete input[key];
+        if (value !== undefined) {
+          await normalizedInput.$setChild(child.$getKey(), value, {parse});
+        }
       }
     }
 
-    const environmentArguments = {};
-    for (const parameter of await getEnvironmentParameters()) {
-      const {key, value} = await extractArgument(remainingArguments, parameter, {parse});
-      if (value !== undefined) {
-        environmentArguments[key.slice(1)] = value;
+    let extractedEnvironment;
+
+    if (parse) {
+      const environmentChildren = (await getEnvironment()).$getChildren({
+        includeNativeChildren: true
+      });
+      for (const child of environmentChildren) {
+        if (!(child instanceof Value)) {
+          // Ignore native methods and getters
+          continue;
+        }
+        const {key, value} = findArgument(input, child);
+        if (key === undefined) {
+          continue;
+        }
+        delete input[key];
+        if (value === undefined) {
+          continue;
+        }
+        if (extractedEnvironment === undefined) {
+          extractedEnvironment = {};
+        }
+        extractedEnvironment[child.$getKey()] = value;
       }
     }
 
-    const remainingArgumentKeys = Object.keys(remainingArguments);
-    if (remainingArgumentKeys.length) {
-      throw new Error(`Invalid method argument: ${formatCode(remainingArgumentKeys[0])}.`);
+    const remainingKeys = Object.keys(input);
+    if (remainingKeys.length) {
+      throw new Error(`Invalid method input key: ${formatCode(remainingKeys[0])}.`);
     }
 
-    return {normalizedArguments, environmentArguments};
+    return {normalizedInput, extractedEnvironment};
   }
 
-  _normalizeEnvironement(environment) {
-    if (environment === undefined) {
-      environment = {};
+  async _normalizeEnvironement(environment) {
+    if (environment instanceof Resource) {
+      return environment;
     }
 
-    if (!isPlainObject(environment)) {
-      throw new TypeError(`A resource method must be invoked with a plain object ${formatCode('environment')} argument (${formatString(typeof environment)} received)`);
+    let normalizedEnvironment = await getEnvironment();
+
+    if (environment !== undefined) {
+      if (!isPlainObject(environment)) {
+        throw new TypeError(`A resource method must be invoked with an 'environment' argument of type Resource, plain object or undefined (${formatString(typeof environment)} received)`);
+      }
+      normalizedEnvironment = await normalizedEnvironment.$extend(environment);
     }
 
-    return environment;
+    return normalizedEnvironment;
   }
 
   _getImplementation(parent) {
     const expression = this.$runExpression;
     if (expression) {
       const methodResource = this;
-      return function (args) {
-        return methodResource._run(expression, args, {parent: this});
+      return function (input) {
+        return methodResource._run(expression, input, {parent: this});
       };
     }
 
@@ -298,7 +329,7 @@ export class MethodResource extends Resource {
     return implementation;
   }
 
-  async _run(expressionProperty, args, {parent} = {}) {
+  async _run(expressionProperty, input, {parent} = {}) {
     let result;
 
     for (const expression of expressionProperty) {
@@ -313,10 +344,10 @@ export class MethodResource extends Resource {
       // }
 
       let parsedExpression = parse(expression, variable => {
-        if (!(variable in args)) {
+        if (!(variable in input)) {
           throw new Error(`Invalid variable found in a method expression: ${formatCode(variable)}`);
         }
-        return String(args[variable]);
+        return String(input[variable]);
       });
 
       parsedExpression = parsedExpression.map(arg => {
@@ -362,7 +393,10 @@ export class MethodResource extends Resource {
       definition = {};
     }
 
-    this._serializeInput(definition, options);
+    const input = this._input;
+    if (input !== undefined) {
+      definition['@input'] = input.$serialize();
+    }
 
     const runExpression = this._runExpression;
     if (runExpression !== undefined) {
@@ -413,47 +447,21 @@ export class MethodResource extends Resource {
 
     return definition;
   }
+}
 
-  _serializeInput(definition, _options) {
-    const input = this._input;
-    if (input) {
-      const serializedInput = {};
-      let count = 0;
-      for (const parameter of input) {
-        const parameterDefinition = parameter.$serialize();
-        if (parameterDefinition !== undefined) {
-          serializedInput[parameter.$getKey()] = parameterDefinition;
-          count++;
-        }
-      }
-      if (count > 0) {
-        definition['@input'] = serializedInput;
-      }
-    }
+let _environment;
+async function getEnvironment() {
+  if (!_environment) {
+    _environment = await EnvironmentResource.$create();
   }
+  return _environment;
 }
 
-async function createParameter(key, definition, {directory, isNative} = {}) {
-  return await Resource.$create(definition, {key, directory, isNative});
-}
-
-let _environmentParameters;
-async function getEnvironmentParameters() {
-  if (!_environmentParameters) {
-    _environmentParameters = [
-      await createParameter('@verbose', {'@type': 'boolean', '@aliases': ['@v']}, {isNative: true}),
-      await createParameter('@quiet', {'@type': 'boolean', '@aliases': ['@q']}, {isNative: true}),
-      await createParameter('@debug', {'@type': 'boolean', '@aliases': ['@d']}, {isNative: true})
-    ];
-  }
-  return _environmentParameters;
-}
-
-function findArgument(args, parameter) {
-  let {key, value} = getPropertyKeyAndValue(args, parameter.$getKey(), parameter.$aliases) || {};
+function findArgument(args, child) {
+  let {key, value} = getPropertyKeyAndValue(args, child.$getKey(), child.$aliases) || {};
 
   if (key === undefined) {
-    const position = parameter.$position;
+    const position = child.$position;
     if (position !== undefined) {
       const positionalArgumentKey = makePositionalArgumentKey(position);
       if (positionalArgumentKey in args) {
@@ -464,7 +472,7 @@ function findArgument(args, parameter) {
   }
 
   if (key === undefined) {
-    if (parameter.$isSubInput) {
+    if (child.$isSubInput) {
       const subArgumentsKey = getSubArgumentsKey();
       if (subArgumentsKey in args) {
         key = subArgumentsKey;
@@ -474,15 +482,6 @@ function findArgument(args, parameter) {
   }
 
   return {key, value};
-}
-
-async function extractArgument(args, parameter, {parse}) {
-  const {key, value} = findArgument(args, parameter);
-  if (key !== undefined) {
-    delete args[key];
-  }
-  const normalizedValue = (await parameter.$extend(value, {parse})).$autoUnbox();
-  return {key: parameter.$getKey(), value: normalizedValue};
 }
 
 function parseCommandLineArguments(argsAndOpts) {

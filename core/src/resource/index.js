@@ -45,21 +45,213 @@ const CONSOLE_TOOL_RESOURCE = 'tool/console';
 export class Resource {
   static $RESOURCE_TYPE = 'resource';
 
+  static $RESOURCE_NATIVE_CHILDREN = {
+    '@parent': {
+      '@description': 'Get the parent of the resource',
+      '@getter': {
+        '@type': 'method'
+      }
+    },
+    '@console': {
+      '@description': 'Shortcut to the console tool (tool/console)',
+      '@getter': {
+        '@type': 'method',
+        '@run': `@import ${CONSOLE_TOOL_RESOURCE}`
+      }
+    },
+    '@registry': {
+      '@description': 'Shortcut to Resdir Registry (resdir/registry)',
+      '@getter': {
+        '@type': 'method',
+        '@run': `@import ${RESDIR_REGISTRY_RESOURCE}`
+      }
+    },
+    '@create': {
+      '@type': 'method',
+      '@description': 'Create a resource in the current directory',
+      '@input': {
+        typeOrImport: {
+          '@type': 'string',
+          '@aliases': ['type', 'import'],
+          '@position': 0
+        }
+      }
+    },
+    '@add': {
+      '@type': 'method',
+      '@description': 'Add a property',
+      '@input': {
+        typeOrImport: {
+          '@type': 'string',
+          '@aliases': ['type', 'import'],
+          '@position': 0
+        },
+        key: {
+          '@type': 'string',
+          '@position': 1
+        }
+      }
+    },
+    '@remove': {
+      '@type': 'method',
+      '@description': 'Remove a property',
+      '@aliases': ['@rm'],
+      '@input': {
+        key: {
+          '@type': 'string',
+          '@position': 0
+        }
+      }
+    },
+    '@print': {
+      '@type': 'method',
+      '@description': 'Print resource content',
+      '@aliases': ['@p']
+    },
+    '@inspect': {
+      '@type': 'method',
+      '@description': 'Inspect resource definition',
+      '@aliases': ['@i']
+    },
+    '@install': {
+      '@type': 'method',
+      '@description': 'Broadcast \'@install\' event',
+      '@input': {
+        eventInput: {
+          '@type': 'object',
+          '@isSubInput': true
+        }
+      }
+    },
+    '@lint': {
+      '@type': 'method',
+      '@description': 'Broadcast \'@lint\' event',
+      '@input': {
+        eventInput: {
+          '@type': 'object',
+          '@isSubInput': true
+        }
+      }
+    },
+    '@test': {
+      '@type': 'method',
+      '@description': 'Broadcast \'@test\' event',
+      '@input': {
+        eventInput: {
+          '@type': 'object',
+          '@isSubInput': true
+        }
+      }
+    },
+    '@build': {
+      '@type': 'method',
+      '@description': 'Broadcast \'@build\' event',
+      '@input': {
+        eventInput: {
+          '@type': 'object',
+          '@isSubInput': true
+        }
+      }
+    },
+    '@load': {
+      '@type': 'method',
+      '@description': 'Load a resource',
+      '@input': {
+        specifier: {
+          '@type': 'string',
+          '@position': 0
+        }
+      }
+    },
+    '@import': {
+      '@type': 'method',
+      '@description': 'Import a resource',
+      '@input': {
+        specifier: {
+          '@type': 'string',
+          '@position': 0
+        }
+      }
+    },
+    '@emit': {
+      '@type': 'method',
+      '@description': 'Emit an event',
+      '@input': {
+        event: {
+          '@type': 'string',
+          '@position': 0
+        },
+        eventInput: {
+          '@type': 'object',
+          '@isSubInput': true
+        }
+      }
+    },
+    '@broadcast': {
+      '@type': 'method',
+      '@description': 'Broadcast an event',
+      '@input': {
+        event: {
+          '@type': 'string',
+          '@position': 0
+        },
+        eventInput: {
+          '@type': 'object',
+          '@isSubInput': true
+        }
+      }
+    },
+    '@normalize': {
+      '@type': 'method',
+      '@description': 'Normalize the current resource file',
+      '@input': {
+        format: {
+          '@type': 'string',
+          '@value': 'JSON'
+        }
+      }
+    },
+    '@help': {
+      '@type': 'method',
+      '@description': 'Show resource help',
+      '@aliases': ['@h'],
+      '@input': {
+        keys: {
+          '@type': 'array',
+          '@position': 0
+        },
+        showNative: {
+          '@type': 'boolean',
+          '@aliases': ['native']
+        }
+      }
+    },
+    '@@help': {
+      '@type': 'method',
+      '@description': 'Show native attributes and methods',
+      '@aliases': ['@@h'],
+      '@input': {
+        keys: {
+          '@type': 'array',
+          '@position': 0
+        }
+      }
+    }
+  };
+
   async $construct(
     definition,
-    {bases = [], parent, key, directory, file, specifier, isUnpublishable, isNative} = {}
+    {bases = [], parent, key, directory, file, specifier, parse, isUnpublishable, isNative} = {}
   ) {
     this._bases = [];
     this._children = [];
 
-    if (isNative) {
-      this.$setIsNative(true);
-    } else {
-      this._children.push.apply(this._children, await getNativeChildren());
-    }
-
     await catchContext(this, async () => {
       definition = {...definition};
+
+      if (isNative) {
+        this.$setIsNative(true);
+      }
 
       if (parent !== undefined) {
         this.$setParent(parent);
@@ -125,12 +317,12 @@ export class Resource {
       const exportDefinition = takeProperty(definition, '@export');
 
       for (const key of Object.keys(definition)) {
-        await this.$setChild(key, definition[key]);
+        await this.$setChild(key, definition[key], {parse, isNative});
       }
 
       if (unpublishableDefinition !== undefined) {
         for (const [key, definition] of entries(unpublishableDefinition)) {
-          await this.$setChild(key, definition, {isUnpublishable: true});
+          await this.$setChild(key, definition, {parse, isUnpublishable: true, isNative});
         }
       }
 
@@ -231,6 +423,8 @@ export class Resource {
       }
     }
 
+    await NativeClass._initializeResourceNativeChildren();
+
     let ResourceClass = NativeClass;
     for (const builder of builders) {
       ResourceClass = builder(ResourceClass);
@@ -253,6 +447,39 @@ export class Resource {
     });
 
     return resource;
+  }
+
+  static async _initializeResourceNativeChildren() {
+    if (Object.prototype.hasOwnProperty.call(this, '$RESOURCE_NATIVE_CHILDREN')) {
+      if (Object.prototype.hasOwnProperty.call(this, '_resourceNativeChildren')) {
+        return;
+      }
+      this._resourceNativeChildren = [];
+      for (const [key, definition] of entries(this.$RESOURCE_NATIVE_CHILDREN)) {
+        const child = await Resource.$create(definition, {key, isNative: true});
+        this._resourceNativeChildren.push(child);
+      }
+    }
+    if (this === Resource) {
+      return;
+    }
+    const parent = Object.getPrototypeOf(this);
+    await parent._initializeResourceNativeChildren();
+  }
+
+  static _getNativeChildren() {
+    if (Object.prototype.hasOwnProperty.call(this, '_nativeChildren')) {
+      return this._nativeChildren;
+    }
+    this._nativeChildren = [];
+    if (Object.prototype.hasOwnProperty.call(this, '_resourceNativeChildren')) {
+      this._nativeChildren.push(...this._resourceNativeChildren);
+    }
+    if (this !== Resource) {
+      const parent = Object.getPrototypeOf(this);
+      this._nativeChildren.unshift(...parent._getNativeChildren());
+    }
+    return this._nativeChildren;
   }
 
   static async $load(
@@ -830,28 +1057,37 @@ export class Resource {
     this._export = resource;
   }
 
-  $forEachChild(fn, {includeNativeChildren} = {}) {
-    for (let i = 0; i < this._children.length; i++) {
-      const child = this._children[i];
-      if (!includeNativeChildren && child.$getIsNative()) {
-        continue;
-      }
-      const result = fn(child, i);
+  $forEachChild(fn, {includeResourceChildren = true, includeNativeChildren} = {}) {
+    if (includeResourceChildren) {
+      const children = this._children;
+      const result = _forEachItems(children, fn);
       if (result === false) {
-        break;
+        return false;
+      }
+    }
+
+    if (includeNativeChildren) {
+      const children = this.constructor._getNativeChildren();
+      const result = _forEachItems(children, fn);
+      if (result === false) {
+        return false;
       }
     }
   }
 
   async $forEachChildAsync(fn, {includeNativeChildren} = {}) {
-    const childs = [];
-    this.$forEachChild(child => childs.push(child), {includeNativeChildren});
-    for (const child of childs) {
+    for (const child of this.$getChildren({includeNativeChildren})) {
       const result = await fn(child);
       if (result === false) {
-        break;
+        return false;
       }
     }
+  }
+
+  $getChildren({includeNativeChildren} = {}) {
+    const children = [];
+    this.$forEachChild(child => children.push(child), {includeNativeChildren});
+    return children;
   }
 
   $hasChildren() {
@@ -899,7 +1135,7 @@ export class Resource {
     return result;
   }
 
-  async $setChild(key, definition, {isUnpublishable} = {}) {
+  async $setChild(key, definition, {parse, isUnpublishable, isNative} = {}) {
     const removedChildIndex = this.$removeChild(key);
 
     const base = this.$getChildFromBases(key);
@@ -909,7 +1145,9 @@ export class Resource {
       key,
       directory: this.$getCurrentDirectory({throwIfUndefined: false}),
       parent: this,
-      isUnpublishable
+      parse,
+      isUnpublishable,
+      isNative: isNative || (base && base.$getIsNative())
     });
 
     if (!base) {
@@ -1409,21 +1647,25 @@ export class Resource {
   }
 
   _printMethodInput() {
-    const input = this.$getInput() || [];
+    const input = this.$getInput();
 
-    const params = [];
-    for (const param of input) {
-      if (param.$hidden) {
-        continue;
-      }
-      const formattedParam = param._formatChild();
-      params.push(formattedParam);
+    if (input === undefined) {
+      return;
     }
 
-    if (params.length) {
+    const children = [];
+    input.$forEachChild(child => {
+      if (child.$hidden) {
+        return;
+      }
+      const formattedChild = child._formatChild();
+      children.push(formattedChild);
+    });
+
+    if (children.length) {
       emptyLine();
       print('Input:');
-      print(formatTable(params, {columnGap: 2, margins: {left: 2}}));
+      print(formatTable(children, {columnGap: 2, margins: {left: 2}}));
     }
   }
 
@@ -1433,10 +1675,6 @@ export class Resource {
 
     this.$forEachChild(
       child => {
-        if (showNative && !child.$getIsNative()) {
-          return;
-        }
-
         if (child.$hidden) {
           return;
         }
@@ -1458,7 +1696,7 @@ export class Resource {
         section[type === 'method' ? 'methods' : 'attributes'].push(formattedChild);
         allData.push(formattedChild);
       },
-      {includeNativeChildren: showNative}
+      {includeResourceChildren: !showNative, includeNativeChildren: showNative}
     );
 
     for (let i = 0; i < sections.length; i++) {
@@ -1758,213 +1996,14 @@ export class Resource {
   }
 }
 
-let _nativeChildren;
-async function getNativeChildren() {
-  if (_nativeChildren) {
-    return _nativeChildren;
-  }
-
-  const children = {
-    '@parent': {
-      '@description': 'Get the parent of the resource',
-      '@getter': {
-        '@type': 'method'
-      }
-    },
-    '@console': {
-      '@description': 'Shortcut to the console tool (tool/console)',
-      '@getter': {
-        '@type': 'method',
-        '@run': `@import ${CONSOLE_TOOL_RESOURCE}`
-      }
-    },
-    '@registry': {
-      '@description': 'Shortcut to Resdir Registry (resdir/registry)',
-      '@getter': {
-        '@type': 'method',
-        '@run': `@import ${RESDIR_REGISTRY_RESOURCE}`
-      }
-    },
-    '@create': {
-      '@type': 'method',
-      '@description': 'Create a resource in the current directory',
-      '@input': {
-        typeOrImport: {
-          '@type': 'string',
-          '@aliases': ['type', 'import'],
-          '@position': 0
-        }
-      }
-    },
-    '@add': {
-      '@type': 'method',
-      '@description': 'Add a property',
-      '@input': {
-        typeOrImport: {
-          '@type': 'string',
-          '@aliases': ['type', 'import'],
-          '@position': 0
-        },
-        key: {
-          '@type': 'string',
-          '@position': 1
-        }
-      }
-    },
-    '@remove': {
-      '@type': 'method',
-      '@description': 'Remove a property',
-      '@aliases': ['@rm'],
-      '@input': {
-        key: {
-          '@type': 'string',
-          '@position': 0
-        }
-      }
-    },
-    '@print': {
-      '@type': 'method',
-      '@description': 'Print resource content',
-      '@aliases': ['@p']
-    },
-    '@inspect': {
-      '@type': 'method',
-      '@description': 'Inspect resource definition',
-      '@aliases': ['@i']
-    },
-    '@install': {
-      '@type': 'method',
-      '@description': 'Broadcast \'@install\' event',
-      '@input': {
-        eventInput: {
-          '@type': 'object',
-          '@isSubInput': true
-        }
-      }
-    },
-    '@lint': {
-      '@type': 'method',
-      '@description': 'Broadcast \'@lint\' event',
-      '@input': {
-        eventInput: {
-          '@type': 'object',
-          '@isSubInput': true
-        }
-      }
-    },
-    '@test': {
-      '@type': 'method',
-      '@description': 'Broadcast \'@test\' event',
-      '@input': {
-        eventInput: {
-          '@type': 'object',
-          '@isSubInput': true
-        }
-      }
-    },
-    '@build': {
-      '@type': 'method',
-      '@description': 'Broadcast \'@build\' event',
-      '@input': {
-        eventInput: {
-          '@type': 'object',
-          '@isSubInput': true
-        }
-      }
-    },
-    '@load': {
-      '@type': 'method',
-      '@description': 'Load a resource',
-      '@input': {
-        specifier: {
-          '@type': 'string',
-          '@position': 0
-        }
-      }
-    },
-    '@import': {
-      '@type': 'method',
-      '@description': 'Import a resource',
-      '@input': {
-        specifier: {
-          '@type': 'string',
-          '@position': 0
-        }
-      }
-    },
-    '@emit': {
-      '@type': 'method',
-      '@description': 'Emit an event',
-      '@input': {
-        event: {
-          '@type': 'string',
-          '@position': 0
-        },
-        eventInput: {
-          '@type': 'object',
-          '@isSubInput': true
-        }
-      }
-    },
-    '@broadcast': {
-      '@type': 'method',
-      '@description': 'Broadcast an event',
-      '@input': {
-        event: {
-          '@type': 'string',
-          '@position': 0
-        },
-        eventInput: {
-          '@type': 'object',
-          '@isSubInput': true
-        }
-      }
-    },
-    '@normalize': {
-      '@type': 'method',
-      '@description': 'Normalize the current resource file',
-      '@input': {
-        format: {
-          '@type': 'string',
-          '@value': 'JSON'
-        }
-      }
-    },
-    '@help': {
-      '@type': 'method',
-      '@description': 'Show resource help',
-      '@aliases': ['@h'],
-      '@input': {
-        keys: {
-          '@type': 'array',
-          '@position': 0
-        },
-        showNative: {
-          '@type': 'boolean',
-          '@aliases': ['native']
-        }
-      }
-    },
-    '@@help': {
-      '@type': 'method',
-      '@description': 'Show native attributes and methods',
-      '@aliases': ['@@h'],
-      '@input': {
-        keys: {
-          '@type': 'array',
-          '@position': 0
-        }
-      }
+function _forEachItems(items, fn) {
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const result = fn(item, i);
+    if (result === false) {
+      return false;
     }
-  };
-
-  _nativeChildren = [];
-  for (const [key, definition] of entries(children)) {
-    const child = await Resource.$create(definition, {key, isNative: true});
-    _nativeChildren.push(child);
   }
-
-  return _nativeChildren;
 }
 
 function findSubclass(A, B) {
