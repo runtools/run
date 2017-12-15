@@ -1309,7 +1309,7 @@ export class Resource {
     });
   }
 
-  async '@create'({typeOrImport} = {}, {verbose, quiet, debug} = {}) {
+  async '@create'({typeOrImport} = {}, environment) {
     if (!typeOrImport) {
       throw new Error(`${formatCode('typeOrImport')} argument is missing`);
     }
@@ -1348,17 +1348,15 @@ export class Resource {
       },
       {
         intro: `Creating resource...`,
-        outro: `Resource created`,
-        verbose,
-        quiet,
-        debug
-      }
+        outro: `Resource created`
+      },
+      environment
     );
 
     return resource;
   }
 
-  async '@add'({typeOrImport, key} = {}, {verbose, quiet, debug} = {}) {
+  async '@add'({typeOrImport, key} = {}, environment) {
     if (!typeOrImport) {
       throw new Error(`${formatCode('typeOrImport')} argument is missing`);
     }
@@ -1399,17 +1397,15 @@ export class Resource {
       },
       {
         intro: `Adding property...`,
-        outro: `Property added`,
-        verbose,
-        quiet,
-        debug
-      }
+        outro: `Property added`
+      },
+      environment
     );
 
     return child;
   }
 
-  async '@remove'({key} = {}, {verbose, quiet, debug} = {}) {
+  async '@remove'({key} = {}, environment) {
     if (!key) {
       throw new Error(`${formatCode('key')} argument is missing`);
     }
@@ -1426,11 +1422,9 @@ export class Resource {
       },
       {
         intro: `Removing property...`,
-        outro: `Property removed`,
-        verbose,
-        quiet,
-        debug
-      }
+        outro: `Property removed`
+      },
+      environment
     );
   }
 
