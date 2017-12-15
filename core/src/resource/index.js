@@ -69,10 +69,12 @@ export class Resource {
     '@create': {
       '@type': 'method',
       '@description': 'Create a resource in the current directory',
+      '@examples': ['@create array', '@create js/npm-package', '@create resdir/resource#^1.2.0'],
       '@input': {
-        typeOrImport: {
+        typeOrSpecifier: {
           '@type': 'string',
-          '@aliases': ['type', 'import'],
+          '@description': 'Type or resource specifier',
+          '@examples': ['array', 'js/npm-package', 'resdir/resource#^1.2.0'],
           '@position': 0
         }
       }
@@ -80,14 +82,22 @@ export class Resource {
     '@add': {
       '@type': 'method',
       '@description': 'Add a property',
+      '@examples': [
+        '@add string firstName',
+        '@add js/esnext-transpiler transpiler',
+        '@add aws/website#^1.2.0 frontend'
+      ],
       '@input': {
-        typeOrImport: {
+        typeOrSpecifier: {
           '@type': 'string',
-          '@aliases': ['type', 'import'],
+          '@description': 'Type or resource specifier',
+          '@examples': ['string', 'js/esnext-transpiler', 'aws/website#^1.2.0'],
           '@position': 0
         },
         key: {
           '@type': 'string',
+          '@description': 'Key of the property to add',
+          '@examples': ['firstName', 'age', 'frontend'],
           '@position': 1
         }
       }
@@ -95,60 +105,67 @@ export class Resource {
     '@remove': {
       '@type': 'method',
       '@description': 'Remove a property',
+      '@examples': ['@remove firstName', '@remove frontend'],
       '@aliases': ['@rm'],
       '@input': {
         key: {
           '@type': 'string',
+          '@description': 'Key of the property to remove',
+          '@examples': ['firstName', 'frontend'],
           '@position': 0
         }
       }
     },
     '@print': {
       '@type': 'method',
-      '@description': 'Print resource content',
+      '@description': 'Print resource\'s content',
       '@aliases': ['@p']
     },
     '@inspect': {
       '@type': 'method',
-      '@description': 'Inspect resource definition',
+      '@description': 'Inspect resource\'s definition',
       '@aliases': ['@i']
     },
     '@install': {
       '@type': 'method',
-      '@description': 'Broadcast \'@install\' event',
+      '@description': 'Broadcast an \'@install\' event',
       '@input': {
         eventInput: {
           '@type': 'object',
+          '@description': 'Input sent to event listeners',
           '@isSubInput': true
         }
       }
     },
     '@lint': {
       '@type': 'method',
-      '@description': 'Broadcast \'@lint\' event',
+      '@description': 'Broadcast a \'@lint\' event',
       '@input': {
         eventInput: {
           '@type': 'object',
+          '@description': 'Input sent to event listeners',
           '@isSubInput': true
         }
       }
     },
     '@test': {
       '@type': 'method',
-      '@description': 'Broadcast \'@test\' event',
+      '@description': 'Broadcast a \'@test\' event',
       '@input': {
         eventInput: {
           '@type': 'object',
+          '@description': 'Input sent to event listeners',
           '@isSubInput': true
         }
       }
     },
     '@build': {
       '@type': 'method',
-      '@description': 'Broadcast \'@build\' event',
+      '@description': 'Broadcast a \'@build\' event',
       '@input': {
         eventInput: {
           '@type': 'object',
+          '@description': 'Input sent to event listeners',
           '@isSubInput': true
         }
       }
@@ -156,9 +173,12 @@ export class Resource {
     '@load': {
       '@type': 'method',
       '@description': 'Load a resource',
+      '@examples': ['@load resdir/example', '@load resdir/registry#^1.2.0'],
       '@input': {
         specifier: {
           '@type': 'string',
+          '@description': 'Resource specifier',
+          '@examples': ['resdir/example', 'resdir/registry#^1.2.0'],
           '@position': 0
         }
       }
@@ -166,9 +186,12 @@ export class Resource {
     '@import': {
       '@type': 'method',
       '@description': 'Import a resource',
+      '@examples': ['@import tool/notifier', '@import tool/console#^1.2.0'],
       '@input': {
         specifier: {
           '@type': 'string',
+          '@description': 'Resource specifier',
+          '@examples': ['tool/notifier', 'tool/console#^1.2.0'],
           '@position': 0
         }
       }
@@ -176,13 +199,17 @@ export class Resource {
     '@emit': {
       '@type': 'method',
       '@description': 'Emit an event',
+      '@examples': ['@emit websiteDeployed', '@emit build -- example.js --production'],
       '@input': {
         event: {
           '@type': 'string',
+          '@description': 'Event name',
+          '@examples': ['build', 'websiteDeployed'],
           '@position': 0
         },
         eventInput: {
           '@type': 'object',
+          '@description': 'Input sent to event listeners',
           '@isSubInput': true
         }
       }
@@ -190,13 +217,17 @@ export class Resource {
     '@broadcast': {
       '@type': 'method',
       '@description': 'Broadcast an event',
+      '@examples': ['@broadcast websiteDeployed', '@broadcast build -- example.js --production'],
       '@input': {
         event: {
           '@type': 'string',
+          '@description': 'Event name',
+          '@examples': ['build', 'websiteDeployed'],
           '@position': 0
         },
         eventInput: {
           '@type': 'object',
+          '@description': 'Input sent to event listeners',
           '@isSubInput': true
         }
       }
@@ -204,35 +235,43 @@ export class Resource {
     '@normalize': {
       '@type': 'method',
       '@description': 'Normalize the current resource file',
+      '@examples': ['@normalize', '@normalize --format=JSON5'],
       '@input': {
         format: {
           '@type': 'string',
+          '@description': 'Preferred format',
+          '@examples': ['JSON', 'JSON5'],
           '@value': 'JSON'
         }
       }
     },
     '@help': {
       '@type': 'method',
-      '@description': 'Show resource help',
+      '@description': 'Show resource\'s help',
+      '@examples': ['@help', '@help frontend,deploy', '@help @add'],
       '@aliases': ['@h'],
       '@input': {
         keys: {
           '@type': 'array',
+          '@description': 'Key path to sub-resources, attributes or methods',
           '@position': 0
         },
         showNative: {
           '@type': 'boolean',
-          '@aliases': ['native']
+          '@aliases': ['native'],
+          '@hidden': true
         }
       }
     },
     '@@help': {
       '@type': 'method',
-      '@description': 'Show native attributes and methods',
+      '@description': 'Show help for native attributes and methods',
+      '@examples': ['@@help', '@@help keywords'],
       '@aliases': ['@@h'],
       '@input': {
         keys: {
           '@type': 'array',
+          '@description': 'Key path to sub-resources, attributes or methods',
           '@position': 0
         }
       }
@@ -457,6 +496,7 @@ export class Resource {
       this._resourceNativeChildren = [];
       for (const [key, definition] of entries(this.$RESOURCE_NATIVE_CHILDREN)) {
         const child = await Resource.$create(definition, {key, isNative: true});
+        child.$setCreator(this.prototype);
         this._resourceNativeChildren.push(child);
       }
     }
@@ -695,7 +735,7 @@ export class Resource {
           break;
         }
       }
-      if (isSelf || deepSearch) {
+      if ((isSelf || deepSearch) && resource._bases) {
         resources.push(...resource._bases);
       }
       isSelf = false;
@@ -1060,9 +1100,11 @@ export class Resource {
   $forEachChild(fn, {includeResourceChildren = true, includeNativeChildren} = {}) {
     if (includeResourceChildren) {
       const children = this._children;
-      const result = _forEachItems(children, fn);
-      if (result === false) {
-        return false;
+      if (children) {
+        const result = _forEachItems(children, fn);
+        if (result === false) {
+          return false;
+        }
       }
     }
 
@@ -1240,16 +1282,6 @@ export class Resource {
 
       child = await child.$resolveGetter({parent: this});
 
-      // const nextKey = getPositionalArgument(args, 0);
-      // if (nextKey === '@help' || nextKey === '@h') {
-      //   shiftPositionalArguments(args);
-      //   return await child['@help'](args);
-      // }
-      // if (nextKey === '@@help' || nextKey === '@@h') {
-      //   shiftPositionalArguments(args);
-      //   return await child['@@help'](args);
-      // }
-
       return await child.$invoke(args, {parent: this});
     });
   }
@@ -1309,17 +1341,17 @@ export class Resource {
     });
   }
 
-  async '@create'({typeOrImport} = {}, environment) {
-    if (!typeOrImport) {
-      throw new Error(`${formatCode('typeOrImport')} argument is missing`);
+  async '@create'({typeOrSpecifier} = {}, environment) {
+    if (!typeOrSpecifier) {
+      throw new Error(`${formatCode('typeOrSpecifier')} argument is missing`);
     }
 
     let type;
-    let importArg;
-    if (getResourceClass(typeOrImport)) {
-      type = typeOrImport;
+    let specifier;
+    if (getResourceClass(typeOrSpecifier)) {
+      type = typeOrSpecifier;
     } else {
-      importArg = typeOrImport;
+      specifier = typeOrSpecifier;
     }
 
     const resource = await task(
@@ -1332,9 +1364,9 @@ export class Resource {
         }
 
         const definition = {};
-        if (importArg) {
-          importArg = await this._pinResource(importArg);
-          definition['@import'] = importArg;
+        if (specifier) {
+          specifier = await this._pinResource(specifier);
+          definition['@import'] = specifier;
         }
         if (type) {
           definition['@type'] = type;
@@ -1362,11 +1394,11 @@ export class Resource {
     }
 
     let type;
-    let importArg;
+    let specifier;
     if (getResourceClass(typeOrImport)) {
       type = typeOrImport;
     } else {
-      importArg = typeOrImport;
+      specifier = typeOrImport;
     }
 
     if (!key) {
@@ -1381,9 +1413,9 @@ export class Resource {
     child = await task(
       async () => {
         const definition = {};
-        if (importArg) {
-          importArg = await this._pinResource(importArg);
-          definition['@import'] = importArg;
+        if (specifier) {
+          specifier = await this._pinResource(specifier);
+          definition['@import'] = specifier;
         }
         if (type) {
           definition['@type'] = type;
@@ -1543,7 +1575,11 @@ export class Resource {
     if (key) {
       let child;
       if (type === 'method') {
-        throw new Error('UNIMPLEMENTED');
+        const input = this.$getInput();
+        child = input && input.$findChild(key);
+        if (!child) {
+          throw new Error(`No method input attribute found with this key: ${formatCode(key)}`);
+        }
       } else {
         child = this.$findChild(key, {includeNativeChildren: true});
         if (!child) {
@@ -1673,11 +1709,8 @@ export class Resource {
           return;
         }
 
-        let creator;
-        if (!showNative) {
-          creator = child.$getCreator();
-          assert(creator, 'A resource child should always have a creator');
-        }
+        const creator = child.$getCreator();
+        assert(creator, 'A resource child should always have a creator');
 
         let section = sections.find(section => section.creator === creator);
         if (!section) {
@@ -1696,22 +1729,23 @@ export class Resource {
     for (let i = 0; i < sections.length; i++) {
       const section = sections[i];
 
-      const specifier =
-        section.creator && section.creator._formatResourceSpecifier({directory: process.cwd()});
-      if (specifier !== undefined) {
+      const title = showNative ?
+        section.creator._formatType() :
+        section.creator._formatResourceSpecifier({directory: process.cwd()});
+      if (title) {
         emptyLine();
-        print(formatBold(specifier));
+        print(formatBold(title));
       }
 
       if (section.attributes.length) {
         emptyLine();
-        print(showNative ? 'Native attributes:' : 'Attributes:');
+        print('Attributes:');
         print(formatTable(section.attributes, {allData, columnGap: 2, margins: {left: 2}}));
       }
 
       if (section.methods.length) {
         emptyLine();
-        print(showNative ? 'Native methods:' : 'Methods');
+        print('Methods:');
         print(formatTable(section.methods, {allData, columnGap: 2, margins: {left: 2}}));
       }
     }
@@ -1730,26 +1764,33 @@ export class Resource {
 
     const description = this.$description;
     let formattedDescription = description || '';
-    let aliasesAndPosition = '';
+    let cliAttributes = '';
 
     const aliases = this._formatAliases({removeKey: true});
     if (aliases) {
-      aliasesAndPosition += aliases;
+      cliAttributes += aliases;
     }
 
     const position = this._formatPosition();
     if (position) {
-      if (aliasesAndPosition) {
-        aliasesAndPosition += '; ';
+      if (cliAttributes) {
+        cliAttributes += '; ';
       }
-      aliasesAndPosition += position;
+      cliAttributes += position;
     }
 
-    if (aliasesAndPosition) {
+    if (this.$isSubInput) {
+      if (cliAttributes) {
+        cliAttributes += '; ';
+      }
+      cliAttributes += 'sub-input';
+    }
+
+    if (cliAttributes) {
       if (formattedDescription) {
         formattedDescription += ' ';
       }
-      formattedDescription += formatDim(`(${aliasesAndPosition})`);
+      formattedDescription += formatDim(`(${cliAttributes})`);
     }
 
     return [formattedKey, formattedDescription];
@@ -1760,6 +1801,9 @@ export class Resource {
   }
 
   _formatType() {
+    if (this.$getGetter()) {
+      return 'getter';
+    }
     const type = this._getType();
     if (type === 'method') {
       return this.$getIsNative() ? 'native method' : 'method';
@@ -1991,6 +2035,14 @@ export class Resource {
 }
 
 function _forEachItems(items, fn) {
+  if (!Array.isArray(items)) {
+    throw new TypeError('\'items\' argument must be an array');
+  }
+
+  if (typeof fn !== 'function') {
+    throw new TypeError('\'fn\' argument must be a function');
+  }
+
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
     const result = fn(item, i);

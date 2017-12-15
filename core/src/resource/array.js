@@ -6,6 +6,13 @@ import ValueResource from './value';
 export class ArrayResource extends ValueResource {
   static $RESOURCE_TYPE = 'array';
 
+  static $RESOURCE_NATIVE_CHILDREN = {
+    '@countItems': {
+      '@type': 'method',
+      '@description': 'Return the number of items in the array'
+    }
+  };
+
   static $normalizeValue(value) {
     if (!Array.isArray(value)) {
       throw new Error('Invalid value type');
@@ -27,6 +34,12 @@ export class ArrayResource extends ValueResource {
       return [];
     }
     return str.split(',');
+  }
+
+  async '@countItems'() {
+    return {
+      result: this.$value ? this.$value.length : 0
+    };
   }
 }
 
