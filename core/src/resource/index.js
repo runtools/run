@@ -2,7 +2,7 @@ import {join, resolve, dirname, extname, isAbsolute} from 'path';
 import {existsSync, unlinkSync} from 'fs';
 import {homedir} from 'os';
 import assert from 'assert';
-import {isPlainObject, isEmpty, union, pull, upperFirst, entries} from 'lodash';
+import {isPlainObject, isEmpty, union, pull, upperFirst, entries, compact} from 'lodash';
 import isDirectory from 'is-directory';
 import {ensureDirSync, ensureFileSync} from 'fs-extra';
 import {getProperty, takeProperty} from '@resdir/util';
@@ -241,7 +241,7 @@ export class Resource {
           '@type': 'string',
           '@description': 'Preferred format',
           '@examples': ['JSON', 'JSON5'],
-          '@value': 'JSON'
+          '@default': 'JSON'
         }
       }
     },
@@ -403,14 +403,12 @@ export class Resource {
 
     const location = getProperty(normalizedDefinition, '@load');
 
-    if (
-      this === Resource &&
-      types.length === 0 &&
-      location === undefined &&
-      base === undefined &&
-      normalizedDefinition['@value'] !== undefined
-    ) {
-      types = [inferType(normalizedDefinition['@value'])];
+    if (this === Resource && types.length === 0 && location === undefined && base === undefined) {
+      if (normalizedDefinition['@value'] !== undefined) {
+        types = [inferType(normalizedDefinition['@value'])];
+      } else if (normalizedDefinition['@default'] !== undefined) {
+        types = [inferType(normalizedDefinition['@default'])];
+      }
     }
 
     let NativeClass;
@@ -1592,6 +1590,7 @@ export class Resource {
 
     this._printKeyAndType();
     this._printDescription();
+    this._printDefault();
     this._printAliases();
     this._printPosition();
     this._printExamples();
@@ -1623,6 +1622,14 @@ export class Resource {
     const description = this.$description;
     if (description) {
       print(description);
+    }
+  }
+
+  _printDefault() {
+    const defaultValue = this._formatDefault();
+    if (defaultValue) {
+      emptyLine();
+      print(upperFirst(defaultValue));
     }
   }
 
@@ -1764,33 +1771,18 @@ export class Resource {
 
     const description = this.$description;
     let formattedDescription = description || '';
-    let cliAttributes = '';
-
-    const aliases = this._formatAliases({removeKey: true});
-    if (aliases) {
-      cliAttributes += aliases;
-    }
-
-    const position = this._formatPosition();
-    if (position) {
-      if (cliAttributes) {
-        cliAttributes += '; ';
-      }
-      cliAttributes += position;
-    }
-
-    if (this.$isSubInput) {
-      if (cliAttributes) {
-        cliAttributes += '; ';
-      }
-      cliAttributes += 'sub-input';
-    }
-
-    if (cliAttributes) {
+    let attributes = [
+      this._formatDefault(),
+      this._formatAliases({removeKey: true}),
+      this._formatPosition(),
+      this._formatSubInput()
+    ];
+    attributes = compact(attributes);
+    if (attributes.length) {
       if (formattedDescription) {
         formattedDescription += ' ';
       }
-      formattedDescription += formatDim(`(${cliAttributes})`);
+      formattedDescription += formatDim(`(${attributes.join('; ')})`);
     }
 
     return [formattedKey, formattedDescription];
@@ -1835,6 +1827,14 @@ export class Resource {
     return formatString(specifier, {addQuotes: false});
   }
 
+  _formatDefault() {
+    const defaultValue = this.$default;
+    if (defaultValue === undefined) {
+      return '';
+    }
+    return 'default: ' + formatValue(defaultValue);
+  }
+
   _formatAliases({removeKey} = {}) {
     let aliases = this.$aliases;
     if (aliases === undefined) {
@@ -1863,6 +1863,10 @@ export class Resource {
       return '';
     }
     return 'position: ' + formatValue(position);
+  }
+
+  _formatSubInput() {
+    return this.$isSubInput ? 'sub-input' : '';
   }
 
   static $normalize(definition, _options) {

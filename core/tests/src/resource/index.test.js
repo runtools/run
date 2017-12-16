@@ -15,18 +15,22 @@ describe('Resource', () => {
     expect(await Resource.$create({'@type': 'boolean'})).toBeInstanceOf(BooleanResource);
     expect(await Resource.$create(true)).toBeInstanceOf(BooleanResource);
     expect(await Resource.$create({'@value': false})).toBeInstanceOf(BooleanResource);
+    expect(await Resource.$create({'@default': false})).toBeInstanceOf(BooleanResource);
 
     expect(await Resource.$create({'@type': 'number'})).toBeInstanceOf(NumberResource);
     expect(await Resource.$create(123.45)).toBeInstanceOf(NumberResource);
     expect(await Resource.$create({'@value': 0})).toBeInstanceOf(NumberResource);
+    expect(await Resource.$create({'@default': 0})).toBeInstanceOf(NumberResource);
 
     expect(await Resource.$create({'@type': 'string'})).toBeInstanceOf(StringResource);
     expect(await Resource.$create('Hello')).toBeInstanceOf(StringResource);
     expect(await Resource.$create({'@value': ''})).toBeInstanceOf(StringResource);
+    expect(await Resource.$create({'@default': ''})).toBeInstanceOf(StringResource);
 
     expect(await Resource.$create({'@type': 'array'})).toBeInstanceOf(ArrayResource);
     expect(await Resource.$create([1])).toBeInstanceOf(ArrayResource);
     expect(await Resource.$create({'@value': []})).toBeInstanceOf(ArrayResource);
+    expect(await Resource.$create({'@default': []})).toBeInstanceOf(ArrayResource);
 
     expect(await Resource.$create({'@type': 'object'})).toBeInstanceOf(ObjectResource);
     expect(await Resource.$create({'@type': 'object', '@value': {name: 'Manu'}})).toBeInstanceOf(ObjectResource);
@@ -34,6 +38,7 @@ describe('Resource', () => {
       name: 'Manu'
     });
     expect(await Resource.$create({'@value': {}})).toBeInstanceOf(ObjectResource);
+    expect(await Resource.$create({'@default': {}})).toBeInstanceOf(ObjectResource);
   });
 
   test('emptiness', async () => {

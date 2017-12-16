@@ -21,7 +21,8 @@ export class ObjectResource extends ValueResource {
       definition['@type'] === undefined &&
       definition['@import'] === undefined &&
       definition['@implementation'] === undefined &&
-      definition['@value'] === undefined
+      definition['@value'] === undefined &&
+      definition['@default'] === undefined
     ) {
       definition = {'@value': definition};
     }

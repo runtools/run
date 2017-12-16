@@ -22,6 +22,16 @@ describe('ObjectResource', () => {
     await expect(ObjectResource.$create({'@type': 'object', '@value': 'hello'})).rejects.toBeInstanceOf(Error);
   });
 
+  test('default', async () => {
+    expect((await ObjectResource.$create()).$default).toBeUndefined();
+    expect((await ObjectResource.$create()).$value).toBeUndefined();
+    expect((await ObjectResource.$create({'@default': {}})).$default).toEqual({});
+    expect((await ObjectResource.$create({'@default': {}})).$value).toEqual({});
+    expect((await ObjectResource.$create({'@value': {name: 'Manu'}, '@default': {}})).$default).toEqual({});
+    expect((await ObjectResource.$create({'@value': {name: 'Manu'}, '@default': {}})).$value).toEqual({name: 'Manu'});
+    await expect(ObjectResource.$create({'@default': 'hello'})).rejects.toBeInstanceOf(Error);
+  });
+
   test('immutability', async () => {
     const obj = await ObjectResource.$create({name: 'Manu'});
     expect(obj.$value).toEqual({name: 'Manu'});
@@ -33,6 +43,26 @@ describe('ObjectResource', () => {
       obj.$value.age = 44;
     }).toThrow();
     expect(obj.$value.age).toBeUndefined();
+
+    const obj2 = await ObjectResource.$create({'@default': {name: 'Manu'}});
+    expect(obj2.$default).toEqual({name: 'Manu'});
+    expect(obj2.$value).toEqual({name: 'Manu'});
+    expect(() => {
+      obj2.$default.name = 'Manuel';
+    }).toThrow();
+    expect(() => {
+      obj2.$value.name = 'Manuel';
+    }).toThrow();
+    expect(obj2.$default.name).toBe('Manu');
+    expect(obj2.$value.name).toBe('Manu');
+    expect(() => {
+      obj2.$default.age = 44;
+    }).toThrow();
+    expect(() => {
+      obj2.$value.age = 44;
+    }).toThrow();
+    expect(obj2.$default.age).toBeUndefined();
+    expect(obj2.$value.age).toBeUndefined();
   });
 
   test('serialization', async () => {
@@ -43,5 +73,8 @@ describe('ObjectResource', () => {
       age: 44
     });
     expect((await ObjectResource.$create({'@type': 'object', '@value': {name: 'Manu'}})).$serialize()).toEqual({'@type': 'object', '@value': {name: 'Manu'}});
+    expect((await ObjectResource.$create({'@default': {name: 'Manu'}})).$serialize()).toEqual({
+      '@default': {name: 'Manu'}
+    });
   });
 });

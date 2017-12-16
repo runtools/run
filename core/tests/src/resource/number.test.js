@@ -12,6 +12,16 @@ describe('NumberResource', () => {
     await expect(NumberResource.$create('hello')).rejects.toBeInstanceOf(Error);
   });
 
+  test('default', async () => {
+    expect((await NumberResource.$create()).$default).toBeUndefined();
+    expect((await NumberResource.$create()).$value).toBeUndefined();
+    expect((await NumberResource.$create({'@default': 0})).$default).toBe(0);
+    expect((await NumberResource.$create({'@default': 0})).$value).toBe(0);
+    expect((await NumberResource.$create({'@value': 1, '@default': 0})).$default).toBe(0);
+    expect((await NumberResource.$create({'@value': 1, '@default': 0})).$value).toBe(1);
+    await expect(NumberResource.$create({'@default': 'hi'})).rejects.toBeInstanceOf(Error);
+  });
+
   test('parsing', async () => {
     await expect(NumberResource.$create('123')).rejects.toBeInstanceOf(Error);
     expect((await NumberResource.$create('123', {parse: true})).$value).toBe(123);
@@ -24,5 +34,8 @@ describe('NumberResource', () => {
   test('serialization', async () => {
     expect((await NumberResource.$create()).$serialize()).toBeUndefined();
     expect((await NumberResource.$create(123.45)).$serialize()).toBe(123.45);
+    expect((await NumberResource.$create({'@default': 0})).$serialize()).toEqual({
+      '@default': 0
+    });
   });
 });

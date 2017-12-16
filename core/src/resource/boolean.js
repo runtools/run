@@ -19,7 +19,7 @@ export class BooleanResource extends ValueResource {
     return super.$normalize(definition, options);
   }
 
-  static $parse(str) {
+  static $parseValue(str) {
     const originalString = str;
     str = str.toLowerCase();
     if (str === '1' || str === 'true' || str === 'yes' || str === 'on') {

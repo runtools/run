@@ -7,16 +7,12 @@ export class BinaryResource extends ValueResource {
 
   static $normalizeValue(value) {
     if (typeof value === 'string') {
-      return this.$parse(value);
+      return this.$parseValue(value);
     }
     if (Buffer.isBuffer(value)) {
       return value;
     }
     throw new Error('Invalid value type');
-  }
-
-  $serializeValue() {
-    return this._value && BASE64_PREFIX + this._value.toString('base64');
   }
 
   static $normalize(definition, options) {
@@ -26,13 +22,17 @@ export class BinaryResource extends ValueResource {
     return super.$normalize(definition, options);
   }
 
-  static $parse(str) {
+  static $parseValue(str) {
     if (str.startsWith(BASE64_PREFIX)) {
       str = str.slice(BASE64_PREFIX.length);
       const buffer = Buffer.from(str, 'base64');
       return buffer;
     }
     throw new Error(`Cannot convert a string to a binary`);
+  }
+
+  static $serializeValue(value) {
+    return value && BASE64_PREFIX + value.toString('base64');
   }
 }
 

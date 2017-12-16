@@ -29,7 +29,7 @@ export class ArrayResource extends ValueResource {
     return super.$normalize(definition, options);
   }
 
-  static $parse(str) {
+  static $parseValue(str) {
     if (!str) {
       return [];
     }

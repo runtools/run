@@ -112,7 +112,7 @@ function normalizeBoolean(boolean, options) {
     return boolean;
   }
   if (typeof boolean === 'string' && options && options.parse) {
-    return Boolean.$parse(boolean);
+    return Boolean.$parseValue(boolean);
   }
   throw new TypeError(`Attribute value type must be a boolean`);
 }

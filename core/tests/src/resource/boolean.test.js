@@ -11,6 +11,16 @@ describe('BooleanResource', () => {
     await expect(BooleanResource.$create(1)).rejects.toBeInstanceOf(Error);
   });
 
+  test('default', async () => {
+    expect((await BooleanResource.$create()).$default).toBeUndefined();
+    expect((await BooleanResource.$create()).$value).toBeUndefined();
+    expect((await BooleanResource.$create({'@default': false})).$default).toBe(false);
+    expect((await BooleanResource.$create({'@default': false})).$value).toBe(false);
+    expect((await BooleanResource.$create({'@value': true, '@default': false})).$default).toBe(false);
+    expect((await BooleanResource.$create({'@value': true, '@default': false})).$value).toBe(true);
+    await expect(BooleanResource.$create({'@default': 'yes'})).rejects.toBeInstanceOf(Error);
+  });
+
   test('parsing', async () => {
     await expect(BooleanResource.$create('true')).rejects.toBeInstanceOf(Error);
     expect((await BooleanResource.$create('true', {parse: true})).$value).toBe(true);
@@ -32,5 +42,8 @@ describe('BooleanResource', () => {
     expect((await BooleanResource.$create()).$serialize()).toBeUndefined();
     expect((await BooleanResource.$create(false)).$serialize()).toBe(false);
     expect((await BooleanResource.$create(true)).$serialize()).toBe(true);
+    expect((await BooleanResource.$create({'@default': false})).$serialize()).toEqual({
+      '@default': false
+    });
   });
 });

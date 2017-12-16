@@ -9,6 +9,7 @@ export class ValueResource extends Resource {
     definition = {...definition};
 
     const value = takeProperty(definition, '@value');
+    const defaultValue = takeProperty(definition, '@default');
 
     await super.$construct(definition, options);
 
@@ -16,11 +17,18 @@ export class ValueResource extends Resource {
       if (value !== undefined) {
         this.$value = value;
       }
+      if (defaultValue !== undefined) {
+        this.$default = defaultValue;
+      }
     });
   }
 
   get $value() {
-    return this._getInheritedValue('_value');
+    let value = this._getInheritedValue('_value');
+    if (value === undefined) {
+      value = this.$default;
+    }
+    return value;
   }
 
   set $value(value) {
@@ -30,8 +38,15 @@ export class ValueResource extends Resource {
     this._value = value;
   }
 
-  $serializeValue() {
-    return this._value;
+  get $default() {
+    return this._getInheritedValue('_default');
+  }
+
+  set $default(defaultValue) {
+    if (defaultValue !== undefined) {
+      defaultValue = this.constructor.$normalizeValue(defaultValue);
+    }
+    this._default = defaultValue;
   }
 
   $defaultAutoBoxing = true;
@@ -53,15 +68,19 @@ export class ValueResource extends Resource {
   static $normalize(definition, options) {
     if (definition !== undefined && !isPlainObject(definition)) {
       if (typeof definition === 'string' && options && options.parse) {
-        definition = this.$parse(definition);
+        definition = this.$parseValue(definition);
       }
       definition = {'@value': definition};
     }
     return super.$normalize(definition, options);
   }
 
-  static $parse(str) {
+  static $parseValue(str) {
     return str;
+  }
+
+  static $serializeValue(value) {
+    return value;
   }
 
   $serialize(options) {
@@ -71,9 +90,14 @@ export class ValueResource extends Resource {
       definition = {};
     }
 
-    const serializedValue = this.$serializeValue();
+    const serializedValue = this.constructor.$serializeValue(this._value);
     if (serializedValue !== undefined) {
       definition['@value'] = serializedValue;
+    }
+
+    const serializedDefault = this.constructor.$serializeValue(this._default);
+    if (serializedDefault !== undefined) {
+      definition['@default'] = serializedDefault;
     }
 
     const keys = Object.keys(definition);
