@@ -1,6 +1,6 @@
 import {isAbsolute} from 'path';
 import {isEmpty, isPlainObject, difference} from 'lodash';
-import {takeProperty, getPropertyKeyAndValue} from '@resdir/util';
+import {takeProperty, findProperty} from '@resdir/util';
 import {catchContext, formatString, formatCode} from '@resdir/console';
 import {
   makePositionalArgumentKey,
@@ -242,12 +242,12 @@ export class MethodResource extends Resource {
     }
 
     for (const child of normalizedInput.$getChildren()) {
-      const {key, value} = findArgument(input, child);
-      if (key !== undefined) {
-        delete input[key];
-        if (value !== undefined) {
-          await normalizedInput.$setChild(child.$getKey(), value, {parse});
+      const {foundKeys, childKey, value} = findArgument(input, child, {parse});
+      if (foundKeys.length) {
+        for (const key of foundKeys) {
+          delete input[key];
         }
+        await normalizedInput.$setChild(childKey, value, {parse});
       }
     }
 
@@ -262,18 +262,16 @@ export class MethodResource extends Resource {
           // Ignore native methods and getters
           continue;
         }
-        const {key, value} = findArgument(input, child);
-        if (key === undefined) {
-          continue;
+        const {foundKeys, childKey, value} = findArgument(input, child, {parse});
+        if (foundKeys.length) {
+          for (const key of foundKeys) {
+            delete input[key];
+          }
+          if (extractedEnvironment === undefined) {
+            extractedEnvironment = {};
+          }
+          extractedEnvironment[childKey] = value;
         }
-        delete input[key];
-        if (value === undefined) {
-          continue;
-        }
-        if (extractedEnvironment === undefined) {
-          extractedEnvironment = {};
-        }
-        extractedEnvironment[child.$getKey()] = value;
       }
     }
 
@@ -457,31 +455,62 @@ async function getEnvironment() {
   return _environment;
 }
 
-function findArgument(args, child) {
-  let {key, value} = getPropertyKeyAndValue(args, child.$getKey(), child.$aliases) || {};
+function findArgument(args, child, {parse}) {
+  const foundKeys = [];
+  const childKey = child.$getKey();
+  let value;
 
-  if (key === undefined) {
+  if (!parse) {
+    if (childKey in args) {
+      foundKeys.push(childKey);
+      value = args[childKey];
+    }
+  } else {
+    const result = findProperty(args, childKey, child.$aliases);
+    if (result) {
+      foundKeys.push(result.foundKey);
+      value = result.value;
+    }
+
     const position = child.$position;
     if (position !== undefined) {
       const positionalArgumentKey = makePositionalArgumentKey(position);
       if (positionalArgumentKey in args) {
-        key = positionalArgumentKey;
-        value = args[key];
+        foundKeys.push(positionalArgumentKey);
+        value = args[positionalArgumentKey];
       }
     }
-  }
 
-  if (key === undefined) {
+    if (child.$isVariadic) {
+      let position = child.$position;
+      if (position === undefined) {
+        throw new Error(`A ${formatCode('@isVariadic')} attribute must be paired with a ${formatCode('@position')} attribute`);
+      }
+      value = value !== undefined ? [value] : [];
+      while (true) {
+        position++;
+        const positionalArgumentKey = makePositionalArgumentKey(position);
+        if (!(positionalArgumentKey in args)) {
+          break;
+        }
+        foundKeys.push(positionalArgumentKey);
+        value.push(args[positionalArgumentKey]);
+      }
+      if (!value.length) {
+        value = undefined;
+      }
+    }
+
     if (child.$isSubInput) {
       const subArgumentsKey = getSubArgumentsKey();
       if (subArgumentsKey in args) {
-        key = subArgumentsKey;
-        value = args[key];
+        foundKeys.push(subArgumentsKey);
+        value = args[subArgumentsKey];
       }
     }
   }
 
-  return {key, value};
+  return {foundKeys, childKey, value};
 }
 
 function parseCommandLineArguments(argsAndOpts) {

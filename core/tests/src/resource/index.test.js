@@ -215,7 +215,7 @@ describe('Resource', () => {
     expect(parent.address.$getChild('city').$description).toBe('The city');
   });
 
-  test('Resource loaded from a file', async () => {
+  test('resource loaded from a file', async () => {
     const PersonConstructor = await Resource.$load('../../fixtures/person', {directory: __dirname});
     expect(PersonConstructor).toBeInstanceOf(Resource);
     expect(PersonConstructor.$getChild('name')).toBeUndefined();
@@ -229,7 +229,7 @@ describe('Resource', () => {
     expect(person.age).toBe(44);
   });
 
-  test('Resource loaded from a file via a @load attribute', async () => {
+  test('resource loaded from a file via a @load attribute', async () => {
     const person = await Resource.$create(
       {'@load': '../../fixtures/person-instance'},
       {directory: __dirname}
@@ -240,7 +240,7 @@ describe('Resource', () => {
     expect(person.age).toBe(44);
   });
 
-  test('Resource imported from a file', async () => {
+  test('resource imported from a file', async () => {
     const Person = await Resource.$import('../../fixtures/person', {directory: __dirname});
     expect(Person).toBeInstanceOf(Resource);
     expect(Person.$getChild('name')).toBeInstanceOf(StringResource);
@@ -249,7 +249,7 @@ describe('Resource', () => {
     expect(Person.age).toBeUndefined();
   });
 
-  test('Resource imported from a file via an @import attribute', async () => {
+  test('resource imported from a file via an @import attribute', async () => {
     const person = await Resource.$create(
       {'@import': '../../fixtures/person'},
       {directory: __dirname}
@@ -265,7 +265,7 @@ describe('Resource', () => {
     });
   });
 
-  test('Sub-resource imported from a file via an @import property', async () => {
+  test('sub-resource imported from a file via an @import property', async () => {
     const Company = await Resource.$create(
       {name: {'@type': 'string'}, boss: {'@import': '../../fixtures/person'}},
       {directory: __dirname}

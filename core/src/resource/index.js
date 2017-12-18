@@ -254,7 +254,8 @@ export class Resource {
         keys: {
           '@type': 'array',
           '@description': 'Key path to sub-resources, attributes or methods',
-          '@position': 0
+          '@position': 0,
+          '@isVariadic': true
         },
         showNative: {
           '@type': 'boolean',
@@ -272,7 +273,8 @@ export class Resource {
         keys: {
           '@type': 'array',
           '@description': 'Key path to sub-resources, attributes or methods',
-          '@position': 0
+          '@position': 0,
+          '@isVariadic': true
         }
       }
     }
@@ -331,6 +333,7 @@ export class Resource {
       set('$description', '@description');
       set('$aliases', '@aliases');
       set('$position', '@position');
+      set('$isVariadic', '@isVariadic');
       set('$isSubInput', '@isSubInput');
       set('$examples', '@examples');
 
@@ -1018,6 +1021,17 @@ export class Resource {
       throw new TypeError(`${formatCode('@position')} attribute must be a number`);
     }
     this._position = position;
+  }
+
+  get $isVariadic() {
+    return this._getInheritedValue('_isVariadic');
+  }
+
+  set $isVariadic(isVariadic) {
+    if (isVariadic !== undefined && typeof isVariadic !== 'boolean') {
+      throw new TypeError(`${formatCode('@isVariadic')} attribute must be a boolean`);
+    }
+    this._isVariadic = isVariadic;
   }
 
   get $isSubInput() {
@@ -1817,6 +1831,7 @@ export class Resource {
       this._formatDefault(),
       this._formatAliases({removeKey: true}),
       this._formatPosition(),
+      this._formatVariadic(),
       this._formatSubInput()
     ];
     attributes = compact(attributes);
@@ -1907,6 +1922,10 @@ export class Resource {
     return 'position: ' + formatValue(position);
   }
 
+  _formatVariadic() {
+    return this.$isVariadic ? 'variadic' : '';
+  }
+
   _formatSubInput() {
     return this.$isSubInput ? 'sub-input' : '';
   }
@@ -1947,6 +1966,10 @@ export class Resource {
 
     if (this._position !== undefined) {
       definition['@position'] = this._position;
+    }
+
+    if (this._isVariadic !== undefined) {
+      definition['@isVariadic'] = this._isVariadic;
     }
 
     if (this._isSubInput !== undefined) {

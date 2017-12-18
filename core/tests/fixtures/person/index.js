@@ -9,6 +9,10 @@ module.exports = base =>
       return result;
     }
 
+    async formatTags({tags}) {
+      return tags.join(', ');
+    }
+
     async build() {
       this.hasBeenBuilt = true;
     }

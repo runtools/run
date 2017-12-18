@@ -12,8 +12,8 @@
       "@type": "method",
       "@input": {
         "verb": {
-          "@position": 0,
-          "@value": "Hello"
+          "@default": "Hello",
+          "@position": 0
         },
         "shout": false
       }
@@ -22,11 +22,21 @@
       "@type": "method",
       "@input": {
         "verb": {
-          "@position": 0,
-          "@value": "Hi"
+          "@default": "Hi",
+          "@position": 0
         }
       },
       "@run": "formatGreetingMethod $verb"
+    },
+    "formatTags": {
+      "@type": "method",
+      "@input": {
+        "tags": {
+          "@default": [],
+          "@position": 0,
+          "@isVariadic": true
+        }
+      }
     },
     "address": {
       "city": {
