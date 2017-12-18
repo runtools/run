@@ -248,7 +248,7 @@ export class Resource {
     '@help': {
       '@type': 'method',
       '@description': 'Show resource\'s help',
-      '@examples': ['@help', '@help frontend,deploy', '@help @add'],
+      '@examples': ['@help', '@help frontend deploy', '@help @add'],
       '@aliases': ['@h'],
       '@input': {
         keys: {
@@ -1649,6 +1649,8 @@ export class Resource {
     this._printDefault();
     this._printAliases();
     this._printPosition();
+    this._printIsVariadic();
+    this._printIsSubInput();
     this._printExamples();
     if (type === 'method') {
       this._printMethodInput();
@@ -1702,6 +1704,22 @@ export class Resource {
     if (position) {
       emptyLine();
       print(upperFirst(position));
+    }
+  }
+
+  _printIsVariadic() {
+    const isVariadic = this._formatIsVariadic();
+    if (isVariadic) {
+      emptyLine();
+      print(upperFirst(isVariadic));
+    }
+  }
+
+  _printIsSubInput() {
+    const isSubInput = this._formatIsSubInput();
+    if (isSubInput) {
+      emptyLine();
+      print(upperFirst(isSubInput));
     }
   }
 
@@ -1831,8 +1849,8 @@ export class Resource {
       this._formatDefault(),
       this._formatAliases({removeKey: true}),
       this._formatPosition(),
-      this._formatVariadic(),
-      this._formatSubInput()
+      this._formatIsVariadic({shorten: true}),
+      this._formatIsSubInput({shorten: true})
     ];
     attributes = compact(attributes);
     if (attributes.length) {
@@ -1922,12 +1940,26 @@ export class Resource {
     return 'position: ' + formatValue(position);
   }
 
-  _formatVariadic() {
-    return this.$isVariadic ? 'variadic' : '';
+  _formatIsVariadic({shorten} = {}) {
+    const isVariadic = this.$isVariadic;
+    if (isVariadic === undefined) {
+      return '';
+    }
+    if (shorten) {
+      return isVariadic ? 'variadic' : '';
+    }
+    return 'variadic: ' + formatValue(isVariadic);
   }
 
-  _formatSubInput() {
-    return this.$isSubInput ? 'sub-input' : '';
+  _formatIsSubInput({shorten} = {}) {
+    const isSubInput = this.$isSubInput;
+    if (isSubInput === undefined) {
+      return '';
+    }
+    if (shorten) {
+      return isSubInput ? 'sub-input' : '';
+    }
+    return 'sub-input: ' + formatValue(isSubInput);
   }
 
   static $normalize(definition, _options) {
