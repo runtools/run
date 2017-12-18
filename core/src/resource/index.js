@@ -324,8 +324,9 @@ export class Resource {
       };
 
       set('$comment', '@comment');
-      set('$types', '@type', ['@import']); // TODO: @type and @import should be handled separately
-      set('$location', '@load');
+      set('$type', '@type');
+      set('$importAttribute', '@import');
+      set('$loadAttribute', '@load');
       set('$directory', '@directory');
       set('$description', '@description');
       set('$aliases', '@aliases');
@@ -375,6 +376,8 @@ export class Resource {
     });
   }
 
+  /* eslint-disable complexity */
+
   static async $create(
     definition,
     {base, parent, key, directory, file, specifier, parse, isUnpublishable, isNative} = {}
@@ -393,21 +396,37 @@ export class Resource {
       directory = dirname(file);
     }
 
-    const directoryProperty = getProperty(normalizedDefinition, '@directory');
-    if (directoryProperty) {
-      directory = resolve(directory, directoryProperty);
+    const directoryAttribute = getProperty(normalizedDefinition, '@directory');
+    if (directoryAttribute) {
+      directory = resolve(directory, directoryAttribute);
     }
 
-    let types = getProperty(normalizedDefinition, '@type', ['@import']);
-    types = Resource.$normalizeTypes(types);
+    let type = getProperty(normalizedDefinition, '@type');
+    if (type !== undefined) {
+      type = this.$normalizeType(type);
+    }
 
-    const location = getProperty(normalizedDefinition, '@load');
+    let loadAttribute = getProperty(normalizedDefinition, '@load');
+    if (loadAttribute !== undefined) {
+      loadAttribute = this.$normalizeLoadAttribute(loadAttribute);
+    }
 
-    if (this === Resource && types.length === 0 && location === undefined && base === undefined) {
+    let importAttribute = getProperty(normalizedDefinition, '@import');
+    if (importAttribute !== undefined) {
+      importAttribute = this.$normalizeImportAttribute(importAttribute);
+    }
+
+    if (
+      this === Resource &&
+      type === undefined &&
+      base === undefined &&
+      loadAttribute === undefined &&
+      importAttribute === undefined
+    ) {
       if (normalizedDefinition['@value'] !== undefined) {
-        types = [inferType(normalizedDefinition['@value'])];
+        type = inferType(normalizedDefinition['@value']);
       } else if (normalizedDefinition['@default'] !== undefined) {
-        types = [inferType(normalizedDefinition['@default'])];
+        type = inferType(normalizedDefinition['@default']);
       }
     }
 
@@ -421,28 +440,28 @@ export class Resource {
       NativeClass = this;
     }
 
-    for (const type of types) {
-      let Class;
-
-      if (typeof type === 'string') {
-        Class = getResourceClass(type);
-      }
-
-      if (!Class) {
-        const base = await Resource.$import(type, {directory});
-        bases.push(base);
-        Class = base._getNativeClass();
-      }
-
+    if (type !== undefined) {
+      const Class = getResourceClass(type);
       NativeClass = findSubclass(NativeClass, Class);
     }
 
-    if (location) {
-      const base = await Resource.$load(location, {directory});
+    if (loadAttribute !== undefined) {
+      const base = await Resource.$load(loadAttribute, {directory});
       bases.push(base);
       const Class = base._getNativeClass();
       NativeClass = findSubclass(NativeClass, Class);
     }
+
+    if (importAttribute !== undefined) {
+      for (const specifier of importAttribute) {
+        const base = await Resource.$import(specifier, {directory});
+        bases.push(base);
+        const Class = base._getNativeClass();
+        NativeClass = findSubclass(NativeClass, Class);
+      }
+    }
+
+    await NativeClass._initializeResourceNativeChildren();
 
     let builders = [];
     for (const base of bases) {
@@ -451,7 +470,7 @@ export class Resource {
 
     const implementation = getProperty(normalizedDefinition, '@implementation');
     if (implementation) {
-      if (location) {
+      if (loadAttribute) {
         throw new Error(`Can't have both ${formatCode('@load')} and ${formatCode('@implementation')} attributes`);
       }
       const builder = requireImplementation(implementation, {directory});
@@ -459,8 +478,6 @@ export class Resource {
         builders.push(builder);
       }
     }
-
-    await NativeClass._initializeResourceNativeChildren();
 
     let ResourceClass = NativeClass;
     for (const builder of builders) {
@@ -485,6 +502,8 @@ export class Resource {
 
     return resource;
   }
+
+  /* eslint-enable complexity */
 
   static async _initializeResourceNativeChildren() {
     if (Object.prototype.hasOwnProperty.call(this, '$RESOURCE_NATIVE_CHILDREN')) {
@@ -881,37 +900,60 @@ export class Resource {
     this._comment = comment;
   }
 
-  get $types() {
-    return this._types;
+  get $type() {
+    return this._type;
   }
 
-  set $types(types) {
-    if (types !== undefined) {
-      types = Resource.$normalizeTypes(types);
+  set $type(type) {
+    if (type !== undefined) {
+      type = this.constructor.$normalizeType(type);
     }
-    this._types = types;
+    this._type = type;
   }
 
-  static $normalizeTypes(types) {
-    if (types === undefined) {
-      types = [];
-    } else if (typeof types === 'string' || isPlainObject(types)) {
-      types = [types];
-    } else if (!Array.isArray(types)) {
-      throw new Error(`Invalid ${formatCode('@type')}/${formatCode('@import')} value`);
+  static $normalizeType(type) {
+    if (typeof type !== 'string') {
+      throw new TypeError(`${formatCode('@type')} attribute must be a string`);
     }
-    return types;
+    return type;
   }
 
-  get $location() {
-    return this._location;
+  get $loadAttribute() {
+    return this._loadAttribute;
   }
 
-  set $location(location) {
-    if (!(typeof location === 'string' || isPlainObject(location))) {
-      throw new Error(`Invalid ${formatCode('@load')} value`);
+  set $loadAttribute(loadAttribute) {
+    if (loadAttribute !== undefined) {
+      loadAttribute = this.constructor.$normalizeLoadAttribute(loadAttribute);
     }
-    this._location = location;
+    this._loadAttribute = loadAttribute;
+  }
+
+  static $normalizeLoadAttribute(loadAttribute) {
+    if (typeof loadAttribute !== 'string' && !isPlainObject(loadAttribute)) {
+      throw new Error(`Invalid ${formatCode('@load')} attribute value`);
+    }
+    return loadAttribute;
+  }
+
+  get $importAttribute() {
+    return this._importAttribute;
+  }
+
+  set $importAttribute(importAttribute) {
+    if (importAttribute !== undefined) {
+      importAttribute = Resource.$normalizeImportAttribute(importAttribute);
+    }
+    this._importAttribute = importAttribute;
+  }
+
+  static $normalizeImportAttribute(importAttribute) {
+    if (typeof importAttribute === 'string' || isPlainObject(importAttribute)) {
+      importAttribute = [importAttribute];
+    } else if (!Array.isArray(importAttribute)) {
+      throw new Error(`Invalid ${formatCode('@import')} attribute value`);
+    }
+    return importAttribute;
   }
 
   get $directory() {
@@ -1346,7 +1388,7 @@ export class Resource {
 
     let type;
     let specifier;
-    if (getResourceClass(typeOrSpecifier)) {
+    if (getResourceClass(typeOrSpecifier, {throwIfInvalid: false})) {
       type = typeOrSpecifier;
     } else {
       specifier = typeOrSpecifier;
@@ -1393,7 +1435,7 @@ export class Resource {
 
     let type;
     let specifier;
-    if (getResourceClass(typeOrImport)) {
+    if (getResourceClass(typeOrImport, {throwIfInvalid: false})) {
       type = typeOrImport;
     } else {
       specifier = typeOrImport;
@@ -1883,11 +1925,15 @@ export class Resource {
       definition['@comment'] = this._comment;
     }
 
-    this._serializeTypes(definition, options);
-
-    if (this._location !== undefined) {
-      definition['@load'] = this._location;
+    if (this._type !== undefined) {
+      definition['@type'] = this._type;
     }
+
+    if (this._loadAttribute !== undefined) {
+      definition['@load'] = this._loadAttribute;
+    }
+
+    this._serializeImportAttribute(definition, options);
 
     if (this._directory !== undefined) {
       definition['@directory'] = this._directory;
@@ -1942,19 +1988,13 @@ export class Resource {
     return definition;
   }
 
-  _serializeTypes(definition, _options) {
-    // TODO: @type and @import should be handled separately
-    const types = this._types;
-    if (types !== undefined) {
-      if (types.length === 1) {
-        const type = types[0];
-        if (isPlainObject(type) || type.match(/[./]/)) {
-          definition['@import'] = type;
-        } else {
-          definition['@type'] = type;
-        }
-      } else if (types.length > 1) {
-        definition['@import'] = types;
+  _serializeImportAttribute(definition, _options) {
+    const importAttribute = this._importAttribute;
+    if (importAttribute !== undefined) {
+      if (importAttribute.length === 1) {
+        definition['@import'] = importAttribute[0];
+      } else if (importAttribute.length > 1) {
+        definition['@import'] = importAttribute;
       }
     }
   }
@@ -2162,7 +2202,7 @@ function searchImplementationFile(file) {
   return undefined;
 }
 
-function getResourceClass(type) {
+function getResourceClass(type, {throwIfInvalid = true} = {}) {
   switch (type) {
     case 'resource':
       return Resource;
@@ -2181,7 +2221,9 @@ function getResourceClass(type) {
     case 'method':
       return require('./method').default;
     default:
-      return undefined;
+      if (throwIfInvalid) {
+        throw new Error(`Type ${formatString(type)} is invalid`);
+      }
   }
 }
 

@@ -229,6 +229,17 @@ describe('Resource', () => {
     expect(person.age).toBe(44);
   });
 
+  test('Resource loaded from a file via a @load attribute', async () => {
+    const person = await Resource.$create(
+      {'@load': '../../fixtures/person-instance'},
+      {directory: __dirname}
+    );
+    expect(person.$getChild('name')).toBeInstanceOf(StringResource);
+    expect(person.name).toBe('Manu');
+    expect(person.$getChild('age')).toBeInstanceOf(NumberResource);
+    expect(person.age).toBe(44);
+  });
+
   test('Resource imported from a file', async () => {
     const Person = await Resource.$import('../../fixtures/person', {directory: __dirname});
     expect(Person).toBeInstanceOf(Resource);
@@ -238,7 +249,7 @@ describe('Resource', () => {
     expect(Person.age).toBeUndefined();
   });
 
-  test('Resource imported from a file via a type', async () => {
+  test('Resource imported from a file via an @import attribute', async () => {
     const person = await Resource.$create(
       {'@import': '../../fixtures/person'},
       {directory: __dirname}
@@ -254,7 +265,7 @@ describe('Resource', () => {
     });
   });
 
-  test('Resource imported from a file via a property type', async () => {
+  test('Sub-resource imported from a file via an @import property', async () => {
     const Company = await Resource.$create(
       {name: {'@type': 'string'}, boss: {'@import': '../../fixtures/person'}},
       {directory: __dirname}
@@ -263,17 +274,6 @@ describe('Resource', () => {
     expect(Company.$getChild('boss')).toBeInstanceOf(Resource);
     expect(Company.$getChild('boss').$getChild('name')).toBeInstanceOf(StringResource);
     expect(Company.$getChild('boss').$getChild('age')).toBeInstanceOf(NumberResource);
-  });
-
-  test('Resource loaded from a file', async () => {
-    const person = await Resource.$create(
-      {'@load': '../../fixtures/person-instance'},
-      {directory: __dirname}
-    );
-    expect(person.$getChild('name')).toBeInstanceOf(StringResource);
-    expect(person.name).toBe('Manu');
-    expect(person.$getChild('age')).toBeInstanceOf(NumberResource);
-    expect(person.age).toBe(44);
   });
 
   test('multiple inheritance', async () => {
@@ -312,10 +312,19 @@ describe('Resource', () => {
       '@examples': ['aturing/nice-tool', 'resdir/hello'],
       '@hidden': true
     });
-
     await testSerialization({color: {'@type': 'string'}});
     await testSerialization({color: 'green'});
     await testSerialization({name: 'Manu', address: {city: 'Tokyo'}});
+    await testSerialization(
+      {'@import': '../../fixtures/person'},
+      {directory: __dirname},
+      {'@import': '../../fixtures/person'}
+    );
+    await testSerialization(
+      {'@import': ['../../fixtures/person', '../../fixtures/mixin']},
+      {directory: __dirname},
+      {'@import': ['../../fixtures/person', '../../fixtures/mixin']}
+    );
     await testSerialization({
       '@import': {'@export': {name: 'anonymous'}}
     });
