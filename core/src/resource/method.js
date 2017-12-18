@@ -3,13 +3,13 @@ import {isEmpty, isPlainObject, difference} from 'lodash';
 import {takeProperty, findProperty} from '@resdir/util';
 import {catchContext, formatString, formatCode} from '@resdir/console';
 import {
+  parseExpression,
+  handleParsedExpression,
   makePositionalArgumentKey,
   getPositionalArgument,
   shiftPositionalArguments,
-  setSubArguments,
   getSubArgumentsKey
-} from '@resdir/method-arguments';
-import {parse} from 'shell-quote';
+} from '@resdir/expression';
 
 import Resource from '../resource';
 import EnvironmentResource from './environment';
@@ -181,18 +181,16 @@ export class MethodResource extends Resource {
     return this.$getFunction();
   }
 
-  $getFunction({parseArguments} = {}) {
+  $getFunction() {
     const methodResource = this;
 
     return async function (input, environment, ...rest) {
-      const {normalizedInput, extractedEnvironment} = await methodResource._normalizeInput(input, {
-        parse: parseArguments
-      });
+      const {normalizedInput, extractedEnvironment} = await methodResource._normalizeInput(input);
 
       let normalizedEnvironment = await methodResource._normalizeEnvironement(environment);
       if (extractedEnvironment) {
         normalizedEnvironment = await normalizedEnvironment.$extend(extractedEnvironment, {
-          parse: parseArguments
+          parse: true
         });
       }
 
@@ -221,8 +219,9 @@ export class MethodResource extends Resource {
     };
   }
 
-  async _normalizeInput(input = {}, {parse}) {
+  async _normalizeInput(input = {}) {
     if (input instanceof Resource) {
+      // TODO: Handle the case where an incompatible resource is passed
       return {normalizedInput: input};
     }
 
@@ -231,6 +230,8 @@ export class MethodResource extends Resource {
     }
 
     input = {...input};
+
+    const isParsedExpression = handleParsedExpression(input);
 
     let normalizedInput = this.$getInput();
     if (normalizedInput !== undefined) {
@@ -242,18 +243,27 @@ export class MethodResource extends Resource {
     }
 
     for (const child of normalizedInput.$getChildren()) {
-      const {foundKeys, childKey, value} = findArgument(input, child, {parse});
-      if (foundKeys.length) {
-        for (const key of foundKeys) {
-          delete input[key];
+      const childKey = child.$getKey();
+      if (!isParsedExpression) {
+        if (childKey in input) {
+          const value = input[childKey];
+          delete input[childKey];
+          await normalizedInput.$setChild(childKey, value);
         }
-        await normalizedInput.$setChild(childKey, value, {parse});
+      } else {
+        const {foundKeys, value} = findArgument(input, child);
+        if (foundKeys.length) {
+          for (const key of foundKeys) {
+            delete input[key];
+          }
+          await normalizedInput.$setChild(childKey, value, {parse: true});
+        }
       }
     }
 
     let extractedEnvironment;
 
-    if (parse) {
+    if (isParsedExpression) {
       const environmentChildren = (await getEnvironment()).$getChildren({
         includeNativeChildren: true
       });
@@ -262,7 +272,8 @@ export class MethodResource extends Resource {
           // Ignore native methods and getters
           continue;
         }
-        const {foundKeys, childKey, value} = findArgument(input, child, {parse});
+        const childKey = child.$getKey();
+        const {foundKeys, value} = findArgument(input, child);
         if (foundKeys.length) {
           for (const key of foundKeys) {
             delete input[key];
@@ -285,6 +296,7 @@ export class MethodResource extends Resource {
 
   async _normalizeEnvironement(environment) {
     if (environment instanceof Resource) {
+      // TODO: Handle the case where an incompatible resource is passed
       return environment;
     }
 
@@ -331,40 +343,15 @@ export class MethodResource extends Resource {
     let result;
 
     for (const expression of expressionProperty) {
-      // TODO: Replace 'shell-quote' with something more suitable
-
-      // // Prevent 'shell-quote' from interpreting operators:
-      // for (const operator of '|&;()<>') {
-      //   expression = expression.replace(
-      //     new RegExp('\\' + operator, 'g'),
-      //     '\\' + operator
-      //   );
-      // }
-
-      let parsedExpression = parse(expression, variable => {
-        if (!(variable in input)) {
-          throw new Error(`Invalid variable found in a method expression: ${formatCode(variable)}`);
-        }
-        return String(input[variable]);
-      });
-
-      parsedExpression = parsedExpression.map(arg => {
-        if (typeof arg === 'string') {
-          return arg;
-        }
-        throw new Error(`Argument parsing failed (arg: ${JSON.stringify(arg)})`);
-      });
-
-      parsedExpression = parseCommandLineArguments(parsedExpression);
-
+      const parsedExpression = parseExpression(expression);
       result = await this._runParsedExpression(parsedExpression, {parent});
     }
 
     return result;
   }
 
-  async _runParsedExpression(args, {parent}) {
-    const firstArgument = getPositionalArgument(args, 0);
+  async _runParsedExpression(expression, {parent}) {
+    const firstArgument = getPositionalArgument(expression, 0);
     if (
       firstArgument !== undefined &&
       (firstArgument.startsWith('.') || firstArgument.includes('/') || isAbsolute(firstArgument))
@@ -373,15 +360,15 @@ export class MethodResource extends Resource {
       parent = await Resource.$load(firstArgument, {
         directory: this.$getCurrentDirectory({throwIfUndefined: false})
       });
-      args = {...args};
-      shiftPositionalArguments(args);
+      expression = {...expression};
+      shiftPositionalArguments(expression);
     }
-    return await parent.$invoke(args);
+    return await parent.$invoke(expression);
   }
 
-  async $invoke(args, {parent} = {}) {
-    const fn = this.$getFunction({parseArguments: true});
-    return await fn.call(parent, args);
+  async $invoke(expression, {parent} = {}) {
+    const fn = this.$getFunction();
+    return await fn.call(parent, expression);
   }
 
   $serialize(options) {
@@ -455,151 +442,55 @@ async function getEnvironment() {
   return _environment;
 }
 
-function findArgument(args, child, {parse}) {
+function findArgument(expression, child) {
   const foundKeys = [];
-  const childKey = child.$getKey();
   let value;
 
-  if (!parse) {
-    if (childKey in args) {
-      foundKeys.push(childKey);
-      value = args[childKey];
-    }
-  } else {
-    const result = findProperty(args, childKey, child.$aliases);
-    if (result) {
-      foundKeys.push(result.foundKey);
-      value = result.value;
-    }
+  const childKey = child.$getKey();
+  const result = findProperty(expression, childKey, child.$aliases);
+  if (result) {
+    foundKeys.push(result.foundKey);
+    value = result.value;
+  }
 
-    const position = child.$position;
-    if (position !== undefined) {
+  const position = child.$position;
+  if (position !== undefined) {
+    const positionalArgumentKey = makePositionalArgumentKey(position);
+    if (positionalArgumentKey in expression) {
+      foundKeys.push(positionalArgumentKey);
+      value = expression[positionalArgumentKey];
+    }
+  }
+
+  if (child.$isVariadic) {
+    let position = child.$position;
+    if (position === undefined) {
+      throw new Error(`A ${formatCode('@isVariadic')} attribute must be paired with a ${formatCode('@position')} attribute`);
+    }
+    value = value !== undefined ? [value] : [];
+    while (true) {
+      position++;
       const positionalArgumentKey = makePositionalArgumentKey(position);
-      if (positionalArgumentKey in args) {
-        foundKeys.push(positionalArgumentKey);
-        value = args[positionalArgumentKey];
+      if (!(positionalArgumentKey in expression)) {
+        break;
       }
+      foundKeys.push(positionalArgumentKey);
+      value.push(expression[positionalArgumentKey]);
     }
-
-    if (child.$isVariadic) {
-      let position = child.$position;
-      if (position === undefined) {
-        throw new Error(`A ${formatCode('@isVariadic')} attribute must be paired with a ${formatCode('@position')} attribute`);
-      }
-      value = value !== undefined ? [value] : [];
-      while (true) {
-        position++;
-        const positionalArgumentKey = makePositionalArgumentKey(position);
-        if (!(positionalArgumentKey in args)) {
-          break;
-        }
-        foundKeys.push(positionalArgumentKey);
-        value.push(args[positionalArgumentKey]);
-      }
-      if (!value.length) {
-        value = undefined;
-      }
-    }
-
-    if (child.$isSubInput) {
-      const subArgumentsKey = getSubArgumentsKey();
-      if (subArgumentsKey in args) {
-        foundKeys.push(subArgumentsKey);
-        value = args[subArgumentsKey];
-      }
+    if (!value.length) {
+      value = undefined;
     }
   }
 
-  return {foundKeys, childKey, value};
-}
-
-function parseCommandLineArguments(argsAndOpts) {
-  if (!Array.isArray(argsAndOpts)) {
-    throw new TypeError('\'argsAndOpts\' must be an array');
-  }
-
-  let subArgsAndOpts;
-  const index = argsAndOpts.indexOf('--');
-  if (index !== -1) {
-    subArgsAndOpts = argsAndOpts.slice(index + 1);
-    argsAndOpts = argsAndOpts.slice(0, index);
-  }
-
-  const result = _parseCommandLineArguments(argsAndOpts);
-
-  if (subArgsAndOpts) {
-    const subResult = _parseCommandLineArguments(subArgsAndOpts);
-    setSubArguments(result, subResult);
-  }
-
-  return result;
-}
-
-function _parseCommandLineArguments(argsAndOpts) {
-  const result = {};
-
-  for (let i = 0, position = 0; i < argsAndOpts.length; i++) {
-    const argOrOpt = argsAndOpts[i];
-
-    if (typeof argOrOpt === 'string' && argOrOpt.startsWith('--')) {
-      let opt = argOrOpt.slice(2);
-      let val;
-
-      const index = opt.indexOf('=');
-      if (index !== -1) {
-        val = opt.slice(index + 1);
-        opt = opt.slice(0, index);
-      }
-
-      if (val === undefined) {
-        if (opt.startsWith('no-')) {
-          val = 'false';
-          opt = opt.slice(3);
-        } else if (opt.startsWith('non-')) {
-          val = 'false';
-          opt = opt.slice(4);
-        } else if (opt.startsWith('@no-')) {
-          val = 'false';
-          opt = '@' + opt.slice(4);
-        } else if (opt.startsWith('@non-')) {
-          val = 'false';
-          opt = '@' + opt.slice(5);
-        }
-      }
-
-      if (val === undefined && i + 1 < argsAndOpts.length) {
-        const nextArgOrOpt = argsAndOpts[i + 1];
-        if (typeof nextArgOrOpt !== 'string' || !nextArgOrOpt.startsWith('-')) {
-          val = nextArgOrOpt;
-          i++;
-        }
-      }
-
-      if (val === undefined) {
-        val = 'true';
-      }
-
-      result[opt] = val;
-      continue;
+  if (child.$isSubInput) {
+    const subArgumentsKey = getSubArgumentsKey();
+    if (subArgumentsKey in expression) {
+      foundKeys.push(subArgumentsKey);
+      value = expression[subArgumentsKey];
     }
-
-    if (typeof argOrOpt === 'string' && argOrOpt.startsWith('-')) {
-      const opts = argOrOpt.slice(1);
-      for (let i = 0; i < opts.length; i++) {
-        const opt = opts[i];
-        if (!/[\w\d]/.test(opt)) {
-          throw new Error(`Invalid command line option: ${formatCode(argOrOpt)}`);
-        }
-        result[opt] = 'true';
-      }
-      continue;
-    }
-
-    result[makePositionalArgumentKey(position)] = argOrOpt;
-    position++;
   }
 
-  return result;
+  return {foundKeys, value};
 }
 
 export default MethodResource;

@@ -20,13 +20,7 @@
     },
     "formatGreetingExpression": {
       "@type": "method",
-      "@input": {
-        "verb": {
-          "@default": "Hi",
-          "@position": 0
-        }
-      },
-      "@run": "formatGreetingMethod $verb"
+      "@run": "formatGreetingMethod Hi"
     },
     "formatTags": {
       "@type": "method",

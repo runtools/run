@@ -27,7 +27,7 @@ import {validateResourceKey} from '@resdir/resource-key';
 import {parseResourceIdentifier} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, stringifyResourceSpecifier} from '@resdir/resource-specifier';
 import RegistryClient from '@resdir/registry-client';
-import {shiftPositionalArguments} from '@resdir/method-arguments';
+import {shiftPositionalArguments} from '@resdir/expression';
 
 import Runtime from '../runtime';
 
@@ -1320,11 +1320,11 @@ export class Resource {
     return this;
   }
 
-  async $invoke(args, {_parent} = {}) {
+  async $invoke(expression, {_parent} = {}) {
     return await catchContext(this, async () => {
-      args = {...args};
+      expression = {...expression};
 
-      const key = shiftPositionalArguments(args);
+      const key = shiftPositionalArguments(expression);
       if (key === undefined) {
         return this;
       }
@@ -1336,7 +1336,7 @@ export class Resource {
 
       child = await child.$resolveGetter({parent: this});
 
-      return await child.$invoke(args, {parent: this});
+      return await child.$invoke(expression, {parent: this});
     });
   }
 
@@ -1373,25 +1373,25 @@ export class Resource {
     return this._getAllListeners()[event] || [];
   }
 
-  async $emit(event, args = {}, {parseArguments} = {}) {
+  async $emit(event, eventInput = {}) {
     if (typeof event !== 'string') {
       throw new TypeError('\'event\' argument must be a string');
     }
 
-    if (!isPlainObject(args)) {
-      throw new TypeError('\'args\' argument must be a plain object');
+    if (!isPlainObject(eventInput)) {
+      throw new TypeError('\'eventInput\' argument must be a plain object');
     }
 
     for (const listener of this._getAllListenersForEvent(event)) {
-      const fn = listener.$getFunction({parseArguments});
-      await fn.call(this, args);
+      const fn = listener.$getFunction();
+      await fn.call(this, eventInput);
     }
   }
 
-  async $broadcast(event, args, {parseArguments} = {}) {
-    await this.$emit(event, args, {parseArguments});
+  async $broadcast(event, eventInput) {
+    await this.$emit(event, eventInput);
     await this.$forEachChildAsync(async child => {
-      await child.$broadcast(event, args, {parseArguments});
+      await child.$broadcast(event, eventInput);
     });
   }
 
@@ -1545,23 +1545,23 @@ export class Resource {
   }
 
   async '@install'({eventInput} = {}) {
-    await this.$broadcast('@install', eventInput, {parseArguments: true});
-    await this.$broadcast('@installed', undefined, {parseArguments: true});
+    await this.$broadcast('@install', eventInput);
+    await this.$broadcast('@installed', undefined);
   }
 
   async '@lint'({eventInput} = {}) {
-    await this.$broadcast('@lint', eventInput, {parseArguments: true});
-    await this.$broadcast('@linted', undefined, {parseArguments: true});
+    await this.$broadcast('@lint', eventInput);
+    await this.$broadcast('@linted', undefined);
   }
 
   async '@test'({eventInput} = {}) {
-    await this.$broadcast('@test', eventInput, {parseArguments: true});
-    await this.$broadcast('@tested', undefined, {parseArguments: true});
+    await this.$broadcast('@test', eventInput);
+    await this.$broadcast('@tested', undefined);
   }
 
   async '@build'({eventInput} = {}) {
-    await this.$broadcast('@build', eventInput, {parseArguments: true});
-    await this.$broadcast('@built', undefined, {parseArguments: true});
+    await this.$broadcast('@build', eventInput);
+    await this.$broadcast('@built', undefined);
   }
 
   async '@load'({specifier}) {
@@ -1579,11 +1579,11 @@ export class Resource {
   }
 
   async '@emit'({event, eventInput} = {}) {
-    return await this.$emit(event, eventInput, {parseArguments: true});
+    return await this.$emit(event, eventInput);
   }
 
   async '@broadcast'({event, eventInput} = {}) {
-    return await this.$broadcast(event, eventInput, {parseArguments: true});
+    return await this.$broadcast(event, eventInput);
   }
 
   async '@normalize'({format}) {

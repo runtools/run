@@ -67,7 +67,6 @@ describe('MethodResource', () => {
     await expect(person.formatGreetingMethod({unknownArg: 1})).rejects.toBeInstanceOf(Error);
 
     expect(await person.formatGreetingExpression()).toBe('Hi Manu!');
-    expect(await person.formatGreetingExpression({verb: 'Bonjour'})).toBe('Bonjour Manu!');
 
     person = await Resource.$load('../../fixtures/person-instance', {directory: __dirname});
 
