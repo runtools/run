@@ -282,7 +282,18 @@ export class Resource {
 
   async $construct(
     definition,
-    {bases = [], parent, key, directory, file, specifier, parse, isUnpublishable, isNative} = {}
+    {
+      bases = [],
+      parent,
+      key,
+      directory,
+      file,
+      specifier,
+      parse,
+      allowNewChildren,
+      isUnpublishable,
+      isNative
+    } = {}
   ) {
     this._bases = [];
     this._children = [];
@@ -360,12 +371,21 @@ export class Resource {
       const exportDefinition = takeProperty(definition, '@export');
 
       for (const key of Object.keys(definition)) {
-        await this.$setChild(key, definition[key], {parse, isNative});
+        await this.$setChild(key, definition[key], {
+          parse,
+          createIfNew: allowNewChildren,
+          isNative
+        });
       }
 
       if (unpublishableDefinition !== undefined) {
         for (const [key, definition] of entries(unpublishableDefinition)) {
-          await this.$setChild(key, definition, {parse, isUnpublishable: true, isNative});
+          await this.$setChild(key, definition, {
+            parse,
+            createIfNew: allowNewChildren,
+            isUnpublishable: true,
+            isNative
+          });
         }
       }
 
@@ -383,7 +403,18 @@ export class Resource {
 
   static async $create(
     definition,
-    {base, parent, key, directory, file, specifier, parse, isUnpublishable, isNative} = {}
+    {
+      base,
+      parent,
+      key,
+      directory,
+      file,
+      specifier,
+      parse,
+      allowNewChildren,
+      isUnpublishable,
+      isNative
+    } = {}
   ) {
     let normalizedDefinition;
     if (isPlainObject(definition)) {
@@ -499,6 +530,7 @@ export class Resource {
       file,
       specifier,
       parse,
+      allowNewChildren,
       isUnpublishable,
       isNative
     });
@@ -699,8 +731,12 @@ export class Resource {
     return await this.constructor.$create(definition, {...options, base: this});
   }
 
-  $hasBase(resource) {
-    return Boolean(this.$findBase(base => base === resource));
+  $isDescendantOf(resource) {
+    return resource instanceof Resource && Boolean(this.$findBase(base => base === resource));
+  }
+
+  $isAncestorOf(resource) {
+    return resource instanceof Resource && Boolean(resource.$findBase(base => base === this));
   }
 
   async $save({directory, ensureDirectory} = {}) {
@@ -1231,10 +1267,17 @@ export class Resource {
     return result;
   }
 
-  async $setChild(key, definition, {parse, isUnpublishable, isNative} = {}) {
+  async $setChild(key, definition, {parse, createIfNew = true, isUnpublishable, isNative} = {}) {
     const removedChildIndex = this.$removeChild(key);
 
     const base = this.$getChildFromBases(key);
+
+    if (!createIfNew && !base) {
+      const err = new Error(`Child creation is not allowed (key: ${formatCode(key)})`);
+      err.code = 'RUN_CORE_CHILD_CREATION_DENIED';
+      err.childKey = key;
+      throw err;
+    }
 
     const child = await Resource.$create(definition, {
       base,

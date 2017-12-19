@@ -1,14 +1,13 @@
 import {isAbsolute} from 'path';
 import {isEmpty, isPlainObject, difference} from 'lodash';
-import {takeProperty, findProperty} from '@resdir/util';
-import {catchContext, formatString, formatCode} from '@resdir/console';
+import {takeProperty} from '@resdir/util';
+import {catchContext, formatCode} from '@resdir/console';
 import {
   parseExpression,
-  handleParsedExpression,
-  makePositionalArgumentKey,
+  isParsedExpression,
+  matchExpression,
   getPositionalArgument,
-  shiftPositionalArguments,
-  getSubArgumentsKey
+  shiftPositionalArguments
 } from '@resdir/expression';
 
 import Resource from '../resource';
@@ -64,9 +63,7 @@ export class MethodResource extends Resource {
     if (!isPlainObject(input)) {
       throw new Error(`${formatCode('@input')} property must be an object`);
     }
-    this._input = await Resource.$create(input, {
-      directory: this.$getCurrentDirectory({throwIfUndefined: false})
-    });
+    this._input = await Resource.$create(input);
   }
 
   get $runExpression() {
@@ -185,14 +182,10 @@ export class MethodResource extends Resource {
     const methodResource = this;
 
     return async function (input, environment, ...rest) {
-      const {normalizedInput, extractedEnvironment} = await methodResource._normalizeInput(input);
-
-      let normalizedEnvironment = await methodResource._normalizeEnvironement(environment);
-      if (extractedEnvironment) {
-        normalizedEnvironment = await normalizedEnvironment.$extend(extractedEnvironment, {
-          parse: true
-        });
-      }
+      const {
+        normalizedInput,
+        normalizedEnvironment
+      } = await methodResource._normalizeInputAndEnvironment(input, environment);
 
       if (rest.length !== 0) {
         throw new TypeError(`A resource method must be invoked with a maximum of two arguments (${formatCode('input')} and ${formatCode('environment')})`);
@@ -219,97 +212,92 @@ export class MethodResource extends Resource {
     };
   }
 
-  async _normalizeInput(input = {}) {
-    if (input instanceof Resource) {
-      // TODO: Handle the case where an incompatible resource is passed
-      return {normalizedInput: input};
+  async _normalizeInputAndEnvironment(input = {}, environment = {}) {
+    let normalizedInput = this.$getInput();
+    if (normalizedInput === undefined) {
+      normalizedInput = await Resource.$create();
     }
 
     if (!isPlainObject(input)) {
-      throw new TypeError(`A resource method must be invoked with an 'input' argument of type Resource, plain object or undefined (${formatString(typeof input)} received)`);
-    }
-
-    input = {...input};
-
-    const isParsedExpression = handleParsedExpression(input);
-
-    let normalizedInput = this.$getInput();
-    if (normalizedInput !== undefined) {
-      normalizedInput = await normalizedInput.$extend();
-    } else {
-      normalizedInput = await Resource.$create(input, {
-        directory: this.$getCurrentDirectory({throwIfUndefined: false})
-      });
-    }
-
-    for (const child of normalizedInput.$getChildren()) {
-      const childKey = child.$getKey();
-      if (!isParsedExpression) {
-        if (childKey in input) {
-          const value = input[childKey];
-          delete input[childKey];
-          await normalizedInput.$setChild(childKey, value);
-        }
-      } else {
-        const {foundKeys, value} = findArgument(input, child);
-        if (foundKeys.length) {
-          for (const key of foundKeys) {
-            delete input[key];
-          }
-          await normalizedInput.$setChild(childKey, value, {parse: true});
-        }
-      }
+      throw new TypeError(`'input' argument is invalid`);
     }
 
     let extractedEnvironment;
 
-    if (isParsedExpression) {
-      const environmentChildren = (await getEnvironment()).$getChildren({
-        includeNativeChildren: true
-      });
-      for (const child of environmentChildren) {
-        if (!(child instanceof Value)) {
-          // Ignore native methods and getters
-          continue;
-        }
-        const childKey = child.$getKey();
-        const {foundKeys, value} = findArgument(input, child);
-        if (foundKeys.length) {
-          for (const key of foundKeys) {
-            delete input[key];
-          }
-          if (extractedEnvironment === undefined) {
-            extractedEnvironment = {};
-          }
-          extractedEnvironment[childKey] = value;
-        }
+    const inputIsParsedExpression = isParsedExpression(input);
+
+    if (inputIsParsedExpression) {
+      let result;
+      let remainder;
+
+      const inputSchema = this._getInputSchema();
+      ({result, remainder} = matchExpression(input, inputSchema));
+      input = result;
+
+      const environmentSchema = await getEnvironmentSchema();
+      ({result, remainder} = matchExpression(remainder, environmentSchema));
+      if (!isEmpty(result)) {
+        extractedEnvironment = result;
+      }
+
+      if (!isEmpty(remainder)) {
+        const keys = Object.keys(remainder)
+          .map(key => formatCode(key))
+          .join(', ');
+        throw new Error(`Cannot match arguments (keys: ${keys})`);
       }
     }
 
-    const remainingKeys = Object.keys(input);
-    if (remainingKeys.length) {
-      throw new Error(`Invalid method input key: ${formatCode(remainingKeys[0])}.`);
-    }
-
-    return {normalizedInput, extractedEnvironment};
-  }
-
-  async _normalizeEnvironement(environment) {
-    if (environment instanceof Resource) {
-      // TODO: Handle the case where an incompatible resource is passed
-      return environment;
+    try {
+      normalizedInput = await normalizedInput.$extend(input, {
+        parse: inputIsParsedExpression,
+        allowNewChildren: false
+      });
+    } catch (err) {
+      if (err.code === 'RUN_CORE_CHILD_CREATION_DENIED') {
+        throw new Error(`Cannot match argument (key: ${formatCode(err.childKey)})`);
+      }
+      throw err;
     }
 
     let normalizedEnvironment = await getEnvironment();
 
-    if (environment !== undefined) {
-      if (!isPlainObject(environment)) {
-        throw new TypeError(`A resource method must be invoked with an 'environment' argument of type Resource, plain object or undefined (${formatString(typeof environment)} received)`);
-      }
+    if (normalizedEnvironment.$isAncestorOf(environment)) {
+      normalizedEnvironment = await environment.$extend();
+    } else if (isPlainObject(environment)) {
       normalizedEnvironment = await normalizedEnvironment.$extend(environment);
+    } else {
+      throw new TypeError(`'environment' argument is invalid`);
     }
 
-    return normalizedEnvironment;
+    if (extractedEnvironment) {
+      normalizedEnvironment = await normalizedEnvironment.$extend(extractedEnvironment, {
+        parse: true
+      });
+    }
+
+    return {normalizedInput, normalizedEnvironment};
+  }
+
+  _getInputSchema() {
+    const schema = [];
+
+    const input = this.$getInput();
+    if (input === undefined) {
+      return schema;
+    }
+
+    for (const child of input.$getChildren()) {
+      schema.push({
+        key: child.$getKey(),
+        aliases: child.$aliases,
+        position: child.$position,
+        isVariadic: child.$isVariadic,
+        isSubArguments: child.$isSubInput
+      });
+    }
+
+    return schema;
   }
 
   _getImplementation(parent) {
@@ -442,55 +430,20 @@ async function getEnvironment() {
   return _environment;
 }
 
-function findArgument(expression, child) {
-  const foundKeys = [];
-  let value;
-
-  const childKey = child.$getKey();
-  const result = findProperty(expression, childKey, child.$aliases);
-  if (result) {
-    foundKeys.push(result.foundKey);
-    value = result.value;
-  }
-
-  const position = child.$position;
-  if (position !== undefined) {
-    const positionalArgumentKey = makePositionalArgumentKey(position);
-    if (positionalArgumentKey in expression) {
-      foundKeys.push(positionalArgumentKey);
-      value = expression[positionalArgumentKey];
-    }
-  }
-
-  if (child.$isVariadic) {
-    let position = child.$position;
-    if (position === undefined) {
-      throw new Error(`A ${formatCode('@isVariadic')} attribute must be paired with a ${formatCode('@position')} attribute`);
-    }
-    value = value !== undefined ? [value] : [];
-    while (true) {
-      position++;
-      const positionalArgumentKey = makePositionalArgumentKey(position);
-      if (!(positionalArgumentKey in expression)) {
-        break;
+let _environmentSchema;
+async function getEnvironmentSchema() {
+  if (!_environmentSchema) {
+    _environmentSchema = [];
+    const environment = await getEnvironment();
+    for (const child of environment.$getChildren({includeNativeChildren: true})) {
+      if (!(child instanceof Value)) {
+        // Ignore native methods and getters
+        continue;
       }
-      foundKeys.push(positionalArgumentKey);
-      value.push(expression[positionalArgumentKey]);
-    }
-    if (!value.length) {
-      value = undefined;
+      _environmentSchema.push({key: child.$getKey(), aliases: child.$aliases});
     }
   }
-
-  if (child.$isSubInput) {
-    const subArgumentsKey = getSubArgumentsKey();
-    if (subArgumentsKey in expression) {
-      foundKeys.push(subArgumentsKey);
-      value = expression[subArgumentsKey];
-    }
-  }
-
-  return {foundKeys, value};
+  return _environmentSchema;
 }
 
 export default MethodResource;
