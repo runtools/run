@@ -13,6 +13,14 @@ module.exports = base =>
       return tags.join(', ');
     }
 
+    async formatNameAndAge({name, age}) {
+      let result = name;
+      if (age !== undefined) {
+        result += ` (${age})`;
+      }
+      return result;
+    }
+
     async build() {
       this.hasBeenBuilt = true;
     }

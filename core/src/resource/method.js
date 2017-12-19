@@ -182,14 +182,16 @@ export class MethodResource extends Resource {
     const methodResource = this;
 
     return async function (input, environment, ...rest) {
+      if (rest.length !== 0) {
+        throw new TypeError(`A resource method must be invoked with a maximum of two arguments (${formatCode('input')} and ${formatCode('environment')})`);
+      }
+
       const {
         normalizedInput,
         normalizedEnvironment
       } = await methodResource._normalizeInputAndEnvironment(input, environment);
 
-      if (rest.length !== 0) {
-        throw new TypeError(`A resource method must be invoked with a maximum of two arguments (${formatCode('input')} and ${formatCode('environment')})`);
-      }
+      methodResource._validateInput(normalizedInput);
 
       const implementation = methodResource._getImplementation(this);
       if (!implementation) {
@@ -298,6 +300,18 @@ export class MethodResource extends Resource {
     }
 
     return schema;
+  }
+
+  _validateInput(input) {
+    input.$forEachChild(child => {
+      if (child.$isOptional) {
+        return;
+      }
+      if (child instanceof Value && child.$value !== undefined) {
+        return;
+      }
+      throw new Error(`${formatCode(child.$getKey())} input attribute is missing`);
+    });
   }
 
   _getImplementation(parent) {

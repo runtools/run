@@ -15,7 +15,9 @@
           "@default": "Hello",
           "@position": 0
         },
-        "shout": false
+        "shout": {
+          "@default": false
+        }
       }
     },
     "formatGreetingExpression": {
@@ -29,6 +31,18 @@
           "@default": [],
           "@position": 0,
           "@isVariadic": true
+        }
+      }
+    },
+    "formatNameAndAge": {
+      "@type": "method",
+      "@input": {
+        "name": {
+          "@type": "string"
+        },
+        "age": {
+          "@type": "number",
+          "@isOptional": true
         }
       }
     },

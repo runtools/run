@@ -10,7 +10,7 @@ describe('MethodResource', () => {
     const method = await MethodResource.$create({
       '@input': {
         name: {'@type': 'string', '@position': 0},
-        age: {'@type': 'number'},
+        age: {'@type': 'number', '@isOptional': true},
         tags: {'@type': 'array', '@position': 1, '@isVariadic': true},
         subInput: {'@type': 'object', '@isSubInput': true}
       },
@@ -30,21 +30,25 @@ describe('MethodResource', () => {
     expect(children[0]).toBeInstanceOf(StringResource);
     expect(children[0].$getKey()).toBe('name');
     expect(children[0].$position).toBe(0);
+    expect(children[0].$isOptional).toBeUndefined();
     expect(children[0].$isVariadic).toBeUndefined();
     expect(children[0].$isSubInput).toBeUndefined();
     expect(children[1]).toBeInstanceOf(NumberResource);
     expect(children[1].$getKey()).toBe('age');
     expect(children[1].$position).toBeUndefined();
+    expect(children[1].$isOptional).toBe(true);
     expect(children[1].$isVariadic).toBeUndefined();
     expect(children[1].$isSubInput).toBeUndefined();
     expect(children[2]).toBeInstanceOf(ArrayResource);
     expect(children[2].$getKey()).toBe('tags');
     expect(children[2].$position).toBe(1);
+    expect(children[2].$isOptional).toBeUndefined();
     expect(children[2].$isVariadic).toBe(true);
     expect(children[2].$isSubInput).toBeUndefined();
     expect(children[3]).toBeInstanceOf(ObjectResource);
     expect(children[3].$getKey()).toBe('subInput');
     expect(children[3].$position).toBeUndefined();
+    expect(children[3].$isOptional).toBeUndefined();
     expect(children[3].$isVariadic).toBeUndefined();
     expect(children[3].$isSubInput).toBe(true);
 
@@ -73,7 +77,14 @@ describe('MethodResource', () => {
     expect(await person.formatGreetingMethod()).toBe('Hello Manu!');
   });
 
-  test('variadic parameter', async () => {
+  test('invocation with optional parameter', async () => {
+    const person = await Resource.$load('../../fixtures/person-instance', {directory: __dirname});
+    expect(await person.formatNameAndAge({name: 'Manu'})).toBe('Manu');
+    expect(await person.formatNameAndAge({name: 'Manu', age: 45})).toBe('Manu (45)');
+    await expect(person.formatNameAndAge({age: 45})).rejects.toBeInstanceOf(Error);
+  });
+
+  test('invocation with variadic parameter', async () => {
     const person = await Resource.$load('../../fixtures/person-instance', {directory: __dirname});
 
     expect(await person.formatTags()).toBe('');
@@ -160,9 +171,15 @@ describe('MethodResource', () => {
     });
 
     expect((await MethodResource.$create({
-      '@input': {name: {'@type': 'string', '@position': 0}, age: {'@type': 'number'}}
+      '@input': {
+        name: {'@type': 'string', '@position': 0},
+        age: {'@type': 'number', '@isOptional': true}
+      }
     })).$serialize()).toEqual({
-      '@input': {name: {'@type': 'string', '@position': 0}, age: {'@type': 'number'}}
+      '@input': {
+        name: {'@type': 'string', '@position': 0},
+        age: {'@type': 'number', '@isOptional': true}
+      }
     });
 
     expect((await MethodResource.$create({

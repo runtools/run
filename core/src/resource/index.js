@@ -133,6 +133,7 @@ export class Resource {
         eventInput: {
           '@type': 'object',
           '@description': 'Input sent to event listeners',
+          '@isOptional': true,
           '@isSubInput': true
         }
       }
@@ -144,6 +145,7 @@ export class Resource {
         eventInput: {
           '@type': 'object',
           '@description': 'Input sent to event listeners',
+          '@isOptional': true,
           '@isSubInput': true
         }
       }
@@ -155,6 +157,7 @@ export class Resource {
         eventInput: {
           '@type': 'object',
           '@description': 'Input sent to event listeners',
+          '@isOptional': true,
           '@isSubInput': true
         }
       }
@@ -166,6 +169,7 @@ export class Resource {
         eventInput: {
           '@type': 'object',
           '@description': 'Input sent to event listeners',
+          '@isOptional': true,
           '@isSubInput': true
         }
       }
@@ -210,6 +214,7 @@ export class Resource {
         eventInput: {
           '@type': 'object',
           '@description': 'Input sent to event listeners',
+          '@isOptional': true,
           '@isSubInput': true
         }
       }
@@ -228,6 +233,7 @@ export class Resource {
         eventInput: {
           '@type': 'object',
           '@description': 'Input sent to event listeners',
+          '@isOptional': true,
           '@isSubInput': true
         }
       }
@@ -255,11 +261,13 @@ export class Resource {
           '@type': 'array',
           '@description': 'Key path to sub-resources, attributes or methods',
           '@position': 0,
+          '@isOptional': true,
           '@isVariadic': true
         },
         showNative: {
           '@type': 'boolean',
           '@aliases': ['native'],
+          '@isOptional': true,
           '@hidden': true
         }
       }
@@ -274,6 +282,7 @@ export class Resource {
           '@type': 'array',
           '@description': 'Key path to sub-resources, attributes or methods',
           '@position': 0,
+          '@isOptional': true,
           '@isVariadic': true
         }
       }
@@ -344,6 +353,7 @@ export class Resource {
       set('$description', '@description');
       set('$aliases', '@aliases');
       set('$position', '@position');
+      set('$isOptional', '@isOptional');
       set('$isVariadic', '@isVariadic');
       set('$isSubInput', '@isSubInput');
       set('$examples', '@examples');
@@ -1006,6 +1016,17 @@ export class Resource {
     this._directory = directory;
   }
 
+  get $description() {
+    return this._getInheritedValue('_description');
+  }
+
+  set $description(description) {
+    if (description !== undefined && typeof description !== 'string') {
+      throw new TypeError(`${formatCode('@description')} attribute must be a string`);
+    }
+    this._description = description;
+  }
+
   get $aliases() {
     return this._getInheritedValue('_aliases');
   }
@@ -1037,17 +1058,6 @@ export class Resource {
     return Boolean(aliases && aliases.has(alias));
   }
 
-  get $description() {
-    return this._getInheritedValue('_description');
-  }
-
-  set $description(description) {
-    if (description !== undefined && typeof description !== 'string') {
-      throw new TypeError(`${formatCode('@description')} attribute must be a string`);
-    }
-    this._description = description;
-  }
-
   get $position() {
     return this._getInheritedValue('_position');
   }
@@ -1057,6 +1067,17 @@ export class Resource {
       throw new TypeError(`${formatCode('@position')} attribute must be a number`);
     }
     this._position = position;
+  }
+
+  get $isOptional() {
+    return this._getInheritedValue('_isOptional');
+  }
+
+  set $isOptional(isOptional) {
+    if (isOptional !== undefined && typeof isOptional !== 'boolean') {
+      throw new TypeError(`${formatCode('@isOptional')} attribute must be a boolean`);
+    }
+    this._isOptional = isOptional;
   }
 
   get $isVariadic() {
@@ -1440,7 +1461,7 @@ export class Resource {
 
   async '@create'({typeOrSpecifier} = {}, environment) {
     if (!typeOrSpecifier) {
-      throw new Error(`${formatCode('typeOrSpecifier')} argument is missing`);
+      throw new Error(`${formatCode('typeOrSpecifier')} input attribute is missing`);
     }
 
     let type;
@@ -1487,7 +1508,7 @@ export class Resource {
 
   async '@add'({typeOrImport, key} = {}, environment) {
     if (!typeOrImport) {
-      throw new Error(`${formatCode('typeOrImport')} argument is missing`);
+      throw new Error(`${formatCode('typeOrImport')} input attribute is missing`);
     }
 
     let type;
@@ -1499,7 +1520,7 @@ export class Resource {
     }
 
     if (!key) {
-      throw new Error(`${formatCode('key')} argument is missing`);
+      throw new Error(`${formatCode('key')} input attribute is missing`);
     }
 
     let child = this.$getChild(key);
@@ -1536,7 +1557,7 @@ export class Resource {
 
   async '@remove'({key} = {}, environment) {
     if (!key) {
-      throw new Error(`${formatCode('key')} argument is missing`);
+      throw new Error(`${formatCode('key')} input attribute is missing`);
     }
 
     const child = this.$getChild(key);
@@ -1609,14 +1630,14 @@ export class Resource {
 
   async '@load'({specifier}) {
     if (!specifier) {
-      throw new Error('\'specifier\' argument is missing');
+      throw new Error('\'specifier\' input attribute is missing');
     }
     return await this.constructor.$load(specifier, {directory: process.cwd()});
   }
 
   async '@import'({specifier}) {
     if (!specifier) {
-      throw new Error('\'specifier\' argument is missing');
+      throw new Error('\'specifier\' input attribute is missing');
     }
     return await this.constructor.$import(specifier, {directory: process.cwd()});
   }
@@ -1692,6 +1713,7 @@ export class Resource {
     this._printDefault();
     this._printAliases();
     this._printPosition();
+    this._printIsOptional();
     this._printIsVariadic();
     this._printIsSubInput();
     this._printExamples();
@@ -1747,6 +1769,14 @@ export class Resource {
     if (position) {
       emptyLine();
       print(upperFirst(position));
+    }
+  }
+
+  _printIsOptional() {
+    const isOptional = this._formatIsOptional();
+    if (isOptional) {
+      emptyLine();
+      print(upperFirst(isOptional));
     }
   }
 
@@ -1892,6 +1922,7 @@ export class Resource {
       this._formatDefault(),
       this._formatAliases({removeKey: true}),
       this._formatPosition(),
+      this._formatIsOptional({shorten: true}),
       this._formatIsVariadic({shorten: true}),
       this._formatIsSubInput({shorten: true})
     ];
@@ -1983,6 +2014,17 @@ export class Resource {
     return 'position: ' + formatValue(position);
   }
 
+  _formatIsOptional({shorten} = {}) {
+    const isOptional = this.$isOptional;
+    if (isOptional === undefined) {
+      return '';
+    }
+    if (shorten) {
+      return isOptional ? 'optional' : '';
+    }
+    return 'optional: ' + formatValue(isOptional);
+  }
+
   _formatIsVariadic({shorten} = {}) {
     const isVariadic = this.$isVariadic;
     if (isVariadic === undefined) {
@@ -2041,6 +2083,10 @@ export class Resource {
 
     if (this._position !== undefined) {
       definition['@position'] = this._position;
+    }
+
+    if (this._isOptional !== undefined) {
+      definition['@isOptional'] = this._isOptional;
     }
 
     if (this._isVariadic !== undefined) {
