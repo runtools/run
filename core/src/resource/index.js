@@ -14,6 +14,7 @@ import {
   formatPath,
   formatCode,
   formatBold,
+  formatUnderline,
   formatDim,
   formatUndefined,
   print,
@@ -1256,9 +1257,12 @@ export class Resource {
     return children;
   }
 
-  $hasChildren() {
+  $hasChildren({includeHiddenChildren = true} = {}) {
     let result = false;
-    this.$forEachChild(() => {
+    this.$forEachChild(child => {
+      if (!includeHiddenChildren && child.$isHidden) {
+        return;
+      }
       result = true;
       return false;
     });
@@ -1709,7 +1713,11 @@ export class Resource {
         const input = this.$getInput();
         child = input && input.$findChild(key);
         if (!child) {
-          throw new Error(`No method input attribute found with this key: ${formatCode(key)}`);
+          const output = this.$getOutput();
+          child = output && output.$findChild(key);
+          if (!child) {
+            throw new Error(`No method input or output attribute found with this key: ${formatCode(key)}`);
+          }
         }
       } else {
         child = this.$findChild(key, {includeNativeChildren: true});
@@ -1721,6 +1729,20 @@ export class Resource {
       return await child['@help']({keys, showNative});
     }
 
+    this._printResource({showNative});
+
+    if (!showNative) {
+      emptyLine();
+      print(formatDim(`(use ${formatCode('@@help')} to display native attributes and methods)`));
+    }
+  }
+
+  async '@@help'({keys}) {
+    return await this['@help']({keys, showNative: true});
+  }
+
+  _printResource({showNative} = {}) {
+    const type = this._getType();
     this._printKeyAndType();
     this._printDescription();
     this._printDefault();
@@ -1732,17 +1754,9 @@ export class Resource {
     this._printExamples();
     if (type === 'method') {
       this._printMethodInput();
+      this._printMethodOutput();
     }
     this._printChildren({showNative});
-
-    if (!showNative) {
-      emptyLine();
-      print(formatDim(`(use ${formatCode('@@help')} to display native attributes and methods)`));
-    }
-  }
-
-  async '@@help'({keys}) {
-    return await this['@help']({keys, showNative: true});
   }
 
   _printKeyAndType() {
@@ -1844,26 +1858,31 @@ export class Resource {
   }
 
   _printMethodInput() {
-    const input = this.$getInput();
+    this.__printMethodInputOrOutput('INPUT');
+  }
 
-    if (input === undefined) {
+  _printMethodOutput() {
+    this.__printMethodInputOrOutput('OUTPUT');
+  }
+
+  __printMethodInputOrOutput(attribute) {
+    const resource = attribute === 'INPUT' ? this.$getInput() : this.$getOutput();
+
+    if (resource === undefined) {
       return;
     }
 
-    const children = [];
-    input.$forEachChild(child => {
-      if (child.$isHidden) {
-        return;
-      }
-      const formattedChild = child._formatChild();
-      children.push(formattedChild);
-    });
+    const type = resource._getType();
 
-    if (children.length) {
+    emptyLine();
+    print(formatBold(formatUnderline(attribute === 'INPUT' ? 'Input' : 'Output')));
+
+    if (type !== 'resource' || !resource.$hasChildren({includeHiddenChildren: false})) {
       emptyLine();
-      print('Input:');
-      print(formatTable(children, {columnGap: 2, margins: {left: 2}}));
+      print(resource._formatType());
     }
+
+    resource._printResource();
   }
 
   _printChildren({showNative} = {}) {
@@ -1965,7 +1984,7 @@ export class Resource {
     if (type === 'resource') {
       return 'resource';
     }
-    if (this.$hasChildren()) {
+    if (this.$hasChildren({includeHiddenChildren: false})) {
       return type + '*';
     }
     return type;
