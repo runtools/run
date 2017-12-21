@@ -49,13 +49,19 @@ export class Resource {
     '@parent': {
       '@description': 'Get the parent of the resource',
       '@getter': {
-        '@type': 'method'
+        '@type': 'method',
+        '@output': {
+          '@isOpen': true
+        }
       }
     },
     '@console': {
       '@description': 'Shortcut to the console tool (tool/console)',
       '@getter': {
         '@type': 'method',
+        '@output': {
+          '@isOpen': true
+        },
         '@run': `@import ${CONSOLE_TOOL_RESOURCE}`
       }
     },
@@ -63,6 +69,9 @@ export class Resource {
       '@description': 'Shortcut to Resdir Registry (resdir/registry)',
       '@getter': {
         '@type': 'method',
+        '@output': {
+          '@isOpen': true
+        },
         '@run': `@import ${RESDIR_REGISTRY_RESOURCE}`
       }
     },
@@ -185,6 +194,9 @@ export class Resource {
           '@examples': ['resdir/example', 'resdir/registry#^1.2.0'],
           '@position': 0
         }
+      },
+      '@output': {
+        '@isOpen': true
       }
     },
     '@import': {
@@ -198,6 +210,9 @@ export class Resource {
           '@examples': ['tool/notifier', 'tool/console#^1.2.0'],
           '@position': 0
         }
+      },
+      '@output': {
+        '@isOpen': true
       }
     },
     '@emit': {
@@ -291,18 +306,7 @@ export class Resource {
 
   async $construct(
     definition,
-    {
-      bases = [],
-      parent,
-      key,
-      directory,
-      file,
-      specifier,
-      parse,
-      allowNewChildren,
-      isUnpublishable,
-      isNative
-    } = {}
+    {bases = [], parent, key, directory, file, specifier, parse, isUnpublishable, isNative} = {}
   ) {
     this._bases = [];
     this._children = [];
@@ -373,6 +377,8 @@ export class Resource {
       set('$autoBoxing', '@autoBoxing');
       set('$autoUnboxing', '@autoUnboxing');
 
+      const isOpen = takeProperty(definition, '@isOpen');
+
       for (const base of bases) {
         await this._inherit(base);
       }
@@ -381,21 +387,12 @@ export class Resource {
       const exportDefinition = takeProperty(definition, '@export');
 
       for (const key of Object.keys(definition)) {
-        await this.$setChild(key, definition[key], {
-          parse,
-          createIfNew: allowNewChildren,
-          isNative
-        });
+        await this.$setChild(key, definition[key], {parse, isNative});
       }
 
       if (unpublishableDefinition !== undefined) {
         for (const [key, definition] of entries(unpublishableDefinition)) {
-          await this.$setChild(key, definition, {
-            parse,
-            createIfNew: allowNewChildren,
-            isUnpublishable: true,
-            isNative
-          });
+          await this.$setChild(key, definition, {parse, isUnpublishable: true, isNative});
         }
       }
 
@@ -406,6 +403,10 @@ export class Resource {
         });
         this.$setExport(resource);
       }
+
+      if (isOpen !== undefined) {
+        this.$isOpen = isOpen;
+      }
     });
   }
 
@@ -413,18 +414,7 @@ export class Resource {
 
   static async $create(
     definition,
-    {
-      base,
-      parent,
-      key,
-      directory,
-      file,
-      specifier,
-      parse,
-      allowNewChildren,
-      isUnpublishable,
-      isNative
-    } = {}
+    {base, parent, key, directory, file, specifier, parse, isUnpublishable, isNative} = {}
   ) {
     let normalizedDefinition;
     if (isPlainObject(definition)) {
@@ -540,7 +530,6 @@ export class Resource {
       file,
       specifier,
       parse,
-      allowNewChildren,
       isUnpublishable,
       isNative
     });
@@ -786,7 +775,7 @@ export class Resource {
   async _inherit(base) {
     this._bases.push(base);
     await base.$forEachChildAsync(async child => {
-      await this.$setChild(child.$getKey(), undefined);
+      await this.$setChild(child.$getKey());
     });
   }
 
@@ -826,7 +815,7 @@ export class Resource {
     return result;
   }
 
-  _getInheritedValue(key) {
+  _getInheritedValue(key, options) {
     let result;
     this.$forSelfAndEachBase(
       resource => {
@@ -835,7 +824,7 @@ export class Resource {
           return false;
         }
       },
-      {deepSearch: true}
+      {skipSelf: options && options.skipSelf, deepSearch: true}
     );
     return result;
   }
@@ -936,6 +925,18 @@ export class Resource {
 
   $setIsUnpublishable(isUnpublishable) {
     this._isUnpublishable = isUnpublishable;
+  }
+
+  $getIsOpenByDefault() {
+    const isOpenByDefault = this._getInheritedValue('_isOpenByDefault');
+    return isOpenByDefault !== undefined ? isOpenByDefault : true;
+  }
+
+  $setIsOpenByDefault(isOpenByDefault) {
+    if (isOpenByDefault !== undefined && typeof isOpenByDefault !== 'boolean') {
+      throw new TypeError('\'isOpenByDefault\' argument must be a boolean');
+    }
+    this._isOpenByDefault = isOpenByDefault;
   }
 
   get $comment() {
@@ -1155,6 +1156,18 @@ export class Resource {
     this._implementation = implementation;
   }
 
+  get $isOpen() {
+    const isOpen = this._getInheritedValue('_isOpen');
+    return isOpen !== undefined ? isOpen : this.$getIsOpenByDefault();
+  }
+
+  set $isOpen(isOpen) {
+    if (isOpen !== undefined && typeof isOpen !== 'boolean') {
+      throw new TypeError(`${formatCode('@isOpen')} attribute must be a boolean`);
+    }
+    this._isOpen = isOpen;
+  }
+
   get $hidden() {
     return this._getInheritedValue('_hidden');
   }
@@ -1288,12 +1301,12 @@ export class Resource {
     return result;
   }
 
-  async $setChild(key, definition, {parse, createIfNew = true, isUnpublishable, isNative} = {}) {
+  async $setChild(key, definition, {parse, isUnpublishable, isNative} = {}) {
     const removedChildIndex = this.$removeChild(key);
 
     const base = this.$getChildFromBases(key);
 
-    if (!createIfNew && !base) {
+    if (!base && !this.$isOpen) {
       const err = new Error(`Child creation is not allowed (key: ${formatCode(key)})`);
       err.code = 'RUN_CORE_CHILD_CREATION_DENIED';
       err.childKey = key;
@@ -2107,6 +2120,10 @@ export class Resource {
 
     if (this._implementation !== undefined) {
       definition['@implementation'] = this._implementation;
+    }
+
+    if (this._isOpen !== undefined) {
+      definition['@isOpen'] = this._isOpen;
     }
 
     if (this._hidden !== undefined) {

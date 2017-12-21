@@ -18,19 +18,19 @@
         "shout": {
           "@default": false
         }
+      },
+      "@output": {
+        "result": {
+          "@type": "string"
+        }
       }
     },
     "formatGreetingExpression": {
       "@type": "method",
-      "@run": "formatGreetingMethod Hi"
-    },
-    "formatTags": {
-      "@type": "method",
-      "@input": {
-        "tags": {
-          "@default": [],
-          "@position": 0,
-          "@isVariadic": true
+      "@run": "formatGreetingMethod Hi",
+      "@output": {
+        "result": {
+          "@type": "string"
         }
       }
     },
@@ -43,6 +43,26 @@
         "age": {
           "@type": "number",
           "@isOptional": true
+        }
+      },
+      "@output": {
+        "result": {
+          "@type": "string"
+        }
+      }
+    },
+    "formatTags": {
+      "@type": "method",
+      "@input": {
+        "tags": {
+          "@default": [],
+          "@position": 0,
+          "@isVariadic": true
+        }
+      },
+      "@output": {
+        "result": {
+          "@type": "string"
         }
       }
     },

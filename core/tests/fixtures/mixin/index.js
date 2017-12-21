@@ -1,6 +1,6 @@
 module.exports = base =>
   class Mixin extends base {
     async mixinMethod() {
-      return 'mixin-method-returned-value';
+      return {result: 'mixin-method-returned-value'};
     }
   };

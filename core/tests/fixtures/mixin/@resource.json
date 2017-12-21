@@ -6,7 +6,12 @@
       "@type": "string"
     },
     "mixinMethod": {
-      "@type": "method"
+      "@type": "method",
+      "@output": {
+        "result": {
+          "@type": "string"
+        }
+      }
     }
   }
 }

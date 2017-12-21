@@ -6,11 +6,7 @@ module.exports = base =>
       if (shout) {
         result = result.toUpperCase();
       }
-      return result;
-    }
-
-    async formatTags({tags}) {
-      return tags.join(', ');
+      return {result};
     }
 
     async formatNameAndAge({name, age}) {
@@ -18,7 +14,11 @@ module.exports = base =>
       if (age !== undefined) {
         result += ` (${age})`;
       }
-      return result;
+      return {result};
+    }
+
+    async formatTags({tags}) {
+      return {result: tags.join(', ')};
     }
 
     async build() {

@@ -21,6 +21,7 @@ export class MethodResource extends Resource {
     definition = {...definition};
 
     const input = takeProperty(definition, '@input');
+    const output = takeProperty(definition, '@output');
     const runExpression = takeProperty(definition, '@run');
     const beforeExpression = takeProperty(definition, '@before');
     const afterExpression = takeProperty(definition, '@after');
@@ -32,6 +33,9 @@ export class MethodResource extends Resource {
     await catchContext(this, async () => {
       if (input !== undefined) {
         await this.$setInput(input);
+      }
+      if (output !== undefined) {
+        await this.$setOutput(output);
       }
       if (runExpression !== undefined) {
         this.$runExpression = runExpression;
@@ -56,14 +60,33 @@ export class MethodResource extends Resource {
   }
 
   async $setInput(input) {
-    this._input = undefined;
     if (input === undefined) {
+      this._input = undefined;
       return;
     }
     if (!isPlainObject(input)) {
       throw new Error(`${formatCode('@input')} property must be an object`);
     }
-    this._input = await Resource.$create(input);
+    input = await Resource.$create(input);
+    input.$setIsOpenByDefault(false);
+    this._input = input;
+  }
+
+  $getOutput() {
+    return this._getInheritedValue('_output');
+  }
+
+  async $setOutput(output) {
+    if (output === undefined) {
+      this._output = undefined;
+      return;
+    }
+    if (!isPlainObject(output)) {
+      throw new Error(`${formatCode('@output')} property must be an object`);
+    }
+    output = await Resource.$create(output);
+    output.$setIsOpenByDefault(false);
+    this._output = output;
   }
 
   get $runExpression() {
@@ -191,8 +214,6 @@ export class MethodResource extends Resource {
         normalizedEnvironment
       } = await methodResource._normalizeInputAndEnvironment(input, environment);
 
-      methodResource._validateInput(normalizedInput);
-
       const implementation = methodResource._getImplementation(this);
       if (!implementation) {
         throw new Error(`Can't find implementation for ${formatCode(methodResource.$getKey())}`);
@@ -203,30 +224,32 @@ export class MethodResource extends Resource {
         await methodResource._run(beforeExpression, normalizedInput, {parent: this});
       }
 
-      const result = await implementation.call(this, normalizedInput, normalizedEnvironment);
+      const output = await implementation.call(this, normalizedInput, normalizedEnvironment);
+
+      const normalizedOutput = await methodResource._normalizeOutput(output);
 
       const afterExpression = methodResource.$getAllAfterExpressions();
       if (afterExpression.length) {
         await methodResource._run(afterExpression, normalizedInput, {parent: this});
       }
 
-      return result;
+      return normalizedOutput;
     };
   }
 
-  async _normalizeInputAndEnvironment(input = {}, environment = {}) {
-    let normalizedInput = this.$getInput();
-    if (normalizedInput === undefined) {
-      normalizedInput = await Resource.$create();
+  async _normalizeInputAndEnvironment(input, environment) {
+    if (input instanceof Resource) {
+      // TODO: Check input compatibility
+      return input;
     }
 
-    if (!isPlainObject(input)) {
-      throw new TypeError(`'input' argument is invalid`);
-    }
+    // if (input !== undefined && !isPlainObject(input)) {
+    //   throw new TypeError(`Resource method input is invalid`);
+    // }
 
     let extractedEnvironment;
 
-    const inputIsParsedExpression = isParsedExpression(input);
+    const inputIsParsedExpression = input !== undefined && isParsedExpression(input);
 
     if (inputIsParsedExpression) {
       let result;
@@ -241,35 +264,32 @@ export class MethodResource extends Resource {
       if (!isEmpty(result)) {
         extractedEnvironment = result;
       }
-
-      if (!isEmpty(remainder)) {
-        const keys = Object.keys(remainder)
-          .map(key => formatCode(key))
-          .join(', ');
-        throw new Error(`Cannot match arguments (keys: ${keys})`);
-      }
+      input = {...input, ...remainder};
     }
 
-    try {
-      normalizedInput = await normalizedInput.$extend(input, {
-        parse: inputIsParsedExpression,
-        allowNewChildren: false
-      });
-    } catch (err) {
-      if (err.code === 'RUN_CORE_CHILD_CREATION_DENIED') {
-        throw new Error(`Cannot match argument (key: ${formatCode(err.childKey)})`);
+    let normalizedInput = this.$getInput();
+
+    if (normalizedInput !== undefined) {
+      try {
+        normalizedInput = await normalizedInput.$extend(input, {parse: inputIsParsedExpression});
+      } catch (err) {
+        if (err.code === 'RUN_CORE_CHILD_CREATION_DENIED') {
+          throw new Error(`Cannot match input attribute (key: ${formatCode(err.childKey)})`);
+        }
+        throw err;
       }
-      throw err;
+
+      this._validateInput(normalizedInput);
     }
 
     let normalizedEnvironment = await getEnvironment();
 
     if (normalizedEnvironment.$isAncestorOf(environment)) {
       normalizedEnvironment = await environment.$extend();
-    } else if (isPlainObject(environment)) {
+    } else if (environment === undefined || isPlainObject(environment)) {
       normalizedEnvironment = await normalizedEnvironment.$extend(environment);
     } else {
-      throw new TypeError(`'environment' argument is invalid`);
+      throw new TypeError(`Resource method environment is invalid`);
     }
 
     if (extractedEnvironment) {
@@ -311,6 +331,47 @@ export class MethodResource extends Resource {
         return;
       }
       throw new Error(`${formatCode(child.$getKey())} input attribute is missing`);
+    });
+  }
+
+  async _normalizeOutput(output) {
+    let normalizedOutput = this.$getOutput();
+    if (normalizedOutput === undefined) {
+      return undefined;
+    }
+
+    if (output instanceof Resource) {
+      // TODO: Check output compatibility
+      return output;
+    }
+
+    // if (output !== undefined && !isPlainObject(output)) {
+    //   throw new TypeError(`Resource method output is invalid`);
+    // }
+
+    try {
+      normalizedOutput = await normalizedOutput.$extend(output);
+    } catch (err) {
+      if (err.code === 'RUN_CORE_CHILD_CREATION_DENIED') {
+        throw new Error(`Cannot match output attribute (key: ${formatCode(err.childKey)})`);
+      }
+      throw err;
+    }
+
+    this._validateOutput(normalizedOutput);
+
+    return normalizedOutput;
+  }
+
+  _validateOutput(output) {
+    output.$forEachChild(child => {
+      if (child.$isOptional) {
+        return;
+      }
+      if (child instanceof Value && child.$value !== undefined) {
+        return;
+      }
+      throw new Error(`${formatCode(child.$getKey())} output attribute is missing`);
     });
   }
 
@@ -383,6 +444,11 @@ export class MethodResource extends Resource {
     const input = this._input;
     if (input !== undefined) {
       definition['@input'] = input.$serialize();
+    }
+
+    const output = this._output;
+    if (output !== undefined) {
+      definition['@output'] = output.$serialize();
     }
 
     const runExpression = this._runExpression;
