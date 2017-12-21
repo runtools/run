@@ -74,63 +74,63 @@ describe('MethodResource', () => {
   test('invocation', async () => {
     const Person = await Resource.$import('../../fixtures/person', {directory: __dirname});
 
-    expect((await Person.formatGreetingMethod()).result).toBe('Hello Anonymous!');
+    expect(await Person.formatGreetingMethod()).toBe('Hello Anonymous!');
 
     let person;
 
     person = await Person.$extend({name: 'Manu'});
 
-    expect((await person.formatGreetingMethod()).result).toBe('Hello Manu!');
-    expect((await person.formatGreetingMethod({shout: true})).result).toBe('HELLO MANU!');
-    expect((await person.formatGreetingMethod({verb: 'Konnichiwa'})).result).toBe('Konnichiwa Manu!');
+    expect(await person.formatGreetingMethod()).toBe('Hello Manu!');
+    expect(await person.formatGreetingMethod({shout: true})).toBe('HELLO MANU!');
+    expect(await person.formatGreetingMethod({verb: 'Konnichiwa'})).toBe('Konnichiwa Manu!');
     await expect(person.formatGreetingMethod({unknownArg: 1})).rejects.toBeInstanceOf(Error);
 
-    expect((await person.formatGreetingExpression()).result).toBe('Hi Manu!');
+    expect(await person.formatGreetingExpression()).toBe('Hi Manu!');
 
     person = await Resource.$load('../../fixtures/person-instance', {directory: __dirname});
 
-    expect((await person.formatGreetingMethod()).result).toBe('Hello Manu!');
+    expect(await person.formatGreetingMethod()).toBe('Hello Manu!');
   });
 
   test('invocation with optional parameter', async () => {
     const person = await Resource.$load('../../fixtures/person-instance', {directory: __dirname});
-    expect((await person.formatNameAndAge({name: 'Manu'})).result).toBe('Manu');
-    expect((await person.formatNameAndAge({name: 'Manu', age: 45})).result).toBe('Manu (45)');
+    expect(await person.formatNameAndAge({name: 'Manu'})).toBe('Manu');
+    expect(await person.formatNameAndAge({name: 'Manu', age: 45})).toBe('Manu (45)');
     await expect(person.formatNameAndAge({age: 45})).rejects.toBeInstanceOf(Error);
   });
 
   test('invocation with variadic parameter', async () => {
     const person = await Resource.$load('../../fixtures/person-instance', {directory: __dirname});
 
-    expect((await person.formatTags()).result).toBe('');
-    expect((await person.formatTags({tags: ['cool']})).result).toBe('cool');
-    expect((await person.formatTags({tags: ['cool', 'nice']})).result).toBe('cool, nice');
+    expect(await person.formatTags()).toBe('');
+    expect(await person.formatTags({tags: ['cool']})).toBe('cool');
+    expect(await person.formatTags({tags: ['cool', 'nice']})).toBe('cool, nice');
 
     let method;
 
     method = await MethodResource.$create({
       '@run': 'formatTags',
-      '@output': {result: {'@type': 'string'}}
+      '@output': {'@type': 'string'}
     });
-    expect((await method.$invoke(undefined, {parent: person})).result).toBe('');
+    expect((await method.$invoke(undefined, {parent: person})).$value).toBe('');
 
     method = await MethodResource.$create({
       '@run': 'formatTags cool',
-      '@output': {result: {'@type': 'string'}}
+      '@output': {'@type': 'string'}
     });
-    expect((await method.$invoke(undefined, {parent: person})).result).toBe('cool');
+    expect((await method.$invoke(undefined, {parent: person})).$value).toBe('cool');
 
     method = await MethodResource.$create({
       '@run': 'formatTags cool nice',
-      '@output': {result: {'@type': 'string'}}
+      '@output': {'@type': 'string'}
     });
-    expect((await method.$invoke(undefined, {parent: person})).result).toBe('cool, nice');
+    expect((await method.$invoke(undefined, {parent: person})).$value).toBe('cool, nice');
 
     method = await MethodResource.$create({
       '@run': 'formatTags cool nice smart',
-      '@output': {result: {'@type': 'string'}}
+      '@output': {'@type': 'string'}
     });
-    expect((await method.$invoke(undefined, {parent: person})).result).toBe('cool, nice, smart');
+    expect((await method.$invoke(undefined, {parent: person})).$value).toBe('cool, nice, smart');
   });
 
   test('events', async () => {
@@ -186,8 +186,8 @@ describe('MethodResource', () => {
       {'@import': ['../../fixtures/person', '../../fixtures/mixin']},
       {directory: __dirname}
     );
-    expect((await personWithMixin.formatGreetingMethod()).result).toBe('Hello Anonymous!');
-    expect((await personWithMixin.mixinMethod()).result).toBe('mixin-method-returned-value');
+    expect(await personWithMixin.formatGreetingMethod()).toBe('Hello Anonymous!');
+    expect(await personWithMixin.mixinMethod()).toBe('mixin-method-returned-value');
   });
 
   test('serialization', async () => {

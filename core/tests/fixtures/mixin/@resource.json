@@ -8,9 +8,7 @@
     "mixinMethod": {
       "@type": "method",
       "@output": {
-        "result": {
-          "@type": "string"
-        }
+        "@type": "string"
       }
     }
   }

@@ -198,10 +198,10 @@ export class MethodResource extends Resource {
   $defaultAutoUnboxing = true;
 
   $unbox() {
-    return this.$getFunction();
+    return this.$getFunction({autoUnbox: true});
   }
 
-  $getFunction() {
+  $getFunction({autoUnbox} = {}) {
     const methodResource = this;
 
     return async function (input, environment, ...rest) {
@@ -226,7 +226,11 @@ export class MethodResource extends Resource {
 
       const output = await implementation.call(this, normalizedInput, normalizedEnvironment);
 
-      const normalizedOutput = await methodResource._normalizeOutput(output);
+      let normalizedOutput = await methodResource._normalizeOutput(output);
+
+      if (normalizedOutput !== undefined && autoUnbox) {
+        normalizedOutput = normalizedOutput.$autoUnbox();
+      }
 
       const afterExpression = methodResource.$getAllAfterExpressions();
       if (afterExpression.length) {

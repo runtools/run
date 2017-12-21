@@ -20,18 +20,14 @@
         }
       },
       "@output": {
-        "result": {
-          "@type": "string"
-        }
+        "@type": "string"
       }
     },
     "formatGreetingExpression": {
       "@type": "method",
       "@run": "formatGreetingMethod Hi",
       "@output": {
-        "result": {
-          "@type": "string"
-        }
+        "@type": "string"
       }
     },
     "formatNameAndAge": {
@@ -46,9 +42,7 @@
         }
       },
       "@output": {
-        "result": {
-          "@type": "string"
-        }
+        "@type": "string"
       }
     },
     "formatTags": {
@@ -61,9 +55,7 @@
         }
       },
       "@output": {
-        "result": {
-          "@type": "string"
-        }
+        "@type": "string"
       }
     },
     "address": {

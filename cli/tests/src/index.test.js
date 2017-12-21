@@ -29,26 +29,26 @@ describe('CLI', () => {
     let greeting;
 
     greeting = await run('formatGreetingMethod', {directory: personInstanceDirectory});
-    expect(greeting.result).toBe('Hello Manu!');
+    expect(greeting.$value).toBe('Hello Manu!');
 
     greeting = await run('formatGreetingMethod --verb=Welcome', {
       directory: personInstanceDirectory
     });
-    expect(greeting.result).toBe('Welcome Manu!');
+    expect(greeting.$value).toBe('Welcome Manu!');
 
     greeting = await run('formatGreetingMethod Konnichiwa', {
       directory: personInstanceDirectory
     });
-    expect(greeting.result).toBe('Konnichiwa Manu!');
+    expect(greeting.$value).toBe('Konnichiwa Manu!');
 
     greeting = await run('formatGreetingMethod Bonjour --shout', {
       directory: personInstanceDirectory
     });
-    expect(greeting.result).toBe('BONJOUR MANU!');
+    expect(greeting.$value).toBe('BONJOUR MANU!');
 
     await expect(run('formatGreetingMethod Hi extraArgument', {directory: personInstanceDirectory})).rejects.toBeInstanceOf(Error);
 
     greeting = await run('formatGreetingExpression', {directory: personInstanceDirectory});
-    expect(greeting.result).toBe('Hi Manu!');
+    expect(greeting.$value).toBe('Hi Manu!');
   });
 });
