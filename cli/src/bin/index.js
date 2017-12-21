@@ -8,7 +8,7 @@ import updateNotifier from 'update-notifier';
 import dotenv from 'dotenv';
 import {printErrorAndExit} from '@resdir/console';
 
-import {run} from '../';
+import {runExpression, runREPL} from '../';
 
 dotenv.config({path: join(__dirname, '..', '..', '.env')});
 
@@ -24,9 +24,11 @@ updateNotifier({pkg}).notify();
   expression = expression.map(arg => '"' + arg + '"');
   expression = expression.join(' ');
 
-  if (expression === '') {
-    throw new Error('REPL is not yet implemented');
-  }
+  const directory = process.cwd();
 
-  await run(expression, {directory: process.cwd()});
+  if (expression) {
+    await runExpression(expression, {directory});
+  } else {
+    await runREPL({directory});
+  }
 })().catch(printErrorAndExit);
