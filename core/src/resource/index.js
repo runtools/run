@@ -18,6 +18,7 @@ import {
   formatDim,
   formatUndefined,
   print,
+  printText,
   printSuccess,
   emptyLine,
   formatTable
@@ -1741,89 +1742,95 @@ export class Resource {
     return await this['@help']({keys, showNative: true});
   }
 
-  _printResource({showNative} = {}) {
+  _printResource({indentation = 0, showNative} = {}) {
     const type = this._getType();
-    this._printKeyAndType();
-    this._printDescription();
-    this._printDefault();
-    this._printAliases();
-    this._printPosition();
-    this._printIsOptional();
-    this._printIsVariadic();
-    this._printIsSubInput();
-    this._printExamples();
-    if (type === 'method') {
-      this._printMethodInput();
-      this._printMethodOutput();
+    this._printKeyAndType({indentation});
+    this._printDescription({indentation});
+    if (!showNative) {
+      this._printDefault({indentation});
+      this._printAliases({indentation});
+      this._printPosition({indentation});
+      this._printIsOptional({indentation});
+      this._printIsVariadic({indentation});
+      this._printIsSubInput({indentation});
+      this._printExamples({indentation});
+      if (type === 'method') {
+        this._printMethodListens({indentation});
+        this._printMethodInput({indentation});
+        this._printMethodOutput({indentation});
+      }
     }
-    this._printChildren({showNative});
+    this._printChildren({indentation, showNative});
   }
 
-  _printKeyAndType() {
+  _printKeyAndType({indentation}) {
     const key = this.$getKey();
     if (key) {
       const formattedType = this._formatType();
       emptyLine();
-      print(formatBold(formatCode(key, {addBackticks: false}) + ' ' + formatDim(`(${formattedType})`)));
+      printText(
+        formatBold(formatCode(key, {addBackticks: false}) + ' ' + formatDim(`(${formattedType})`)),
+        {indentation}
+      );
     }
   }
 
-  _printDescription() {
+  _printDescription({indentation}) {
     const description = this.$description;
     if (description) {
-      print(description);
+      printText(description, {indentation});
     }
   }
 
-  _printDefault() {
+  _printDefault({indentation}) {
     const defaultValue = this._formatDefault();
     if (defaultValue) {
       emptyLine();
-      print(upperFirst(defaultValue));
+      printText(upperFirst(defaultValue), {indentation});
     }
   }
 
-  _printAliases() {
+  _printAliases({indentation}) {
     const aliases = this._formatAliases({removeKey: true});
     if (aliases) {
       emptyLine();
-      print(upperFirst(aliases));
+      printText(upperFirst(aliases), {indentation});
     }
   }
 
-  _printPosition() {
+  _printPosition({indentation}) {
     const position = this._formatPosition();
     if (position) {
       emptyLine();
-      print(upperFirst(position));
+      printText(upperFirst(position), {indentation});
     }
   }
 
-  _printIsOptional() {
+  _printIsOptional({indentation}) {
     const isOptional = this._formatIsOptional();
     if (isOptional) {
       emptyLine();
-      print(upperFirst(isOptional));
+      printText(upperFirst(isOptional), {indentation});
     }
   }
 
-  _printIsVariadic() {
+  _printIsVariadic({indentation}) {
     const isVariadic = this._formatIsVariadic();
     if (isVariadic) {
       emptyLine();
-      print(upperFirst(isVariadic));
+      printText(upperFirst(isVariadic), {indentation});
     }
   }
 
-  _printIsSubInput() {
+  _printIsSubInput({indentation}) {
     const isSubInput = this._formatIsSubInput();
     if (isSubInput) {
       emptyLine();
-      print(upperFirst(isSubInput));
+      printText(upperFirst(isSubInput), {indentation});
     }
   }
 
-  _printExamples() {
+  _printExamples({indentation}) {
     let formattedExamples;
 
     const examples = this.$examples;
@@ -1845,27 +1852,27 @@ export class Resource {
 
     if (formattedExamples !== undefined) {
       emptyLine();
-      print(formattedExamples);
+      printText(formattedExamples, {indentation});
     }
   }
 
-  _formatExample(example) {
-    const type = this._getType();
-    if (type === 'method') {
-      return formatCode(example, {addBackticks: false});
+  _printMethodListens({indentation}) {
+    const listens = this._formatMethodListens();
+    if (listens) {
+      emptyLine();
+      printText(upperFirst(listens), {indentation});
     }
-    return formatValue(example, {maxWidth: 78});
   }
 
-  _printMethodInput() {
-    this.__printMethodInputOrOutput('INPUT');
+  _printMethodInput({indentation}) {
+    this.__printMethodInputOrOutput('INPUT', {indentation});
   }
 
-  _printMethodOutput() {
-    this.__printMethodInputOrOutput('OUTPUT');
+  _printMethodOutput({indentation}) {
+    this.__printMethodInputOrOutput('OUTPUT', {indentation});
   }
 
-  __printMethodInputOrOutput(attribute) {
+  __printMethodInputOrOutput(attribute, {indentation}) {
     const resource = attribute === 'INPUT' ? this.$getInput() : this.$getOutput();
 
     if (resource === undefined) {
@@ -1875,17 +1882,17 @@ export class Resource {
     const type = resource._getType();
 
     emptyLine();
-    print(formatBold(formatUnderline(attribute === 'INPUT' ? 'Input' : 'Output')));
+    printText(formatUnderline(attribute === 'INPUT' ? 'Input' : 'Output'), {indentation});
 
     if (type !== 'resource' || !resource.$hasChildren({includeHiddenChildren: false})) {
       emptyLine();
-      print(resource._formatType());
+      printText(resource._formatType(), {indentation});
     }
 
-    resource._printResource();
+    resource._printResource({indentation: indentation + 2});
   }
 
-  _printChildren({showNative} = {}) {
+  _printChildren({indentation, showNative}) {
     const sections = [];
     const allData = [];
 
@@ -1920,19 +1927,19 @@ export class Resource {
         section.creator._formatResourceSpecifier({directory: process.cwd()});
       if (title) {
         emptyLine();
-        print(formatBold(title));
+        printText(formatBold(title), {indentation});
       }
 
       if (section.attributes.length) {
         emptyLine();
-        print('Attributes:');
-        print(formatTable(section.attributes, {allData, columnGap: 2, margins: {left: 2}}));
+        printText('Attributes:', {indentation});
+        print(formatTable(section.attributes, {allData, columnGap: 2, margins: {left: indentation + 2}}));
       }
 
       if (section.methods.length) {
         emptyLine();
-        print('Methods:');
-        print(formatTable(section.methods, {allData, columnGap: 2, margins: {left: 2}}));
+        printText('Methods:', {indentation});
+        print(formatTable(section.methods, {allData, columnGap: 2, margins: {left: indentation + 2}}));
       }
     }
   }
@@ -2013,7 +2020,7 @@ export class Resource {
     if (defaultValue === undefined) {
       return '';
     }
-    return 'default: ' + formatValue(defaultValue);
+    return 'default: ' + formatValue(defaultValue, {multiline: false});
   }
 
   _formatAliases({removeKey} = {}) {
@@ -2077,6 +2084,23 @@ export class Resource {
       return isSubInput ? 'sub-input' : '';
     }
     return 'sub-input: ' + formatValue(isSubInput);
+  }
+
+  _formatExample(example) {
+    const type = this._getType();
+    if (type === 'method') {
+      return formatCode(example, {addBackticks: false});
+    }
+    return formatValue(example, {maxWidth: 78});
+  }
+
+  _formatMethodListens() {
+    let events = this.$getAllListenedEvents();
+    if (!events.length) {
+      return '';
+    }
+    events = events.map(alias => formatString(alias, {addQuotes: false}));
+    return 'listens: ' + events.join(', ');
   }
 
   static $normalize(definition, _options) {
