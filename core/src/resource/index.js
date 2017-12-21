@@ -283,7 +283,7 @@ export class Resource {
           '@type': 'boolean',
           '@aliases': ['native'],
           '@isOptional': true,
-          '@hidden': true
+          '@isHidden': true
         }
       }
     },
@@ -373,7 +373,7 @@ export class Resource {
 
       set('$runtime', '@runtime');
       set('$implementation', '@implementation');
-      set('$hidden', '@hidden');
+      set('$isHidden', '@isHidden');
       set('$autoBoxing', '@autoBoxing');
       set('$autoUnboxing', '@autoUnboxing');
 
@@ -1168,15 +1168,15 @@ export class Resource {
     this._isOpen = isOpen;
   }
 
-  get $hidden() {
-    return this._getInheritedValue('_hidden');
+  get $isHidden() {
+    return this._getInheritedValue('_isHidden');
   }
 
-  set $hidden(hidden) {
-    if (hidden !== undefined && typeof hidden !== 'boolean') {
-      throw new TypeError(`${formatCode('@hidden')} attribute must be a boolean`);
+  set $isHidden(isHidden) {
+    if (isHidden !== undefined && typeof isHidden !== 'boolean') {
+      throw new TypeError(`${formatCode('@isHidden')} attribute must be a boolean`);
     }
-    this._hidden = hidden;
+    this._isHidden = isHidden;
   }
 
   $defaultAutoBoxing = false;
@@ -1852,7 +1852,7 @@ export class Resource {
 
     const children = [];
     input.$forEachChild(child => {
-      if (child.$hidden) {
+      if (child.$isHidden) {
         return;
       }
       const formattedChild = child._formatChild();
@@ -1872,7 +1872,7 @@ export class Resource {
 
     this.$forEachChild(
       child => {
-        if (child.$hidden) {
+        if (child.$isHidden) {
           return;
         }
 
@@ -2126,8 +2126,8 @@ export class Resource {
       definition['@isOpen'] = this._isOpen;
     }
 
-    if (this._hidden !== undefined) {
-      definition['@hidden'] = this._hidden;
+    if (this._isHidden !== undefined) {
+      definition['@isHidden'] = this._isHidden;
     }
 
     if (this._autoBoxing !== undefined) {

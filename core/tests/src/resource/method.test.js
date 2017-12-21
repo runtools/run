@@ -30,6 +30,7 @@ describe('MethodResource', () => {
 
     const input = method.$getInput();
     expect(input).toBeInstanceOf(Resource);
+    expect(input.$isOpen).toBe(false);
     children = input.$getChildren();
     expect(children).toHaveLength(4);
     expect(children[0]).toBeInstanceOf(StringResource);
@@ -59,6 +60,7 @@ describe('MethodResource', () => {
 
     const output = method.$getOutput();
     expect(output).toBeInstanceOf(Resource);
+    expect(output.$isOpen).toBe(false);
     children = output.$getChildren();
     expect(children).toHaveLength(1);
     expect(children[0]).toBeInstanceOf(StringResource);

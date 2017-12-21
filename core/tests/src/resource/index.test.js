@@ -88,10 +88,16 @@ describe('Resource', () => {
     )).$implementation).toBe('../../fixtures/person/index.js');
   });
 
-  test('@hidden', async () => {
-    expect((await Resource.$create()).$hidden).toBeUndefined();
-    expect((await Resource.$create({'@hidden': false})).$hidden).toBe(false);
-    expect((await Resource.$create({'@hidden': true})).$hidden).toBe(true);
+  test('@isHidden', async () => {
+    expect((await Resource.$create()).$isHidden).toBeUndefined();
+    expect((await Resource.$create({'@isHidden': false})).$isHidden).toBe(false);
+    expect((await Resource.$create({'@isHidden': true})).$isHidden).toBe(true);
+  });
+
+  test('@isOpen', async () => {
+    expect((await Resource.$create()).$isOpen).toBe(true);
+    expect((await Resource.$create({'@isOpen': false})).$isOpen).toBe(false);
+    expect((await Resource.$create({'@isOpen': true})).$isOpen).toBe(true);
   });
 
   test('simple property definition', async () => {
@@ -310,7 +316,7 @@ describe('Resource', () => {
       '@aliases': ['hi', 'bonjour'],
       '@description': 'This is a resource',
       '@examples': ['aturing/nice-tool', 'resdir/hello'],
-      '@hidden': true
+      '@isHidden': true
     });
     await testSerialization({color: {'@type': 'string'}});
     await testSerialization({color: 'green'});
