@@ -331,10 +331,9 @@ export class MethodResource extends Resource {
       if (child.$isOptional) {
         return;
       }
-      if (child instanceof Value && child.$value !== undefined) {
-        return;
+      if (child instanceof Value && child.$value === undefined) {
+        throw new Error(`${formatCode(child.$getKey())} input attribute is missing`);
       }
-      throw new Error(`${formatCode(child.$getKey())} input attribute is missing`);
     });
   }
 

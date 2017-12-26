@@ -1,8 +1,7 @@
 import {join, resolve, dirname, extname, isAbsolute} from 'path';
 import {existsSync, unlinkSync} from 'fs';
 import {homedir} from 'os';
-import assert from 'assert';
-import {isPlainObject, isEmpty, union, pull, upperFirst, entries, compact} from 'lodash';
+import {isPlainObject, isEmpty, union, entries} from 'lodash';
 import isDirectory from 'is-directory';
 import {ensureDirSync, ensureFileSync} from 'fs-extra';
 import {getProperty, takeProperty} from '@resdir/util';
@@ -13,17 +12,9 @@ import {
   formatString,
   formatPath,
   formatCode,
-  formatBold,
-  formatUnderline,
-  formatDim,
-  formatUndefined,
   print,
-  printText,
-  printSuccess,
-  emptyLine,
-  formatTable
+  printSuccess
 } from '@resdir/console';
-import indentString from 'indent-string';
 import {load, save} from '@resdir/file-manager';
 import {validateResourceKey} from '@resdir/resource-key';
 import {parseResourceIdentifier} from '@resdir/resource-identifier';
@@ -41,6 +32,7 @@ const RESOURCE_FILE_FORMATS = ['json', 'json5', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
 const PRIVATE_DEV_RESOURCE_FILE_NAME = '@resource.dev.private';
 
+const RESOURCE_HELPER_RESOURCE = 'resource/helper';
 const RESDIR_REGISTRY_RESOURCE = 'resdir/registry';
 const CONSOLE_TOOL_RESOURCE = 'tool/console';
 
@@ -283,9 +275,9 @@ export class Resource {
         },
         showNative: {
           '@type': 'boolean',
+          '@description': 'Show help for native attributes and methods',
           '@aliases': ['native'],
-          '@isOptional': true,
-          '@isHidden': true
+          '@isOptional': true
         }
       }
     },
@@ -1223,6 +1215,14 @@ export class Resource {
     this._export = resource;
   }
 
+  $getType() {
+    return this.constructor.$RESOURCE_TYPE;
+  }
+
+  static $isTypeIdentifier(identifier) {
+    return Boolean(getResourceClass(identifier, {throwIfInvalid: false}));
+  }
+
   $forEachChild(fn, {includeResourceChildren = true, includeNativeChildren} = {}) {
     if (includeResourceChildren) {
       const children = this._children;
@@ -1306,8 +1306,10 @@ export class Resource {
     return result;
   }
 
-  async $setChild(key, definition, {parse, isUnpublishable, isNative} = {}) {
+  async $setChild(key, value, {parse, isUnpublishable, isNative} = {}) {
     const removedChildIndex = this.$removeChild(key);
+
+    let child;
 
     const base = this.$getChildFromBases(key);
 
@@ -1318,15 +1320,22 @@ export class Resource {
       throw err;
     }
 
-    const child = await Resource.$create(definition, {
-      base,
-      key,
-      directory: this.$getCurrentDirectory({throwIfUndefined: false}),
-      parent: this,
-      parse,
-      isUnpublishable,
-      isNative: isNative || (base && base.$getIsNative())
-    });
+    if (value instanceof Resource) {
+      // TODO: Merge base and value
+      child = await value.$extend();
+      child.$setKey(key);
+      child.$setParent(this);
+    } else {
+      child = await Resource.$create(value, {
+        base,
+        key,
+        directory: this.$getCurrentDirectory({throwIfUndefined: false}),
+        parent: this,
+        parse,
+        isUnpublishable,
+        isNative: isNative || (base && base.$getIsNative())
+      });
+    }
 
     if (!base) {
       child.$setCreator(this);
@@ -1475,6 +1484,13 @@ export class Resource {
     await this.$forEachChildAsync(async child => {
       await child.$broadcast(event, eventInput);
     });
+  }
+
+  static async _getResourceHelper() {
+    if (!this._resourceHelper) {
+      this._resourceHelper = await Resource.$import(RESOURCE_HELPER_RESOURCE);
+    }
+    return this._resourceHelper;
   }
 
   async '@create'({typeOrSpecifier} = {}, environment) {
@@ -1704,403 +1720,13 @@ export class Resource {
   }
 
   async '@help'({keys = [], showNative} = {}) {
-    const type = this._getType();
-
-    keys = [...keys];
-    const key = keys.shift();
-    if (key) {
-      let child;
-      if (type === 'method') {
-        const input = this.$getInput();
-        child = input && input.$findChild(key);
-        if (!child) {
-          const output = this.$getOutput();
-          child = output && output.$findChild(key);
-          if (!child) {
-            throw new Error(`No method input or output attribute found with this key: ${formatCode(key)}`);
-          }
-        }
-      } else {
-        child = this.$findChild(key, {includeNativeChildren: true});
-        if (!child) {
-          throw new Error(`No attribute or method found with this key: ${formatCode(key)}`);
-        }
-        child = await child.$resolveGetter({parent: this});
-      }
-      return await child['@help']({keys, showNative});
-    }
-
-    this._printResource({showNative});
-
-    if (!showNative) {
-      emptyLine();
-      print(formatDim(`(use ${formatCode('@@help')} to display native attributes and methods)`));
-    }
+    const helper = await this.constructor._getResourceHelper();
+    const resourcePtr = await getResourceClass('pointer').$create(this);
+    await helper.help({resourcePtr, keys, showNative});
   }
 
   async '@@help'({keys}) {
     return await this['@help']({keys, showNative: true});
-  }
-
-  _printResource({indentation = 0, showNative} = {}) {
-    const type = this._getType();
-    this._printKeyAndType({indentation});
-    this._printDescription({indentation});
-    if (!showNative) {
-      this._printDefault({indentation});
-      this._printAliases({indentation});
-      this._printPosition({indentation});
-      this._printIsOptional({indentation});
-      this._printIsVariadic({indentation});
-      this._printIsSubInput({indentation});
-      this._printExamples({indentation});
-      if (type === 'method') {
-        this._printMethodListens({indentation});
-        this._printMethodInput({indentation});
-        this._printMethodOutput({indentation});
-      }
-    }
-    this._printChildren({indentation, showNative});
-  }
-
-  _printKeyAndType({indentation}) {
-    const key = this.$getKey();
-    if (key) {
-      const formattedType = this._formatType();
-      emptyLine();
-      printText(
-        formatBold(formatCode(key, {addBackticks: false}) + ' ' + formatDim(`(${formattedType})`)),
-        {indentation}
-      );
-    }
-  }
-
-  _printDescription({indentation}) {
-    const description = this.$description;
-    if (description) {
-      printText(description, {indentation});
-    }
-  }
-
-  _printDefault({indentation}) {
-    const defaultValue = this._formatDefault();
-    if (defaultValue) {
-      emptyLine();
-      printText(upperFirst(defaultValue), {indentation});
-    }
-  }
-
-  _printAliases({indentation}) {
-    const aliases = this._formatAliases({removeKey: true});
-    if (aliases) {
-      emptyLine();
-      printText(upperFirst(aliases), {indentation});
-    }
-  }
-
-  _printPosition({indentation}) {
-    const position = this._formatPosition();
-    if (position) {
-      emptyLine();
-      printText(upperFirst(position), {indentation});
-    }
-  }
-
-  _printIsOptional({indentation}) {
-    const isOptional = this._formatIsOptional();
-    if (isOptional) {
-      emptyLine();
-      printText(upperFirst(isOptional), {indentation});
-    }
-  }
-
-  _printIsVariadic({indentation}) {
-    const isVariadic = this._formatIsVariadic();
-    if (isVariadic) {
-      emptyLine();
-      printText(upperFirst(isVariadic), {indentation});
-    }
-  }
-
-  _printIsSubInput({indentation}) {
-    const isSubInput = this._formatIsSubInput();
-    if (isSubInput) {
-      emptyLine();
-      printText(upperFirst(isSubInput), {indentation});
-    }
-  }
-
-  _printExamples({indentation}) {
-    let formattedExamples;
-
-    const examples = this.$examples;
-    if (examples && examples.length === 1) {
-      formattedExamples = 'Example:';
-      const example = this._formatExample(examples[0]);
-      if (example.includes('\n')) {
-        formattedExamples += '\n' + indentString(example, 2);
-      } else {
-        formattedExamples += ' ' + example;
-      }
-    } else if (examples && examples.length > 1) {
-      formattedExamples = 'Examples:';
-      for (let example of examples) {
-        example = this._formatExample(example);
-        formattedExamples += '\n' + indentString(example, 2);
-      }
-    }
-
-    if (formattedExamples !== undefined) {
-      emptyLine();
-      printText(formattedExamples, {indentation});
-    }
-  }
-
-  _printMethodListens({indentation}) {
-    const listens = this._formatMethodListens();
-    if (listens) {
-      emptyLine();
-      printText(upperFirst(listens), {indentation});
-    }
-  }
-
-  _printMethodInput({indentation}) {
-    this.__printMethodInputOrOutput('INPUT', {indentation});
-  }
-
-  _printMethodOutput({indentation}) {
-    this.__printMethodInputOrOutput('OUTPUT', {indentation});
-  }
-
-  __printMethodInputOrOutput(attribute, {indentation}) {
-    const resource = attribute === 'INPUT' ? this.$getInput() : this.$getOutput();
-
-    if (resource === undefined) {
-      return;
-    }
-
-    const type = resource._getType();
-
-    emptyLine();
-    printText(formatUnderline(attribute === 'INPUT' ? 'Input' : 'Output'), {indentation});
-
-    if (type !== 'resource' || !resource.$hasChildren({includeHiddenChildren: false})) {
-      emptyLine();
-      printText(resource._formatType(), {indentation});
-    }
-
-    resource._printResource({indentation: indentation + 2});
-  }
-
-  _printChildren({indentation, showNative}) {
-    const sections = [];
-    const allData = [];
-
-    this.$forEachChild(
-      child => {
-        if (child.$isHidden) {
-          return;
-        }
-
-        const creator = child.$getCreator();
-        assert(creator, 'A resource child should always have a creator');
-
-        let section = sections.find(section => section.creator === creator);
-        if (!section) {
-          section = {creator, attributes: [], methods: []};
-          sections.push(section);
-        }
-
-        const formattedChild = child._formatChild();
-        const type = child._getType();
-        section[type === 'method' ? 'methods' : 'attributes'].push(formattedChild);
-        allData.push(formattedChild);
-      },
-      {includeResourceChildren: !showNative, includeNativeChildren: showNative}
-    );
-
-    for (let i = 0; i < sections.length; i++) {
-      const section = sections[i];
-
-      const title = showNative ?
-        section.creator._formatType() :
-        section.creator._formatResourceSpecifier({directory: process.cwd()});
-      if (title) {
-        emptyLine();
-        printText(formatBold(title), {indentation});
-      }
-
-      if (section.attributes.length) {
-        emptyLine();
-        printText('Attributes:', {indentation});
-        print(formatTable(section.attributes, {allData, columnGap: 2, margins: {left: indentation + 2}}));
-      }
-
-      if (section.methods.length) {
-        emptyLine();
-        printText('Methods:', {indentation});
-        print(formatTable(section.methods, {allData, columnGap: 2, margins: {left: indentation + 2}}));
-      }
-    }
-  }
-
-  _formatChild() {
-    const type = this._getType();
-
-    const key = this.$getKey();
-    let formattedKey = formatCode(key, {addBackticks: false});
-    if (type !== 'method') {
-      let formattedType = this._formatType();
-      formattedType = formatDim(`(${formattedType})`);
-      formattedKey += ' ' + formattedType;
-    }
-
-    const description = this.$description;
-    let formattedDescription = description || '';
-    let attributes = [
-      this._formatDefault(),
-      this._formatAliases({removeKey: true}),
-      this._formatPosition(),
-      this._formatIsOptional({shorten: true}),
-      this._formatIsVariadic({shorten: true}),
-      this._formatIsSubInput({shorten: true})
-    ];
-    attributes = compact(attributes);
-    if (attributes.length) {
-      if (formattedDescription) {
-        formattedDescription += ' ';
-      }
-      formattedDescription += formatDim(`(${attributes.join('; ')})`);
-    }
-
-    return [formattedKey, formattedDescription];
-  }
-
-  _getType() {
-    return this.constructor.$RESOURCE_TYPE;
-  }
-
-  _formatType() {
-    if (this.$getGetter()) {
-      return 'getter';
-    }
-    const type = this._getType();
-    if (type === 'method') {
-      return this.$getIsNative() ? 'native method' : 'method';
-    }
-    if (type === 'resource') {
-      return 'resource';
-    }
-    if (this.$hasChildren({includeHiddenChildren: false})) {
-      return type + '*';
-    }
-    return type;
-  }
-
-  _formatResourceSpecifier({directory}) {
-    const specifier = this.$getResourceSpecifier();
-    if (!specifier) {
-      return undefined;
-    }
-
-    const parsedSpecifier = parseResourceSpecifier(specifier);
-    if (parsedSpecifier.location) {
-      const file = this.$getResourceFile();
-      if (!file) {
-        return formatUndefined('file');
-      }
-      return formatPath(file, {addQuotes: false, baseDirectory: directory, relativize: true});
-    }
-
-    return formatString(specifier, {addQuotes: false});
-  }
-
-  _formatDefault() {
-    const defaultValue = this.$default;
-    if (defaultValue === undefined) {
-      return '';
-    }
-    return 'default: ' + formatValue(defaultValue, {multiline: false});
-  }
-
-  _formatAliases({removeKey} = {}) {
-    let aliases = this.$aliases;
-    if (aliases === undefined) {
-      return '';
-    }
-    aliases = Array.from(aliases);
-    if (removeKey) {
-      const key = this.$getKey();
-      if (key) {
-        pull(aliases, key);
-      }
-    }
-    if (aliases.length === 0) {
-      return '';
-    }
-    aliases = aliases.map(alias => formatCode(alias, {addBackticks: false}));
-    if (aliases.length === 1) {
-      return 'alias: ' + aliases[0];
-    }
-    return 'aliases: ' + aliases.join(', ');
-  }
-
-  _formatPosition() {
-    const position = this.$position;
-    if (position === undefined) {
-      return '';
-    }
-    return 'position: ' + formatValue(position);
-  }
-
-  _formatIsOptional({shorten} = {}) {
-    const isOptional = this.$isOptional;
-    if (isOptional === undefined) {
-      return '';
-    }
-    if (shorten) {
-      return isOptional ? 'optional' : '';
-    }
-    return 'optional: ' + formatValue(isOptional);
-  }
-
-  _formatIsVariadic({shorten} = {}) {
-    const isVariadic = this.$isVariadic;
-    if (isVariadic === undefined) {
-      return '';
-    }
-    if (shorten) {
-      return isVariadic ? 'variadic' : '';
-    }
-    return 'variadic: ' + formatValue(isVariadic);
-  }
-
-  _formatIsSubInput({shorten} = {}) {
-    const isSubInput = this.$isSubInput;
-    if (isSubInput === undefined) {
-      return '';
-    }
-    if (shorten) {
-      return isSubInput ? 'sub-input' : '';
-    }
-    return 'sub-input: ' + formatValue(isSubInput);
-  }
-
-  _formatExample(example) {
-    const type = this._getType();
-    if (type === 'method') {
-      return formatCode(example, {addBackticks: false});
-    }
-    return formatValue(example, {maxWidth: 78});
-  }
-
-  _formatMethodListens() {
-    let events = this.$getAllListenedEvents();
-    if (!events.length) {
-      return '';
-    }
-    events = events.map(alias => formatString(alias, {addQuotes: false}));
-    return 'listens: ' + events.join(', ');
   }
 
   static $normalize(definition, _options) {
@@ -2424,6 +2050,8 @@ function getResourceClass(type, {throwIfInvalid = true} = {}) {
       return require('./binary').default;
     case 'method':
       return require('./method').default;
+    case 'pointer':
+      return require('./pointer').default;
     default:
       if (throwIfInvalid) {
         throw new Error(`Type ${formatString(type)} is invalid`);
