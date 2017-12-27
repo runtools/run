@@ -1,41 +1,40 @@
-import NumberResource from '../../../dist/resource/number';
+import Resource from '../../../dist/resource';
 
 describe('NumberResource', () => {
   test('creation', async () => {
-    expect(await NumberResource.$create()).toBeInstanceOf(NumberResource);
-    expect((await NumberResource.$create()).$value).toBeUndefined();
-    expect((await NumberResource.$create({'@value': 0})).$value).toBe(0);
-    expect((await NumberResource.$create({'@value': 1})).$value).toBe(1);
-    expect((await NumberResource.$create({'@value': 123.45})).$value).toBe(123.45);
-    expect((await NumberResource.$create(-789)).$value).toBe(-789);
-    await expect(NumberResource.$create({'@value': 'hello'})).rejects.toBeInstanceOf(Error);
-    await expect(NumberResource.$create('hello')).rejects.toBeInstanceOf(Error);
+    expect((await Resource.$create({'@type': 'number'})).$getType()).toBe('number');
+    expect((await Resource.$create({'@type': 'number'})).$value).toBeUndefined();
+    expect((await Resource.$create({'@value': 0})).$value).toBe(0);
+    expect((await Resource.$create({'@value': 1})).$value).toBe(1);
+    expect((await Resource.$create({'@value': 123.45})).$value).toBe(123.45);
+    expect((await Resource.$create(-789)).$value).toBe(-789);
+    await expect(Resource.$create({'@type': 'number', '@value': 'hello'})).rejects.toBeInstanceOf(Error);
   });
 
   test('default', async () => {
-    expect((await NumberResource.$create()).$default).toBeUndefined();
-    expect((await NumberResource.$create()).$value).toBeUndefined();
-    expect((await NumberResource.$create({'@default': 0})).$default).toBe(0);
-    expect((await NumberResource.$create({'@default': 0})).$value).toBe(0);
-    expect((await NumberResource.$create({'@value': 1, '@default': 0})).$default).toBe(0);
-    expect((await NumberResource.$create({'@value': 1, '@default': 0})).$value).toBe(1);
-    await expect(NumberResource.$create({'@default': 'hi'})).rejects.toBeInstanceOf(Error);
+    expect((await Resource.$create({'@type': 'number'})).$default).toBeUndefined();
+    expect((await Resource.$create({'@type': 'number'})).$value).toBeUndefined();
+    expect((await Resource.$create({'@default': 0})).$default).toBe(0);
+    expect((await Resource.$create({'@default': 0})).$value).toBe(0);
+    expect((await Resource.$create({'@value': 1, '@default': 0})).$default).toBe(0);
+    expect((await Resource.$create({'@value': 1, '@default': 0})).$value).toBe(1);
+    await expect(Resource.$create({'@type': 'number', '@default': 'hi'})).rejects.toBeInstanceOf(Error);
   });
 
   test('parsing', async () => {
-    await expect(NumberResource.$create('123')).rejects.toBeInstanceOf(Error);
-    expect((await NumberResource.$create('123', {parse: true})).$value).toBe(123);
-    expect((await NumberResource.$create('0.999', {parse: true})).$value).toBe(0.999);
-    expect((await NumberResource.$create('-3.333', {parse: true})).$value).toBe(-3.333);
-    await expect(NumberResource.$create('', {parse: true})).rejects.toBeInstanceOf(Error);
-    await expect(NumberResource.$create('two', {parse: true})).rejects.toBeInstanceOf(Error);
+    const number = await Resource.$create({'@type': 'number'});
+    await expect(number.$extend('123')).rejects.toBeInstanceOf(Error);
+    expect((await number.$extend('123', {parse: true})).$value).toBe(123);
+    expect((await number.$extend('0.999', {parse: true})).$value).toBe(0.999);
+    expect((await number.$extend('-3.333', {parse: true})).$value).toBe(-3.333);
+    await expect(number.$extend('', {parse: true})).rejects.toBeInstanceOf(Error);
+    await expect(number.$extend('two', {parse: true})).rejects.toBeInstanceOf(Error);
   });
 
   test('serialization', async () => {
-    expect((await NumberResource.$create()).$serialize()).toBeUndefined();
-    expect((await NumberResource.$create(123.45)).$serialize()).toBe(123.45);
-    expect((await NumberResource.$create({'@default': 0})).$serialize()).toEqual({
-      '@default': 0
-    });
+    expect((await Resource.$create({'@type': 'number'})).$serialize()).toEqual({'@type': 'number'});
+    expect((await Resource.$create(123.45)).$serialize()).toBe(123.45);
+    expect((await Resource.$create({'@value': 123.45})).$serialize()).toBe(123.45);
+    expect((await Resource.$create({'@default': 0})).$serialize()).toEqual({'@default': 0});
   });
 });

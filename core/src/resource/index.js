@@ -391,7 +391,7 @@ export class Resource {
       }
 
       if (exportDefinition !== undefined) {
-        const resource = await Resource.$create(exportDefinition, {
+        const resource = await this.constructor.$create(exportDefinition, {
           directory: this.$getCurrentDirectory({throwIfUndefined: false}),
           specifier
         });
@@ -445,7 +445,6 @@ export class Resource {
     }
 
     if (
-      this === Resource &&
       type === undefined &&
       base === undefined &&
       loadAttribute === undefined &&
@@ -465,7 +464,7 @@ export class Resource {
       bases.push(base);
       NativeClass = base._getNativeClass();
     } else {
-      NativeClass = this;
+      NativeClass = Resource;
     }
 
     if (type !== undefined) {
@@ -540,7 +539,7 @@ export class Resource {
       }
       this._resourceNativeChildren = [];
       for (const [key, definition] of entries(this.$RESOURCE_NATIVE_CHILDREN)) {
-        const child = await Resource.$create(definition, {key, isNative: true});
+        const child = await this.$create(definition, {key, isNative: true});
         child.$setCreator(this.prototype);
         this._resourceNativeChildren.push(child);
       }
@@ -1117,7 +1116,7 @@ export class Resource {
       this._getter = undefined;
       return;
     }
-    this._getter = await Resource.$create(getter, {key, directory, isNative});
+    this._getter = await this.constructor.$create(getter, {key, directory, isNative});
   }
 
   async $resolveGetter({parent} = {}) {
@@ -1326,7 +1325,7 @@ export class Resource {
       child.$setKey(key);
       child.$setParent(this);
     } else {
-      child = await Resource.$create(value, {
+      child = await this.constructor.$create(value, {
         base,
         key,
         directory: this.$getCurrentDirectory({throwIfUndefined: false}),
@@ -1524,7 +1523,7 @@ export class Resource {
           definition['@type'] = type;
         }
 
-        const resource = await Resource.$create(definition, {directory});
+        const resource = await this.constructor.$create(definition, {directory});
         await resource.$emit('@created');
         await resource.$save();
 
@@ -1721,7 +1720,7 @@ export class Resource {
 
   async '@help'({keys = [], showNative} = {}) {
     const helper = await this.constructor._getResourceHelper();
-    const resourcePtr = await getResourceClass('pointer').$create(this);
+    const resourcePtr = this.constructor.$create({'@type': 'pointer', '@target': this});
     await helper.help({resourcePtr, keys, showNative});
   }
 
@@ -1991,7 +1990,10 @@ function inferType(value) {
   if (isPlainObject(value)) {
     return 'object';
   }
-  throw new Error('Cannot infer the type from @value');
+  if (Buffer.isBuffer(value)) {
+    return 'binary';
+  }
+  throw new Error('Cannot infer the type from @value or @default');
 }
 
 function requireImplementation(implementationFile, {directory} = {}) {
@@ -2050,6 +2052,8 @@ function getResourceClass(type, {throwIfInvalid = true} = {}) {
       return require('./binary').default;
     case 'method':
       return require('./method').default;
+    case 'environment':
+      return require('./environment').default;
     case 'pointer':
       return require('./pointer').default;
     default:

@@ -1,37 +1,33 @@
-import StringResource from '../../../dist/resource/string';
+import Resource from '../../../dist/resource';
 
 describe('StringResource', () => {
   test('creation', async () => {
-    expect(await StringResource.$create()).toBeInstanceOf(StringResource);
-    expect((await StringResource.$create()).$value).toBeUndefined();
-    expect((await StringResource.$create({'@value': ''})).$value).toBe('');
-    expect((await StringResource.$create({'@value': 'green'})).$value).toBe('green');
-    expect((await StringResource.$create('blue')).$value).toBe('blue');
-    await expect(StringResource.$create({'@value': 123})).rejects.toBeInstanceOf(Error);
-    await expect(StringResource.$create(123)).rejects.toBeInstanceOf(Error);
+    expect((await Resource.$create({'@type': 'string'})).$getType()).toBe('string');
+    expect((await Resource.$create({'@value': ''})).$getType()).toBe('string');
+    expect((await Resource.$create({'@type': 'string'})).$value).toBeUndefined();
+    expect((await Resource.$create({'@value': ''})).$value).toBe('');
+    expect((await Resource.$create({'@value': 'green'})).$value).toBe('green');
+    expect((await Resource.$create('blue')).$value).toBe('blue');
+    await expect(Resource.$create({'@type': 'string', '@value': 123})).rejects.toBeInstanceOf(Error);
   });
 
   test('default', async () => {
-    expect((await StringResource.$create()).$default).toBeUndefined();
-    expect((await StringResource.$create()).$value).toBeUndefined();
-    expect((await StringResource.$create({'@default': 'black'})).$default).toBe('black');
-    expect((await StringResource.$create({'@default': 'black'})).$value).toBe('black');
-    expect((await StringResource.$create({'@value': 'green', '@default': 'black'})).$default).toBe('black');
-    expect((await StringResource.$create({'@value': 'green', '@default': 'black'})).$value).toBe('green');
-    await expect(StringResource.$create({'@default': 123})).rejects.toBeInstanceOf(Error);
+    expect((await Resource.$create({'@type': 'string'})).$default).toBeUndefined();
+    expect((await Resource.$create({'@type': 'string'})).$value).toBeUndefined();
+    expect((await Resource.$create({'@default': 'black'})).$default).toBe('black');
+    expect((await Resource.$create({'@default': 'black'})).$value).toBe('black');
+    expect((await Resource.$create({'@value': 'green', '@default': 'black'})).$default).toBe('black');
+    expect((await Resource.$create({'@value': 'green', '@default': 'black'})).$value).toBe('green');
+    await expect(Resource.$create({'@type': 'string', '@default': 123})).rejects.toBeInstanceOf(Error);
   });
 
   test('serialization', async () => {
-    expect((await StringResource.$create()).$serialize()).toBeUndefined();
-    expect((await StringResource.$create({'@aliases': ['colour']})).$serialize()).toEqual({
-      '@aliases': ['colour']
+    expect((await Resource.$create({'@type': 'string'})).$serialize()).toEqual({
+      '@type': 'string'
     });
-    expect((await StringResource.$create({'@aliases': ['colour'], '@value': 'green'})).$serialize()).toEqual({
-      '@aliases': ['colour'],
-      '@value': 'green'
-    });
-    expect((await StringResource.$create({'@value': 'green'})).$serialize()).toBe('green');
-    expect((await StringResource.$create({'@default': 'black'})).$serialize()).toEqual({
+    expect((await Resource.$create('green')).$serialize()).toBe('green');
+    expect((await Resource.$create({'@value': 'green'})).$serialize()).toBe('green');
+    expect((await Resource.$create({'@default': 'black'})).$serialize()).toEqual({
       '@default': 'black'
     });
   });

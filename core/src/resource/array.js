@@ -30,10 +30,7 @@ export class ArrayResource extends ValueResource {
   }
 
   static $parseValue(str) {
-    if (!str) {
-      return [];
-    }
-    return str.split(',');
+    return str ? [str] : [];
   }
 
   async '@countItems'() {

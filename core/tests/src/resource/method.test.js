@@ -1,13 +1,9 @@
 import Resource from '../../../dist/resource';
-import MethodResource from '../../../dist/resource/method';
-import StringResource from '../../../dist/resource/string';
-import NumberResource from '../../../dist/resource/number';
-import ArrayResource from '../../../dist/resource/array';
-import ObjectResource from '../../../dist/resource/object';
 
 describe('MethodResource', () => {
   test('creation', async () => {
-    const method = await MethodResource.$create({
+    const method = await Resource.$create({
+      '@type': 'method',
       '@input': {
         name: {'@type': 'string', '@position': 0},
         age: {'@type': 'number', '@isOptional': true},
@@ -24,7 +20,7 @@ describe('MethodResource', () => {
       '@unlisten': 'test'
     });
 
-    expect(method).toBeInstanceOf(MethodResource);
+    expect(method.$getType()).toBe('method');
 
     let children;
 
@@ -33,25 +29,25 @@ describe('MethodResource', () => {
     expect(input.$isOpen).toBe(false);
     children = input.$getChildren();
     expect(children).toHaveLength(4);
-    expect(children[0]).toBeInstanceOf(StringResource);
+    expect(children[0].$getType()).toBe('string');
     expect(children[0].$getKey()).toBe('name');
     expect(children[0].$position).toBe(0);
     expect(children[0].$isOptional).toBeUndefined();
     expect(children[0].$isVariadic).toBeUndefined();
     expect(children[0].$isSubInput).toBeUndefined();
-    expect(children[1]).toBeInstanceOf(NumberResource);
+    expect(children[1].$getType()).toBe('number');
     expect(children[1].$getKey()).toBe('age');
     expect(children[1].$position).toBeUndefined();
     expect(children[1].$isOptional).toBe(true);
     expect(children[1].$isVariadic).toBeUndefined();
     expect(children[1].$isSubInput).toBeUndefined();
-    expect(children[2]).toBeInstanceOf(ArrayResource);
+    expect(children[2].$getType()).toBe('array');
     expect(children[2].$getKey()).toBe('tags');
     expect(children[2].$position).toBe(1);
     expect(children[2].$isOptional).toBeUndefined();
     expect(children[2].$isVariadic).toBe(true);
     expect(children[2].$isSubInput).toBeUndefined();
-    expect(children[3]).toBeInstanceOf(ObjectResource);
+    expect(children[3].$getType()).toBe('object');
     expect(children[3].$getKey()).toBe('subInput');
     expect(children[3].$position).toBeUndefined();
     expect(children[3].$isOptional).toBeUndefined();
@@ -63,7 +59,7 @@ describe('MethodResource', () => {
     expect(output.$isOpen).toBe(false);
     children = output.$getChildren();
     expect(children).toHaveLength(1);
-    expect(children[0]).toBeInstanceOf(StringResource);
+    expect(children[0].$getType()).toBe('string');
     expect(children[0].$getKey()).toBe('result');
 
     expect(method.$beforeExpression).toEqual(['@console print Deploying...']);
@@ -110,25 +106,29 @@ describe('MethodResource', () => {
 
     let method;
 
-    method = await MethodResource.$create({
+    method = await Resource.$create({
+      '@type': 'method',
       '@run': 'formatTags',
       '@output': {'@type': 'string'}
     });
     expect((await method.$invoke(undefined, {parent: person})).$value).toBe('');
 
-    method = await MethodResource.$create({
+    method = await Resource.$create({
+      '@type': 'method',
       '@run': 'formatTags cool',
       '@output': {'@type': 'string'}
     });
     expect((await method.$invoke(undefined, {parent: person})).$value).toBe('cool');
 
-    method = await MethodResource.$create({
+    method = await Resource.$create({
+      '@type': 'method',
       '@run': 'formatTags cool nice',
       '@output': {'@type': 'string'}
     });
     expect((await method.$invoke(undefined, {parent: person})).$value).toBe('cool, nice');
 
-    method = await MethodResource.$create({
+    method = await Resource.$create({
+      '@type': 'method',
       '@run': 'formatTags cool nice smart',
       '@output': {'@type': 'string'}
     });
@@ -193,66 +193,82 @@ describe('MethodResource', () => {
   });
 
   test('serialization', async () => {
-    expect((await MethodResource.$create()).$serialize()).toBeUndefined();
-
-    expect((await MethodResource.$create({'@type': 'method'})).$serialize()).toEqual({
+    expect((await Resource.$create({'@type': 'method'})).$serialize()).toEqual({
       '@type': 'method'
     });
 
-    expect((await MethodResource.$create({
+    expect((await Resource.$create({
+      '@type': 'method',
       '@input': {
         name: {'@type': 'string', '@position': 0},
         age: {'@type': 'number', '@isOptional': true}
       }
     })).$serialize()).toEqual({
+      '@type': 'method',
       '@input': {
         name: {'@type': 'string', '@position': 0},
         age: {'@type': 'number', '@isOptional': true}
       }
     });
 
-    expect((await MethodResource.$create({
+    expect((await Resource.$create({
+      '@type': 'method',
       '@input': {tags: {'@type': 'array', '@position': 0, '@isVariadic': true}}
     })).$serialize()).toEqual({
+      '@type': 'method',
       '@input': {tags: {'@type': 'array', '@position': 0, '@isVariadic': true}}
     });
 
-    expect((await MethodResource.$create({
+    expect((await Resource.$create({
+      '@type': 'method',
       '@input': {subInput: {'@type': 'object', '@isSubInput': true}}
     })).$serialize()).toEqual({
+      '@type': 'method',
       '@input': {subInput: {'@type': 'object', '@isSubInput': true}}
     });
 
-    expect((await MethodResource.$create({
+    expect((await Resource.$create({
+      '@type': 'method',
       '@output': {
         result: {'@type': 'string', '@isOptional': true},
         error: {'@type': 'number'}
       }
     })).$serialize()).toEqual({
+      '@type': 'method',
       '@output': {
         result: {'@type': 'string', '@isOptional': true},
         error: {'@type': 'number'}
       }
     });
 
-    expect((await MethodResource.$create({'@run': 'frontend deploy --@verbose'})).$serialize()).toEqual({'@run': 'frontend deploy --@verbose'});
+    expect((await Resource.$create({
+      '@type': 'method',
+      '@run': 'frontend deploy --@verbose'
+    })).$serialize()).toEqual({'@type': 'method', '@run': 'frontend deploy --@verbose'});
 
-    expect((await MethodResource.$create({'@run': ['build', 'deploy']})).$serialize()).toEqual({
+    expect((await Resource.$create({'@type': 'method', '@run': ['build', 'deploy']})).$serialize()).toEqual({
+      '@type': 'method',
       '@run': ['build', 'deploy']
     });
 
-    expect((await MethodResource.$create({'@before': '@console print Deploying...'})).$serialize()).toEqual({'@before': '@console print Deploying...'});
+    expect((await Resource.$create({
+      '@type': 'method',
+      '@before': '@console print Deploying...'
+    })).$serialize()).toEqual({'@type': 'method', '@before': '@console print Deploying...'});
 
-    expect((await MethodResource.$create({'@after': '@console print Depoyment completed'})).$serialize()).toEqual({'@after': '@console print Depoyment completed'});
+    expect((await Resource.$create({
+      '@type': 'method',
+      '@after': '@console print Depoyment completed'
+    })).$serialize()).toEqual({'@type': 'method', '@after': '@console print Depoyment completed'});
 
-    expect((await MethodResource.$create({'@listen': 'build'})).$serialize()).toEqual({
+    expect((await Resource.$create({'@type': 'method', '@listen': 'build'})).$serialize()).toEqual({
+      '@type': 'method',
       '@listen': 'build'
     });
-    expect((await MethodResource.$create({
-      '@listen': ['build', 'install']
-    })).$serialize()).toEqual({'@listen': ['build', 'install']});
+    expect((await Resource.$create({'@type': 'method', '@listen': ['build', 'install']})).$serialize()).toEqual({'@type': 'method', '@listen': ['build', 'install']});
 
-    expect((await MethodResource.$create({'@unlisten': 'build'})).$serialize()).toEqual({
+    expect((await Resource.$create({'@type': 'method', '@unlisten': 'build'})).$serialize()).toEqual({
+      '@type': 'method',
       '@unlisten': 'build'
     });
   });

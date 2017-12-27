@@ -11,7 +11,6 @@ import {
 } from '@resdir/expression';
 
 import Resource from '../resource';
-import EnvironmentResource from './environment';
 import Value from './value';
 
 export class MethodResource extends Resource {
@@ -67,7 +66,7 @@ export class MethodResource extends Resource {
     if (!isPlainObject(input)) {
       throw new Error(`${formatCode('@input')} property must be an object`);
     }
-    input = await Resource.$create(input);
+    input = await this.constructor.$create(input);
     input.$setIsOpenByDefault(false);
     this._input = input;
   }
@@ -84,7 +83,7 @@ export class MethodResource extends Resource {
     if (!isPlainObject(output)) {
       throw new Error(`${formatCode('@output')} property must be an object`);
     }
-    output = await Resource.$create(output);
+    output = await this.constructor.$create(output);
     output.$setIsOpenByDefault(false);
     this._output = output;
   }
@@ -508,7 +507,7 @@ export class MethodResource extends Resource {
 let _environment;
 async function getEnvironment() {
   if (!_environment) {
-    _environment = await EnvironmentResource.$create();
+    _environment = await Resource.$create({'@type': 'environment'});
   }
   return _environment;
 }
