@@ -12,8 +12,7 @@ import {
   formatString,
   formatPath,
   formatCode,
-  print,
-  printSuccess
+  print
 } from '@resdir/console';
 import {load, save} from '@resdir/file-manager';
 import {validateResourceKey} from '@resdir/resource-key';
@@ -84,7 +83,7 @@ export class Resource {
     },
     '@add': {
       '@type': 'method',
-      '@description': 'Add a property',
+      '@description': 'Add a property to the current resource',
       '@examples': [
         '@add string firstName',
         '@add js/esnext-transpiler transpiler',
@@ -93,7 +92,7 @@ export class Resource {
       '@input': {
         typeOrSpecifier: {
           '@type': 'string',
-          '@description': 'Type or resource specifier',
+          '@description': 'Type or resource specifier of the property to add',
           '@examples': ['string', 'js/esnext-transpiler', 'aws/website#^1.2.0'],
           '@position': 0
         },
@@ -107,7 +106,7 @@ export class Resource {
     },
     '@remove': {
       '@type': 'method',
-      '@description': 'Remove a property',
+      '@description': 'Remove a property from the current resource',
       '@examples': ['@remove firstName', '@remove frontend'],
       '@aliases': ['@rm'],
       '@input': {
@@ -249,13 +248,13 @@ export class Resource {
     },
     '@normalize': {
       '@type': 'method',
-      '@description': 'Normalize the current resource file',
+      '@description': 'Normalize the file of the current resource',
       '@examples': ['@normalize', '@normalize --format=JSON5'],
       '@input': {
         format: {
           '@type': 'string',
           '@description': 'Preferred format',
-          '@examples': ['JSON', 'JSON5'],
+          '@examples': ['JSON', 'JSON5', 'YAML'],
           '@default': 'JSON'
         }
       }
@@ -1485,146 +1484,6 @@ export class Resource {
     });
   }
 
-  static async _getResourceHelper() {
-    if (!this._resourceHelper) {
-      this._resourceHelper = await Resource.$import(RESOURCE_HELPER_RESOURCE);
-    }
-    return this._resourceHelper;
-  }
-
-  async '@create'({typeOrSpecifier} = {}, environment) {
-    if (!typeOrSpecifier) {
-      throw new Error(`${formatCode('typeOrSpecifier')} input attribute is missing`);
-    }
-
-    let type;
-    let specifier;
-    if (getResourceClass(typeOrSpecifier, {throwIfInvalid: false})) {
-      type = typeOrSpecifier;
-    } else {
-      specifier = typeOrSpecifier;
-    }
-
-    const resource = await task(
-      async () => {
-        const directory = process.cwd();
-
-        const existingResource = await this.constructor.$load(directory, {throwIfNotFound: false});
-        if (existingResource) {
-          throw new Error(`A resource already exists in the current directory`);
-        }
-
-        const definition = {};
-        if (specifier) {
-          specifier = await this._pinResource(specifier);
-          definition['@import'] = specifier;
-        }
-        if (type) {
-          definition['@type'] = type;
-        }
-
-        const resource = await this.constructor.$create(definition, {directory});
-        await resource.$emit('@created');
-        await resource.$save();
-
-        return resource;
-      },
-      {
-        intro: `Creating resource...`,
-        outro: `Resource created`
-      },
-      environment
-    );
-
-    return resource;
-  }
-
-  async '@add'({typeOrImport, key} = {}, environment) {
-    if (!typeOrImport) {
-      throw new Error(`${formatCode('typeOrImport')} input attribute is missing`);
-    }
-
-    let type;
-    let specifier;
-    if (getResourceClass(typeOrImport, {throwIfInvalid: false})) {
-      type = typeOrImport;
-    } else {
-      specifier = typeOrImport;
-    }
-
-    if (!key) {
-      throw new Error(`${formatCode('key')} input attribute is missing`);
-    }
-
-    let child = this.$getChild(key);
-    if (child) {
-      throw new Error(`A property with the same key (${formatCode(key)}) already exists`);
-    }
-
-    child = await task(
-      async () => {
-        const definition = {};
-        if (specifier) {
-          specifier = await this._pinResource(specifier);
-          definition['@import'] = specifier;
-        }
-        if (type) {
-          definition['@type'] = type;
-        }
-
-        child = await this.$setChild(key, definition);
-        await child.$emit('@added');
-        await this.$save();
-
-        return child;
-      },
-      {
-        intro: `Adding property...`,
-        outro: `Property added`
-      },
-      environment
-    );
-
-    return child;
-  }
-
-  async '@remove'({key} = {}, environment) {
-    if (!key) {
-      throw new Error(`${formatCode('key')} input attribute is missing`);
-    }
-
-    const child = this.$getChild(key);
-    if (!child) {
-      throw new Error(`Property not found (key: ${formatCode(key)})`);
-    }
-
-    await task(
-      async () => {
-        await this.$removeChild(key);
-        await this.$save();
-      },
-      {
-        intro: `Removing property...`,
-        outro: `Property removed`
-      },
-      environment
-    );
-  }
-
-  async _pinResource(specifier) {
-    const {identifier, versionRange, location} = parseResourceSpecifier(specifier);
-    if (location) {
-      return specifier;
-    }
-    if (versionRange.toJSON() === undefined) {
-      const resource = await Resource.$load(identifier);
-      if (resource.version) {
-        specifier = stringifyResourceSpecifier({identifier, versionRange: '^' + resource.version});
-      }
-    }
-    return specifier;
-  }
-
   async '@parent'() {
     const parent = this.$getParent();
     if (!parent) {
@@ -1683,49 +1542,44 @@ export class Resource {
     return await this.$broadcast(event, eventInput);
   }
 
-  async '@normalize'({format}) {
-    // find . -name "@resource.json5" -exec run {} @normalize --json \;
-    format = format.toUpperCase();
-
-    const file = this.$getResourceFile();
-    if (!file) {
-      throw new Error('Resource file is undefined');
-    }
-
-    let newFile;
-    const extension = extname(file);
-
-    const convertToJSON = format === 'JSON' && extension !== '.json';
-    if (convertToJSON) {
-      newFile = file.slice(0, -extension.length) + '.json';
-    }
-
-    const convertToJSON5 = format === 'JSON5' && extension !== '.json5';
-    if (convertToJSON5) {
-      newFile = file.slice(0, -extension.length) + '.json5';
-    }
-
-    if (newFile) {
-      this.$setResourceFile(newFile);
-    }
-
-    await this.$save();
-
-    if (newFile) {
-      unlinkSync(file);
-    }
-
-    printSuccess('Resource file normalized');
-  }
-
-  async '@help'({keys = [], showNative} = {}) {
+  async '@create'({typeOrSpecifier}, environment) {
     const helper = await this.constructor._getResourceHelper();
-    const resourcePtr = this.constructor.$create({'@type': 'pointer', '@target': this});
-    await helper.help({resourcePtr, keys, showNative});
+    await helper.create({typeOrSpecifier}, environment);
   }
 
-  async '@@help'({keys}) {
-    return await this['@help']({keys, showNative: true});
+  async '@add'({typeOrSpecifier, key}, environment) {
+    const helper = await this.constructor._getResourceHelper();
+    const resourcePtr = await this.constructor.$create({'@type': 'pointer', '@target': this});
+    await helper.add({resourcePtr, typeOrSpecifier, key}, environment);
+  }
+
+  async '@remove'({key}, environment) {
+    const helper = await this.constructor._getResourceHelper();
+    const resourcePtr = await this.constructor.$create({'@type': 'pointer', '@target': this});
+    await helper.remove({resourcePtr, key}, environment);
+  }
+
+  async '@normalize'({format}, environment) {
+    const helper = await this.constructor._getResourceHelper();
+    const resourcePtr = await this.constructor.$create({'@type': 'pointer', '@target': this});
+    await helper.normalize({resourcePtr, format}, environment);
+  }
+
+  async '@help'({keys, showNative}, environment) {
+    const helper = await this.constructor._getResourceHelper();
+    const resourcePtr = await this.constructor.$create({'@type': 'pointer', '@target': this});
+    await helper.help({resourcePtr, keys, showNative}, environment);
+  }
+
+  async '@@help'({keys}, environment) {
+    return await this['@help']({keys, showNative: true}, environment);
+  }
+
+  static async _getResourceHelper() {
+    if (!this._resourceHelper) {
+      this._resourceHelper = await Resource.$import(RESOURCE_HELPER_RESOURCE);
+    }
+    return this._resourceHelper;
   }
 
   static $normalize(definition, _options) {
