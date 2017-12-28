@@ -1044,14 +1044,16 @@ export class Resource {
       validateResourceKey(alias);
     }
     if (!this._aliases) {
-      this._aliases = new Set();
+      this._aliases = [];
     }
-    this._aliases.add(alias);
+    if (!this._aliases.includes(alias)) {
+      this._aliases.push(alias);
+    }
   }
 
   $hasAlias(alias) {
     const aliases = this.$aliases;
-    return Boolean(aliases && aliases.has(alias));
+    return Boolean(aliases && aliases.includes(alias));
   }
 
   get $position() {
@@ -1686,12 +1688,9 @@ export class Resource {
   }
 
   _serializeAliases(definition, _options) {
-    let aliases = this._aliases;
-    if (aliases !== undefined) {
-      aliases = Array.from(aliases);
-      if (aliases.length > 0) {
-        definition['@aliases'] = aliases;
-      }
+    const aliases = this._aliases;
+    if (aliases && aliases.length > 0) {
+      definition['@aliases'] = aliases;
     }
   }
 
