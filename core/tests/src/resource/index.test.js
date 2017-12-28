@@ -23,6 +23,11 @@ describe('Resource', () => {
     expect(res2.$hasAlias('bonjour')).toBe(false);
     res2.$addAlias('bonjour');
     expect(res2.$hasAlias('bonjour')).toBe(true);
+
+    const res3 = await Resource.$create();
+    expect(() => res3.$addAlias('1')).toThrow();
+    expect(() => res3.$addAlias('a-')).toThrow();
+    expect(() => res3.$addAlias('')).toThrow();
   });
 
   test('@description', async () => {
@@ -73,7 +78,11 @@ describe('Resource', () => {
     person.name = 'Manuel';
     expect(person.name).toBe('Manuel');
 
+    await expect(Resource.$create({'1invalidKey': 'value'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'invalid-key': 'value'})).rejects.toBeInstanceOf(Error);
     await expect(Resource.$create({'@invalidKey': 'value'})).rejects.toBeInstanceOf(Error);
+
+    expect((await Resource.$create({'@nativeKey': 'value'}, {isNative: true})).$getType()).toBe('resource');
   });
 
   test('properties defined from literals', async () => {

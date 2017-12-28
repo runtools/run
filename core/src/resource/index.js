@@ -1040,6 +1040,9 @@ export class Resource {
   }
 
   $addAlias(alias) {
+    if (!this.$getIsNative()) {
+      validateResourceKey(alias);
+    }
     if (!this._aliases) {
       this._aliases = new Set();
     }
