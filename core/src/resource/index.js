@@ -299,7 +299,18 @@ export class Resource {
 
   async $construct(
     definition,
-    {bases = [], parent, key, directory, file, specifier, parse, isUnpublishable, isNative} = {}
+    {
+      bases = [],
+      parent,
+      key,
+      directory,
+      file,
+      implementationFile,
+      specifier,
+      parse,
+      isUnpublishable,
+      isNative
+    } = {}
   ) {
     this._bases = [];
     this._children = [];
@@ -325,6 +336,10 @@ export class Resource {
 
       if (file !== undefined) {
         this.$setResourceFile(file);
+      }
+
+      if (implementationFile !== undefined) {
+        this.$setImplementationFile(implementationFile);
       }
 
       if (specifier !== undefined) {
@@ -494,14 +509,29 @@ export class Resource {
       builders = union(builders, base._getClassBuilders());
     }
 
+    let implementationFile;
+
     const implementation = getProperty(normalizedDefinition, '@implementation');
     if (implementation) {
       if (loadAttribute) {
-        throw new Error(`Can't have both ${formatCode('@load')} and ${formatCode('@implementation')} attributes`);
+        throw new Error(
+          `Can't have both ${formatCode('@load')} and ${formatCode('@implementation')} attributes`
+        );
       }
-      const builder = requireImplementation(implementation, {directory});
-      if (builder && !builders.includes(builder)) {
-        builders.push(builder);
+
+      implementationFile = implementation;
+      if (!isAbsolute(implementationFile) && directory) {
+        implementationFile = resolve(directory, implementationFile);
+      }
+      implementationFile = searchImplementationFile(implementationFile);
+
+      if (implementationFile) {
+        const builder = requireImplementation(implementationFile);
+        if (builder && !builders.includes(builder)) {
+          builders.push(builder);
+        }
+      } else {
+        console.warn(`Implementation file not found: ${formatPath(implementation)}`);
       }
     }
 
@@ -520,6 +550,7 @@ export class Resource {
       key,
       directory,
       file,
+      implementationFile,
       specifier,
       parse,
       isUnpublishable,
@@ -879,6 +910,14 @@ export class Resource {
     this._resourceFile = file;
   }
 
+  $getImplementationFile() {
+    return this._implementationFile;
+  }
+
+  $setImplementationFile(file) {
+    this._implementationFile = file;
+  }
+
   $getResourceSpecifier() {
     return this._resourceSpecifier;
   }
@@ -1031,7 +1070,9 @@ export class Resource {
         aliases = [aliases];
       }
       if (!Array.isArray(aliases)) {
-        throw new TypeError(`${formatCode('@aliases')} attribute must be a string or an array of string`);
+        throw new TypeError(
+          `${formatCode('@aliases')} attribute must be a string or an array of string`
+        );
       }
       for (const alias of aliases) {
         this.$addAlias(alias);
@@ -1211,7 +1252,7 @@ export class Resource {
   }
 
   $getExport() {
-    return this._export;
+    return this._getInheritedValue('_export');
   }
 
   $setExport(resource) {
@@ -1358,7 +1399,11 @@ export class Resource {
       set(value) {
         const promise = child.$autoBox(value);
         if (promise) {
-          throw new Error(`Can't change ${formatCode(key)} synchronously with an attribute setter. Please use the $setChild() asynchronous method.`);
+          throw new Error(
+            `Can't change ${formatCode(
+              key
+            )} synchronously with an attribute setter. Please use the $setChild() asynchronous method.`
+          );
         }
       },
       configurable: true
@@ -1735,7 +1780,7 @@ export class Resource {
   }
 
   _serializeExport(definition, options) {
-    const exportResource = this.$getExport();
+    const exportResource = this._export;
     if (exportResource) {
       const exportDefinition = exportResource.$serialize(options);
       if (exportDefinition) {
@@ -1852,21 +1897,15 @@ function inferType(value) {
   throw new Error('Cannot infer the type from @value or @default');
 }
 
-function requireImplementation(implementationFile, {directory} = {}) {
-  let file = implementationFile;
-  if (!isAbsolute(file) && directory) {
-    file = resolve(directory, file);
-  }
-  file = searchImplementationFile(file);
-  if (!file) {
-    console.warn(`Implementation file not found: ${formatPath(implementationFile)}`);
-  }
+function requireImplementation(file) {
   try {
     const result = require(file);
     return result.default || result;
   } catch (err) {
     if (process.env.DEBUG) {
-      console.warn(`An error occured while loading implementation (file: ${formatPath(file)}): ${err.message}`);
+      console.warn(
+        `An error occured while loading implementation (file: ${formatPath(file)}): ${err.message}`
+      );
     }
   }
 }
