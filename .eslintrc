@@ -6,6 +6,7 @@
   },
   "rules": {
     "capitalized-comments": 0,
+    "function-paren-newline": [2, "consistent"],
     "indent": [2, 2, {"SwitchCase": 1}],
     "new-cap": [2, {"capIsNew": false}],
     "no-await-in-loop": 0,

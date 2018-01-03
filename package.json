@@ -10,8 +10,8 @@
     "lint": "eslint ."
   },
   "devDependencies": {
-    "babel-eslint": "^8.0.3",
-    "eslint": "^4.12.1",
+    "babel-eslint": "^8.1.2",
+    "eslint": "^4.14.0",
     "eslint-config-xo": "^0.19.0"
   },
   "dependencies": {}
