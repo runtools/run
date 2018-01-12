@@ -1,13 +1,14 @@
 {
   "@import": "js/npm-package",
   "name": "run-core",
-  "version": "0.11.0",
+  "version": "0.11.3",
   "description": "Resdir resources runner",
   "author": "Manuel Vila <mvila@3base.com>",
   "repository": "https://github.com/resdir/resdir.git",
   "license": "MIT",
   "files": [
-    "./dist"
+    "./dist",
+    "./umd"
   ],
   "main": "./dist/index.js",
   "dependencies": {
@@ -32,6 +33,22 @@
     "tests": {
       "@import": "1place/esnext-jest",
       "@directory": "./tests"
+    },
+    "bundler": {
+      "@import": "1place/esnext-bundler",
+      "entryFile": "./src/browser.js",
+      "bundleFile": "./umd/run-core.js",
+      "format": "umd",
+      "name": "Resource",
+      "fileWatcher": {
+        "@import": "tool/file-watcher",
+        "files": [
+          "./src/browser.js"
+        ],
+        "onFileModified": {
+          "@run": "@parent run"
+        }
+      }
     }
   }
 }
