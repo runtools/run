@@ -1,16 +1,23 @@
 /* eslint-disable */
 
-class Person {
-  set age(val) {
-    console.log(val);
-    return 'promise';
-  }
-}
+import Resource from '../browser';
 
-const p = new Person();
+(async () => {
+  const resource = await Resource.$import('https://api.hello.resdir.com');
+  console.log(await resource.hello());
+})();
 
-const r = (p.age = 40);
-console.log(r);
+// class Person {
+//   set age(val) {
+//     console.log(val);
+//     return 'promise';
+//   }
+// }
+//
+// const p = new Person();
+//
+// const r = (p.age = 40);
+// console.log(r);
 
 // const o1 = {a: 1, b: 2};
 //
