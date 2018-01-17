@@ -22,6 +22,7 @@ import RegistryClient from '@resdir/registry-client';
 import {shiftPositionalArguments} from '@resdir/expression';
 
 import Runtime from '../runtime';
+import RemoteResource from './remote';
 
 const RUN_CLIENT_ID = 'RUN_CLI';
 const RUN_CLIENT_DIRECTORY = join(homedir(), '.run');
@@ -405,7 +406,9 @@ export class Resource {
       }
 
       if (exportDefinition !== undefined) {
+        const base = this.$getExport({considerBases: true});
         const resource = await this.constructor.$create(exportDefinition, {
+          base,
           directory: this.$getCurrentDirectory({throwIfUndefined: false}),
           specifier
         });
@@ -608,6 +611,15 @@ export class Resource {
     } else {
       const {location} = parseResourceSpecifier(specifier);
       if (location) {
+        if (location.match(/^https?:\/\//i)) {
+          // TODO: Make it right
+          if (!importing) {
+            throw new Error(
+              'Remote resource loading is not implemented yet (only importing is supported)'
+            );
+          }
+          return await RemoteResource.$import(location);
+        }
         result = await this._fetchFromLocation(location, {directory, searchInParentDirectories});
       } else {
         result = await this._fetchFromLocalResources(specifier);
@@ -624,17 +636,25 @@ export class Resource {
       return undefined;
     }
 
+    let base;
     let {definition, file} = result;
-    directory = result.directory;
 
     if (importing) {
+      // TODO: Allow circular references when loading resources,
+      // so we can remove this ugly code
+
+      const loadAttribute = getProperty(definition, '@load');
+      if (loadAttribute) {
+        base = await this.$import(loadAttribute, {directory: dirname(file)});
+      }
+
       definition = getProperty(definition, '@export');
       if (definition === undefined) {
         throw new Error(`Can't import a resource without a ${formatCode('@export')} property`);
       }
     }
 
-    const resource = await this.$create(definition, {file, directory, specifier});
+    const resource = await this.$create(definition, {base, file, directory, specifier});
 
     return resource;
   }
@@ -715,8 +735,9 @@ export class Resource {
       return undefined;
     }
 
-    const {definition, directory} = result;
+    const {definition, file} = result;
 
+    const directory = dirname(file);
     const installedFlagFile = join(directory, '.installed');
     const installingFlagFile = join(directory, '.installing');
     if (!existsSync(installedFlagFile) && !existsSync(installingFlagFile)) {
@@ -742,7 +763,7 @@ export class Resource {
       }
     }
 
-    return {definition, directory};
+    return {definition, file};
   }
 
   static async $import(specifier, {directory} = {}) {
@@ -910,8 +931,10 @@ export class Resource {
     this._resourceFile = file;
   }
 
-  $getImplementationFile() {
-    return this._implementationFile;
+  $getImplementationFile({considerBases} = {}) {
+    return considerBases ?
+      this._getInheritedValue('_implementationFile') :
+      this._implementationFile;
   }
 
   $setImplementationFile(file) {
@@ -1251,8 +1274,8 @@ export class Resource {
     this._autoUnboxing = autoUnboxing;
   }
 
-  $getExport() {
-    return this._getInheritedValue('_export');
+  $getExport({considerBases} = {}) {
+    return considerBases ? this._getInheritedValue('_export') : this._export;
   }
 
   $setExport(resource) {
