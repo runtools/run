@@ -5,6 +5,10 @@ import {catchContext} from '@resdir/console';
 import Resource from '../resource';
 import Boolean from './boolean';
 
+// TODO: Don't use a Resource to handle the environment, use a plain object
+
+const RUN_CLIENT_ID = 'RUN_CLI';
+
 export class EnvironmentResource extends Resource {
   static $RESOURCE_NATIVE_CHILDREN = {
     '@verbose': {
@@ -42,6 +46,14 @@ export class EnvironmentResource extends Resource {
         this.$setDebug(debug, {parse});
       }
     });
+  }
+
+  $getClientId() {
+    return RUN_CLIENT_ID;
+  }
+
+  get '@clientId'() {
+    return this.$getClientId();
   }
 
   $getVerbose() {
@@ -104,6 +116,29 @@ export class EnvironmentResource extends Resource {
     }
 
     return definition;
+  }
+
+  toJSON() {
+    const result = {};
+
+    result['@clientId'] = this.$getClientId();
+
+    const verbose = this.$getVerbose();
+    if (verbose !== undefined) {
+      result['@verbose'] = verbose;
+    }
+
+    const quiet = this.$getQuiet();
+    if (quiet !== undefined) {
+      result['@quiet'] = quiet;
+    }
+
+    const debug = this.$getDebug();
+    if (debug !== undefined) {
+      result['@debug'] = debug;
+    }
+
+    return result;
   }
 }
 

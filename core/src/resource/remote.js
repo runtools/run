@@ -53,7 +53,7 @@ async function invokeRemoteMethod({endpoint, name, input, environment, timeout})
 
     if (response.error) {
       const err = new Error(response.error.message);
-      err.code = response.error.code;
+      err.jsonRPCErrorCode = response.error.code;
       Object.assign(err, response.error.data);
       throw err;
     }
