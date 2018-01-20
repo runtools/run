@@ -1,4 +1,4 @@
-import Resource from '../../../dist/resource';
+import Resource from '../../../dist/cjs/resource';
 
 describe('NumberResource', () => {
   test('creation', async () => {

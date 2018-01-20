@@ -9,13 +9,13 @@ import {printErrorAndExit} from '@resdir/console';
 
 import {runExpression, runREPL} from '../';
 
-dotenv.config({path: join(__dirname, '..', '..', '.env')});
+dotenv.config({path: join(__dirname, '..', '..', '..', '.env')});
 
 if (nodeVersion.major < 6) {
   printErrorAndExit('⚡run requires at least version 6 of Node.');
 }
 
-const pkg = require('../../package');
+const pkg = require('../../../package');
 updateNotifier({pkg}).notify();
 
 (async () => {

@@ -517,9 +517,7 @@ export class Resource {
     const implementation = getProperty(normalizedDefinition, '@implementation');
     if (implementation) {
       if (loadAttribute) {
-        throw new Error(
-          `Can't have both ${formatCode('@load')} and ${formatCode('@implementation')} attributes`
-        );
+        throw new Error(`Can't have both ${formatCode('@load')} and ${formatCode('@implementation')} attributes`);
       }
 
       implementationFile = implementation;
@@ -614,9 +612,7 @@ export class Resource {
         if (location.match(/^https?:\/\//i)) {
           // TODO: Make it right
           if (!importing) {
-            throw new Error(
-              'Remote resource loading is not implemented yet (only importing is supported)'
-            );
+            throw new Error('Remote resource loading is not implemented yet (only importing is supported)');
           }
           return await RemoteResource.$import(location);
         }
@@ -1093,9 +1089,7 @@ export class Resource {
         aliases = [aliases];
       }
       if (!Array.isArray(aliases)) {
-        throw new TypeError(
-          `${formatCode('@aliases')} attribute must be a string or an array of string`
-        );
+        throw new TypeError(`${formatCode('@aliases')} attribute must be a string or an array of string`);
       }
       for (const alias of aliases) {
         this.$addAlias(alias);
@@ -1422,11 +1416,7 @@ export class Resource {
       set(value) {
         const promise = child.$autoBox(value);
         if (promise) {
-          throw new Error(
-            `Can't change ${formatCode(
-              key
-            )} synchronously with an attribute setter. Please use the $setChild() asynchronous method.`
-          );
+          throw new Error(`Can't change ${formatCode(key)} synchronously with an attribute setter. Please use the $setChild() asynchronous method.`);
         }
       },
       configurable: true
@@ -1926,9 +1916,7 @@ function requireImplementation(file) {
     return result.default || result;
   } catch (err) {
     if (process.env.DEBUG) {
-      console.warn(
-        `An error occured while loading implementation (file: ${formatPath(file)}): ${err.message}`
-      );
+      console.warn(`An error occured while loading implementation (file: ${formatPath(file)}): ${err.message}`);
     }
   }
 }

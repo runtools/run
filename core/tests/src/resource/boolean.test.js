@@ -1,4 +1,4 @@
-import Resource from '../../../dist/resource/boolean';
+import Resource from '../../../dist/cjs/resource/boolean';
 
 describe('BooleanResource', () => {
   test('creation', async () => {
