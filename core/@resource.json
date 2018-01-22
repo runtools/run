@@ -29,15 +29,10 @@
       "@directory": "./tests"
     },
     "bundler": {
-      "@import": "1place/esnext-bundler",
+      "@import": "js/bundler",
       "entryFile": "./dist/esm/browser.js",
       "bundleFile": "./dist/browser/run-core.js",
-      "targets": {
-        "chrome": "50",
-        "safari": "10",
-        "firefox": "53",
-        "edge": "14"
-      },
+      "target": "browser",
       "format": "iife",
       "name": "Resource",
       "run": {
