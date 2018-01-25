@@ -18,23 +18,36 @@ import {load, save} from '@resdir/file-manager';
 import {validateResourceKey} from '@resdir/resource-key';
 import {parseResourceIdentifier} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, stringifyResourceSpecifier} from '@resdir/resource-specifier';
-import RegistryClient from '@resdir/registry-client';
+import ResourceFetcher from '@resdir/resource-fetcher';
 import {shiftPositionalArguments} from '@resdir/expression';
 
 import Runtime from '../runtime';
 import RemoteResource from './remote';
 
-const RUN_CLIENT_ID = 'RUN_CLI';
-const RUN_CLIENT_DIRECTORY = join(homedir(), '.run');
+const RUN_CLIENT_ID = process.env.RUN_CLIENT_ID || 'RUN_CLI';
+const RUN_CLIENT_DIRECTORY = process.env.RUN_CLIENT_DIRECTORY || join(homedir(), '.run');
+const RUN_LOCAL_RESOURCES = process.env.RUN_LOCAL_RESOURCES;
+
+const RESDIR_REGISTRY_CLIENT = process.env.RESDIR_REGISTRY_CLIENT || 'resdir/registry-client';
+const RESDIR_REGISTRY_SERVER = process.env.RESDIR_REGISTRY_SERVER || 'https://registry.resdir.com';
+const RESDIR_UPLOAD_SERVER_S3_BUCKET_NAME =
+  process.env.RESDIR_UPLOAD_SERVER_S3_BUCKET_NAME || 'resdir-registry-v1';
+const RESDIR_UPLOAD_SERVER_S3_KEY_PREFIX =
+  process.env.RESDIR_UPLOAD_SERVER_S3_KEY_PREFIX || 'resources/uploads/';
 
 const RESOURCE_FILE_NAME = '@resource';
 const RESOURCE_FILE_FORMATS = ['json', 'json5', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
 const PRIVATE_DEV_RESOURCE_FILE_NAME = '@resource.dev.private';
 
-const RESOURCE_HELPER_RESOURCE = 'resource/helper';
-const RESDIR_REGISTRY_RESOURCE = 'resdir/registry';
-const CONSOLE_TOOL_RESOURCE = 'tool/console';
+const BOOTSTRAPPING_RESOURCES = [
+  'resdir/resource',
+  'js/npm-dependencies',
+  'resdir/registry-client'
+];
+
+const RESOURCE_HELPER = 'resource/helper';
+const TOOL_CONSOLE = 'tool/console';
 
 export class Resource {
   static $RESOURCE_TYPE = 'resource';
@@ -56,17 +69,16 @@ export class Resource {
         '@output': {
           '@isOpen': true
         },
-        '@run': `@import ${CONSOLE_TOOL_RESOURCE}`
+        '@run': `@import ${TOOL_CONSOLE}`
       }
     },
     '@registry': {
-      '@description': 'Shortcut to Resdir Registry (resdir/registry)',
+      '@description': 'Shortcut to Resdir Registry client (resdir/registry-client)',
       '@getter': {
         '@type': 'method',
         '@output': {
           '@isOpen': true
-        },
-        '@run': `@import ${RESDIR_REGISTRY_RESOURCE}`
+        }
       }
     },
     '@create': {
@@ -677,7 +689,7 @@ export class Resource {
     const {identifier, versionRange} = parseResourceSpecifier(specifier);
     const {namespace, name} = parseResourceIdentifier(identifier);
 
-    const resourcesDirectory = process.env.RUN_LOCAL_RESOURCES;
+    const resourcesDirectory = RUN_LOCAL_RESOURCES;
     if (!resourcesDirectory || resourcesDirectory === '0') {
       return undefined;
     }
@@ -698,7 +710,7 @@ export class Resource {
   }
 
   static $getClientId() {
-    return process.env.RUN_CLIENT_ID || RUN_CLIENT_ID;
+    return RUN_CLIENT_ID;
   }
 
   $getClientId() {
@@ -706,32 +718,58 @@ export class Resource {
   }
 
   static $getClientDirectory() {
-    return process.env.RUN_CLIENT_DIRECTORY || RUN_CLIENT_DIRECTORY;
+    return RUN_CLIENT_DIRECTORY;
   }
 
   $getClientDirectory() {
     return this.constructor.$getClientDirectory();
   }
 
-  static $getRegistry() {
-    if (!this._registry) {
-      this._registry = new RegistryClient({
-        registryURL: process.env.RESDIR_REGISTRY_URL,
-        clientId: this.$getClientId(),
+  static async $getRegistryClient() {
+    if (!this._registryClient) {
+      this._registryClient = await this.$create({
+        '@import': RESDIR_REGISTRY_CLIENT,
+        registryServer: RESDIR_REGISTRY_SERVER,
+        uploadServer: {
+          type: 'AWS_S3',
+          config: {
+            bucketName: RESDIR_UPLOAD_SERVER_S3_BUCKET_NAME,
+            keyPrefix: RESDIR_UPLOAD_SERVER_S3_KEY_PREFIX
+          }
+        }
+      });
+    }
+    return this._registryClient;
+  }
+
+  static async $getRegistryServer() {
+    if (!this._registryServer) {
+      this._registryServer = await this.$import(RESDIR_REGISTRY_SERVER);
+    }
+    return this._registryServer;
+  }
+
+  static async $getResourceFetcher() {
+    if (!this._resourceFetcher) {
+      this._resourceFetcher = new ResourceFetcher({
+        registryServer: await this.$getRegistryServer(),
         clientDirectory: this.$getClientDirectory()
       });
     }
-    return this._registry;
+    return this._resourceFetcher;
   }
 
   static async _fetchFromRegistry(specifier) {
-    const registry = this.$getRegistry();
-    const result = await registry.fetchResource(specifier);
-    if (!result) {
-      return undefined;
+    let result;
+    if (BOOTSTRAPPING_RESOURCES.includes(specifier)) {
+      const resourceFetcher = await this.$getResourceFetcher();
+      result = await resourceFetcher.fetch({specifier});
+    } else {
+      const registryClient = await this.$getRegistryClient();
+      result = await registryClient.resources.fetch({specifier});
     }
-
-    const {definition, file} = result;
+    const {file} = result;
+    const definition = load(file);
 
     const directory = dirname(file);
     const installedFlagFile = join(directory, '.installed');
@@ -1555,6 +1593,10 @@ export class Resource {
     return parent;
   }
 
+  async '@registry'() {
+    return await this.constructor.$getRegistryClient();
+  }
+
   async '@print'() {
     this.$print();
   }
@@ -1640,7 +1682,7 @@ export class Resource {
 
   static async _getResourceHelper() {
     if (!this._resourceHelper) {
-      this._resourceHelper = await Resource.$import(RESOURCE_HELPER_RESOURCE);
+      this._resourceHelper = await Resource.$import(RESOURCE_HELPER);
     }
     return this._resourceHelper;
   }
