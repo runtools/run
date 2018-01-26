@@ -17,17 +17,22 @@ export class RemoteResource {
 
     const endpoint = specifier;
 
-    const methods = await invokeRemoteMethod({
+    const methods = await invoke({
       endpoint,
-      name: '__getMethods__',
+      method: 'getMethods',
       timeout: 30 * 1000
     });
 
     const resource = {};
 
     for (const name of methods) {
-      resource[name] = (input, environment) => {
-        return invokeRemoteMethod({endpoint, name, input, environment});
+      resource[name] = async (input, environment) => {
+        const {output} = await invoke({
+          endpoint,
+          method: 'invokeMethod',
+          params: {name, input, environment}
+        });
+        return output;
       };
     }
 
@@ -35,10 +40,10 @@ export class RemoteResource {
   }
 }
 
-async function invokeRemoteMethod({endpoint, name, input, environment, timeout}) {
+async function invoke({endpoint, method, params, timeout}) {
   const id = Math.floor(Math.random() * (Number.MAX_SAFE_INTEGER - 1)) + 1;
 
-  const request = buildJSONRPCRequest(id, name, {input, environment});
+  const request = buildJSONRPCRequest(id, method, params);
 
   const response = await postJSON(endpoint, request, {timeout});
 
@@ -46,9 +51,7 @@ async function invokeRemoteMethod({endpoint, name, input, environment, timeout})
     validateJSONRPCResponse(response);
 
     if (response.id !== id) {
-      throw new Error(
-        `Request 'id' and response 'id' do not match while invoking a remote method (name: '${name}')`
-      );
+      throw new Error(`Request 'id' and response 'id' do not match while invoking a remote method`);
     }
 
     if (response.error) {
@@ -66,7 +69,7 @@ async function invokeRemoteMethod({endpoint, name, input, environment, timeout})
     throw new Error(response.errorMessage);
   }
 
-  throw new Error(`An unknown error occurred while invoking a remote method (name: '${name}')`);
+  throw new Error(`An unknown error occurred while invoking a remote method`);
 }
 
 export default RemoteResource;
