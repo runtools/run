@@ -20,6 +20,7 @@ import {parseResourceIdentifier} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, stringifyResourceSpecifier} from '@resdir/resource-specifier';
 import ResourceFetcher from '@resdir/resource-fetcher';
 import {shiftPositionalArguments} from '@resdir/expression';
+import decache from 'decache';
 
 import Runtime from '../runtime';
 import RemoteResource from './remote';
@@ -322,7 +323,8 @@ export class Resource {
       specifier,
       parse,
       isUnpublishable,
-      isNative
+      isNative,
+      disableCache
     } = {}
   ) {
     this._bases = [];
@@ -388,7 +390,8 @@ export class Resource {
         await this.$setGetter(getter, {
           key,
           directory: this.$getCurrentDirectory({throwIfUndefined: false}),
-          isNative
+          isNative,
+          disableCache
         });
       }
 
@@ -408,12 +411,17 @@ export class Resource {
       const exportDefinition = takeProperty(definition, '@export');
 
       for (const key of Object.keys(definition)) {
-        await this.$setChild(key, definition[key], {parse, isNative});
+        await this.$setChild(key, definition[key], {parse, isNative, disableCache});
       }
 
       if (unpublishableDefinition !== undefined) {
         for (const [key, definition] of entries(unpublishableDefinition)) {
-          await this.$setChild(key, definition, {parse, isUnpublishable: true, isNative});
+          await this.$setChild(key, definition, {
+            parse,
+            isUnpublishable: true,
+            isNative,
+            disableCache
+          });
         }
       }
 
@@ -422,7 +430,8 @@ export class Resource {
         const resource = await this.constructor.$create(exportDefinition, {
           base,
           directory: this.$getCurrentDirectory({throwIfUndefined: false}),
-          specifier
+          specifier,
+          disableCache
         });
         this.$setExport(resource);
       }
@@ -437,7 +446,18 @@ export class Resource {
 
   static async $create(
     definition,
-    {base, parent, key, directory, file, specifier, parse, isUnpublishable, isNative} = {}
+    {
+      base,
+      parent,
+      key,
+      directory,
+      file,
+      specifier,
+      parse,
+      isUnpublishable,
+      isNative,
+      disableCache
+    } = {}
   ) {
     let normalizedDefinition;
     if (isPlainObject(definition)) {
@@ -502,7 +522,7 @@ export class Resource {
     }
 
     if (loadAttribute !== undefined) {
-      const base = await Resource.$load(loadAttribute, {directory});
+      const base = await Resource.$load(loadAttribute, {directory, disableCache});
       bases.push(base);
       const Class = base._getNativeClass();
       NativeClass = findSubclass(NativeClass, Class);
@@ -510,7 +530,7 @@ export class Resource {
 
     if (importAttribute !== undefined) {
       for (const specifier of importAttribute) {
-        const base = await Resource.$import(specifier, {directory});
+        const base = await Resource.$import(specifier, {directory, disableCache});
         bases.push(base);
         const Class = base._getNativeClass();
         NativeClass = findSubclass(NativeClass, Class);
@@ -539,7 +559,7 @@ export class Resource {
       implementationFile = searchImplementationFile(implementationFile);
 
       if (implementationFile) {
-        const builder = requireImplementation(implementationFile);
+        const builder = requireImplementation(implementationFile, {disableCache});
         if (builder && !builders.includes(builder)) {
           builders.push(builder);
         }
@@ -567,7 +587,8 @@ export class Resource {
       specifier,
       parse,
       isUnpublishable,
-      isNative
+      isNative,
+      disableCache
     });
 
     return resource;
@@ -611,7 +632,7 @@ export class Resource {
 
   static async $load(
     specifier,
-    {directory, importing, searchInParentDirectories, throwIfNotFound = true} = {}
+    {directory, importing, searchInParentDirectories, disableCache, throwIfNotFound = true} = {}
   ) {
     let result;
 
@@ -653,7 +674,7 @@ export class Resource {
 
       const loadAttribute = getProperty(definition, '@load');
       if (loadAttribute) {
-        base = await this.$import(loadAttribute, {directory: dirname(file)});
+        base = await this.$import(loadAttribute, {directory: dirname(file), disableCache});
       }
 
       definition = getProperty(definition, '@export');
@@ -662,7 +683,13 @@ export class Resource {
       }
     }
 
-    const resource = await this.$create(definition, {base, file, directory, specifier});
+    const resource = await this.$create(definition, {
+      base,
+      file,
+      directory,
+      specifier,
+      disableCache
+    });
 
     return resource;
   }
@@ -800,8 +827,8 @@ export class Resource {
     return {definition, file};
   }
 
-  static async $import(specifier, {directory} = {}) {
-    return await this.$load(specifier, {directory, importing: true});
+  static async $import(specifier, {directory, disableCache} = {}) {
+    return await this.$load(specifier, {directory, importing: true, disableCache});
   }
 
   async $extend(definition, options) {
@@ -1211,12 +1238,12 @@ export class Resource {
     return this._getInheritedValue('_getter');
   }
 
-  async $setGetter(getter, {key, directory, isNative}) {
+  async $setGetter(getter, {key, directory, isNative, disableCache}) {
     if (getter === undefined) {
       this._getter = undefined;
       return;
     }
-    this._getter = await this.constructor.$create(getter, {key, directory, isNative});
+    this._getter = await this.constructor.$create(getter, {key, directory, isNative, disableCache});
   }
 
   async $resolveGetter({parent} = {}) {
@@ -1405,7 +1432,7 @@ export class Resource {
     return result;
   }
 
-  async $setChild(key, value, {parse, isUnpublishable, isNative} = {}) {
+  async $setChild(key, value, {parse, isUnpublishable, isNative, disableCache} = {}) {
     const removedChildIndex = this.$removeChild(key);
 
     let child;
@@ -1432,7 +1459,8 @@ export class Resource {
         parent: this,
         parse,
         isUnpublishable,
-        isNative: isNative || (base && base.$getIsNative())
+        isNative: isNative || (base && base.$getIsNative()),
+        disableCache
       });
     }
 
@@ -1952,8 +1980,11 @@ function inferType(value) {
   throw new Error('Cannot infer the type from @value or @default');
 }
 
-function requireImplementation(file) {
+function requireImplementation(file, {disableCache} = {}) {
   try {
+    if (disableCache) {
+      decache(file);
+    }
     const result = require(file);
     return result.default || result;
   } catch (err) {
