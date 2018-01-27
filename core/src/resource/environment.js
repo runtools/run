@@ -11,6 +11,9 @@ const RUN_CLIENT_ID = 'RUN_CLI';
 
 export class EnvironmentResource extends Resource {
   static $RESOURCE_NATIVE_CHILDREN = {
+    '@clientId': {
+      '@type': 'string'
+    },
     '@verbose': {
       '@type': 'boolean',
       '@aliases': ['@v']
@@ -28,6 +31,7 @@ export class EnvironmentResource extends Resource {
   async $construct(definition, options) {
     definition = {...definition};
 
+    const clientId = takeProperty(definition, '@clientId');
     const verbose = takeProperty(definition, '@verbose', ['@v']);
     const quiet = takeProperty(definition, '@quiet', ['@q']);
     const debug = takeProperty(definition, '@debug', ['@d']);
@@ -36,6 +40,9 @@ export class EnvironmentResource extends Resource {
 
     catchContext(this, () => {
       const parse = options && options.parse;
+      if (clientId !== undefined) {
+        this.$setClientId(clientId);
+      }
       if (verbose !== undefined) {
         this.$setVerbose(verbose, {parse});
       }
@@ -49,7 +56,11 @@ export class EnvironmentResource extends Resource {
   }
 
   $getClientId() {
-    return RUN_CLIENT_ID;
+    return this._clientId || RUN_CLIENT_ID;
+  }
+
+  $setClientId(clientId) {
+    this._clientId = clientId;
   }
 
   get '@clientId'() {
@@ -97,6 +108,10 @@ export class EnvironmentResource extends Resource {
 
     if (definition === undefined) {
       definition = {};
+    }
+
+    if (this._clientId !== undefined) {
+      definition['@clientId'] = this._clientId;
     }
 
     if (this._verbose !== undefined) {
