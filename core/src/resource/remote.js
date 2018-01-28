@@ -1,8 +1,10 @@
 import {buildJSONRPCRequest, validateJSONRPCResponse} from '@resdir/json-rpc';
 import postJSON from '@resdir/http-post-json';
 
+const INVOKE_METHOD_VERSION = 1;
+
 export class RemoteResource {
-  static async $import(specifier) {
+  static $import(specifier) {
     if (!specifier) {
       throw new Error(`'specifier' argument is missing`);
     }
@@ -17,26 +19,30 @@ export class RemoteResource {
 
     const endpoint = specifier;
 
-    const methods = await invoke({
-      endpoint,
-      method: 'getMethods',
-      timeout: 30 * 1000
-    });
+    const resource = new Proxy(
+      {},
+      {
+        get(target, name) {
+          if (name === 'then') {
+            return undefined;
+          }
 
-    const resource = {};
+          if (!target[name]) {
+            target[name] = async (input, environment) => {
+              const {output} = await invoke({
+                endpoint,
+                method: 'invoke',
+                params: {name, input, environment, version: INVOKE_METHOD_VERSION}
+              });
+              return output;
+            };
+          }
+          return target[name];
+        }
+      }
+    );
 
-    for (const name of methods) {
-      resource[name] = async (input, environment) => {
-        const {output} = await invoke({
-          endpoint,
-          method: 'invokeMethod',
-          params: {name, input, environment}
-        });
-        return output;
-      };
-    }
-
-    return resource;
+    return Promise.resolve(resource);
   }
 }
 
