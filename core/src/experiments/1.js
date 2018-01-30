@@ -1,11 +1,29 @@
 /* eslint-disable */
 
-import Resource from '../browser';
+const obj1 = {
+  async method() {
+    console.log('obj1');
+  }
+};
+
+const obj2 = {
+  async method() {
+    await super.method();
+    console.log('obj2');
+  }
+};
 
 (async () => {
-  const resource = await Resource.$import('https://api.hello.resdir.com');
-  console.log(await resource.hello());
+  Object.setPrototypeOf(obj2, obj1);
+  obj2.method();
 })();
+
+// import Resource from '../browser';
+//
+// (async () => {
+//   const resource = await Resource.$import('https://api.hello.resdir.com');
+//   console.log(await resource.hello());
+// })();
 
 // class Person {
 //   set age(val) {

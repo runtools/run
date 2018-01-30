@@ -53,9 +53,9 @@ describe('Resource', () => {
   test('@implementation', async () => {
     expect((await Resource.$create()).$implementation).toBeUndefined();
     expect((await Resource.$create(
-      {'@implementation': '../../fixtures/person/index.js'},
+      {'@implementation': '../fixtures/person/index.js'},
       {directory: __dirname}
-    )).$implementation).toBe('../../fixtures/person/index.js');
+    )).$implementation).toBe('../fixtures/person/index.js');
   });
 
   test('@isHidden', async () => {
@@ -196,12 +196,12 @@ describe('Resource', () => {
   });
 
   test('resource loaded from a file', async () => {
-    const PersonConstructor = await Resource.$load('../../fixtures/person', {directory: __dirname});
+    const PersonConstructor = await Resource.$load('../fixtures/person', {directory: __dirname});
     expect(PersonConstructor.$getType()).toBe('resource');
     expect(PersonConstructor.$getChild('name')).toBeUndefined();
     expect(PersonConstructor.$getChild('age')).toBeUndefined();
 
-    const person = await Resource.$load('../../fixtures/person-instance', {directory: __dirname});
+    const person = await Resource.$load('../fixtures/person-instance', {directory: __dirname});
     expect(person.$getType()).toBe('resource');
     expect(person.$getChild('name').$getType()).toBe('string');
     expect(person.name).toBe('Manu');
@@ -211,7 +211,7 @@ describe('Resource', () => {
 
   test('resource loaded from a file via a @load attribute', async () => {
     const person = await Resource.$create(
-      {'@load': '../../fixtures/person-instance'},
+      {'@load': '../fixtures/person-instance'},
       {directory: __dirname}
     );
     expect(person.$getChild('name').$getType()).toBe('string');
@@ -221,7 +221,7 @@ describe('Resource', () => {
   });
 
   test('resource imported from a file', async () => {
-    const Person = await Resource.$import('../../fixtures/person', {directory: __dirname});
+    const Person = await Resource.$import('../fixtures/person', {directory: __dirname});
     expect(Person.$getType()).toBe('resource');
     expect(Person.$getChild('name').$getType()).toBe('string');
     expect(Person.name).toBeUndefined();
@@ -231,7 +231,7 @@ describe('Resource', () => {
 
   test('resource imported from a file via an @import attribute', async () => {
     const person = await Resource.$create(
-      {'@import': '../../fixtures/person'},
+      {'@import': '../fixtures/person'},
       {directory: __dirname}
     );
     expect(person.$getChild('name').$getType()).toBe('string');
@@ -239,7 +239,7 @@ describe('Resource', () => {
     person.name = 'Manu';
     person.age = 44;
     expect(person.$serialize()).toEqual({
-      '@import': '../../fixtures/person',
+      '@import': '../fixtures/person',
       name: 'Manu',
       age: 44
     });
@@ -247,7 +247,7 @@ describe('Resource', () => {
 
   test('sub-resource imported from a file via an @import property', async () => {
     const Company = await Resource.$create(
-      {name: {'@type': 'string'}, boss: {'@import': '../../fixtures/person'}},
+      {name: {'@type': 'string'}, boss: {'@import': '../fixtures/person'}},
       {directory: __dirname}
     );
     expect(Company.$getChild('name').$getType()).toBe('string');
@@ -263,7 +263,7 @@ describe('Resource', () => {
   test('multiple inheritance', async () => {
     const personWithMixin = await Resource.$create(
       {
-        '@import': ['../../fixtures/person', '../../fixtures/mixin'],
+        '@import': ['../fixtures/person', '../fixtures/mixin'],
         name: 'Manu',
         mixinProperty: 'mixin-property-value'
       },
@@ -300,14 +300,14 @@ describe('Resource', () => {
     await testSerialization({color: 'green'});
     await testSerialization({name: 'Manu', address: {city: 'Tokyo'}});
     await testSerialization(
-      {'@import': '../../fixtures/person'},
+      {'@import': '../fixtures/person'},
       {directory: __dirname},
-      {'@import': '../../fixtures/person'}
+      {'@import': '../fixtures/person'}
     );
     await testSerialization(
-      {'@import': ['../../fixtures/person', '../../fixtures/mixin']},
+      {'@import': ['../fixtures/person', '../fixtures/mixin']},
       {directory: __dirname},
-      {'@import': ['../../fixtures/person', '../../fixtures/mixin']}
+      {'@import': ['../fixtures/person', '../fixtures/mixin']}
     );
     await testSerialization({
       '@import': {'@export': {name: 'anonymous'}}
@@ -317,7 +317,7 @@ describe('Resource', () => {
       name: 'Manu'
     });
     await testSerialization(
-      {'@implementation': '../../fixtures/person/index.js', '@runtime': 'node#>=6.10.0'},
+      {'@implementation': '../fixtures/person/index.js', '@runtime': 'node#>=6.10.0'},
       {directory: __dirname}
     );
   });

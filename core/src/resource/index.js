@@ -1985,8 +1985,25 @@ function requireImplementation(file, {disableCache} = {}) {
     if (disableCache) {
       decache(file);
     }
-    const result = require(file);
-    return result.default || result;
+
+    let builder = require(file);
+
+    if (builder.default) {
+      // ES Module
+      builder = builder.default;
+    }
+
+    if (typeof builder !== 'function') {
+      // Plain object builder (EXPERIMENTAL)
+      const object = builder;
+      builder = base => {
+        const UnnamedResource = class extends base {};
+        Object.assign(UnnamedResource.prototype, object);
+        return UnnamedResource;
+      };
+    }
+
+    return builder;
   } catch (err) {
     if (process.env.DEBUG) {
       console.warn(`An error occured while loading implementation (file: ${formatPath(file)}): ${err.message}`);

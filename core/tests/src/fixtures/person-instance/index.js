@@ -1,5 +1,5 @@
-module.exports = base =>
-  class PersonInstance extends base {
+export default base =>
+  class extends base {
     async build() {
       await super.build();
       this.hasBeenBuiltByInstance = true;

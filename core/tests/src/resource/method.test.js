@@ -70,7 +70,7 @@ describe('MethodResource', () => {
   });
 
   test('invocation', async () => {
-    const Person = await Resource.$import('../../fixtures/person', {directory: __dirname});
+    const Person = await Resource.$import('../fixtures/person', {directory: __dirname});
 
     expect(await Person.formatGreetingMethod()).toBe('Hello Anonymous!');
 
@@ -85,20 +85,20 @@ describe('MethodResource', () => {
 
     expect(await person.formatGreetingExpression()).toBe('Hi Manu!');
 
-    person = await Resource.$load('../../fixtures/person-instance', {directory: __dirname});
+    person = await Resource.$load('../fixtures/person-instance', {directory: __dirname});
 
     expect(await person.formatGreetingMethod()).toBe('Hello Manu!');
   });
 
   test('invocation with optional parameter', async () => {
-    const person = await Resource.$load('../../fixtures/person-instance', {directory: __dirname});
+    const person = await Resource.$load('../fixtures/person-instance', {directory: __dirname});
     expect(await person.formatNameAndAge({name: 'Manu'})).toBe('Manu');
     expect(await person.formatNameAndAge({name: 'Manu', age: 45})).toBe('Manu (45)');
     await expect(person.formatNameAndAge({age: 45})).rejects.toBeInstanceOf(Error);
   });
 
   test('invocation with variadic parameter', async () => {
-    const person = await Resource.$load('../../fixtures/person-instance', {directory: __dirname});
+    const person = await Resource.$load('../fixtures/person-instance', {directory: __dirname});
 
     expect(await person.formatTags()).toBe('');
     expect(await person.formatTags({tags: ['cool']})).toBe('cool');
@@ -136,14 +136,14 @@ describe('MethodResource', () => {
   });
 
   test('events', async () => {
-    const person = await Resource.$import('../../fixtures/person', {directory: __dirname});
+    const person = await Resource.$import('../fixtures/person', {directory: __dirname});
     expect(person.hasBeenBuilt).toBe(false);
     await person.publish();
     expect(person.hasBeenBuilt).toBe(true);
   });
 
   test('inherited events', async () => {
-    const person = await Resource.$load('../../fixtures/person-instance', {directory: __dirname});
+    const person = await Resource.$load('../fixtures/person-instance', {directory: __dirname});
     expect(person.hasBeenBuilt).toBe(false);
     expect(person.hasBeenBuiltByInstance).toBe(false);
     expect(person.hasBeenTested).toBe(false);
@@ -155,7 +155,7 @@ describe('MethodResource', () => {
 
   test('unlistened events', async () => {
     const person = await Resource.$create(
-      {'@import': '../../fixtures/person', build: {'@unlisten': 'publish'}},
+      {'@import': '../fixtures/person', build: {'@unlisten': 'publish'}},
       {directory: __dirname}
     );
     expect(person.hasBeenBuilt).toBe(false);
@@ -164,14 +164,14 @@ describe('MethodResource', () => {
   });
 
   test('before and after hooks', async () => {
-    const person = await Resource.$import('../../fixtures/person', {directory: __dirname});
+    const person = await Resource.$import('../fixtures/person', {directory: __dirname});
     expect(person.hookTestResults).toEqual([]);
     await person.hookTest();
     expect(person.hookTestResults).toEqual(['beforeHookTest', 'hookTest', 'afterHookTest']);
   });
 
   test('inherited before and after hooks', async () => {
-    const person = await Resource.$load('../../fixtures/person-instance', {directory: __dirname});
+    const person = await Resource.$load('../fixtures/person-instance', {directory: __dirname});
     expect(person.hookTestResults).toEqual([]);
     await person.hookTest();
     expect(person.hookTestResults).toEqual([
@@ -185,7 +185,7 @@ describe('MethodResource', () => {
 
   test('multiple inheritance', async () => {
     const personWithMixin = await Resource.$create(
-      {'@import': ['../../fixtures/person', '../../fixtures/mixin']},
+      {'@import': ['../fixtures/person', '../fixtures/mixin']},
       {directory: __dirname}
     );
     expect(await personWithMixin.formatGreetingMethod()).toBe('Hello Anonymous!');
