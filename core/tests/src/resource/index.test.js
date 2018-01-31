@@ -283,8 +283,9 @@ describe('Resource', () => {
       const resource = await Resource.$create(definition, options);
       expect(resource.$serialize()).toEqual(expected);
     }
-    await testSerialization(undefined, undefined, undefined);
-    await testSerialization({}, undefined, undefined);
+    await testSerialization(undefined, undefined, {});
+    await testSerialization({});
+    await testSerialization({subResource: {}}, undefined, {}); // FIXME: 'subResource' should not disappear
     await testSerialization({'@type': 'resource'});
     await testSerialization({'@type': 'object'});
     await testSerialization({'@type': 'object', '@value': {}});

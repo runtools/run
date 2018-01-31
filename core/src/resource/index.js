@@ -1799,7 +1799,7 @@ export class Resource {
 
     this._serializeExport(definition, options);
 
-    if (isEmpty(definition)) {
+    if (options && options.isChild && isEmpty(definition)) {
       definition = undefined;
     }
 
@@ -1848,7 +1848,7 @@ export class Resource {
       if (publishing && isUnpublishable) {
         return;
       }
-      const childDefinition = child.$serialize(options);
+      const childDefinition = child.$serialize({...options, isChild: true});
       if (childDefinition === undefined) {
         return;
       }
