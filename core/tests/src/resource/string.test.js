@@ -1,4 +1,4 @@
-import Resource from '../../../dist/cjs/resource';
+import Resource from '../../../..';
 
 describe('StringResource', () => {
   test('creation', async () => {

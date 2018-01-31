@@ -1,4 +1,4 @@
-import Resource from '../../../dist/cjs/resource/binary';
+import Resource from '../../../..';
 
 describe('BinaryResource', () => {
   test('creation', async () => {

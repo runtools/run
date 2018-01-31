@@ -1,15 +1,17 @@
 import {join} from 'path';
 
-import {runExpression} from '../..';
+import {runExpression} from '../../..';
 
 const personInstanceDirectory = join(
   __dirname,
   '..',
   '..',
   '..',
+  '..',
   'core',
   'tests',
   'dist',
+  'cjs',
   'fixtures',
   'person-instance'
 );
