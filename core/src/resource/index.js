@@ -42,8 +42,9 @@ const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
 const PRIVATE_DEV_RESOURCE_FILE_NAME = '@resource.dev.private';
 
 const BOOTSTRAPPING_RESOURCES = [
-  'resdir/resource',
+  'js/resource',
   'js/npm-dependencies',
+  'resdir/resource',
   'resdir/registry-client'
 ];
 
@@ -100,14 +101,14 @@ export class Resource {
       '@description': 'Add a property to the current resource',
       '@examples': [
         '@add string firstName',
-        '@add js/esnext-transpiler transpiler',
+        '@add js/transpiler transpiler',
         '@add aws/website#^1.2.0 frontend'
       ],
       '@input': {
         typeOrSpecifier: {
           '@type': 'string',
           '@description': 'Type or resource specifier of the property to add',
-          '@examples': ['string', 'js/esnext-transpiler', 'aws/website#^1.2.0'],
+          '@examples': ['string', 'js/transpiler', 'aws/website#^1.2.0'],
           '@position': 0
         },
         key: {
@@ -788,7 +789,8 @@ export class Resource {
 
   static async _fetchFromRegistry(specifier) {
     let result;
-    if (BOOTSTRAPPING_RESOURCES.includes(specifier)) {
+    const {identifier} = parseResourceSpecifier(specifier);
+    if (BOOTSTRAPPING_RESOURCES.includes(identifier)) {
       const resourceFetcher = await this.$getResourceFetcher();
       result = await resourceFetcher.fetch({specifier});
     } else {
