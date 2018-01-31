@@ -21,7 +21,7 @@
   },
   "@unpublishable": {
     "tests": {
-      "@import": "1place/esnext-jest",
+      "@import": "1place/jest",
       "@directory": "./tests"
     }
   }
