@@ -12,6 +12,7 @@ import {
   formatString,
   formatPath,
   formatCode,
+  formatURL,
   print
 } from '@resdir/console';
 import {load, save} from '@resdir/file-manager';
@@ -20,6 +21,7 @@ import {parseResourceIdentifier} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, stringifyResourceSpecifier} from '@resdir/resource-specifier';
 import ResourceFetcher from '@resdir/resource-fetcher';
 import {shiftPositionalArguments} from '@resdir/expression';
+import {createClientError} from '@resdir/error';
 import decache from 'decache';
 
 import Runtime from '../runtime';
@@ -554,18 +556,22 @@ export class Resource {
     const implementationAttribute = getProperty(normalizedDefinition, '@implementation');
     if (implementationAttribute) {
       implementationFile = implementationAttribute;
-      if (!isAbsolute(implementationFile) && directory) {
+
+      if (!isAbsolute(implementationFile)) {
         implementationFile = resolve(directory, implementationFile);
       }
-      implementationFile = searchImplementationFile(implementationFile);
 
-      if (implementationFile) {
+      const foundFile = searchImplementationFile(implementationFile);
+      if (foundFile) {
+        implementationFile = foundFile;
         const builder = requireImplementation(implementationFile, {disableCache});
         if (builder && !builders.includes(builder)) {
           builders.push(builder);
         }
       } else {
-        console.warn(`Implementation file not found: ${formatPath(implementationAttribute)}`);
+        builders.push(() => {
+          throw createClientError(`Resource implementation file not found (file: ${formatPath(implementationFile)})`);
+        });
       }
     }
 
@@ -573,9 +579,13 @@ export class Resource {
     let implementation;
 
     for (const builder of builders) {
-      implementation = await builder(Resource);
-      if (!isPlainObject(implementation)) {
-        throw new Error(`Implementation builders must return a plain object`);
+      try {
+        implementation = await builder(Resource);
+        if (!isPlainObject(implementation)) {
+          throw createClientError(`A resource implementation builder must return a plain object (file: ${formatPath(builder.file)})`);
+        }
+      } catch (err) {
+        implementation = {__buildError__: err};
       }
       implementation._builder = builder;
       Object.setPrototypeOf(implementation, resource);
@@ -675,7 +685,7 @@ export class Resource {
         if (location.match(/^https?:\/\//i)) {
           // TODO: Make it right
           if (!importing) {
-            throw new Error('Remote resource loading is not implemented yet (only importing is supported)');
+            throw createClientError(`Remote resource '@load' is not implemented yet, only '@import' is supported (location: ${formatURL(location)})`);
           }
           return await RemoteResource.$import(location);
         }
@@ -690,7 +700,7 @@ export class Resource {
 
     if (!result) {
       if (throwIfNotFound) {
-        throw new Error(`Resource not found: ${formatString(specifier)}`);
+        throw createClientError(`Resource not found (specifier: ${formatString(specifier)}, directory: ${formatPath(directory)})`);
       }
       return undefined;
     }
@@ -709,7 +719,7 @@ export class Resource {
 
       definition = getProperty(definition, '@export');
       if (definition === undefined) {
-        throw new Error(`Can't import a resource without a ${formatCode('@export')} property`);
+        throw createClientError(`Can't import a resource without an ${formatCode('@export')} property (specifier: ${formatString(specifier)}, directory: ${formatPath(directory)})`);
       }
     }
 
@@ -1080,7 +1090,7 @@ export class Resource {
 
   $setIsOpenByDefault(isOpenByDefault) {
     if (isOpenByDefault !== undefined && typeof isOpenByDefault !== 'boolean') {
-      throw new TypeError('\'isOpenByDefault\' argument must be a boolean');
+      throw createClientError('\'isOpenByDefault\' argument must be a boolean');
     }
     this._isOpenByDefault = isOpenByDefault;
   }
@@ -1091,7 +1101,7 @@ export class Resource {
 
   set $comment(comment) {
     if (comment !== undefined && typeof comment !== 'string') {
-      throw new TypeError(`${formatCode('@comment')} attribute must be a string`);
+      throw createClientError(`${formatCode('@comment')} attribute must be a string`);
     }
     this._comment = comment;
   }
@@ -1109,7 +1119,7 @@ export class Resource {
 
   static $normalizeType(type) {
     if (typeof type !== 'string') {
-      throw new TypeError(`${formatCode('@type')} attribute must be a string`);
+      throw createClientError(`${formatCode('@type')} attribute must be a string`);
     }
     return type;
   }
@@ -1127,7 +1137,7 @@ export class Resource {
 
   static $normalizeLoadAttribute(loadAttribute) {
     if (typeof loadAttribute !== 'string' && !isPlainObject(loadAttribute)) {
-      throw new Error(`Invalid ${formatCode('@load')} attribute value`);
+      throw createClientError(`Invalid ${formatCode('@load')} attribute value`);
     }
     return loadAttribute;
   }
@@ -1147,7 +1157,7 @@ export class Resource {
     if (typeof importAttribute === 'string' || isPlainObject(importAttribute)) {
       importAttribute = [importAttribute];
     } else if (!Array.isArray(importAttribute)) {
-      throw new Error(`Invalid ${formatCode('@import')} attribute value`);
+      throw createClientError(`Invalid ${formatCode('@import')} attribute value`);
     }
     return importAttribute;
   }
@@ -1158,7 +1168,7 @@ export class Resource {
 
   set $directory(directory) {
     if (directory !== undefined && typeof directory !== 'string') {
-      throw new TypeError(`${formatCode('@directory')} attribute must be a string`);
+      throw createClientError(`${formatCode('@directory')} attribute must be a string`);
     }
     this._directory = directory;
   }
@@ -1169,7 +1179,7 @@ export class Resource {
 
   set $description(description) {
     if (description !== undefined && typeof description !== 'string') {
-      throw new TypeError(`${formatCode('@description')} attribute must be a string`);
+      throw createClientError(`${formatCode('@description')} attribute must be a string`);
     }
     this._description = description;
   }
@@ -1185,7 +1195,7 @@ export class Resource {
         aliases = [aliases];
       }
       if (!Array.isArray(aliases)) {
-        throw new TypeError(`${formatCode('@aliases')} attribute must be a string or an array of string`);
+        throw createClientError(`${formatCode('@aliases')} attribute must be a string or an array of string`);
       }
       for (const alias of aliases) {
         this.$addAlias(alias);
@@ -1216,7 +1226,7 @@ export class Resource {
 
   set $position(position) {
     if (position !== undefined && typeof position !== 'number') {
-      throw new TypeError(`${formatCode('@position')} attribute must be a number`);
+      throw createClientError(`${formatCode('@position')} attribute must be a number`);
     }
     this._position = position;
   }
@@ -1227,7 +1237,7 @@ export class Resource {
 
   set $isOptional(isOptional) {
     if (isOptional !== undefined && typeof isOptional !== 'boolean') {
-      throw new TypeError(`${formatCode('@isOptional')} attribute must be a boolean`);
+      throw createClientError(`${formatCode('@isOptional')} attribute must be a boolean`);
     }
     this._isOptional = isOptional;
   }
@@ -1238,7 +1248,7 @@ export class Resource {
 
   set $isVariadic(isVariadic) {
     if (isVariadic !== undefined && typeof isVariadic !== 'boolean') {
-      throw new TypeError(`${formatCode('@isVariadic')} attribute must be a boolean`);
+      throw createClientError(`${formatCode('@isVariadic')} attribute must be a boolean`);
     }
     this._isVariadic = isVariadic;
   }
@@ -1249,7 +1259,7 @@ export class Resource {
 
   set $isSubInput(isSubInput) {
     if (isSubInput !== undefined && typeof isSubInput !== 'boolean') {
-      throw new TypeError(`${formatCode('@isSubInput')} attribute must be a boolean`);
+      throw createClientError(`${formatCode('@isSubInput')} attribute must be a boolean`);
     }
     this._isSubInput = isSubInput;
   }
@@ -1291,7 +1301,7 @@ export class Resource {
 
   set $runtime(runtime) {
     if (runtime !== undefined && typeof runtime !== 'string') {
-      throw new TypeError(`${formatCode('@runtime')} attribute must be a string`);
+      throw createClientError(`${formatCode('@runtime')} attribute must be a string`);
     }
     this._runtime = runtime !== undefined ? new Runtime(runtime) : undefined;
   }
@@ -1302,7 +1312,7 @@ export class Resource {
 
   set $implementation(implementation) {
     if (implementation !== undefined && typeof implementation !== 'string') {
-      throw new TypeError(`${formatCode('@implementation')} attribute must be a string`);
+      throw createClientError(`${formatCode('@implementation')} attribute must be a string`);
     }
     this._implementationAttribute = implementation;
   }
@@ -1314,7 +1324,7 @@ export class Resource {
 
   set $isOpen(isOpen) {
     if (isOpen !== undefined && typeof isOpen !== 'boolean') {
-      throw new TypeError(`${formatCode('@isOpen')} attribute must be a boolean`);
+      throw createClientError(`${formatCode('@isOpen')} attribute must be a boolean`);
     }
     this._isOpen = isOpen;
   }
@@ -1325,7 +1335,7 @@ export class Resource {
 
   set $isHidden(isHidden) {
     if (isHidden !== undefined && typeof isHidden !== 'boolean') {
-      throw new TypeError(`${formatCode('@isHidden')} attribute must be a boolean`);
+      throw createClientError(`${formatCode('@isHidden')} attribute must be a boolean`);
     }
     this._isHidden = isHidden;
   }
@@ -1342,7 +1352,7 @@ export class Resource {
 
   set $autoBoxing(autoBoxing) {
     if (autoBoxing !== undefined && typeof autoBoxing !== 'boolean') {
-      throw new TypeError(`${formatCode('@autoBoxing')} attribute must be a boolean`);
+      throw createClientError(`${formatCode('@autoBoxing')} attribute must be a boolean`);
     }
     this._autoBoxing = autoBoxing;
   }
@@ -1359,7 +1369,7 @@ export class Resource {
 
   set $autoUnboxing(autoUnboxing) {
     if (autoUnboxing !== undefined && typeof autoUnboxing !== 'boolean') {
-      throw new TypeError(`${formatCode('@autoUnboxing')} attribute must be a boolean`);
+      throw createClientError(`${formatCode('@autoUnboxing')} attribute must be a boolean`);
     }
     this._autoUnboxing = autoUnboxing;
   }
@@ -1513,7 +1523,7 @@ export class Resource {
       set(value) {
         const promise = child.$autoBox(value);
         if (promise) {
-          throw new Error(`Can't change ${formatCode(key)} synchronously with an attribute setter. Please use the $setChild() asynchronous method.`);
+          throw createClientError(`Can't change ${formatCode(key)} synchronously with an attribute setter. Please use the $setChild() asynchronous method.`);
         }
       },
       configurable: true
@@ -1580,7 +1590,7 @@ export class Resource {
 
       let child = this.$findChild(key, {includeNativeChildren: true});
       if (!child) {
-        throw new Error(`No attribute or method found with this key: ${formatCode(key)}`);
+        throw createClientError(`No attribute or method found with this key: ${formatCode(key)}`);
       }
 
       child = await child.$resolveGetter({parent: this});
@@ -1647,7 +1657,7 @@ export class Resource {
   async '@parent'() {
     const parent = this.$getParent();
     if (!parent) {
-      throw new Error(`${formatCode('@parent')} can't be invoked from the resource's root`);
+      throw createClientError(`${formatCode('@parent')} can't be invoked from the resource's root`);
     }
     return parent;
   }
@@ -1686,14 +1696,14 @@ export class Resource {
 
   async '@load'({specifier}) {
     if (!specifier) {
-      throw new Error('\'specifier\' input attribute is missing');
+      throw createClientError('\'specifier\' input attribute is missing');
     }
     return await this.constructor.$load(specifier, {directory: process.cwd()});
   }
 
   async '@import'({specifier}) {
     if (!specifier) {
-      throw new Error('\'specifier\' input attribute is missing');
+      throw createClientError('\'specifier\' input attribute is missing');
     }
     return await this.constructor.$import(specifier, {directory: process.cwd()});
   }
@@ -1748,7 +1758,7 @@ export class Resource {
 
   static $normalize(definition, _options) {
     if (definition !== undefined && !isPlainObject(definition)) {
-      throw new Error('Invalid resource definition');
+      throw createClientError('Invalid resource definition');
     }
     return definition;
   }
@@ -1990,30 +2000,35 @@ function inferType(value) {
   if (Buffer.isBuffer(value)) {
     return 'binary';
   }
-  throw new Error('Cannot infer the type from @value or @default');
+  throw createClientError('Cannot infer the type from @value or @default');
 }
 
 function requireImplementation(file, {disableCache} = {}) {
+  let implementation;
+
   try {
     if (disableCache) {
       decache(file);
     }
 
-    let implementation = require(file);
+    implementation = require(file);
     if (implementation.default) {
       // ES Module
       implementation = implementation.default;
     }
-    if (typeof implementation !== 'function') {
-      throw new Error('Resource implementation file must export a function');
-    }
 
-    return implementation;
-  } catch (err) {
-    if (process.env.DEBUG) {
-      console.warn(`An error occured while loading implementation (file: ${formatPath(file)}): ${err.message}`);
+    if (typeof implementation !== 'function') {
+      throw createClientError(`A resource implementation file must export a function (file: ${formatPath(file)})`);
     }
+  } catch (err) {
+    implementation = () => {
+      throw err;
+    };
   }
+
+  implementation.file = file;
+
+  return implementation;
 }
 
 function searchImplementationFile(file) {
@@ -2059,7 +2074,7 @@ function getResourceClass(type, {throwIfInvalid = true} = {}) {
       return require('./pointer').default;
     default:
       if (throwIfInvalid) {
-        throw new Error(`Type ${formatString(type)} is invalid`);
+        throw createClientError(`Type ${formatString(type)} is invalid`);
       }
   }
 }

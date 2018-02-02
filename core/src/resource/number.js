@@ -1,4 +1,5 @@
 import {formatString} from '@resdir/console';
+import {createClientError} from '@resdir/error';
 
 import ValueResource from './value';
 
@@ -7,7 +8,7 @@ export class NumberResource extends ValueResource {
 
   static $normalizeValue(value) {
     if (typeof value !== 'number') {
-      throw new Error('Invalid value type');
+      throw createClientError('Invalid value type');
     }
     return value;
   }
@@ -22,7 +23,7 @@ export class NumberResource extends ValueResource {
   static $parseValue(str) {
     const number = str && Number(str);
     if (typeof number !== 'number' || isNaN(number)) {
-      throw new Error(`Cannot convert a string to a number: ${formatString(str)}`);
+      throw createClientError(`Cannot convert a string to a number: ${formatString(str)}`);
     }
     return number;
   }

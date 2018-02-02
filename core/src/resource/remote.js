@@ -1,20 +1,21 @@
 import {buildJSONRPCRequest, validateJSONRPCResponse} from '@resdir/json-rpc';
 import postJSON from '@resdir/http-post-json';
+import {createClientError} from '@resdir/error';
 
 const INVOKE_METHOD_VERSION = 1;
 
 export class RemoteResource {
   static $import(specifier) {
     if (!specifier) {
-      throw new Error(`'specifier' argument is missing`);
+      throw createClientError(`'specifier' argument is missing`);
     }
 
     if (typeof specifier !== 'string') {
-      throw new Error(`'specifier' argument must be a string`);
+      throw createClientError(`'specifier' argument must be a string`);
     }
 
     if (!specifier.match(/^https?:\/\//i)) {
-      throw new Error(`Sorry, only HTTP(S) specifiers are supported`);
+      throw createClientError(`Sorry, only HTTP(S) specifiers are supported`);
     }
 
     const endpoint = specifier;

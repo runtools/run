@@ -1,5 +1,6 @@
 import {isPlainObject, cloneDeep} from 'lodash';
 import deepFreeze from 'deep-freeze';
+import {createClientError} from '@resdir/error';
 
 import ValueResource from './value';
 
@@ -8,7 +9,7 @@ export class ObjectResource extends ValueResource {
 
   static $normalizeValue(value) {
     if (!isPlainObject(value)) {
-      throw new Error('Invalid value type');
+      throw createClientError('Invalid value type');
     }
     value = cloneDeep(value);
     deepFreeze(value);

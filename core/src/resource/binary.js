@@ -1,4 +1,5 @@
 import ValueResource from './value';
+import {createClientError} from '@resdir/error';
 
 const BASE64_PREFIX = 'data:;base64,';
 
@@ -12,7 +13,7 @@ export class BinaryResource extends ValueResource {
     if (Buffer.isBuffer(value)) {
       return value;
     }
-    throw new Error('Invalid value type');
+    throw createClientError('Invalid value type');
   }
 
   static $normalize(definition, options) {
@@ -28,7 +29,7 @@ export class BinaryResource extends ValueResource {
       const buffer = Buffer.from(str, 'base64');
       return buffer;
     }
-    throw new Error(`Cannot convert a string to a binary`);
+    throw createClientError(`Cannot convert a string to a binary`);
   }
 
   static $serializeValue(value) {

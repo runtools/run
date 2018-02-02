@@ -1,11 +1,12 @@
 import ValueResource from './value';
+import {createClientError} from '@resdir/error';
 
 export class StringResource extends ValueResource {
   static $RESOURCE_TYPE = 'string';
 
   static $normalizeValue(value) {
     if (typeof value !== 'string') {
-      throw new Error('Invalid value type');
+      throw createClientError('Invalid value type');
     }
     return value;
   }

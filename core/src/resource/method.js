@@ -9,6 +9,7 @@ import {
   getPositionalArgument,
   shiftPositionalArguments
 } from '@resdir/expression';
+import {createClientError} from '@resdir/error';
 
 import Resource from '../resource';
 import Value from './value';
@@ -64,7 +65,7 @@ export class MethodResource extends Resource {
       return;
     }
     if (!isPlainObject(input)) {
-      throw new Error(`${formatCode('@input')} property must be an object`);
+      throw createClientError(`${formatCode('@input')} property must be an object`);
     }
     input = await this.constructor.$create(input);
     input.$setIsOpenByDefault(false);
@@ -81,7 +82,7 @@ export class MethodResource extends Resource {
       return;
     }
     if (!isPlainObject(output)) {
-      throw new Error(`${formatCode('@output')} property must be an object`);
+      throw createClientError(`${formatCode('@output')} property must be an object`);
     }
     output = await this.constructor.$create(output);
     output.$setIsOpenByDefault(false);
@@ -215,7 +216,7 @@ export class MethodResource extends Resource {
 
       const implementation = methodResource._getImplementation(this);
       if (!implementation) {
-        throw new Error(`Can't find implementation for ${formatCode(methodResource.$getKey())}`);
+        throw createClientError(`Can't find implementation for ${formatCode(methodResource.$getKey())}`);
       }
 
       const beforeExpression = methodResource.$getAllBeforeExpressions();
@@ -393,7 +394,17 @@ export class MethodResource extends Resource {
     }
 
     // TODO: Don't access private inherited properties
-    return parent._implementation && parent._implementation[key];
+    const resourceImplementation = parent._implementation;
+
+    if (!resourceImplementation) {
+      return undefined;
+    }
+
+    if (resourceImplementation.__buildError__) {
+      throw resourceImplementation.__buildError__;
+    }
+
+    return resourceImplementation[key];
   }
 
   async _run(expressionProperty, input, {parent} = {}) {

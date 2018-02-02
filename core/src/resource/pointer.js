@@ -1,6 +1,7 @@
 import {isPlainObject} from 'lodash';
 import {takeProperty} from '@resdir/util';
 import {formatCode, catchContext} from '@resdir/console';
+import {createClientError} from '@resdir/error';
 
 import Resource from '../resource';
 
@@ -27,7 +28,7 @@ export class PointerResource extends Resource {
 
   set $target(target) {
     if (target !== undefined && !(target instanceof Resource)) {
-      throw new TypeError(`${formatCode('@target')} attribute must be a Resource`);
+      throw createClientError(`${formatCode('@target')} attribute must be a Resource`);
     }
     this._target = target;
   }

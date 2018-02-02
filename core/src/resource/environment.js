@@ -1,6 +1,7 @@
 import {isEmpty} from 'lodash';
 import {takeProperty} from '@resdir/util';
 import {catchContext} from '@resdir/console';
+import {createClientError} from '@resdir/error';
 
 import Resource from '../resource';
 import Boolean from './boolean';
@@ -164,7 +165,7 @@ function normalizeBoolean(boolean, options) {
   if (typeof boolean === 'string' && options && options.parse) {
     return Boolean.$parseValue(boolean);
   }
-  throw new TypeError(`Attribute value type must be a boolean`);
+  throw createClientError(`Attribute value type must be a boolean`);
 }
 
 export default EnvironmentResource;

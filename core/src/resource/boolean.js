@@ -1,4 +1,5 @@
 import {formatString} from '@resdir/console';
+import {createClientError} from '@resdir/error';
 
 import ValueResource from './value';
 
@@ -7,7 +8,7 @@ export class BooleanResource extends ValueResource {
 
   static $normalizeValue(value) {
     if (typeof value !== 'boolean') {
-      throw new Error('Invalid value type');
+      throw createClientError('Invalid value type');
     }
     return value;
   }
@@ -28,7 +29,7 @@ export class BooleanResource extends ValueResource {
     if (str === '0' || str === 'false' || str === 'no' || str === 'off') {
       return false;
     }
-    throw new Error(`Cannot convert a string to a boolean: ${formatString(originalString)}`);
+    throw createClientError(`Cannot convert a string to a boolean: ${formatString(originalString)}`);
   }
 }
 
