@@ -1,22 +1,62 @@
 /* eslint-disable */
 
-const obj1 = {
-  async method() {
-    console.log('obj1');
-  }
+const implementation = {
+  meth() {
+    super.meth();
+    console.log('implementation');
+  },
+
+  str: 'Hello'
 };
 
-const obj2 = {
-  async method() {
-    await super.method();
-    console.log('obj2');
+const proxy = new Proxy(
+  {
+    meth() {
+      console.log('proxy');
+      console.log(this.str);
+    }
+  },
+  {
+    get(target, name) {
+      return target[name];
+    }
   }
-};
+);
 
-(async () => {
-  Object.setPrototypeOf(obj2, obj1);
-  obj2.method();
-})();
+Object.setPrototypeOf(implementation, proxy);
+
+implementation.meth();
+
+// ---
+
+// const obj1Builder = Resource => ({
+//   async method() {
+//     console.log('obj1', Resource);
+//   }
+// });
+//
+// const obj2Builder = Resource => ({
+//   async method() {
+//     await super.method();
+//     console.log('obj2', Resource);
+//   }
+// });
+//
+// (async () => {
+//   const obj1 = obj1Builder('A1');
+//   const obj2 = obj2Builder('A2');
+//   Object.setPrototypeOf(obj2, obj1);
+//   await obj2.method();
+// })();
+//
+// (async () => {
+//   const obj1 = obj1Builder('B1');
+//   const obj2 = obj2Builder('B2');
+//   Object.setPrototypeOf(obj2, obj1);
+//   await obj2.method();
+// })();
+
+// ---
 
 // import Resource from '../browser';
 //

@@ -1,19 +1,18 @@
-export default base =>
-  class extends base {
-    async build() {
-      await super.build();
-      this.hasBeenBuiltByInstance = true;
-    }
+export default () => ({
+  async build() {
+    await super.build();
+    this.hasBeenBuiltByInstance = true;
+  },
 
-    async test() {
-      this.hasBeenTested = true;
-    }
+  async test() {
+    this.hasBeenTested = true;
+  },
 
-    async instanceBeforeHookTest() {
-      this.hookTestResults = [...this.hookTestResults, 'instanceBeforeHookTest'];
-    }
+  async instanceBeforeHookTest() {
+    this.hookTestResults = [...this.hookTestResults, 'instanceBeforeHookTest'];
+  },
 
-    async instanceAfterHookTest() {
-      this.hookTestResults = [...this.hookTestResults, 'instanceAfterHookTest'];
-    }
-  };
+  async instanceAfterHookTest() {
+    this.hookTestResults = [...this.hookTestResults, 'instanceAfterHookTest'];
+  }
+});

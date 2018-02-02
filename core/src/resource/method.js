@@ -386,22 +386,14 @@ export class MethodResource extends Resource {
       };
     }
 
+    const key = this.$getKey();
+
     if (this.$getIsNative()) {
-      return parent[this.$getKey()];
+      return parent[key];
     }
 
-    let implementation;
-    parent.$forSelfAndEachBase(
-      resource => {
-        const proto = resource.constructor.prototype;
-        implementation = proto[this.$getKey()];
-        if (implementation) {
-          return false;
-        }
-      },
-      {deepSearch: true}
-    );
-    return implementation;
+    // TODO: Don't access private inherited properties
+    return parent._implementation && parent._implementation[key];
   }
 
   async _run(expressionProperty, input, {parent} = {}) {

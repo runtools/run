@@ -1,4 +1,4 @@
-export default {
+export default () => ({
   async formatGreetingMethod({verb, shout}) {
     const name = this.name || 'Anonymous';
     let result = `${verb} ${name}!`;
@@ -35,4 +35,4 @@ export default {
   async afterHookTest() {
     this.hookTestResults = [...this.hookTestResults, 'afterHookTest'];
   }
-};
+});

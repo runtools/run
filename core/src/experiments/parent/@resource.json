@@ -1,0 +1,6 @@
+{
+  "@implementation": "./index.js",
+  "hello": {
+    "@type": "method"
+  }
+}

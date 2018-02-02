@@ -460,6 +460,10 @@ export class Resource {
       disableCache
     } = {}
   ) {
+    // TODO: Reimplement from scratch
+    // Don't waste time improving (or even understanding) this part, it will be completely rewritten.
+    // The plan is to use Proxy to virtualize resource's attributes and methods.
+
     let normalizedDefinition;
     if (isPlainObject(definition)) {
       normalizedDefinition = definition;
@@ -507,53 +511,49 @@ export class Resource {
       }
     }
 
-    let NativeClass;
+    let BaseClass;
     const bases = [];
 
     if (base) {
       bases.push(base);
-      NativeClass = base._getNativeClass();
+      BaseClass = base.constructor;
     } else {
-      NativeClass = Resource;
+      BaseClass = Resource;
     }
 
     if (type !== undefined) {
       const Class = getResourceClass(type);
-      NativeClass = findSubclass(NativeClass, Class);
+      BaseClass = findSubclass(BaseClass, Class);
     }
 
     if (loadAttribute !== undefined) {
       const base = await Resource.$load(loadAttribute, {directory, disableCache});
       bases.push(base);
-      const Class = base._getNativeClass();
-      NativeClass = findSubclass(NativeClass, Class);
+      const Class = base.constructor;
+      BaseClass = findSubclass(BaseClass, Class);
     }
 
     if (importAttribute !== undefined) {
       for (const specifier of importAttribute) {
         const base = await Resource.$import(specifier, {directory, disableCache});
         bases.push(base);
-        const Class = base._getNativeClass();
-        NativeClass = findSubclass(NativeClass, Class);
+        const Class = base.constructor;
+        BaseClass = findSubclass(BaseClass, Class);
       }
     }
 
-    await NativeClass._initializeResourceNativeChildren();
+    await BaseClass._initializeResourceNativeChildren();
 
     let builders = [];
     for (const base of bases) {
-      builders = union(builders, base._getClassBuilders());
+      builders = union(builders, base._getBuilders());
     }
 
     let implementationFile;
 
-    const implementation = getProperty(normalizedDefinition, '@implementation');
-    if (implementation) {
-      if (loadAttribute) {
-        throw new Error(`Can't have both ${formatCode('@load')} and ${formatCode('@implementation')} attributes`);
-      }
-
-      implementationFile = implementation;
+    const implementationAttribute = getProperty(normalizedDefinition, '@implementation');
+    if (implementationAttribute) {
+      implementationFile = implementationAttribute;
       if (!isAbsolute(implementationFile) && directory) {
         implementationFile = resolve(directory, implementationFile);
       }
@@ -565,19 +565,31 @@ export class Resource {
           builders.push(builder);
         }
       } else {
-        console.warn(`Implementation file not found: ${formatPath(implementation)}`);
+        console.warn(`Implementation file not found: ${formatPath(implementationAttribute)}`);
       }
     }
 
-    let ResourceClass = NativeClass;
+    let resource = new BaseClass();
+    let implementation;
+
     for (const builder of builders) {
-      ResourceClass = builder(ResourceClass);
-      ResourceClass._classBuilder = builder;
+      implementation = await builder(Resource);
+      if (!isPlainObject(implementation)) {
+        throw new Error(`Implementation builders must return a plain object`);
+      }
+      implementation._builder = builder;
+      Object.setPrototypeOf(implementation, resource);
+      resource = implementation;
     }
 
-    normalizedDefinition = ResourceClass.$normalize(definition, {parse});
+    if (implementation) {
+      resource = Object.create(resource);
+      resource.constructor = BaseClass;
+      resource._implementation = implementation;
+    }
 
-    const resource = new ResourceClass();
+    normalizedDefinition = BaseClass.$normalize(definition, {parse});
+
     await resource.$construct(normalizedDefinition, {
       bases,
       parent,
@@ -629,6 +641,23 @@ export class Resource {
       this._nativeChildren.unshift(...parent._getNativeChildren());
     }
     return this._nativeChildren;
+  }
+
+  _getBuilders() {
+    const builders = [];
+    let resource = this;
+    while (true) {
+      // OPTIMIZE
+      const builder = resource._builder;
+      if (!builder) {
+        break;
+      }
+      if (!builders.includes(builder)) {
+        builders.unshift(builder);
+      }
+      resource = Object.getPrototypeOf(resource);
+    }
+    return builders;
   }
 
   static async $load(
@@ -1268,14 +1297,14 @@ export class Resource {
   }
 
   get $implementation() {
-    return this._implementation;
+    return this._implementationAttribute;
   }
 
   set $implementation(implementation) {
     if (implementation !== undefined && typeof implementation !== 'string') {
       throw new TypeError(`${formatCode('@implementation')} attribute must be a string`);
     }
-    this._implementation = implementation;
+    this._implementationAttribute = implementation;
   }
 
   get $isOpen() {
@@ -1775,8 +1804,8 @@ export class Resource {
       definition['@runtime'] = this._runtime.toJSON();
     }
 
-    if (this._implementation !== undefined) {
-      definition['@implementation'] = this._implementation;
+    if (this._implementationAttribute !== undefined) {
+      definition['@implementation'] = this._implementationAttribute;
     }
 
     if (this._isOpen !== undefined) {
@@ -1872,24 +1901,6 @@ export class Resource {
         definition['@export'] = exportDefinition;
       }
     }
-  }
-
-  _getNativeClass() {
-    let Class = this.constructor;
-    while (Class._classBuilder) {
-      Class = Object.getPrototypeOf(Class);
-    }
-    return Class;
-  }
-
-  _getClassBuilders() {
-    const builders = [];
-    let Class = this.constructor;
-    while (Class._classBuilder) {
-      builders.unshift(Class._classBuilder);
-      Class = Object.getPrototypeOf(Class);
-    }
-    return builders;
   }
 }
 
@@ -1988,24 +1999,16 @@ function requireImplementation(file, {disableCache} = {}) {
       decache(file);
     }
 
-    let builder = require(file);
-
-    if (builder.default) {
+    let implementation = require(file);
+    if (implementation.default) {
       // ES Module
-      builder = builder.default;
+      implementation = implementation.default;
+    }
+    if (typeof implementation !== 'function') {
+      throw new Error('Resource implementation file must export a function');
     }
 
-    if (typeof builder !== 'function') {
-      // Plain object builder (EXPERIMENTAL)
-      const object = builder;
-      builder = base => {
-        const UnnamedResource = class extends base {};
-        Object.assign(UnnamedResource.prototype, object);
-        return UnnamedResource;
-      };
-    }
-
-    return builder;
+    return implementation;
   } catch (err) {
     if (process.env.DEBUG) {
       console.warn(`An error occured while loading implementation (file: ${formatPath(file)}): ${err.message}`);
