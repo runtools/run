@@ -13,7 +13,7 @@ if (nodeVersion.major < 6) {
   printErrorAndExit('⚡run requires at least version 6 of Node.');
 }
 
-const pkg = require('../../../package');
+const pkg = require('../../../package.json');
 updateNotifier({pkg}).notify();
 
 require('./main');

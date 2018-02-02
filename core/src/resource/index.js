@@ -13,6 +13,7 @@ import {
   formatPath,
   formatCode,
   formatURL,
+  formatPunctuation,
   print
 } from '@resdir/console';
 import {load, save} from '@resdir/file-manager';
@@ -78,6 +79,7 @@ export class Resource {
     },
     '@registry': {
       '@description': 'Shortcut to Resdir Registry client (resdir/registry-client)',
+      '@aliases': ['@reg', '@r'],
       '@getter': {
         '@type': 'method',
         '@output': {
@@ -275,6 +277,10 @@ export class Resource {
           '@default': 'JSON'
         }
       }
+    },
+    '@version': {
+      '@type': 'method',
+      '@description': 'Display Run\'s version'
     },
     '@help': {
       '@type': 'method',
@@ -1737,6 +1743,14 @@ export class Resource {
     const helper = await this.constructor._getResourceHelper();
     const resourcePtr = await this.constructor.$create({'@type': 'pointer', '@target': this});
     await helper.normalize({resourcePtr, format}, environment);
+  }
+
+  async '@version'(_input, environment) {
+    const pkg = require('../../../package.json');
+    print(
+      `${formatCode(pkg.name, {addBackticks: false})}${formatPunctuation(':')} ${pkg.version}`,
+      environment
+    );
   }
 
   async '@help'({keys, showNative}, environment) {
