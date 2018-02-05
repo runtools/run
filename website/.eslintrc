@@ -1,0 +1,10 @@
+{
+  "extends": ["plugin:react/recommended"],
+  "plugins": ["react"],
+  "env": {
+    "browser": true
+  },
+  "rules": {
+    "react/no-unescaped-entities": 0
+  }
+}

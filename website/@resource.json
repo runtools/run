@@ -1,0 +1,74 @@
+{
+  "@import": ["aws/website", "js/resource"],
+  "customErrors": [
+    {
+      "errorCode": 404,
+      "responseCode": 200,
+      "responsePage": "index.html"
+    }
+  ],
+  "dependencies": {
+    "color": "^3.0.0",
+    "hast-util-sanitize": "^1.1.2",
+    "highlight.js": "^9.12.0",
+    "lodash": "^4.17.4",
+    "prop-types": "^15.6.0",
+    "radium": "^0.21.2",
+    "radium-starter": "^0.10.0",
+    "react-lowlight": "^1.1.1",
+    "react-md-spinner": "^0.2.5",
+    "react-router-dom": "^4.2.2",
+    "remark": "^9.0.0",
+    "remark-react": "^4.0.1",
+    "@resdir/http-client": "^0.2.11",
+    "sleep-promise": "^2.0.0"
+  },
+  "builder": {
+    "run": {
+      "@type": "method",
+      "@run": [
+        "@parent transpiler run",
+        "@parent bundler run",
+        "@parent copier run",
+        "@parent freezer run",
+        "tool/notifier notify 'Build completed'"
+      ],
+      "@listen": "@build"
+    },
+    "fileWatcher": {
+      "@import": "tool/file-watcher",
+      "files": ["./index.html", "./src/**", "./images/**"],
+      "onFileModified": {
+        "@run": "@parent run"
+      }
+    }
+  },
+  "transpiler": {
+    "@import": "js/transpiler",
+    "targets": {
+      "chrome": "50",
+      "safari": "10",
+      "firefox": "53",
+      "edge": "14"
+    },
+    "format": "esm",
+    "transformJSX": true
+  },
+  "bundler": {
+    "@import": "js/bundler",
+    "entry": "./dist/esm/index.js",
+    "target": "browser",
+    "format": "iife",
+    "globals": {
+      "react": "React",
+      "react-dom": "ReactDOM"
+    }
+  },
+  "copier": {
+    "@import": "tool/file-copier",
+    "sourceDirectory": "./"
+  },
+  "freezer": {
+    "@import": "website/freezer"
+  }
+}
