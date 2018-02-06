@@ -15,7 +15,7 @@ Aren't you tired of installing, configuring or updating your developper tools? T
 
 #### Hello, “resources”
 
-In Run's vocabulary, a resource is a JSON (or YAML) document that allows you to specify both data (e.g., configuration) and tools. For example, here is how you would define a website hosted on AWS:
+In Run's world, a resource is a JSON (or YAML) document that allows you to specify both data (e.g., configuration) and tools. For example, here is how you would define a website hosted on AWS:
 
 \`\`\`
 {

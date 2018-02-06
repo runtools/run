@@ -37,6 +37,9 @@ export class Header extends React.Component {
         <Link to="/">
           <Logo width={85} style={{marginBottom: '6px'}} />
         </Link>
+        <div style={{marginLeft: '0.6rem'}}>
+          <small style={{color: t.mutedTextColor, letterSpacing: '0.04rem'}}>alpha</small>
+        </div>
         <div style={{flexGrow: 1}} />
         <ul style={[menuStyle]}>
           <li style={menuItemStyle}>
