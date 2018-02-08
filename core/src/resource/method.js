@@ -219,6 +219,13 @@ export class MethodResource extends Resource {
         throw createClientError(`Can't find implementation for ${formatCode(methodResource.$getKey())}`);
       }
 
+      if (!(this._$hasBeenInitialized || this._$isInitializing)) {
+        this._$isInitializing = true;
+        await this.$emit('@initialize');
+        this._$isInitializing = false;
+        this._$hasBeenInitialized = true;
+      }
+
       const beforeExpression = methodResource.$getAllBeforeExpressions();
       if (beforeExpression.length) {
         await methodResource._run(beforeExpression, normalizedInput, {parent: this});

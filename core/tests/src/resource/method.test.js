@@ -183,6 +183,13 @@ describe('MethodResource', () => {
     ]);
   });
 
+  test('initialization', async () => {
+    const person = await Resource.$import('../fixtures/person', {directory: __dirname});
+    expect(person.hasBeenInitialized).toBe(false);
+    await person.formatGreetingMethod();
+    expect(person.hasBeenInitialized).toBe(true);
+  });
+
   test('multiple inheritance', async () => {
     const personWithMixin = await Resource.$create(
       {'@import': ['../fixtures/person', '../fixtures/mixin']},

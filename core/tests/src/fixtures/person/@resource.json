@@ -8,6 +8,11 @@
     "age": {
       "@type": "number"
     },
+    "hasBeenInitialized": false,
+    "initialize": {
+      "@type": "method",
+      "@listen": "@initialize"
+    },
     "formatGreetingMethod": {
       "@type": "method",
       "@input": {

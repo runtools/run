@@ -1,4 +1,8 @@
 export default () => ({
+  async initialize() {
+    this.hasBeenInitialized = true;
+  },
+
   async formatGreetingMethod({verb, shout}) {
     const name = this.name || 'Anonymous';
     let result = `${verb} ${name}!`;
