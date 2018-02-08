@@ -206,7 +206,7 @@ export class MethodResource extends Resource {
 
     return async function (input, environment, ...rest) {
       if (rest.length !== 0) {
-        throw new TypeError(`A resource method must be invoked with a maximum of two arguments (${formatCode('input')} and ${formatCode('environment')})`);
+        throw createClientError(`A resource method must be invoked with a maximum of two arguments (${formatCode('input')} and ${formatCode('environment')})`);
       }
 
       const {
@@ -285,7 +285,7 @@ export class MethodResource extends Resource {
         normalizedInput = await normalizedInput.$extend(input, {parse: inputIsParsedExpression});
       } catch (err) {
         if (err.code === 'RUN_CORE_CHILD_CREATION_DENIED') {
-          throw new Error(`Cannot match input attribute (key: ${formatCode(err.childKey)})`);
+          throw createClientError(`Cannot match input attribute (key: ${formatCode(err.childKey)})`);
         }
         throw err;
       }
@@ -339,7 +339,7 @@ export class MethodResource extends Resource {
         return;
       }
       if (child instanceof Value && child.$value === undefined) {
-        throw new Error(`${formatCode(child.$getKey())} input attribute is missing`);
+        throw createClientError(`${formatCode(child.$getKey())} input attribute is missing`);
       }
     });
   }
@@ -363,7 +363,7 @@ export class MethodResource extends Resource {
       normalizedOutput = await normalizedOutput.$extend(output);
     } catch (err) {
       if (err.code === 'RUN_CORE_CHILD_CREATION_DENIED') {
-        throw new Error(`Cannot match output attribute (key: ${formatCode(err.childKey)})`);
+        throw createClientError(`Cannot match output attribute (key: ${formatCode(err.childKey)})`);
       }
       throw err;
     }
@@ -381,7 +381,7 @@ export class MethodResource extends Resource {
       if (child instanceof Value && child.$value !== undefined) {
         return;
       }
-      throw new Error(`${formatCode(child.$getKey())} output attribute is missing`);
+      throw createClientError(`${formatCode(child.$getKey())} output attribute is missing`);
     });
   }
 

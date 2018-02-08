@@ -1,6 +1,6 @@
 import {buildJSONRPCRequest, validateJSONRPCResponse} from '@resdir/json-rpc';
 import postJSON from '@resdir/http-post-json';
-import {createClientError} from '@resdir/error';
+import {createClientError, createRemoteError} from '@resdir/error';
 
 const INVOKE_METHOD_VERSION = 1;
 
@@ -62,10 +62,7 @@ async function invoke({endpoint, method, params, timeout}) {
     }
 
     if (response.error) {
-      const err = new Error(response.error.message);
-      err.jsonRPCErrorCode = response.error.code;
-      Object.assign(err, response.error.data);
-      throw err;
+      throw createRemoteError(response.error.message, response.error.data);
     }
 
     return response.result;
@@ -73,7 +70,7 @@ async function invoke({endpoint, method, params, timeout}) {
 
   if (response.errorMessage) {
     // Lambda error
-    throw new Error(response.errorMessage);
+    throw createRemoteError(response.errorMessage);
   }
 
   throw new Error(`An unknown error occurred while invoking a remote method`);
