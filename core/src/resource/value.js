@@ -24,7 +24,7 @@ export class ValueResource extends Resource {
   }
 
   get $value() {
-    let value = this._getInheritedValue('_value');
+    let value = this._$getInheritedValue('_$value');
     if (value === undefined) {
       value = this.$default;
     }
@@ -35,18 +35,18 @@ export class ValueResource extends Resource {
     if (value !== undefined) {
       value = this.constructor.$normalizeValue(value);
     }
-    this._value = value;
+    this._$value = value;
   }
 
   get $default() {
-    return this._getInheritedValue('_default');
+    return this._$getInheritedValue('_$default');
   }
 
   set $default(defaultValue) {
     if (defaultValue !== undefined) {
       defaultValue = this.constructor.$normalizeValue(defaultValue);
     }
-    this._default = defaultValue;
+    this._$default = defaultValue;
   }
 
   $defaultAutoBoxing = true;
@@ -90,12 +90,12 @@ export class ValueResource extends Resource {
       definition = {};
     }
 
-    const serializedValue = this.constructor.$serializeValue(this._value);
+    const serializedValue = this.constructor.$serializeValue(this._$value);
     if (serializedValue !== undefined) {
       definition['@value'] = serializedValue;
     }
 
-    const serializedDefault = this.constructor.$serializeValue(this._default);
+    const serializedDefault = this.constructor.$serializeValue(this._$default);
     if (serializedDefault !== undefined) {
       definition['@default'] = serializedDefault;
     }

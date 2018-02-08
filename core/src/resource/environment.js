@@ -57,11 +57,11 @@ export class EnvironmentResource extends Resource {
   }
 
   $getClientId() {
-    return this._clientId || RUN_CLIENT_ID;
+    return this._$clientId || RUN_CLIENT_ID;
   }
 
   $setClientId(clientId) {
-    this._clientId = clientId;
+    this._$clientId = clientId;
   }
 
   get '@clientId'() {
@@ -69,11 +69,11 @@ export class EnvironmentResource extends Resource {
   }
 
   $getVerbose() {
-    return this._getInheritedValue('_verbose');
+    return this._$getInheritedValue('_$verbose');
   }
 
   $setVerbose(verbose, options) {
-    this._verbose = normalizeBoolean(verbose, options);
+    this._$verbose = normalizeBoolean(verbose, options);
   }
 
   get '@verbose'() {
@@ -81,11 +81,11 @@ export class EnvironmentResource extends Resource {
   }
 
   $getQuiet() {
-    return this._getInheritedValue('_quiet');
+    return this._$getInheritedValue('_$quiet');
   }
 
   $setQuiet(quiet, options) {
-    this._quiet = normalizeBoolean(quiet, options);
+    this._$quiet = normalizeBoolean(quiet, options);
   }
 
   get '@quiet'() {
@@ -93,11 +93,11 @@ export class EnvironmentResource extends Resource {
   }
 
   $getDebug() {
-    return this._getInheritedValue('_debug');
+    return this._$getInheritedValue('_$debug');
   }
 
   $setDebug(debug, options) {
-    this._debug = normalizeBoolean(debug, options);
+    this._$debug = normalizeBoolean(debug, options);
   }
 
   get '@debug'() {
@@ -111,20 +111,20 @@ export class EnvironmentResource extends Resource {
       definition = {};
     }
 
-    if (this._clientId !== undefined) {
-      definition['@clientId'] = this._clientId;
+    if (this._$clientId !== undefined) {
+      definition['@clientId'] = this._$clientId;
     }
 
-    if (this._verbose !== undefined) {
-      definition['@verbose'] = this._verbose;
+    if (this._$verbose !== undefined) {
+      definition['@verbose'] = this._$verbose;
     }
 
-    if (this._quiet !== undefined) {
-      definition['@quiet'] = this._quiet;
+    if (this._$quiet !== undefined) {
+      definition['@quiet'] = this._$quiet;
     }
 
-    if (this._debug !== undefined) {
-      definition['@debug'] = this._debug;
+    if (this._$debug !== undefined) {
+      definition['@debug'] = this._$debug;
     }
 
     if (isEmpty(definition)) {

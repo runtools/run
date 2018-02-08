@@ -56,12 +56,12 @@ export class MethodResource extends Resource {
   }
 
   $getInput() {
-    return this._getInheritedValue('_input');
+    return this._$getInheritedValue('_$input');
   }
 
   async $setInput(input) {
     if (input === undefined) {
-      this._input = undefined;
+      this._$input = undefined;
       return;
     }
     if (!isPlainObject(input)) {
@@ -69,16 +69,16 @@ export class MethodResource extends Resource {
     }
     input = await this.constructor.$create(input);
     input.$setIsOpenByDefault(false);
-    this._input = input;
+    this._$input = input;
   }
 
   $getOutput() {
-    return this._getInheritedValue('_output');
+    return this._$getInheritedValue('_$output');
   }
 
   async $setOutput(output) {
     if (output === undefined) {
-      this._output = undefined;
+      this._$output = undefined;
       return;
     }
     if (!isPlainObject(output)) {
@@ -86,37 +86,37 @@ export class MethodResource extends Resource {
     }
     output = await this.constructor.$create(output);
     output.$setIsOpenByDefault(false);
-    this._output = output;
+    this._$output = output;
   }
 
   get $runExpression() {
-    return this._getInheritedValue('_runExpression');
+    return this._$getInheritedValue('_$runExpression');
   }
 
   set $runExpression(runExpression) {
     if (typeof runExpression === 'string') {
       runExpression = [runExpression];
     }
-    this._runExpression = runExpression;
+    this._$runExpression = runExpression;
   }
 
   get $beforeExpression() {
-    return this._beforeExpression;
+    return this._$beforeExpression;
   }
 
   set $beforeExpression(beforeExpression) {
     if (typeof beforeExpression === 'string') {
       beforeExpression = [beforeExpression];
     }
-    this._beforeExpression = beforeExpression;
+    this._$beforeExpression = beforeExpression;
   }
 
   $getAllBeforeExpressions() {
     const expression = [];
     this.$forSelfAndEachBase(
       method => {
-        if (method._beforeExpression) {
-          expression.unshift(...method._beforeExpression);
+        if (method._$beforeExpression) {
+          expression.unshift(...method._$beforeExpression);
         }
       },
       {deepSearch: true}
@@ -125,22 +125,22 @@ export class MethodResource extends Resource {
   }
 
   get $afterExpression() {
-    return this._afterExpression;
+    return this._$afterExpression;
   }
 
   set $afterExpression(afterExpression) {
     if (typeof afterExpression === 'string') {
       afterExpression = [afterExpression];
     }
-    this._afterExpression = afterExpression;
+    this._$afterExpression = afterExpression;
   }
 
   $getAllAfterExpressions() {
     const expression = [];
     this.$forSelfAndEachBase(
       method => {
-        if (method._afterExpression) {
-          expression.push(...method._afterExpression);
+        if (method._$afterExpression) {
+          expression.push(...method._$afterExpression);
         }
       },
       {deepSearch: true}
@@ -149,25 +149,25 @@ export class MethodResource extends Resource {
   }
 
   get $listenedEvents() {
-    return this._listenedEvents;
+    return this._$listenedEvents;
   }
 
   set $listenedEvents(events) {
     if (!Array.isArray(events)) {
       events = [events];
     }
-    this._listenedEvents = events;
+    this._$listenedEvents = events;
   }
 
   get $unlistenedEvents() {
-    return this._unlistenedEvents;
+    return this._$unlistenedEvents;
   }
 
   set $unlistenedEvents(events) {
     if (!Array.isArray(events)) {
       events = [events];
     }
-    this._unlistenedEvents = events;
+    this._$unlistenedEvents = events;
   }
 
   $getAllListenedEvents() {
@@ -175,15 +175,15 @@ export class MethodResource extends Resource {
     const unlistenedEvents = [];
     this.$forSelfAndEachBase(
       method => {
-        if (method._listenedEvents) {
-          for (const event of method._listenedEvents) {
+        if (method._$listenedEvents) {
+          for (const event of method._$listenedEvents) {
             if (!listenedEvents.includes(event)) {
               listenedEvents.push(event);
             }
           }
         }
-        if (method._unlistenedEvents) {
-          for (const event of method._unlistenedEvents) {
+        if (method._$unlistenedEvents) {
+          for (const event of method._$unlistenedEvents) {
             if (!unlistenedEvents.includes(event)) {
               unlistenedEvents.push(event);
             }
@@ -212,9 +212,9 @@ export class MethodResource extends Resource {
       const {
         normalizedInput,
         normalizedEnvironment
-      } = await methodResource._normalizeInputAndEnvironment(input, environment);
+      } = await methodResource._$normalizeInputAndEnvironment(input, environment);
 
-      const implementation = methodResource._getImplementation(this);
+      const implementation = methodResource._$getImplementation(this);
       if (!implementation) {
         throw createClientError(`Can't find implementation for ${formatCode(methodResource.$getKey())}`);
       }
@@ -228,12 +228,12 @@ export class MethodResource extends Resource {
 
       const beforeExpression = methodResource.$getAllBeforeExpressions();
       if (beforeExpression.length) {
-        await methodResource._run(beforeExpression, normalizedInput, {parent: this});
+        await methodResource._$run(beforeExpression, normalizedInput, {parent: this});
       }
 
       const output = await implementation.call(this, normalizedInput, normalizedEnvironment);
 
-      let normalizedOutput = await methodResource._normalizeOutput(output);
+      let normalizedOutput = await methodResource._$normalizeOutput(output);
 
       if (normalizedOutput !== undefined && autoUnbox) {
         normalizedOutput = normalizedOutput.$autoUnbox();
@@ -241,14 +241,14 @@ export class MethodResource extends Resource {
 
       const afterExpression = methodResource.$getAllAfterExpressions();
       if (afterExpression.length) {
-        await methodResource._run(afterExpression, normalizedInput, {parent: this});
+        await methodResource._$run(afterExpression, normalizedInput, {parent: this});
       }
 
       return normalizedOutput;
     };
   }
 
-  async _normalizeInputAndEnvironment(input, environment) {
+  async _$normalizeInputAndEnvironment(input, environment) {
     if (input instanceof Resource) {
       // TODO: Check input compatibility
       return input;
@@ -266,7 +266,7 @@ export class MethodResource extends Resource {
       let result;
       let remainder;
 
-      const inputSchema = this._getInputSchema();
+      const inputSchema = this._$getInputSchema();
       ({result, remainder} = matchExpression(input, inputSchema));
       input = result;
 
@@ -290,7 +290,7 @@ export class MethodResource extends Resource {
         throw err;
       }
 
-      this._validateInput(normalizedInput);
+      this._$validateInput(normalizedInput);
     }
 
     let normalizedEnvironment = await getEnvironment();
@@ -312,7 +312,7 @@ export class MethodResource extends Resource {
     return {normalizedInput, normalizedEnvironment};
   }
 
-  _getInputSchema() {
+  _$getInputSchema() {
     const schema = [];
 
     const input = this.$getInput();
@@ -333,7 +333,7 @@ export class MethodResource extends Resource {
     return schema;
   }
 
-  _validateInput(input) {
+  _$validateInput(input) {
     input.$forEachChild(child => {
       if (child.$isOptional) {
         return;
@@ -344,7 +344,7 @@ export class MethodResource extends Resource {
     });
   }
 
-  async _normalizeOutput(output) {
+  async _$normalizeOutput(output) {
     let normalizedOutput = this.$getOutput();
     if (normalizedOutput === undefined) {
       return undefined;
@@ -368,12 +368,12 @@ export class MethodResource extends Resource {
       throw err;
     }
 
-    this._validateOutput(normalizedOutput);
+    this._$validateOutput(normalizedOutput);
 
     return normalizedOutput;
   }
 
-  _validateOutput(output) {
+  _$validateOutput(output) {
     output.$forEachChild(child => {
       if (child.$isOptional) {
         return;
@@ -385,12 +385,12 @@ export class MethodResource extends Resource {
     });
   }
 
-  _getImplementation(parent) {
+  _$getImplementation(parent) {
     const expression = this.$runExpression;
     if (expression) {
       const methodResource = this;
       return function (input) {
-        return methodResource._run(expression, input, {parent: this});
+        return methodResource._$run(expression, input, {parent: this});
       };
     }
 
@@ -401,31 +401,31 @@ export class MethodResource extends Resource {
     }
 
     // TODO: Don't access private inherited properties
-    const resourceImplementation = parent._implementation;
+    const resourceImplementation = parent._$implementation;
 
     if (!resourceImplementation) {
       return undefined;
     }
 
-    if (resourceImplementation.__buildError__) {
-      throw resourceImplementation.__buildError__;
+    if (resourceImplementation._$buildError) {
+      throw resourceImplementation._$buildError;
     }
 
     return resourceImplementation[key];
   }
 
-  async _run(expressionProperty, input, {parent} = {}) {
+  async _$run(expressionProperty, input, {parent} = {}) {
     let result;
 
     for (const expression of expressionProperty) {
       const parsedExpression = parseExpression(expression);
-      result = await this._runParsedExpression(parsedExpression, {parent});
+      result = await this._$runParsedExpression(parsedExpression, {parent});
     }
 
     return result;
   }
 
-  async _runParsedExpression(expression, {parent}) {
+  async _$runParsedExpression(expression, {parent}) {
     const firstArgument = getPositionalArgument(expression, 0);
     if (
       firstArgument !== undefined &&
@@ -453,17 +453,17 @@ export class MethodResource extends Resource {
       definition = {};
     }
 
-    const input = this._input;
+    const input = this._$input;
     if (input !== undefined) {
       definition['@input'] = input.$serialize();
     }
 
-    const output = this._output;
+    const output = this._$output;
     if (output !== undefined) {
       definition['@output'] = output.$serialize();
     }
 
-    const runExpression = this._runExpression;
+    const runExpression = this._$runExpression;
     if (runExpression !== undefined) {
       if (runExpression.length === 1) {
         definition['@run'] = runExpression[0];
@@ -472,7 +472,7 @@ export class MethodResource extends Resource {
       }
     }
 
-    const beforeExpression = this._beforeExpression;
+    const beforeExpression = this._$beforeExpression;
     if (beforeExpression !== undefined) {
       if (beforeExpression.length === 1) {
         definition['@before'] = beforeExpression[0];
@@ -481,7 +481,7 @@ export class MethodResource extends Resource {
       }
     }
 
-    const afterExpression = this._afterExpression;
+    const afterExpression = this._$afterExpression;
     if (afterExpression !== undefined) {
       if (afterExpression.length === 1) {
         definition['@after'] = afterExpression[0];
@@ -490,7 +490,7 @@ export class MethodResource extends Resource {
       }
     }
 
-    let listenedEvents = this._listenedEvents;
+    let listenedEvents = this._$listenedEvents;
     if (listenedEvents && listenedEvents.length) {
       if (listenedEvents.length === 1) {
         listenedEvents = listenedEvents[0];
@@ -498,7 +498,7 @@ export class MethodResource extends Resource {
       definition['@listen'] = listenedEvents;
     }
 
-    let unlistenedEvents = this._unlistenedEvents;
+    let unlistenedEvents = this._$unlistenedEvents;
     if (unlistenedEvents && unlistenedEvents.length) {
       if (unlistenedEvents.length === 1) {
         unlistenedEvents = unlistenedEvents[0];

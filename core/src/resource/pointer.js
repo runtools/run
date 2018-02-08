@@ -23,18 +23,18 @@ export class PointerResource extends Resource {
   }
 
   get $target() {
-    return this._getInheritedValue('_target');
+    return this._$getInheritedValue('_$target');
   }
 
   set $target(target) {
     if (target !== undefined && !(target instanceof Resource)) {
       throw createClientError(`${formatCode('@target')} attribute must be a Resource`);
     }
-    this._target = target;
+    this._$target = target;
   }
 
   $format() {
-    if (this._target) {
+    if (this._$target) {
       throw new Error('Cannot format a pointer resource');
     }
     return super.$format();
@@ -48,7 +48,7 @@ export class PointerResource extends Resource {
   }
 
   $serialize(options) {
-    if (this._target) {
+    if (this._$target) {
       throw new Error('Cannot serialize a pointer resource');
     }
     return super.$serialize(options);
