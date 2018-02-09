@@ -11,7 +11,9 @@ import {runExpression, runREPL} from '../';
     print(`${formatCode(pkg.name, {addBackticks: false})}${formatPunctuation(':')} ${pkg.version}`);
   }
 
-  expression = expression.map(arg => '"' + arg + '"');
+  // expression = expression.map(arg => '"' + arg + '"');
+  // expression = expression.join(' ');
+  expression = expression.map(arg => arg.replace(/\s/g, '\\ '));
   expression = expression.join(' ');
 
   const directory = process.cwd();

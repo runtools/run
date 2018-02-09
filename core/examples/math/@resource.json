@@ -1,0 +1,19 @@
+{
+  "@implementation": "./index.js",
+  "sum": {
+    "@type": "method",
+    "@input": {
+      "a": {
+        "@type": "number",
+        "@position": 0
+      },
+      "b": {
+        "@type": "number",
+        "@position": 1
+      }
+    },
+    "@output": {
+      "@type": "number"
+    }
+  }
+}

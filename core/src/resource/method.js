@@ -1,14 +1,7 @@
-import {isAbsolute} from 'path';
 import {isEmpty, isPlainObject, difference} from 'lodash';
 import {takeProperty} from '@resdir/util';
 import {catchContext, formatCode} from '@resdir/console';
-import {
-  parseExpression,
-  isParsedExpression,
-  matchExpression,
-  getPositionalArgument,
-  shiftPositionalArguments
-} from '@resdir/expression';
+import {parseExpression, isParsedExpression, matchExpression} from '@resdir/expression';
 import {createClientError} from '@resdir/error';
 
 import Resource from '../resource';
@@ -419,26 +412,10 @@ export class MethodResource extends Resource {
 
     for (const expression of expressionProperty) {
       const parsedExpression = parseExpression(expression);
-      result = await this._$runParsedExpression(parsedExpression, {parent});
+      result = await parent.$invoke(parsedExpression);
     }
 
     return result;
-  }
-
-  async _$runParsedExpression(expression, {parent}) {
-    const firstArgument = getPositionalArgument(expression, 0);
-    if (
-      firstArgument !== undefined &&
-      (firstArgument.startsWith('.') || firstArgument.includes('/') || isAbsolute(firstArgument))
-    ) {
-      // The fist arguments looks like a resource identifier
-      parent = await Resource.$load(firstArgument, {
-        directory: this.$getCurrentDirectory({throwIfUndefined: false})
-      });
-      expression = {...expression};
-      shiftPositionalArguments(expression);
-    }
-    return await parent.$invoke(expression);
   }
 
   async $invoke(expression, {parent} = {}) {

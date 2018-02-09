@@ -21,7 +21,7 @@ import {validateResourceKey} from '@resdir/resource-key';
 import {parseResourceIdentifier} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, stringifyResourceSpecifier} from '@resdir/resource-specifier';
 import ResourceFetcher from '@resdir/resource-fetcher';
-import {shiftPositionalArguments} from '@resdir/expression';
+import {shiftPositionalArguments, isParsedExpression} from '@resdir/expression';
 import {createClientError} from '@resdir/error';
 import decache from 'decache';
 
@@ -1594,19 +1594,49 @@ export class Resource {
     return await catchContext(this, async () => {
       expression = {...expression};
 
-      const key = shiftPositionalArguments(expression);
-      if (key === undefined) {
-        return this;
+      let receiver = this;
+
+      while (true) {
+        const keyOrSubexpression = shiftPositionalArguments(expression);
+
+        if (keyOrSubexpression === undefined) {
+          return receiver;
+        }
+
+        if (isParsedExpression(keyOrSubexpression)) {
+          const subexpression = keyOrSubexpression;
+          if (receiver === undefined) {
+            throw createClientError(`Cannot run a subexpression with an undefined receiver`);
+          }
+          receiver = await receiver.$invoke(subexpression);
+          continue;
+        }
+
+        const key = keyOrSubexpression;
+
+        if (key.startsWith('.') || key.includes('/') || isAbsolute(key)) {
+          // The key looks like a resource specifier
+          const specifier = key;
+          const resource = await Resource.$load(specifier, {
+            directory: this.$getCurrentDirectory({throwIfUndefined: false}) // TODO: remove 'this'
+          });
+          return await resource.$invoke(expression);
+        }
+
+        if (receiver === undefined) {
+          throw createClientError(`Cannot get ${formatCode(key)} on an undefined receiver`);
+        }
+
+        let child = receiver.$findChild(key, {includeNativeChildren: true});
+
+        if (!child) {
+          throw createClientError(`No attribute or method found with this key: ${formatCode(key)}`);
+        }
+
+        child = await child.$resolveGetter({parent: receiver});
+
+        return await child.$invoke(expression, {parent: receiver});
       }
-
-      let child = this.$findChild(key, {includeNativeChildren: true});
-      if (!child) {
-        throw createClientError(`No attribute or method found with this key: ${formatCode(key)}`);
-      }
-
-      child = await child.$resolveGetter({parent: this});
-
-      return await child.$invoke(expression, {parent: this});
     });
   }
 
