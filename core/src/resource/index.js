@@ -1303,7 +1303,7 @@ export class Resource {
     if (!getter) {
       return this;
     }
-    return await getter.$invoke(undefined, {parent});
+    return await getter.$call(parent);
   }
 
   get $runtime() {
@@ -1590,53 +1590,53 @@ export class Resource {
     return this;
   }
 
-  async $invoke(expression, {_parent} = {}) {
-    return await catchContext(this, async () => {
+  static async $invoke(parent, expression) {
+    return await catchContext(parent, async () => {
       expression = {...expression};
 
-      let receiver = this;
+      const argument = shiftPositionalArguments(expression);
 
-      while (true) {
-        const keyOrSubexpression = shiftPositionalArguments(expression);
-
-        if (keyOrSubexpression === undefined) {
-          return receiver;
-        }
-
-        if (isParsedExpression(keyOrSubexpression)) {
-          const subexpression = keyOrSubexpression;
-          if (receiver === undefined) {
-            throw createClientError(`Cannot run a subexpression with an undefined receiver`);
-          }
-          receiver = await receiver.$invoke(subexpression);
-          continue;
-        }
-
-        const key = keyOrSubexpression;
-
-        if (key.startsWith('.') || key.includes('/') || isAbsolute(key)) {
-          // The key looks like a resource specifier
-          const specifier = key;
-          const resource = await Resource.$load(specifier, {
-            directory: this.$getCurrentDirectory({throwIfUndefined: false}) // TODO: remove 'this'
-          });
-          return await resource.$invoke(expression);
-        }
-
-        if (receiver === undefined) {
-          throw createClientError(`Cannot get ${formatCode(key)} on an undefined receiver`);
-        }
-
-        let child = receiver.$findChild(key, {includeNativeChildren: true});
-
-        if (!child) {
-          throw createClientError(`No attribute or method found with this key: ${formatCode(key)}`);
-        }
-
-        child = await child.$resolveGetter({parent: receiver});
-
-        return await child.$invoke(expression, {parent: receiver});
+      if (argument === undefined) {
+        return parent;
       }
+
+      if (isParsedExpression(argument)) {
+        const subexpression = argument;
+        if (parent === undefined) {
+          throw createClientError(`Cannot run a subexpression with an undefined parent`);
+        }
+        const output = await Resource.$invoke(parent, subexpression);
+        return await Resource.$invoke(output, expression);
+      }
+
+      if (argument.startsWith('.') || argument.includes('/') || isAbsolute(argument)) {
+        // The argument looks like a resource specifier
+        const specifier = argument;
+        const resource = await Resource.$load(specifier, {
+          directory: parent.$getCurrentDirectory({throwIfUndefined: false}) // ???
+        });
+        return await Resource.$invoke(resource, expression);
+      }
+
+      const key = argument;
+
+      if (parent === undefined) {
+        throw createClientError(`Cannot get ${formatCode(key)} on an undefined parent`);
+      }
+
+      let child = parent.$findChild(key, {includeNativeChildren: true});
+
+      if (!child) {
+        throw createClientError(`No attribute or method found with this key: ${formatCode(key)}`);
+      }
+
+      child = await child.$resolveGetter({parent});
+
+      if (child.$call) {
+        return await child.$call(parent, expression);
+      }
+
+      return await Resource.$invoke(child, expression);
     });
   }
 

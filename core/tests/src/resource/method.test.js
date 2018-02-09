@@ -111,28 +111,28 @@ describe('MethodResource', () => {
       '@run': 'formatTags',
       '@output': {'@type': 'string'}
     });
-    expect((await method.$invoke(undefined, {parent: person})).$value).toBe('');
+    expect((await method.$call(person)).$value).toBe('');
 
     method = await Resource.$create({
       '@type': 'method',
       '@run': 'formatTags cool',
       '@output': {'@type': 'string'}
     });
-    expect((await method.$invoke(undefined, {parent: person})).$value).toBe('cool');
+    expect((await method.$call(person)).$value).toBe('cool');
 
     method = await Resource.$create({
       '@type': 'method',
       '@run': 'formatTags cool nice',
       '@output': {'@type': 'string'}
     });
-    expect((await method.$invoke(undefined, {parent: person})).$value).toBe('cool, nice');
+    expect((await method.$call(person)).$value).toBe('cool, nice');
 
     method = await Resource.$create({
       '@type': 'method',
       '@run': 'formatTags cool nice smart',
       '@output': {'@type': 'string'}
     });
-    expect((await method.$invoke(undefined, {parent: person})).$value).toBe('cool, nice, smart');
+    expect((await method.$call(person)).$value).toBe('cool, nice, smart');
   });
 
   test('events', async () => {

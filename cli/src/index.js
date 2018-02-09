@@ -22,7 +22,7 @@ export async function runExpression(expression = '', {directory} = {}) {
   );
 
   return await session(async () => {
-    return await method.$invoke(undefined, {parent: resource});
+    return await method.$call(resource);
   });
 }
 

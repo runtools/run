@@ -194,6 +194,11 @@ export class MethodResource extends Resource {
     return this.$getFunction({autoUnbox: true});
   }
 
+  async $call(parent, expression) {
+    const fn = this.$getFunction();
+    return await fn.call(parent, expression);
+  }
+
   $getFunction({autoUnbox} = {}) {
     const methodResource = this;
 
@@ -412,15 +417,10 @@ export class MethodResource extends Resource {
 
     for (const expression of expressionProperty) {
       const parsedExpression = parseExpression(expression);
-      result = await parent.$invoke(parsedExpression);
+      result = await Resource.$invoke(parent, parsedExpression);
     }
 
     return result;
-  }
-
-  async $invoke(expression, {parent} = {}) {
-    const fn = this.$getFunction();
-    return await fn.call(parent, expression);
   }
 
   $serialize(options) {
