@@ -1089,16 +1089,26 @@ export class Resource {
     this._$isUnpublishable = isUnpublishable;
   }
 
-  $getIsOpenByDefault() {
-    const isOpenByDefault = this._$getInheritedValue('_$isOpenByDefault');
-    return isOpenByDefault !== undefined ? isOpenByDefault : true;
+  $getIsMethodInput() {
+    return this._$getInheritedValue('_$isMethodInput');
   }
 
-  $setIsOpenByDefault(isOpenByDefault) {
-    if (isOpenByDefault !== undefined && typeof isOpenByDefault !== 'boolean') {
-      throw createClientError('\'isOpenByDefault\' argument must be a boolean');
+  $setIsMethodInput(isMethodInput) {
+    if (isMethodInput !== undefined && typeof isMethodInput !== 'boolean') {
+      throw createClientError('\'isMethodInput\' argument must be a boolean');
     }
-    this._$isOpenByDefault = isOpenByDefault;
+    this._$isMethodInput = isMethodInput;
+  }
+
+  $getIsMethodOutput() {
+    return this._$getInheritedValue('_$isMethodOutput');
+  }
+
+  $setIsMethodOutput(isMethodOutput) {
+    if (isMethodOutput !== undefined && typeof isMethodOutput !== 'boolean') {
+      throw createClientError('\'isMethodOutput\' argument must be a boolean');
+    }
+    this._$isMethodOutput = isMethodOutput;
   }
 
   get $comment() {
@@ -1338,6 +1348,10 @@ export class Resource {
       throw createClientError(`${formatCode('@isOpen')} attribute must be a boolean`);
     }
     this._$isOpen = isOpen;
+  }
+
+  $getIsOpenByDefault() {
+    return !(this.$getIsMethodInput() || this.$getIsMethodOutput());
   }
 
   get $isHidden() {
@@ -1788,13 +1802,13 @@ export class Resource {
     );
   }
 
-  async '@help'({keys, showNative}, environment) {
+  async '@help'({keys, showNative} = {}, environment) {
     const helper = await this.constructor._$getResourceHelper();
     const resourcePtr = await this.constructor.$create({'@type': 'pointer', '@target': this});
     await helper.help({resourcePtr, keys, showNative}, environment);
   }
 
-  async '@@help'({keys}, environment) {
+  async '@@help'({keys} = {}, environment) {
     return await this['@help']({keys, showNative: true}, environment);
   }
 

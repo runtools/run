@@ -61,7 +61,7 @@ export class MethodResource extends Resource {
       throw createClientError(`${formatCode('@input')} property must be an object`);
     }
     input = await this.constructor.$create(input);
-    input.$setIsOpenByDefault(false);
+    input.$setIsMethodInput(true);
     this._$input = input;
   }
 
@@ -78,7 +78,7 @@ export class MethodResource extends Resource {
       throw createClientError(`${formatCode('@output')} property must be an object`);
     }
     output = await this.constructor.$create(output);
-    output.$setIsOpenByDefault(false);
+    output.$setIsMethodOutput(true);
     this._$output = output;
   }
 
