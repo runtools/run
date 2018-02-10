@@ -39,7 +39,9 @@
       "@import": "tool/file-watcher",
       "files": ["./index.html", "./src/**", "./images/**"],
       "onFileModified": {
-        "@run": "@parent run"
+        "@type": "method",
+        "@run": "@parent run",
+        "@listen": "fileModified"
       }
     }
   },
