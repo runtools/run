@@ -9,7 +9,6 @@
   "bin": {
     "run": "dist/cjs/bin/index.js"
   },
-  "preferGlobal": true,
   "dependencies": {
     "dotenv": "^4.0.0",
     "json5": "^0.5.1",
