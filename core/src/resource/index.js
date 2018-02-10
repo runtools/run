@@ -13,6 +13,7 @@ import {
   formatPath,
   formatCode,
   formatURL,
+  formatNumber,
   formatPunctuation,
   print
 } from '@resdir/console';
@@ -43,6 +44,9 @@ const RESOURCE_FILE_NAME = '@resource';
 const RESOURCE_FILE_FORMATS = ['json', 'json5', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
 const PRIVATE_DEV_RESOURCE_FILE_NAME = '@resource.dev.private';
+
+const MIN_DESCRIPTION_LENGTH = 2;
+const MAX_DESCRIPTION_LENGTH = 100;
 
 const BOOTSTRAPPING_RESOURCES = [
   'js/resource',
@@ -1194,8 +1198,16 @@ export class Resource {
   }
 
   set $description(description) {
-    if (description !== undefined && typeof description !== 'string') {
-      throw createClientError(`${formatCode('@description')} attribute must be a string`);
+    if (description !== undefined) {
+      if (typeof description !== 'string') {
+        throw createClientError(`${formatCode('@description')} attribute must be a string`);
+      }
+      if (description.length < MIN_DESCRIPTION_LENGTH) {
+        throw createClientError(`${formatCode('@description')} attribute is too short (minimum characters is ${formatNumber(MIN_DESCRIPTION_LENGTH)})`);
+      }
+      if (description.length > MAX_DESCRIPTION_LENGTH) {
+        throw createClientError(`${formatCode('@description')} attribute is too long (maximum characters is ${formatNumber(MAX_DESCRIPTION_LENGTH)})`);
+      }
     }
     this._$description = description;
   }

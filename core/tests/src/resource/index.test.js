@@ -33,6 +33,12 @@ describe('Resource', () => {
   test('@description', async () => {
     expect((await Resource.$create()).$description).toBeUndefined();
     expect((await Resource.$create({'@description': 'This is a resource'})).$description).toBe('This is a resource');
+    await expect(Resource.$create({'@description': 123})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@description': 'a'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({
+      '@description':
+          '12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901' // 101 characters
+    })).rejects.toBeInstanceOf(Error);
   });
 
   test('@examples', async () => {
