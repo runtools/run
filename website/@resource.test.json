@@ -1,0 +1,34 @@
+{
+  "@load": "./@resource.json",
+  "domainName": "test.run.tools",
+  "contentDirectory": "./builds/test",
+  "bundler": {
+    "output": "./dist/bundle.test.js",
+    "replacements": {
+      "process.env.NODE_ENV": "'production'"
+    },
+    "reinstallDependencies": true,
+    "minify": true
+  },
+  "copier": {
+    "destinationDirectory": "./builds/test",
+    "clearDestination": true,
+    "files": [
+      {
+        "source": "./index.html",
+        "replacements": {
+          "$REACT_URL$": "https://unpkg.com/react@16.2.0/umd/react.production.min.js",
+          "$REACT_DOM_URL$": "https://unpkg.com/react-dom@16.2.0/umd/react-dom.production.min.js"
+        }
+      },
+      {
+        "source": "./dist/bundle.test.js",
+        "destination": "./bundle.js"
+      },
+      "./images"
+    ]
+  },
+  "freezer": {
+    "sourceDirectory": "./builds/test"
+  }
+}

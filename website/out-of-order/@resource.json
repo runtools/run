@@ -1,4 +1,8 @@
 {
   "@import": "aws/website",
-  "contentDirectory": "./content"
+  "domainName": "run.tools",
+  "contentDirectory": "./content",
+  "testServer": {
+    "port": 9016
+  }
 }

@@ -1,0 +1,31 @@
+{
+  "@load": "./@resource.json",
+  "contentDirectory": "./builds/dev",
+  "testServer": {
+    "port": 9016
+  },
+  "bundler": {
+    "output": "./dist/bundle.dev.js"
+  },
+  "copier": {
+    "destinationDirectory": "./builds/dev",
+    "clearDestination": true,
+    "files": [
+      {
+        "source": "./index.html",
+        "replacements": {
+          "$REACT_URL$": "https://unpkg.com/react@16.2.0/umd/react.development.js",
+          "$REACT_DOM_URL$": "https://unpkg.com/react-dom@16.2.0/umd/react-dom.development.js"
+        }
+      },
+      {
+        "source": "./dist/bundle.dev.js",
+        "destination": "./bundle.js"
+      },
+      "./images"
+    ]
+  },
+  "freezer": {
+    "sourceDirectory": "./builds/dev"
+  }
+}
