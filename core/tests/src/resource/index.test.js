@@ -30,15 +30,14 @@ describe('Resource', () => {
     expect(() => res3.$addAlias('')).toThrow();
   });
 
+  test('@name', async () => {
+    expect((await Resource.$create()).$name).toBeUndefined();
+    expect((await Resource.$create({'@name': 'Awesome Resource'})).$name).toBe('Awesome Resource');
+  });
+
   test('@description', async () => {
     expect((await Resource.$create()).$description).toBeUndefined();
     expect((await Resource.$create({'@description': 'This is a resource'})).$description).toBe('This is a resource');
-    await expect(Resource.$create({'@description': 123})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({'@description': 'a'})).rejects.toBeInstanceOf(Error);
-    await expect(Resource.$create({
-      '@description':
-          '12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901' // 101 characters
-    })).rejects.toBeInstanceOf(Error);
   });
 
   test('@examples', async () => {
@@ -299,6 +298,7 @@ describe('Resource', () => {
     await testSerialization({
       '@comment': 'This is a comment',
       '@aliases': ['hi', 'bonjour'],
+      '@name': 'Awesome Resource',
       '@description': 'This is a resource',
       '@examples': ['aturing/nice-tool', 'resdir/hello'],
       '@isHidden': true

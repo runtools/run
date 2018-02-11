@@ -13,7 +13,6 @@ import {
   formatPath,
   formatCode,
   formatURL,
-  formatNumber,
   formatPunctuation,
   print
 } from '@resdir/console';
@@ -21,6 +20,8 @@ import {load, save} from '@resdir/file-manager';
 import {validateResourceKey} from '@resdir/resource-key';
 import {parseResourceIdentifier} from '@resdir/resource-identifier';
 import {parseResourceSpecifier, stringifyResourceSpecifier} from '@resdir/resource-specifier';
+import {validateResourceName} from '@resdir/resource-name';
+import {validateResourceDescription} from '@resdir/resource-description';
 import ResourceFetcher from '@resdir/resource-fetcher';
 import {shiftPositionalArguments, isParsedExpression} from '@resdir/expression';
 import {createClientError} from '@resdir/error';
@@ -44,9 +45,6 @@ const RESOURCE_FILE_NAME = '@resource';
 const RESOURCE_FILE_FORMATS = ['json', 'json5', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
 const PRIVATE_DEV_RESOURCE_FILE_NAME = '@resource.dev.private';
-
-const MIN_DESCRIPTION_LENGTH = 2;
-const MAX_DESCRIPTION_LENGTH = 100;
 
 const BOOTSTRAPPING_RESOURCES = [
   'js/resource',
@@ -337,6 +335,7 @@ export class Resource {
       parse,
       isUnpublishable,
       isNative,
+      exporterDefinition,
       disableCache
     } = {}
   ) {
@@ -378,6 +377,10 @@ export class Resource {
         this.$setIsUnpublishable(true);
       }
 
+      if (exporterDefinition) {
+        this.$setExporterDefinition(exporterDefinition);
+      }
+
       const set = (target, source, aliases) => {
         const value = takeProperty(definition, source, aliases);
         if (value !== undefined) {
@@ -390,6 +393,7 @@ export class Resource {
       set('$importAttribute', '@import');
       set('$loadAttribute', '@load');
       set('$directory', '@directory');
+      set('$name', '@name');
       set('$description', '@description');
       set('$aliases', '@aliases');
       set('$position', '@position');
@@ -469,6 +473,7 @@ export class Resource {
       parse,
       isUnpublishable,
       isNative,
+      exporterDefinition,
       disableCache
     } = {}
   ) {
@@ -621,6 +626,7 @@ export class Resource {
       parse,
       isUnpublishable,
       isNative,
+      exporterDefinition,
       disableCache
     });
 
@@ -682,7 +688,7 @@ export class Resource {
 
   static async $load(
     specifier,
-    {directory, importing, searchInParentDirectories, disableCache, throwIfNotFound = true} = {}
+    {directory, isImporting, searchInParentDirectories, disableCache, throwIfNotFound = true} = {}
   ) {
     let result;
 
@@ -694,7 +700,7 @@ export class Resource {
       if (location) {
         if (location.match(/^https?:\/\//i)) {
           // TODO: Make it right
-          if (!importing) {
+          if (!isImporting) {
             throw createClientError(`Remote resource '@load' is not implemented yet, only '@import' is supported (location: ${formatURL(location)})`);
           }
           return await RemoteResource.$import(location);
@@ -717,8 +723,9 @@ export class Resource {
 
     let base;
     let {definition, file} = result;
+    let exporterDefinition; // TODO: Should disappear with a proper implementation
 
-    if (importing) {
+    if (isImporting) {
       // TODO: Allow circular references when loading resources,
       // so we can remove this ugly code
 
@@ -727,6 +734,7 @@ export class Resource {
         base = await this.$import(loadAttribute, {directory: dirname(file), disableCache});
       }
 
+      exporterDefinition = definition;
       definition = getProperty(definition, '@export');
       if (definition === undefined) {
         throw createClientError(`Can't import a resource without an ${formatCode('@export')} property (specifier: ${formatString(specifier)}, directory: ${formatPath(directory)})`);
@@ -738,6 +746,7 @@ export class Resource {
       file,
       directory,
       specifier,
+      exporterDefinition,
       disableCache
     });
 
@@ -879,7 +888,7 @@ export class Resource {
   }
 
   static async $import(specifier, {directory, disableCache} = {}) {
-    return await this.$load(specifier, {directory, importing: true, disableCache});
+    return await this.$load(specifier, {directory, isImporting: true, disableCache});
   }
 
   async $extend(definition, options) {
@@ -1093,6 +1102,14 @@ export class Resource {
     this._$isUnpublishable = isUnpublishable;
   }
 
+  $getExporterDefinition() {
+    return this._$getInheritedValue('_$exporterDefinition');
+  }
+
+  $setExporterDefinition(exporterDefinition) {
+    this._$exporterDefinition = exporterDefinition;
+  }
+
   $getIsMethodInput() {
     return this._$getInheritedValue('_$isMethodInput');
   }
@@ -1193,21 +1210,26 @@ export class Resource {
     this._$directory = directory;
   }
 
+  get $name() {
+    // TODO: I am not sure about that, roots and children should probably work the same
+    return this.$isRoot() ? this._$name : this._$getInheritedValue('_$name');
+  }
+
+  set $name(name) {
+    if (name !== undefined) {
+      validateResourceName(name);
+    }
+    this._$name = name;
+  }
+
   get $description() {
-    return this._$getInheritedValue('_$description');
+    // TODO: I am not sure about that, roots and children should probably work the same
+    return this.$isRoot() ? this._$description : this._$getInheritedValue('_$description');
   }
 
   set $description(description) {
     if (description !== undefined) {
-      if (typeof description !== 'string') {
-        throw createClientError(`${formatCode('@description')} attribute must be a string`);
-      }
-      if (description.length < MIN_DESCRIPTION_LENGTH) {
-        throw createClientError(`${formatCode('@description')} attribute is too short (minimum characters is ${formatNumber(MIN_DESCRIPTION_LENGTH)})`);
-      }
-      if (description.length > MAX_DESCRIPTION_LENGTH) {
-        throw createClientError(`${formatCode('@description')} attribute is too long (maximum characters is ${formatNumber(MAX_DESCRIPTION_LENGTH)})`);
-      }
+      validateResourceDescription(description);
     }
     this._$description = description;
   }
@@ -1857,6 +1879,10 @@ export class Resource {
 
     if (this._$directory !== undefined) {
       definition['@directory'] = this._$directory;
+    }
+
+    if (this._$name !== undefined) {
+      definition['@name'] = this._$name;
     }
 
     if (this._$description !== undefined) {
