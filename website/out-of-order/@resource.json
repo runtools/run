@@ -1,5 +1,5 @@
 {
-  "@import": "aws/website",
+  "@import": "aws/s3-hosted-website",
   "domainName": "run.tools",
   "contentDirectory": "./content",
   "testServer": {

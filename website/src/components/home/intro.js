@@ -19,7 +19,7 @@ In Run's world, a resource is a JSON (or YAML) document that allows you to speci
 
 \`\`\`
 {
-  "@import": "aws/website#^0.1.0",
+  "@import": "aws/s3-hosted-website#^0.1.0",
   "domainName": "www.example.com",
   "contentDirectory": "./content"
 }
@@ -33,11 +33,11 @@ run deploy
 
 And voila! Your website is online. With a minimal effort, it is hosted on AWS using all the state-of-the-art techniques to ensure maximum speed and availability. When you use a tool for the first time, it is installed for you, and if there are updates in the future, they are automatically installed as well.
 
-Obviously, this example is oversimplified, but it shows a very important aspect of the resource concept: data (\`"domainName"\`, \`"contentDirectory"\`) and tools (\`"aws/website"\`) are encapsulated into something that is easy to use and share to other people (or to the future of you). Just get the resource file, and you are all set.
+Obviously, this example is oversimplified, but it shows a very important aspect of the resource concept: data (\`"domainName"\`, \`"contentDirectory"\`) and tools (\`"aws/s3-hosted-website"\`) are encapsulated into something that is easy to use and share to other people (or to the future of you). Just get the resource file, and you are all set.
 
-What about this \`"aws/website#^0.1.0"\` string? Well, it is just a reference to another resource. By importing it, you are inheriting all its attributes and methods. This is how you get the \`"domainName"\` attribute or the \`deploy\` command. Embracing the principles of object-oriented programming, resources can represent almost anything (documents, configs, tools, APIs, libraries,...), and they are highly extendable and composable.
+What about this \`"aws/s3-hosted-website#^0.1.0"\` string? Well, it is just a reference to another resource. By importing it, you are inheriting all its attributes and methods. This is how you get the \`"domainName"\` attribute or the \`deploy\` command. Embracing the principles of object-oriented programming, resources can represent almost anything (documents, configs, tools, APIs, libraries,...), and they are highly extendable and composable.
 
-But where does the \`"aws/website"\` resource come from? To make things easier, in addition to Run, we are developing a resource directory. Simply named [Resdir](https://resdir.com), it will be a place of choice to store, share and discover resources. Although still in development, you can start using it. We are using it ourselves, and we are publishing our first resources, \`"aws/website"\` is just one of them.
+But where does the \`"aws/s3-hosted-website"\` resource come from? To make things easier, in addition to Run, we are developing a resource directory. Simply named [Resdir](https://resdir.com), it will be a place of choice to store, share and discover resources. Although still in development, you can start using it. We are using it ourselves, and we are publishing our first resources, \`"aws/s3-hosted-website"\` is just one of them.
 `;
 
 const ASIDE = `
@@ -55,7 +55,7 @@ For now, resource's methods must be implemented in JavaScript because the Run's 
 
 ##### Remote invocations
 
-Another exciting feature of resources is that they can be invoked remotely. Using a tool like \`"aws/hosted-resource"\`, you can deploy a resource to AWS Lambda, and invoke it the same way you would invoke a local resource. It can even work in the browser. We see this possibility as a cheap way to create backends – the whole “Web API” part is gone.
+Another exciting feature of resources is that they can be invoked remotely. Using a tool like \`"aws/lambda-hosted-resource"\`, you can deploy a resource to AWS Lambda, and invoke it the same way you would invoke a local resource. It can even work in the browser. We see this possibility as a cheap way to create backends – the whole “Web API” part is gone.
 `;
 
 /* eslint-enable no-irregular-whitespace */

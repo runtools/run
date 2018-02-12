@@ -109,13 +109,13 @@ export class Resource {
       '@examples': [
         '@add string firstName',
         '@add js/transpiler transpiler',
-        '@add aws/website#^1.2.0 frontend'
+        '@add aws/s3-hosted-website#^1.2.0 frontend'
       ],
       '@input': {
         typeOrSpecifier: {
           '@type': 'string',
           '@description': 'Type or resource specifier of the property to add',
-          '@examples': ['string', 'js/transpiler', 'aws/website#^1.2.0'],
+          '@examples': ['string', 'js/transpiler', 'aws/s3-hosted-website#^1.2.0'],
           '@position': 0
         },
         key: {

@@ -1,5 +1,5 @@
 {
-  "@import": ["aws/website", "js/resource"],
+  "@import": ["aws/s3-hosted-website", "js/resource"],
   "customErrors": [
     {
       "errorCode": 404,
