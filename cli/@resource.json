@@ -1,5 +1,5 @@
 {
-  "@import": "1place/npm-package",
+  "@import": "1place/npm-package#^0.1.0",
   "name": "run-cli",
   "version": "0.11.7",
   "description": "One tool to run them all",
@@ -20,7 +20,7 @@
   },
   "@unpublishable": {
     "tests": {
-      "@import": "1place/jest",
+      "@import": "1place/jest#^0.1.0",
       "@directory": "./tests"
     }
   }

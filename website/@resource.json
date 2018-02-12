@@ -1,5 +1,5 @@
 {
-  "@import": ["aws/s3-hosted-website", "js/resource"],
+  "@import": ["aws/s3-hosted-website#^0.1.0", "js/resource#^0.1.0"],
   "customErrors": [
     {
       "errorCode": 404,
@@ -31,12 +31,12 @@
         "@parent bundler run",
         "@parent copier run",
         "@parent freezer run",
-        "tool/notifier notify 'Build completed'"
+        "(@import tool/notifier#^0.1.0) notify 'Build completed'"
       ],
       "@listen": "@build"
     },
     "fileWatcher": {
-      "@import": "tool/file-watcher",
+      "@import": "tool/file-watcher#^0.1.0",
       "files": ["./index.html", "./src/**", "./images/**"],
       "onFileModified": {
         "@type": "method",
@@ -46,7 +46,7 @@
     }
   },
   "transpiler": {
-    "@import": "js/transpiler",
+    "@import": "js/transpiler#^0.1.0",
     "targets": {
       "chrome": "50",
       "safari": "10",
@@ -57,7 +57,7 @@
     "transformJSX": true
   },
   "bundler": {
-    "@import": "js/bundler",
+    "@import": "js/bundler#^0.1.0",
     "entry": "./dist/esm/index.js",
     "target": "browser",
     "format": "iife",
@@ -67,10 +67,10 @@
     }
   },
   "copier": {
-    "@import": "tool/file-copier",
+    "@import": "tool/file-copier#^0.1.0",
     "sourceDirectory": "./"
   },
   "freezer": {
-    "@import": "website/freezer"
+    "@import": "website/freezer#^0.1.0"
   }
 }
