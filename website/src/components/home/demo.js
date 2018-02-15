@@ -31,7 +31,7 @@ export class Demo extends React.Component {
             backgroundColor: 'black',
             borderWidth: '2px',
             borderStyle: 'solid',
-            borderColor: t.alternateBorderColor,
+            borderColor: t.altBorderColor,
             borderRadius: '25px',
             [`@media (max-width: ${t.mediumBreakpoint})`]: {padding: '10px', borderRadius: '10px'},
             [`@media (max-width: ${t.smallBreakpoint})`]: {padding: '10px', borderRadius: '10px'}

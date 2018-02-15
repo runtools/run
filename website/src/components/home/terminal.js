@@ -73,7 +73,7 @@ export class Terminal extends React.Component {
           backgroundColor: 'black',
           borderWidth: '2px',
           borderStyle: 'solid',
-          borderColor: t.alternateBorderColor,
+          borderColor: t.altBorderColor,
           borderRadius: '15px',
           [`@media (max-width: ${t.smallBreakpoint})`]: {
             width: '300px',
@@ -99,7 +99,7 @@ export class Terminal extends React.Component {
           <span
             style={{
               fontFamily: t.monospaceFontFamily,
-              fontSize: '20px',
+              fontSize: '19px',
               [`@media (max-width: ${t.smallBreakpoint})`]: {fontSize: '11px'}
             }}
           >

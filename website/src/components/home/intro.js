@@ -37,13 +37,17 @@ Obviously, this example is oversimplified, but it shows a very important aspect 
 
 What about this \`"aws/s3-hosted-website#^0.1.0"\` string? Well, it is just a reference to another resource. By importing it, you are inheriting all its attributes and methods. This is how you get the \`"domainName"\` attribute or the \`deploy\` command. Embracing the principles of object-oriented programming, resources can represent almost anything (documents, configs, tools, APIs, libraries,...), and they are highly extendable and composable.
 
-But where does the \`"aws/s3-hosted-website"\` resource come from? To make things easier, in addition to Run, we are developing a resource directory. Simply named [Resdir](https://resdir.com), it will be a place of choice to store, share and discover resources. Although still in development, you can start using it. We are using it ourselves, and we are publishing our first resources, \`"aws/s3-hosted-website"\` is just one of them.
+But where does the \`"aws/s3-hosted-website"\` resource come from? To make things easier, in addition to Run, we are developing a resource directory. Simply named [Resdir](${
+  process.env.RESDIR_WEBSITE_URL
+}), it will be a place of choice to store, share and discover resources. Although still in development, you can start using it. We are using it ourselves, and we are publishing our first resources, \`"aws/s3-hosted-website"\` is just one of them.
 `;
 
 const ASIDE = `
 ##### Resdir, the resource directory
 
-It is very easy to publish a resource to [Resdir](https://resdir.com) and share it to everyone (or to a selected group of people if your resource is private). Resource's names are always prefixed with a namespace (e.g., \`"aturing/nice-tool"\`) so that there is no conflict. When you create a Resdir account, you get a personal namespace, and it is also possible to create namespaces for organizations and communities.
+It is very easy to publish a resource to [Resdir](${
+  process.env.RESDIR_WEBSITE_URL
+}) and share it to everyone (or to a selected group of people if your resource is private). Resource's names are always prefixed with a namespace (e.g., \`"aturing/nice-tool"\`) so that there is no conflict. When you create a Resdir account, you get a personal namespace, and it is also possible to create namespaces for organizations and communities.
 
 ---
 

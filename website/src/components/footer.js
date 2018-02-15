@@ -19,12 +19,12 @@ export class Footer extends React.Component {
       width: '6rem',
       [`@media (max-width: ${t.smallBreakpoint})`]: {width: '3rem'}
     };
-    const menuStyle = [s.unstyledList, s.noMargins];
-    const menuItemStyle = [{marginBottom: '.5rem'}];
-    const menuItemLinkStyle = [{':hover': {textDecoration: 'none'}}];
+    const menuStyle = {...s.unstyledList, ...s.noMargins};
+    const menuItemStyle = {marginBottom: '.5rem'};
+    const menuItemLinkStyle = {':hover': {textDecoration: 'none'}};
 
     return (
-      <footer style={{padding: '3rem 0', backgroundColor: t.alternateBackgroundColor}}>
+      <footer style={{padding: '3rem 0', backgroundColor: t.altBackgroundColor}}>
         <div
           style={{
             display: 'flex',
@@ -34,7 +34,7 @@ export class Footer extends React.Component {
           }}
         >
           <div>
-            <ul style={[menuStyle]}>
+            <ul style={menuStyle}>
               <li style={menuItemStyle}>
                 <Link key="footer-docs" to="/docs" style={menuItemLinkStyle}>
                   Docs
@@ -56,9 +56,9 @@ export class Footer extends React.Component {
               </li>
             </ul>
           </div>
-          <div style={[columnGapStyle]}>&nbsp;</div>
+          <div style={columnGapStyle}>&nbsp;</div>
           <div>
-            <ul style={[menuStyle]}>
+            <ul style={menuStyle}>
               <li style={menuItemStyle}>
                 <a
                   key="footer-github"

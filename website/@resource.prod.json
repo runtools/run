@@ -23,7 +23,10 @@
       },
       {
         "source": "./dist/bundle.prod.js",
-        "destination": "./bundle.js"
+        "destination": "./bundle.js",
+        "replacements": {
+          "$RESDIR_WEBSITE_URL$": "https://resdir.com"
+        }
       },
       "./images"
     ]

@@ -13,8 +13,8 @@ function theme() {
   // Color source: http://flatuicolors.com/palette/defo
   // Use http://serennu.com/colour/colourcalculator.php to calculate variations
   return {
-    primaryColor: '#1abc9c', // Aqua
-    accentColor: '#f39c12', // Orange
+    primaryColor: '#f39c12', // Orange
+    accentColor: '#1abc9c', // Aqua
     backgroundColor: '#10171E',
     borderColor: '#444444',
     baseTextColor: '#CCCCCC',
@@ -34,8 +34,8 @@ function theme() {
     preBackgroundColor: t => t.codeBackgroundColor,
     modularScaleRatio: 1.25,
     // Custom variables
-    alternateBackgroundColor: '#2c3e50',
-    alternateBorderColor: '#888888',
+    altBackgroundColor: '#2c3e50',
+    altBorderColor: '#888888',
     extraColor1: '#3498db', // Blue
     extraColor2: '#e74c3c', // Red
     extraColor3: '#9b59b6' // Purple
@@ -45,7 +45,11 @@ function theme() {
 function styles(t, _s) {
   return {
     centeredPage: {maxWidth: '1280px', margin: '0 auto'},
-    subheading: {fontWeight: '300', color: t.mutedTextColor, letterSpacing: '0.03rem'}
+    subheading: {fontWeight: '300', color: t.mutedTextColor, letterSpacing: '0.03rem'},
+    primaryLink: {
+      color: t.primaryColor,
+      ':hover': {color: t.lightPrimaryColor, textDecoration: 'none'}
+    }
   };
 }
 

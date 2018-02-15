@@ -34,7 +34,7 @@ export class Hero extends React.Component {
   };
 
   render() {
-    const {style, theme: t, styles: s} = this.props;
+    const {style, styles: s} = this.props;
 
     return (
       <div
@@ -50,13 +50,7 @@ export class Hero extends React.Component {
         <h1 style={{textAlign: 'center'}}>Make software development fun&nbsp;again! 🎉</h1>
         <h3 style={{...s.subheading, maxWidth: '800px', textAlign: 'center'}}>
           Forget Grandpa{'\''}s Unix paradigms, use{' '}
-          <Link
-            to="/#intro"
-            style={{
-              color: t.accentColor,
-              ':hover': {color: t.lightAccentColor, textDecoration: 'none'}
-            }}
-          >
+          <Link to="/#intro" style={s.primaryLink}>
             Run
           </Link>{' '}
           to create and consume a brand new generation of tools.

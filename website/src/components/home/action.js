@@ -30,8 +30,8 @@ export class Action extends React.Component {
             maxWidth: '970px'
           }}
         >
-          Feeling excited about Run and the resource concept?<br />Don't wait, be a pioneer, and
-          create your first resource.
+          Feeling excited about Run and the resource concept?<br />Don't wait, be a pioneer, create
+          your first resource.
         </h3>
         <Button rsAccent rsLarge>
           Create a resource

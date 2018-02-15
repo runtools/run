@@ -1,0 +1,1 @@
+process.env.RESDIR_WEBSITE_URL = '$RESDIR_WEBSITE_URL$';
