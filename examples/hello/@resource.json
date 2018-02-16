@@ -1,0 +1,15 @@
+{
+  "frontend": {
+    "@import": "aws/s3-hosted-website#^0.1.0",
+    "domainName": "www.hello.resdir.com",
+    "contentDirectory": "./frontend"
+  },
+  "backend": {
+    "@import": "aws/lambda-hosted-resource#^0.1.0",
+    "domainName": "api.hello.resdir.com",
+    "@export": {
+      "@implementation": "./backend/index.js",
+      "hello": { "@type": "method" }
+    }
+  }
+}

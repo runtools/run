@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <script src="https://unpkg.com/run-core@^0.11/dist/browser/run-core.js"></script>
+    <script>
+      // (async () => {
+      //   const backend = await Resource.$import('https://api.hello.resdir.com');
+      //   document.body.innerText = await backend.hello();
+      // })();
+      Resource.$import('https://api.hello.resdir.com')
+        .then(function (backend) {
+          return backend.hello();
+        })
+        .then(function (result) {
+          document.body.innerText = result;
+        })
+        .catch(function (err) {
+          console.error(err);
+        });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "books": [
+    {
+      "title": "Tutorial",
+      "chapters": [
+        {
+          "title": "Installation",
+          "path": "tutorial/install.md"
+        },
+        {
+          "title": "Your first @resource",
+          "path": "tutorial/create-resource.md"
+        },
+        {
+          "title": "Publishing",
+          "path": "tutorial/publish-resource.md"
+        }
+      ]
+    },
+    {
+      "title": "Reference",
+      "chapters": [
+        {
+          "title": "@resource",
+          "path": "reference/resource.md"
+        }
+      ]
+    }
+  ]
+}
