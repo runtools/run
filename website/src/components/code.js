@@ -49,7 +49,10 @@ export function highlightJSStyles(t) {
     '.hljs-string, .hljs-regexp, .hljs-addition, .hljs-attribute, .hljs-meta-string': {
       color: t.primaryColor
     },
-    '.hljs-built_in, .hljs-class .hljs-title': {
+    '.hljs-built_in': {
+      color: t.codeColor
+    },
+    '.hljs-class .hljs-title': {
       color: t.accentColor
     },
     '.hljs-attr, .hljs-variable, .hljs-template-variable, .hljs-type, .hljs-selector-class, .hljs-selector-attr, .hljs-selector-pseudo, .hljs-number': {

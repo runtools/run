@@ -4,7 +4,7 @@ import {withRadiumStarter} from 'radium-starter';
 import {withRouter} from 'react-router';
 import {getJSON, get} from '@resdir/http-client';
 
-import {globals, resolveGlobals} from '../../globals';
+import {constants, resolveConstants} from '../../constants';
 import Layout from '../layout';
 import {withErrorBoundary, catchErrors} from '../error-boundary';
 import Link from '../link';
@@ -56,7 +56,7 @@ export class Docs extends React.Component {
   }
 
   async _loadContents() {
-    const url = globals.DOCS_BASE_URL + '/' + DOCS_INDEX_PATH;
+    const url = constants.DOCS_BASE_URL + '/' + DOCS_INDEX_PATH;
     let {body: contents} = await getJSON(url);
     if (typeof contents === 'string') {
       contents = JSON.parse(contents);
@@ -85,8 +85,8 @@ export class Docs extends React.Component {
     const {chapter, nextChapter} = this._findChapter(url);
     if (chapter && !chapter.text) {
       this.setState({chapter: undefined, nextChapter: undefined, isLoadingChapter: true});
-      let {body: text} = await get(globals.DOCS_BASE_URL + '/' + chapter.path);
-      text = resolveGlobals(text);
+      let {body: text} = await get(constants.DOCS_BASE_URL + '/' + chapter.path);
+      text = resolveConstants(text);
       chapter.text = text;
     }
     this.setState({chapter, nextChapter, isLoadingChapter: false});
