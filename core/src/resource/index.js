@@ -1212,8 +1212,7 @@ export class Resource {
   }
 
   get $name() {
-    // TODO: I am not sure about that, roots and children should probably work the same
-    return this.$isRoot() ? this._$name : this._$getInheritedValue('_$name');
+    return this._$getInheritedValue('_$name');
   }
 
   set $name(name) {
@@ -1224,8 +1223,7 @@ export class Resource {
   }
 
   get $description() {
-    // TODO: I am not sure about that, roots and children should probably work the same
-    return this.$isRoot() ? this._$description : this._$getInheritedValue('_$description');
+    return this._$getInheritedValue('_$description');
   }
 
   set $description(description) {
