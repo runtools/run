@@ -14,6 +14,10 @@
         {
           "title": "Resource composition",
           "path": "introduction/resource-composition.md"
+        },
+        {
+          "title": "Sharing a resource",
+          "path": "introduction/sharing-a-resource.md"
         }
       ]
     },
