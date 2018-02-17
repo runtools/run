@@ -19,7 +19,7 @@ function theme() {
     borderColor: '#444444',
     baseTextColor: '#CCCCCC',
     baseInverseTextColor: t => t.backgroundColor,
-    mutedTextColor: '#AAAAAA',
+    mutedTextColor: '#888888',
     headingsColor: '#ECF0F1', // Almost white
     headingsFontWeight: '500',
     headingsLineHeight: t => t.baseLineHeight,
@@ -34,6 +34,7 @@ function theme() {
     preBackgroundColor: t => t.codeBackgroundColor,
     modularScaleRatio: 1.25,
     // Custom variables
+    subheadingsColor: '#AAAAAA',
     altBackgroundColor: '#2c3e50',
     altBorderColor: '#888888',
     extraColor1: '#3498db', // Blue

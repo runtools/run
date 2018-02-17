@@ -2,18 +2,22 @@
   "@implementation": "./index.js",
   "sum": {
     "@type": "method",
+    "@description": "Compute the sum of two numbers",
     "@input": {
       "a": {
         "@type": "number",
+        "@description": "The first number",
         "@position": 0
       },
       "b": {
         "@type": "number",
+        "@description": "The second number",
         "@position": 1
       }
     },
     "@output": {
-      "@type": "number"
+      "@type": "number",
+      "@description": "The result of the operation"
     }
   }
 }

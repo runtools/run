@@ -1,0 +1,6 @@
+{
+  "hello": {
+    "@type": "method",
+    "@run": "@console print 'Hello, World!'"
+  }
+}

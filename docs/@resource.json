@@ -1,0 +1,7 @@
+{
+  "@import": "website/hosted-website#^0.1.0",
+  "testServer": {
+    "port": 9017,
+    "delay": 200
+  }
+}

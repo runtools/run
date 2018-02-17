@@ -1,0 +1,3 @@
+### Resource composition
+
+There are two ways...

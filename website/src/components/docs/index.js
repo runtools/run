@@ -3,16 +3,17 @@ import PropTypes from 'prop-types';
 import {withRadiumStarter} from 'radium-starter';
 import {withRouter} from 'react-router';
 import {getJSON, get} from '@resdir/http-client';
-// import sleep from 'sleep-promise';
 
+import {globals, resolveGlobals} from '../../globals';
 import Layout from '../layout';
 import {withErrorBoundary, catchErrors} from '../error-boundary';
+import Link from '../link';
 import Loading from '../loading';
 import NotFound from '../not-found';
+import Spinner from '../spinner';
 import {NavRoot, NavSection, NavItem} from './nav';
 import Markdown from '../markdown';
 
-const DOCS_BASE_URL = 'https://raw.githubusercontent.com/resdir/resdir/master/docs/content/';
 const DOCS_INDEX_PATH = 'index.json';
 const CHAPTER_FILE_EXTENSION = '.md';
 
@@ -30,7 +31,9 @@ export class Docs extends React.Component {
   state = {
     contents: undefined,
     chapter: undefined,
-    isLoading: true
+    nextChapter: undefined,
+    isLoadingContents: true,
+    isLoadingChapter: true
   };
 
   componentDidMount() {
@@ -45,13 +48,15 @@ export class Docs extends React.Component {
 
   @catchErrors
   async load() {
-    // await sleep(3000);
+    this.setState({isLoadingContents: true});
     const contents = await this._loadContents();
-    this.setState({contents}, () => this.loadChapter(this.props.location.pathname));
+    this.setState({contents, isLoadingContents: false}, () => {
+      this.loadChapter(this.props.location.pathname);
+    });
   }
 
   async _loadContents() {
-    const url = DOCS_BASE_URL + DOCS_INDEX_PATH;
+    const url = globals.DOCS_BASE_URL + '/' + DOCS_INDEX_PATH;
     let {body: contents} = await getJSON(url);
     if (typeof contents === 'string') {
       contents = JSON.parse(contents);
@@ -77,19 +82,23 @@ export class Docs extends React.Component {
 
   @catchErrors
   async loadChapter(url) {
-    const chapter = this._findChapter(url);
+    const {chapter, nextChapter} = this._findChapter(url);
     if (chapter && !chapter.text) {
-      const {body: text} = await get(DOCS_BASE_URL + chapter.path);
+      this.setState({chapter: undefined, nextChapter: undefined, isLoadingChapter: true});
+      let {body: text} = await get(globals.DOCS_BASE_URL + '/' + chapter.path);
+      text = resolveGlobals(text);
       chapter.text = text;
     }
-    this.setState({chapter, isLoading: false});
+    this.setState({chapter, nextChapter, isLoadingChapter: false});
   }
 
   _findChapter(url) {
     for (const book of this.state.contents.books) {
-      for (const chapter of book.chapters) {
+      for (let i = 0; i < book.chapters.length; i++) {
+        const chapter = book.chapters[i];
         if (chapter.url === url || chapter.alternateURLs.includes(url)) {
-          return chapter;
+          const nextChapter = book.chapters[i + 1];
+          return {chapter, nextChapter};
         }
       }
     }
@@ -98,11 +107,11 @@ export class Docs extends React.Component {
   render() {
     const {theme: t, styles: s} = this.props;
 
-    if (this.state.isLoading) {
+    if (this.state.isLoadingContents) {
       return <Loading />;
     }
 
-    if (this.state.contents && !this.state.chapter) {
+    if (!this.state.isLoadingChapter && !this.state.chapter) {
       return <NotFound />;
     }
 
@@ -113,19 +122,30 @@ export class Docs extends React.Component {
             ...s.centeredPage,
             display: 'flex',
             justifyContent: 'center',
-            padding: '2rem 1.5rem',
+            padding: '2rem 1.5rem 3rem 1.5rem',
             [`@media (max-width: ${t.mediumBreakpointMinusOne})`]: {
               flexDirection: 'column'
             }
           }}
         >
-          <Contents data={this.state.contents} style={{flexBasis: '18rem'}} />
-          <Chapter
-            data={this.state.chapter}
+          <Contents
+            content={this.state.contents}
             style={{
-              flexBasis: '42rem',
+              width: '18rem',
               [`@media (max-width: ${t.mediumBreakpointMinusOne})`]: {
-                order: -1
+                width: '100%',
+                marginTop: '1.5rem'
+              }
+            }}
+          />
+          <Chapter
+            content={this.state.chapter}
+            nextContent={this.state.nextChapter}
+            style={{
+              width: '42rem',
+              [`@media (max-width: ${t.mediumBreakpointMinusOne})`]: {
+                order: -1,
+                width: '100%'
               }
             }}
           />
@@ -139,20 +159,20 @@ export class Docs extends React.Component {
 export class Contents extends React.Component {
   static propTypes = {
     style: PropTypes.object,
-    data: PropTypes.object,
+    content: PropTypes.object,
     location: PropTypes.object.isRequired
   };
 
   render() {
-    const {style, data, location} = this.props;
+    const {style, content, location} = this.props;
 
-    if (!data) {
+    if (!content) {
       return null;
     }
 
     return (
       <NavRoot style={style}>
-        {data.books.map((book, index) => (
+        {content.books.map((book, index) => (
           <NavSection key={index} title={book.title}>
             {book.chapters.map((chapter, index) => {
               return (
@@ -178,18 +198,43 @@ export class Contents extends React.Component {
 export class Chapter extends React.Component {
   static propTypes = {
     style: PropTypes.object,
-    data: PropTypes.object
+    content: PropTypes.object,
+    nextContent: PropTypes.object,
+    theme: PropTypes.object.isRequired
   };
 
   render() {
-    const {data} = this.props;
-    if (!data) {
-      return null;
+    const {style, content, nextContent, theme: t} = this.props;
+
+    if (!content) {
+      return (
+        <div
+          style={{
+            height: '100vh',
+            marginTop: '-100px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            ...style
+          }}
+        >
+          <Spinner size={50} />
+        </div>
+      );
     }
 
     return (
-      <div style={this.props.style}>
-        <Markdown>{data.text}</Markdown>
+      <div style={style}>
+        <Markdown>{content.text}</Markdown>
+        {nextContent ? (
+          <div>
+            <hr style={{marginTop: '1.75rem', marginBottom: '1.75rem'}} />
+            <div>
+              <span style={{color: t.mutedTextColor}}>Next:</span>{' '}
+              <Link to={nextContent.url}>{nextContent.title} →</Link>
+            </div>
+          </div>
+        ) : null}
       </div>
     );
   }

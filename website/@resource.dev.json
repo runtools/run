@@ -14,15 +14,16 @@
       {
         "source": "./index.html",
         "replacements": {
-          "$REACT_URL$": "https://unpkg.com/react@16.2.0/umd/react.development.js",
-          "$REACT_DOM_URL$": "https://unpkg.com/react-dom@16.2.0/umd/react-dom.development.js"
+          "${REACT_URL}": "https://unpkg.com/react@16.2.0/umd/react.development.js",
+          "${REACT_DOM_URL}": "https://unpkg.com/react-dom@16.2.0/umd/react-dom.development.js"
         }
       },
       {
         "source": "./dist/bundle.dev.js",
         "destination": "./bundle.js",
         "replacements": {
-          "$RESDIR_WEBSITE_URL$": "http://dev.resdir.com"
+          "${DOCS_BASE_URL}": "http://docs.dev.run.tools/",
+          "${RESDIR_WEBSITE_URL}": "http://dev.resdir.com"
         }
       },
       "./images"

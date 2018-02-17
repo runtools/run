@@ -1,19 +1,19 @@
 {
   "books": [
     {
-      "title": "Tutorial",
+      "title": "Introduction",
       "chapters": [
         {
-          "title": "Installation",
-          "path": "tutorial/install.md"
+          "title": "Getting started",
+          "path": "introduction/installation-and-hello-world.md"
         },
         {
-          "title": "Your first @resource",
-          "path": "tutorial/create-resource.md"
+          "title": "What is a resource?",
+          "path": "introduction/what-is-a-resource.md"
         },
         {
-          "title": "Publishing",
-          "path": "tutorial/publish-resource.md"
+          "title": "Resource composition",
+          "path": "introduction/resource-composition.md"
         }
       ]
     },
@@ -21,7 +21,7 @@
       "title": "Reference",
       "chapters": [
         {
-          "title": "@resource",
+          "title": "Resource",
           "path": "reference/resource.md"
         }
       ]

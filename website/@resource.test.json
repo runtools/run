@@ -17,15 +17,16 @@
       {
         "source": "./index.html",
         "replacements": {
-          "$REACT_URL$": "https://unpkg.com/react@16.2.0/umd/react.production.min.js",
-          "$REACT_DOM_URL$": "https://unpkg.com/react-dom@16.2.0/umd/react-dom.production.min.js"
+          "${REACT_URL}": "https://unpkg.com/react@16.2.0/umd/react.production.min.js",
+          "${REACT_DOM_URL}": "https://unpkg.com/react-dom@16.2.0/umd/react-dom.production.min.js"
         }
       },
       {
         "source": "./dist/bundle.test.js",
         "destination": "./bundle.js",
         "replacements": {
-          "$RESDIR_WEBSITE_URL$": "https://test.resdir.com"
+          "${DOCS_BASE_URL}": "https://raw.githubusercontent.com/runtools/run/master/docs/content",
+          "${RESDIR_WEBSITE_URL}": "https://test.resdir.com"
         }
       },
       "./images"
