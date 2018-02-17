@@ -55,8 +55,8 @@ async function runLine(line, {directory}) {
     return;
   }
   try {
-    const result = await runExpression(line, {directory});
-    result.$print();
+    const output = await runExpression(line, {directory});
+    output.$print();
   } catch (err) {
     printError(err);
   }

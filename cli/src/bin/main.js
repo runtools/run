@@ -4,6 +4,17 @@ import {runExpression, runREPL} from '../';
 
 (async () => {
   let expression = process.argv.slice(2);
+
+  let printOutput;
+  let index = expression.indexOf('--@print');
+  if (index === -1) {
+    index = expression.indexOf('--@p');
+  }
+  if (index !== -1) {
+    printOutput = true;
+    expression.splice(index, 1);
+  }
+
   expression = expression.map(arg => arg.replace(/\s/g, '\\ '));
   expression = expression.join(' ');
 
@@ -22,7 +33,9 @@ import {runExpression, runREPL} from '../';
   }
 
   const output = await runExpression(expression, {directory});
-  if (output && !output.$getIsMethodOutput()) {
+  if (printOutput) {
+    output.$print();
+  } else if (output && !output.$getIsMethodOutput()) {
     await output['@help']();
   }
 })().catch(printErrorAndExit);
