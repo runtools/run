@@ -1,5 +1,7 @@
 ### Getting started
 
+#### Installation
+
 Install Run using [npm](https://www.npmjs.com/):
 
 ```shell
@@ -12,7 +14,11 @@ Ensure that it is properly installed:
 run @version
 ```
 
-You should see the current version of `run-cli` and `run-core`. So, you are all set, and that was the last time you had to install a tool in your life.
+You should see the current version of `run-cli` and `run-core`.
+
+So, you are all set, and that was the last time you had to install a tool in your life.
+
+#### Hello, World!
 
 Let's get started by writing a simple "Hello, World!" resource. First, create a file named `@resource.json` with the following content:
 

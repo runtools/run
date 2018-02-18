@@ -18,6 +18,10 @@
         {
           "title": "Sharing a resource",
           "path": "introduction/sharing-a-resource.md"
+        },
+        {
+          "title": "Remote invocation",
+          "path": "introduction/remote-invocation.md"
         }
       ]
     },
@@ -25,8 +29,12 @@
       "title": "Reference",
       "chapters": [
         {
-          "title": "Resource",
-          "path": "reference/resource.md"
+          "title": "Built-in attributes",
+          "path": "reference/resource-built-in-attributes.md"
+        },
+        {
+          "title": "Built-in methods",
+          "path": "reference/resource-built-in-methods.md"
         }
       ]
     }

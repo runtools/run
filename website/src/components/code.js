@@ -38,7 +38,7 @@ export function highlightJSStyles(t) {
       fontStyle: 'italic'
     },
     '.hljs-doctag, .hljs-keyword, .hljs-formula': {
-      color: t.extraColor3
+      color: t.codeColor
     },
     '.hljs-section, .hljs-name, .hljs-selector-tag, .hljs-deletion, .hljs-subst': {
       color: t.extraColor2

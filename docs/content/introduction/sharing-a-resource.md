@@ -4,7 +4,7 @@ Creating resources is good but sharing them is even better. Whether publicly to 
 
 #### Signing up for a resource registry
 
-To access the default registry (i.e., only Resdir for now), the easiest way is to use the built-in command `@registry`:
+To access to the default registry (Resdir), the easiest way is to use the built-in command `@registry`:
 
 ```shell
 run @registry
@@ -16,7 +16,7 @@ This should display the in-line help. To sign up, the command to use is:
 run @registry signUp
 ```
 
-After verifying your email address, you will be asked to choose a namespace. This choice is important because all the resources that you will publish in the future will reside in this namespace. For example, if your namespace is `"aturing"`, you will be able to publish a resource using `"aturing/nice-tool"` as identifier. Later on, you will have the possibility to create namespaces for companies or communities but this is another topic.
+After verifying your email address, you will be asked to choose a namespace. This choice is important because all your published resources will reside in this namespace. For example, if your namespace is `"aturing"`, you will be able to publish a resource using `"aturing/nice-tool"` as identifier. Later on, you will have the possibility to create namespaces for organizations and communities, but this is another topic.
 
 #### Publishing a resource
 

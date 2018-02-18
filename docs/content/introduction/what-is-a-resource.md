@@ -2,7 +2,7 @@
 
 In Run's world, a resource is a JSON (or YAML) document that allows to represent almost anything: documents, configs, tools, APIs, libraries,... Embracing the principles of object-oriented programming, a resource is composed of attributes and methods, and can inherit from another resources.
 
-For example, let's create a resource capable of doing additions. First, create a `@resource.json` file with the following content:
+For example, let's create a resource that has a talent for mathematics – it can make additions. First, create a `@resource.json` file with the following content:
 
 ```json
 {
@@ -24,7 +24,7 @@ For example, let's create a resource capable of doing additions. First, create a
 }
 ```
 
-You can see that there is an `add` method with two inputs and one output. This is the interface of the resource. Now, to perform an actual addition, we need an implementation. So let's create the `index.js` file as follows:
+You can see that there is an `add` method with two inputs and one output. This is the interface of the resource. Now, to perform the actual operation, we need an implementation. So let's create the `index.js` file as follows:
 
 ```js
 module.exports = () => ({
@@ -97,3 +97,5 @@ And finally, it is possible to execute the command in a much more appealing way:
 ```shell
 run add 1 2 --@print
 ```
+
+Too easy? I agree, let's go a little further by composing some resources together.
