@@ -150,6 +150,10 @@ export class Resource {
       '@description': 'Inspect resource\'s definition',
       '@aliases': ['@i']
     },
+    '@repl': {
+      '@type': 'method',
+      '@description': 'Start a REPL session'
+    },
     '@install': {
       '@type': 'method',
       '@description': 'Broadcast an \'@install\' event',
@@ -232,7 +236,7 @@ export class Resource {
     },
     '@emit': {
       '@type': 'method',
-      '@description': 'Emit an event',
+      '@description': 'Emit an event to a resource',
       '@examples': ['@emit websiteDeployed', '@emit build -- example.js --production'],
       '@input': {
         event: {
@@ -251,7 +255,7 @@ export class Resource {
     },
     '@broadcast': {
       '@type': 'method',
-      '@description': 'Broadcast an event',
+      '@description': 'Emit an event to a resource and all its child resources',
       '@examples': ['@broadcast websiteDeployed', '@broadcast build -- example.js --production'],
       '@input': {
         event: {
@@ -298,17 +302,17 @@ export class Resource {
           '@isOptional': true,
           '@isVariadic': true
         },
-        showNative: {
+        showBuiltIn: {
           '@type': 'boolean',
-          '@description': 'Show help for native attributes and methods',
-          '@aliases': ['native'],
+          '@description': 'Show help for built-in methods',
+          '@aliases': ['builtIn', 'built'],
           '@isOptional': true
         }
       }
     },
     '@@help': {
       '@type': 'method',
-      '@description': 'Show help for native attributes and methods',
+      '@description': 'Show help for built-in methods',
       '@examples': ['@@help', '@@help keywords'],
       '@aliases': ['@@h'],
       '@input': {
@@ -1835,14 +1839,14 @@ export class Resource {
     );
   }
 
-  async '@help'({keys, showNative} = {}, environment) {
+  async '@help'({keys, showBuiltIn} = {}, environment) {
     const helper = await this.constructor._$getResourceHelper();
     const resourcePtr = await this.constructor.$create({'@type': 'pointer', '@target': this});
-    await helper.help({resourcePtr, keys, showNative}, environment);
+    await helper.help({resourcePtr, keys, showBuiltIn}, environment);
   }
 
   async '@@help'({keys} = {}, environment) {
-    return await this['@help']({keys, showNative: true}, environment);
+    return await this['@help']({keys, showBuiltIn: true}, environment);
   }
 
   static async _$getResourceHelper() {

@@ -5,7 +5,7 @@
       "chapters": [
         {
           "title": "Getting started",
-          "path": "introduction/installation-and-hello-world.md"
+          "path": "introduction/getting-started.md"
         },
         {
           "title": "What is a resource?",
@@ -22,6 +22,10 @@
         {
           "title": "Remote invocation",
           "path": "introduction/remote-invocation.md"
+        },
+        {
+          "title": "Useful resources",
+          "path": "introduction/useful-resources.md"
         }
       ]
     },
@@ -29,12 +33,36 @@
       "title": "Reference",
       "chapters": [
         {
-          "title": "Built-in attributes",
-          "path": "reference/resource-built-in-attributes.md"
+          "title": "Resources",
+          "path": "reference/resources.md"
+        },
+        {
+          "title": "Values",
+          "path": "reference/values.md"
+        },
+        {
+          "title": "Methods",
+          "path": "reference/methods.md"
         },
         {
           "title": "Built-in methods",
-          "path": "reference/resource-built-in-methods.md"
+          "path": "reference/built-in-methods.md"
+        },
+        {
+          "title": "Expressions",
+          "path": "reference/expressions.md"
+        },
+        {
+          "title": "Events",
+          "path": "reference/events.md"
+        },
+        {
+          "title": "Environment",
+          "path": "reference/environment.md"
+        },
+        {
+          "title": "Run CLI",
+          "path": "reference/run-cli.md"
         }
       ]
     }

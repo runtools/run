@@ -54,7 +54,7 @@ And here's the result:
 3
 ```
 
-Wonderful but let's try to improve the UX a little bit by adding some descriptions and the position of the arguments:
+Wonderful but let's try to improve the user's experience a little bit by adding some descriptions and the position of the arguments:
 
 ```json
 {

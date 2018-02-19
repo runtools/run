@@ -20,7 +20,7 @@ After verifying your email address, you will be asked to choose a namespace. Thi
 
 #### Publishing a resource
 
-Let's try to publish the resource you created in the [Getting started](/docs/introduction/installation-and-hello-world) section, the famous "Hello, World!".
+Let's try to publish the resource you created in the [Getting started](/docs/introduction/getting-started) section, the famous "Hello, World!".
 
 First, you need to `@import` Resdir's base resource:
 
