@@ -8,7 +8,7 @@ Install Run using [npm](https://www.npmjs.com/):
 npm install run-cli -g
 ```
 
-Ensure that it is properly installed:
+Ensure that it is correctly installed:
 
 ```shell
 run @version
@@ -37,7 +37,7 @@ Then, invoke Run:
 run
 ```
 
-You should see a description of the resource you just created. This is the online help, when you invoke Run without any arguments, you get a handy help showing what the current resource is capable of. In the present case, there is only one method exposed: `hello`. So let's invoke it:
+You should see a description of the resource you just created, that is the online help. When you invoke Run without any arguments, you get a handy help showing what the current resource is capable of. In the present case, there is only one method exposed: `hello`. So let's invoke it:
 
 ```shell
 run hello

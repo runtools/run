@@ -1,6 +1,6 @@
 ### Resource composition
 
-Most of the time, you don't create your resources from scratch, you want to build them upon exiting ones. This can be done in two ways: loading or importing.
+Most of the time, you don't create your resources from scratch, you build them upon existing ones. That can be done in two ways, either by loading or by importing.
 
 #### Loading resources
 
@@ -19,7 +19,7 @@ First, create the common resource, simply named `@resource.json`:
 }
 ```
 
-You can see that this resource is setting several attributes (`projectName`, `version`,...) that are unrelated to the deployment environment. The resource also defines a `deploy` method.
+You can see that this resource is setting several attributes (`projectName`, `version`, etc.) that are unrelated to the deployment environment. The resource also defines a `deploy` method.
 
 Then, create a resource named `@resource.dev.json` for the test environment, and use `@load` to inherit from the common resource:
 
@@ -61,13 +61,15 @@ And for the production environment:
 run ./@resource.prod.json deploy
 ```
 
+You got it. `@load` is an easy way to share code between multiple resources.
+
 #### Importing resources
 
-When you use `@load`, you inherit all the properties from the source, but sometimes you just want to inherit a part of it. To achieve this, you can use `@import` which will get only the properties contained in the `@export` part of the source.
+When you use `@load`, you inherit all the properties from the source, but sometimes you just want to inherit a part of it. To achieve this, you can use `@import` which will fetch only the properties contained in the `@export` section of the source.
 
-This is very useful when you need to use some tools in order to produce other tools or libraries. Some package managers (e.g., npm) solve this case by using some sort of "development dependencies". Thanks to resources, there is a much more elegant way.
+That is useful when you need to use some tools in order to produce other tools or libraries. Some package managers (e.g., npm) solve this case by using some "development dependencies." Thanks to resources, there is a much more elegant way.
 
-For example, here is a fictional tool to launch some sort of task:
+For example, here is a tool to launch a rocket:
 
 ```json
 {
@@ -88,14 +90,14 @@ For example, here is a fictional tool to launch some sort of task:
   },
   "@export": {
     "@implementation": "./dist/main.js",
-    "launchTask": {
+    "launchRocket": {
       "@type": "method"
     }
   }
 }
 ```
 
-Here, the `builder` and `tests` subresources are only useful during the development phase, they are not what we want to expose to the consumers of the resource. We want to expose only the `launchTask` method, that's why we put it in the `@export` section.
+Here, the `builder` and `tests` subresources are only useful during the development phase, and they are not what we want to expose to the consumer of the resource. To expose only the `launchRocket` method, we put it in the `@export` section.
 
 Now, by importing the tool:
 
@@ -105,6 +107,6 @@ Now, by importing the tool:
 }
 ```
 
-We get only the `launchTask` method, and we don't need to worry about all the details of its creation or implementation.
+We get only the `launchRocket` method, and we don't need to worry about all the details of its creation or implementation.
 
-`@load` and `@import` are simple but very powerful features to compose rich resources mixing different programing languages (only JavaScript for now) and execution environments (local or remote).
+`@load` and `@import` are simple but powerful features to compose rich resources mixing different programming languages and execution environments.

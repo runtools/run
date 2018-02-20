@@ -1,6 +1,6 @@
 ### Built-in methods
 
-Run provides a number of built-in methods to help you manage your resources.
+Run provides some built-in methods to help you manage your resources.
 
 To get an updated list of all built-in methods, invoke `@@help` (notice the double `@`):
 

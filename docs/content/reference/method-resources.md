@@ -1,6 +1,6 @@
-### Methods
+### Method resources
 
-A method is a particular type of resource that can be invoked to perform some actions defined either by an expression (using `@before`, `@run` or `@after`) or by an implementation (using `@implementation`).
+A method resource is a particular type of resource that can be invoked to perform some actions defined either by an [expression](/docs/reference/expressions) (using `@before`, `@run` or `@after`) or by an implementation (using `@implementation`).
 
 For example, here is a method using an expression:
 
@@ -35,9 +35,9 @@ module.exports = () => ({
 });
 ```
 
-To write an implementation, only JavaScript is supported for now, but more languages will come soon.
+To write an implementation, you can only use JavaScript for now, but more languages will come soon.
 
-#### Method attributes
+#### Method resource attributes
 
 ##### @input
 
@@ -72,7 +72,7 @@ Example:
 }
 ```
 
-By combining some resource attributes such as "@aliases", "@position" or "@default", you can define very powerful parameters:
+By combining some attributes such as `@aliases`, `@position` or `@default`, you can refine the definition of your parameters:
 
 ```json
 {
@@ -107,7 +107,7 @@ Example:
 }
 ```
 
-And here is more complex output:
+And here is a more complicated output:
 
 ```json
 {
@@ -130,7 +130,7 @@ And here is more complex output:
 
 ##### @run
 
-The `@run` attribute allows to specify an expression to execute when the method is invoked. For simple cases, it is a convenient way to define an action without having to write an implementation.
+The `@run` attribute allows to specify an [expression](/docs/reference/expressions) that should be executed when the method is invoked. For simple cases, it is a convenient way to define an action without having to write an implementation.
 
 Example:
 
@@ -156,7 +156,7 @@ Using an array, it is possible to execute a sequence of expressions:
 
 ##### @before
 
-The `@before` attribute allows to specify an expression to run before the execution of a method.
+The `@before` attribute allows to specify an [expression](/docs/reference/expressions) that should run before the execution of a method.
 
 Example:
 
@@ -171,7 +171,7 @@ Example:
 
 ##### @after
 
-The `@after` attribute allows to specify an expression to run after the execution of a method.
+The `@after` attribute allows to specify an [expression](/docs/reference/expressions) that should run after the execution of a method.
 
 Example:
 
@@ -186,7 +186,7 @@ Example:
 
 ##### @listen
 
-The `@listen` attribute allows to specify one or more events to be listened to by the current method. When a listened event is emitted (by `@emit` or `@broadcast`), the method is automatically invoked.
+The `@listen` attribute allows to specify one or more [events](/docs/reference/events) to be listened to by the current method. When an event is emitted (by `@emit` or `@broadcast`), the listening methods are automatically invoked.
 
 For example, with a resource like this:
 
@@ -211,7 +211,7 @@ For example, with a resource like this:
 }
 ```
 
-You can easily deploy both the frontend and the backend of your project:
+You can deploy both the frontend and the backend in one command:
 
 ```shell
 run deploy

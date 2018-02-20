@@ -12,7 +12,7 @@ import Markdown from '../markdown';
 const BODY = `
 ### “Run” – the last tool you'll ever install
 
-Aren't you tired of installing, configuring or updating your developper tools? There is something fundamentally wrong with the way most of the tools work today: they control our data. We think that this should be the opposite: data should control tools. As a user, the real thing that we care about is our data (documents, configuration files, etc.). These data should simply specify which tools to use, and then it should be the responsability of the system to take care about installation or updates.
+Aren't you tired of installing, configuring or updating your developer tools? There is something fundamentally wrong with the way most of the tools work today: they control our data. We think that this should be the opposite: data should control tools. As a user, the real thing that we care about is our data (documents, configuration files, etc.). These data should just specify which tools to use, and then it should be the responsibility of the system to take care of installation or updates.
 
 #### Hello, “resources”
 
@@ -32,9 +32,9 @@ In the \`content\` directory next to your resource, put the files that compose y
 run deploy
 \`\`\`
 
-And voila! Your website is online. With a minimal effort, it is hosted on AWS using all the state-of-the-art techniques to ensure maximum speed and availability. When you use a tool for the first time, it is installed for you, and if there are updates in the future, they are automatically installed as well.
+And voila! Your website is online. With a minimal effort, it is hosted on AWS using all the state-of-the-art techniques to ensure maximum speed and availability. When you use a tool for the first time, the resource runtime installs it for you, and if there are updates in the future, they are automatically installed as well.
 
-Obviously, this example is oversimplified, but it shows a very important aspect of the resource concept: data (\`"domainName"\`, \`"contentDirectory"\`) and tools (\`"aws/s3-hosted-website"\`) are encapsulated into something that is easy to use and share to other people (or to the future of you). Just get the resource file, and you are all set.
+This example is oversimplified, but it shows a critical aspect of the resource concept. Data (\`"domainName"\`, \`"contentDirectory"\`) and tools (\`"aws/s3-hosted-website"\`) are encapsulated into something that is easy to use and share to other people (or to the future of you). Just get the resource file, and you are all set.
 
 What about this \`"aws/s3-hosted-website#^0.1.0"\` string? Well, it is just a reference to another resource. By importing it, you are inheriting all its attributes and methods. This is how you get the \`"domainName"\` attribute or the \`deploy\` command. Embracing the principles of object-oriented programming, resources can represent almost anything (documents, configs, tools, APIs, libraries,...), and they are highly extendable and composable.
 
@@ -46,21 +46,21 @@ But where does the \`"aws/s3-hosted-website"\` resource come from? To make thing
 const ASIDE = `
 ##### Resdir, the resource directory
 
-It is very easy to publish a resource to [Resdir](${
+It is easy to publish a resource to [Resdir](${
   constants.RESDIR_WEBSITE_URL
-}) and share it to everyone (or to a selected group of people if your resource is private). Resource's names are always prefixed with a namespace (e.g., \`"aturing/nice-tool"\`) so that there is no conflict. When you create a Resdir account, you get a personal namespace, and it is also possible to create namespaces for organizations and communities.
+}) and share it with everyone (or with a selected group of people when your resource is private). Resource's names are always prefixed with a namespace (e.g., \`"aturing/nice-tool"\`) so that there is no conflict. When you create a Resdir account, you get a personal namespace, and it is also possible to create namespaces for organizations and communities.
 
 ---
 
 ##### Language agnostic
 
-For now, resource's methods must be implemented in JavaScript because the Run's resource runtime knows only about this language. But more runtimes will come in the future. This will open up exciting possibilities for creating resources based on different languages. For example, it will be possible to implement a resource in Ruby that inherits from one written in Go while including another one implemented in Python.
+For now, resource's methods must be implemented in JavaScript because the Run's resource runtime knows only about this language. But more runtimes will come in the future. That will open up exciting possibilities for creating resources based on different languages. For example, it will be possible to implement a resource in Ruby that inherits from one written in Go while including another one implemented in Python.
 
 ---
 
 ##### Remote invocations
 
-Another exciting feature of resources is that they can be invoked remotely. Using a tool like \`"aws/lambda-hosted-resource"\`, you can deploy a resource to AWS Lambda, and invoke it the same way you would invoke a local resource. It can even work in the browser. We see this possibility as a cheap way to create backends – the whole “Web API” part is gone.
+Another exciting feature of resources is that they can be invoked remotely. Using a tool like \`"aws/lambda-hosted-resource"\`, you can deploy a resource to AWS Lambda, and invoke it the same way you would invoke a local resource. It can even work in the browser. We see this possibility as a cheap way to create backends – the whole “Web API” part disappears.
 `;
 
 /* eslint-enable no-irregular-whitespace */

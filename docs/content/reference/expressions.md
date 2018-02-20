@@ -1,6 +1,6 @@
 ### Expressions
 
-An expression is a convenient way to access resource attributes and invoke methods. When you use Run CLI, you are actually evaluating expressions.
+An expression is a convenient way to explore resources and to invoke some methods. When you use [Run CLI](/docs/reference/run-cli), you are evaluating some expressions.
 
 For example, with the following resource:
 
@@ -28,18 +28,18 @@ For example, with the following resource:
 You can invoke expressions such as:
 
 ```bash
-run database # Returns database subresource
+run database # Returns the database subresource
 ```
 
 ```bash
-run database username @print # Prints database's username
+run database username @print # Prints the database's username
 ```
 
 ```bash
-run deploy api.domain.com --optimize  # Invokes deploy method
+run deploy api.domain.com --optimize  # Invokes the deploy method
 ```
 
-Using the `@before`, `@run` or `@after` attribute, expressions can also be used in methods:
+Expressions can also be used in methods using the `@before`, `@run` and `@after` attributes:
 
 ```json
 {
@@ -50,11 +50,11 @@ Using the `@before`, `@run` or `@after` attribute, expressions can also be used 
 }
 ```
 
-This is it. If you're a bit familiar with a shell, you should know how to write an expression. The syntax is not intended to be as powerful as a shell such as [Bash](https://www.gnu.org/software/bash/), the idea is to support the bare minimum syntax to provide the user with a simple and productive way to control its resources. For more advanced operations, we think it is better to use a real programming language, and write a resource `@implementation`.
+If you're a bit familiar with the command line, you should be able to intuit how to write expressions. The syntax is not intended to be as powerful as a shell such as [Bash](https://www.gnu.org/software/bash/), the idea is to support the bare minimum to provide the user with a simple and productive way to control his resources. For more advanced operations, we think it is better to use a full-featured programming language, and write an actual resource `@implementation`.
 
-### Subexpressions
+#### Subexpressions
 
-Using parentheses, an expression can include subexpressions. This is useful for chaining multiple method invocations.
+An expression can use parentheses to include subexpressions. That is useful for chaining multiple method invocations.
 
 Example:
 

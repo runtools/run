@@ -37,12 +37,12 @@
           "path": "reference/resources.md"
         },
         {
-          "title": "Values",
-          "path": "reference/values.md"
+          "title": "Value resources",
+          "path": "reference/value-resources.md"
         },
         {
-          "title": "Methods",
-          "path": "reference/methods.md"
+          "title": "Method resources",
+          "path": "reference/method-resources.md"
         },
         {
           "title": "Built-in methods",

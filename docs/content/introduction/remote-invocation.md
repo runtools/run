@@ -1,10 +1,10 @@
 ### Remote invocation
 
-When you `@import` (or `@load`) a resource, it doesn't matter in which language it is implemented or in which environment it is executed. It can run locally (on your machine) or remotely (on a server), and for the consumer of the resource, it is totally transparent.
+When you `@load` (or `@import`) a resource, it doesn't matter in which language it is implemented or in which environment it is executed. It can run locally in a different runtime or remotely on a different machine, and for the consumer of the resource, it is entirely transparent.
 
-This dramatically simplifies the development of client/server projects, since in most of the cases, you no longer need to develop REST APIs, RPC or whatever. The remote invocation issue is fully managed by the resource runtime.
+That dramatically simplifies the development of client-server projects, since, in most of the cases, you no longer need to develop REST APIs, RPC or whatever. The resource runtime fully manages the remote invocation.
 
-Let's go back to the calculator resource and host it on AWS Lambda:
+Let's go back to the calculator resource and host it on [AWS Lambda](https://aws.amazon.com/lambda/):
 
 ```json
 {
@@ -40,10 +40,12 @@ Then, you can deploy your resource:
 run deploy
 ```
 
-And invoke it very easily:
+And invoke it:
 
 ```shell
 run https://calculator.mydomain.com add 1 2 --@print
 ```
 
-Of course, it is possible to import a remote resource from another resource (`{"@import": "https://calculator.mydomain.com"}`), and you can even import it (and invoke it) from any modern browser! 🤯
+That's it. You have created a full client-server architecture with just one command.
+
+Once a resource has been deployed, you can load it from another resource (`{"@load": "https://calculator.mydomain.com"}`), or even from a [browser](https://github.com/runtools/run/tree/master/examples/web-app)! 🤯

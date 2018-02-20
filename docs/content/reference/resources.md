@@ -1,6 +1,6 @@
 ### Resources
 
-In the resource's world, everything is a resource. So when we refer to a resource, it means the root of a resource or anything inside (attributes, methods, subresources, etc.).
+In the resource's world, everything is a resource. So when we refer to a resource, we mean the root of a resource or anything inside (attributes, methods, subresources, etc.).
 
 For example :
 
@@ -25,7 +25,7 @@ All resources share a number of attributes.
 
 ##### @type
 
-The `@type` attribute allows to specify the type of a resource. The base (and default) type is `"resource"` and from it are built several subtypes such as `"string"`, `"number"`, etc.
+The `@type` attribute allows to specify the type of a resource. The base type is `"resource"` and from it are built several subtypes such as `"string"`, `"number"`, etc.
 
 Example:
 
@@ -47,7 +47,7 @@ The currently available types are: `"resource"` (default), `"boolean"`, `"number
 
 ##### @load
 
-The `@load` attribute allows to specify one or more resources from which the current resource inherits.
+The `@load` attribute allows to specify one or more resources from which the current resource should inherit.
 
 For example, here is a base resource:
 
@@ -68,7 +68,7 @@ For example, here is a base resource:
 }
 ```
 
-Using `@load`, you can inherit from this base resource to create an instance resource:
+Using `@load`, you can inherit from this base resource:
 
 ```js
 // bob.json
@@ -83,11 +83,11 @@ Because `bob.json` inherits from `person.json`, it gets both the attributes `nam
 
 There are several ways to specify the resource you want to load:
 
-* You can use a path to a local file (e.g., `"./person.js"`). This can be an absolute or a relative path. In the case of a relative path, be careful to always start with `"./"` (the current directory) or `"../"` (the parent directory).
-* You can indicate a specifier to select a resource stored in a registry (e.g., `"my-namespace/person#^1.0.0"`). A resource specifier is composed of two parts: An identifier (`"my-namespace/person"`) and a version range (`"^1.0.0"`). The version range is optional but strongly recommended. We use (almost) the same specifications as [npm's version range](https://docs.npmjs.com/files/package.json#dependencies), so you can refer to it for more information.
+* You can use a path to a local file (e.g., `"./person.js"`). That can be an absolute or a relative path. In the case of a relative path, be careful to always start with `"./"` (the current directory) or `"../"` (the parent directory).
+* You can use a specifier to load a resource stored in a registry (e.g., `"my-namespace/person#^1.0.0"`). A resource specifier is composed of an identifier (`"my-namespace/person"`) and a version range (`"^1.0.0"`). The version range is optional but strongly recommended. We use (almost) the same specifications as [npm's version range](https://docs.npmjs.com/files/package.json#dependencies), so until further documentation is available, please refer to it.
 * You can specify the URL of a remote resource (e.g., `"https://person.api.my-domain.com"`). In this case, any method call will trigger a remote invocation.
 
-If you want to load more than one resource, you can use an array:
+Finally, if you want to load more than one resource, just use an array:
 
 ```json
 {
@@ -97,7 +97,7 @@ If you want to load more than one resource, you can use an array:
 
 ##### @import
 
-Like `@load`, the `@import` attribute allows to inherit from one or more resource. The difference is that when you use `@import`, you don't inherit a full resource from its root, you only inherit the part contained in the `@export` section.
+Like `@load`, the `@import` attribute allows inheriting from one or more resource. The difference is that when you use `@import`, you don't inherit a full resource from its root, you only inherit the part contained in the `@export` section.
 
 For example, if you `@import` the following resource:
 
@@ -120,11 +120,11 @@ You will not get `id` and `version` attributes, you will get only `name` and `ag
 
 ##### @export
 
-The `@export` attribute allows to specify the exported part of a resource. It works in conjunction with the `@import` attribute that is described just above.
+The `@export` attribute allows to specify the exported part of a resource. It works in conjunction with the `@import` attribute that is documented just above.
 
 ##### @runtime
 
-The `@runtime` attribute allows to specify the runtime used to run a resource's implementation. For now, only the `"node"` runtime is available.
+The `@runtime` attribute allows to specify the runtime used to run a resource's implementation. For now, only the [Node.js](https://nodejs.org/) runtime is available.
 
 Example:
 
@@ -164,7 +164,7 @@ For example:
 }
 ```
 
-To implement a resource in JavaScript (the only language supported for now), you must export a function that returns an object containing all the methods defined in the resource.
+To create a JavaScript implementation (the only language supported for now), you must export a function that returns an object containing each implemented method.
 
 The above example could be implemented as follows:
 
@@ -176,9 +176,19 @@ module.exports = () => ({
 });
 ```
 
-Each method receives an `@input` resource as first argument and can return anything that is compatible with the defined `@output` resource. If a method returns a `Promise` (or is an ES6 `async` function), it is automatically handled by the resource runtime.
+Or using ES6 modules:
 
-Using `this`, you can call another method defined in the same resource or in any base resource (inherited with `@load` or `@import`). When you call a method, you should always use `await` (or handle the `Promise` manually) because you don't know how and where the method will be executed. Il could be executed locally in a different language runtime or even remotely on a different machine.
+```js
+export default () => ({
+  add({a, b}) {
+    return a + b;
+  }
+});
+```
+
+Each method receives an `@input` resource as the first argument and can return anything that is compatible with the defined `@output` resource. If a method returns a `Promise` (or is an ES6 `async` function), the resource runtime automatically handles it.
+
+Using `this`, you can call another method defined in the same resource or any base resource (inherited with `@load` or `@import`). When you call a method, you should always use `await` (or handle the `Promise` manually) because you shouldn't presume how and where a method is executed. Il could be executed locally – in a different language runtime – or even remotely on a [different machine](/docs/introduction/remote-invocation). So, be sure to always handle the promises:
 
 ```js
 module.exports = () => ({
@@ -189,7 +199,7 @@ module.exports = () => ({
 });
 ```
 
-Finally, to call an overridden method (i.e., a method with the same name defined in a base resource), you can use `super`:
+Finally, to call an overridden method (i.e., a method already implemented in a base resource), you can use `super`:
 
 ```js
 module.exports = () => ({
@@ -201,7 +211,7 @@ module.exports = () => ({
 
 ##### @directory
 
-The `@directory` attribute allows to specify the current directory of a resource. The current directory is used to resolve all relative paths. By default the current directory is the same directory as the resoure file, but it is sometimes useful to specify another directory.
+The `@directory` attribute allows to specify the current directory of a resource. The current directory is used to resolve relative paths, and some tools are using it to fetch or install local files (i.e., `"js/npm-dependencies"`). By default, the current directory is the same directory as the resource file, but it is sometimes useful to specify another directory.
 
 Example:
 
@@ -217,7 +227,7 @@ Example:
 
 ##### @name
 
-The `@name` attribute allows to specify a name to a resource. A good name should be pleasant to read for humans. For example, instead of `"awesome-website"`, you should use something more like `"Awesome Website"`. The name is the first information that is displayed in the auto-generated help, and this name might also be used if you publish a resource to a registry.
+The `@name` attribute allows to specify a name for a resource. A good name should be pleasant to read for humans. For example, instead of `"awesome-website"`, you should use something more like `"Awesome Website"`. The name is the first information that is displayed in the auto-generated help, and this name might also appear when you publish a resource to a registry.
 
 Example:
 
@@ -231,7 +241,7 @@ Example:
 
 ##### @description
 
-The `@description` attribute allows to specify a short description for the current resource. This can be used to describe any type of resource, including methods, parameters, etc. When the `@description` is defined at the root of a resource, it appears in the auto-generated help after the `@name` and it might also be used if you publish a resource to a registry.
+The `@description` attribute allows to specify a short description for the current resource. That can be used to describe any type of resource, including methods, parameters, etc. When the `@description` is defined at the root of a resource, it appears in the auto-generated help after the `@name`, and it might also be used when you publish a resource to a registry.
 
 Example:
 
@@ -244,7 +254,7 @@ Example:
 
 ##### @aliases
 
-The `@aliases` attribute allows to specify aliases for child resources (attibutes, methods, or any subresources). These aliases can improve the user's experience when using the command line. Instead of using a child's key, the user may prefer to use an alias that is shorter or more meaningful given the context.
+The `@aliases` attribute allows to specify aliases for child resources (attributes, methods, or any subresources). These aliases can improve the user's experience on the command line. Instead of using a child's key, the user may prefer to use an alias that is shorter or more meaningful given the context.
 
 For example, `resdir/registry-client` (the default `@registry`) uses aliases for the `currentUser` subresource:
 
@@ -284,7 +294,7 @@ run @registry my orgs ls
 
 ##### @examples
 
-The `@examples` attribute is useful to document a resource. Examples can be used for any type of resource (including methods, parameters, etc.), and they appear in the auto-generated help.
+The `@examples` attribute can be used to document a resource. Examples can appear in any type of resource (including methods and parameters), and they are displayed in the auto-generated help.
 
 Example:
 
@@ -302,7 +312,7 @@ Example:
 
 ##### @position
 
-The `@position` attribute allows to specify the position of method arguments when used from the command line. A position is defined by a number starting from `0`.
+The `@position` attribute allows to specify the position of method arguments in the command line. A position is defined by a number starting from `0`.
 
 Example:
 
@@ -327,7 +337,7 @@ Example:
 }
 ```
 
-Thanks to the argument positions, instead of doing this:
+Now instead of doing this:
 
 ```bash
 run add --a=7 --b=3
@@ -341,7 +351,7 @@ run add 7 3
 
 ##### @isOptional
 
-The `@isOptional` attribute allows to specify whether a method parameter (or any resource attribute) is optional or not. By default, all method parameters are required, and the resource runtime ensures that required parameters are passed by the user. To make a parameter optional, set `@isOptional` to `true`.
+The `@isOptional` attribute allows to specify whether a method parameter is optional or not. By default, all method parameters are required. To make a parameter optional, set `@isOptional` to `true`.
 
 Example:
 
@@ -370,7 +380,7 @@ Example:
 
 ##### @isVariadic
 
-The `@isVariadic` attribute allows to specify that a method parameter is variadic (i.e., can hold one or more values). It is only useful in the context of the command line, and it only works with positional parameters (i.e. using `@position`) of type `"array"`.
+The `@isVariadic` attribute allows defining a variadic method parameter (i.e., a parameter that can hold one or more values). It is only useful in the context of the command line, and it only works with positional parameters (i.e., using `@position`) of type `"array"`.
 
 For example, the following method:
 
@@ -397,7 +407,7 @@ run transpile main.js database.js
 
 ##### @isHidden
 
-The `@isHidden` attribute allows to hide a resource's child from the auto-generated help. It can be used to hide an attribute, a method, a parameter or any type of subresource.
+The `@isHidden` attribute allows hiding a resource's child from the auto-generated help. It can be used to hide an attribute, a method, a parameter or any subresource.
 
 Example:
 
@@ -418,7 +428,7 @@ Example:
 
 ##### @unpublishable
 
-The `@unpublishable` attribute allows to specify a section of a resource that should be ignored when the resource is published to a registry. It is useful to avoid some private information to be published, or to lighten a resource of things that are useful only during the development phase (builders, test suite,...).
+The `@unpublishable` attribute allows to specify a section of a resource that should be ignored when the resource is published to a registry. It is useful to avoid some private information to be published or to lighten a resource of things that are used only during the development phase (e.g., builders, test suite, etc.).
 
 Example:
 
