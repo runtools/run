@@ -22,7 +22,7 @@
         "source": "./dist/bundle.dev.js",
         "destination": "./bundle.js",
         "replacements": {
-          "${DOCS_BASE_URL}": "http://docs.dev.run.tools/",
+          "${DOCS_BASE_URL}": "http://docs.dev.run.tools",
           "${RESDIR_WEBSITE_URL}": "http://dev.resdir.com"
         }
       },

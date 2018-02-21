@@ -25,7 +25,7 @@
         "source": "./dist/bundle.prod.js",
         "destination": "./bundle.js",
         "replacements": {
-          "${DOCS_BASE_URL}": "https://raw.githubusercontent.com/runtools/run/master/docs/content/",
+          "${DOCS_BASE_URL}": "https://raw.githubusercontent.com/runtools/run/master/docs/content",
           "${RESDIR_WEBSITE_URL}": "https://resdir.com",
           "${GOOGLE_ANALYTICS_TRACKING_ID}": "UA-54535670-3"
         }
