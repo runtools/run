@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {withRadiumStarter} from 'radium-starter';
+import ReactPlayer from 'react-player';
+import Media from 'react-media';
 
 @withRadiumStarter
 export class Demo extends React.Component {
@@ -37,19 +39,45 @@ export class Demo extends React.Component {
             [`@media (max-width: ${t.smallBreakpoint})`]: {padding: '10px', borderRadius: '10px'}
           }}
         >
-          <iframe
-            src="https://www.youtube.com/embed/qgNbuNve4bw?rel=0&showinfo=0"
-            frameBorder="0"
-            allowFullScreen
-            style={{
-              width: '940px',
-              height: '587px',
-              [`@media (max-width: ${t.mediumBreakpoint})`]: {width: '620px', height: '387px'},
-              [`@media (max-width: ${t.smallBreakpoint})`]: {width: '280px', height: '175px'}
-            }}
+          <Media
+            query={`(min-width: ${t.mediumBreakpointPlusOne})`}
+            render={() => <Player width="940px" height="587px" />}
+          />
+          <Media
+            query={`(min-width: ${t.smallBreakpointPlusOne}) and (max-width: ${
+              t.mediumBreakpoint
+            })`}
+            render={() => <Player width="620px" height="387px" />}
+          />
+          <Media
+            query={`(max-width: ${t.smallBreakpoint})`}
+            render={() => <Player width="280px" height="175px" />}
           />
         </div>
       </div>
+    );
+  }
+}
+
+class Player extends React.Component {
+  static propTypes = {
+    width: PropTypes.string.isRequired,
+    height: PropTypes.string.isRequired
+  };
+
+  render() {
+    return (
+      <ReactPlayer
+        url="https://www.youtube.com/watch?v=qgNbuNve4bw"
+        width={this.props.width}
+        height={this.props.height}
+        volume={1}
+        config={{
+          youtube: {
+            playerVars: {controls: 1, hl: 'en', modestbranding: 0}
+          }
+        }}
+      />
     );
   }
 }
