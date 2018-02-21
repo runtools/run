@@ -8,15 +8,22 @@ import xml from 'highlight.js/lib/languages/xml';
 import shell from 'highlight.js/lib/languages/shell';
 import bash from 'highlight.js/lib/languages/bash';
 
-Lowlight.registerLanguage('javascript', js);
-Lowlight.registerLanguage('js', js);
+const customJS = hljs => {
+  const definition = js(hljs);
+  // Here there is an opportunity to customize the language definition
+  // Example:
+  // definition.keywords.built_in += ' newKeyword'; // eslint-disable-line camelcase
+  return definition;
+};
+
+Lowlight.registerLanguage('javascript', customJS);
+Lowlight.registerLanguage('js', customJS);
 Lowlight.registerLanguage('json', json);
 Lowlight.registerLanguage('json-key', json);
 Lowlight.registerLanguage('xml', xml);
 Lowlight.registerLanguage('html', xml);
 Lowlight.registerLanguage('shell', shell);
 Lowlight.registerLanguage('bash', bash);
-Lowlight.registerLanguage('js', js);
 
 export class Code extends React.Component {
   static propTypes = {
@@ -37,8 +44,11 @@ export function highlightJSStyles(t) {
       color: t.mutedTextColor,
       fontStyle: 'italic'
     },
-    '.hljs-doctag, .hljs-keyword, .hljs-formula': {
-      color: t.codeColor
+    '.hljs-doctag, .hljs-formula': {
+      color: t.extraColor1
+    },
+    '.hljs-keyword': {
+      color: t.codeColor // Color removed to avoid an issue with '@import', '@export', etc.
     },
     '.hljs-section, .hljs-name, .hljs-selector-tag, .hljs-deletion, .hljs-subst': {
       color: t.extraColor2
@@ -50,7 +60,7 @@ export function highlightJSStyles(t) {
       color: t.primaryColor
     },
     '.hljs-built_in': {
-      color: t.codeColor
+      color: t.codeColor // Color removed to avoid an issue with '@import', '@export', etc.
     },
     '.hljs-class .hljs-title': {
       color: t.accentColor
@@ -69,6 +79,10 @@ export function highlightJSStyles(t) {
     },
     '.hljs-link': {
       textDecoration: 'underline'
+    },
+    // Here we put back the removed color, but only in the context of a <pre>
+    'pre code .hljs-built_in, pre code .hljs-keyword': {
+      color: t.extraColor1
     }
   };
 }

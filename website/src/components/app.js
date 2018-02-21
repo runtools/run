@@ -28,7 +28,7 @@ function theme() {
       Color(t.linkColor)
         .lighten(0.4)
         .string(),
-    codeColor: t => t.baseTextColor,
+    codeColor: '#DDDDDD',
     codeBackgroundColor: '#19242F',
     preColor: t => t.codeColor,
     preBackgroundColor: t => t.codeBackgroundColor,
