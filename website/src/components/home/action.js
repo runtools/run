@@ -1,16 +1,19 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import {withRouter} from 'react-router';
 import {withRadiumStarter, Button} from 'radium-starter';
 
+@withRouter
 @withRadiumStarter
 export class Action extends React.Component {
   static propTypes = {
     style: PropTypes.object,
+    history: PropTypes.object.isRequired,
     styles: PropTypes.object.isRequired
   };
 
   render() {
-    const {style, styles: s} = this.props;
+    const {style, history, styles: s} = this.props;
 
     return (
       <div
@@ -30,11 +33,11 @@ export class Action extends React.Component {
             maxWidth: '970px'
           }}
         >
-          Feeling excited about Run and the resource concept?<br />Don't wait, be a pioneer, create
-          your first resource.
+          Feeling excited about Run and the potential of resources?<br />Don't wait, be a pioneer,
+          create your first resource.
         </h3>
-        <Button rsAccent rsLarge>
-          Create a resource
+        <Button onClick={() => history.push('/docs')} rsAccent rsLarge>
+          Getting started
         </Button>
       </div>
     );

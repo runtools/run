@@ -34,9 +34,9 @@ run deploy
 
 And voila! Your website is online. With a minimal effort, it is hosted on AWS using all the state-of-the-art techniques to ensure maximum speed and availability. When you use a tool for the first time, the resource runtime installs it for you, and if there are updates in the future, they are installed automatically.
 
-This example is oversimplified, but it shows a critical aspect of the resource idea. Data (\`"www.example.com"\`, \`"./content"\`) and tools (\`"aws/s3-hosted-website"\`) are encapsulated into something that is easy to use and share. Just get the resource file, and you are all set.
+This example is simple, but it shows a critical aspect of the resources. Data (\`"www.example.com"\`, \`"./content"\`) and tools (\`"aws/s3-hosted-website"\`) are encapsulated into something that is easy to use and share. Just grab the resource file, and you are all set.
 
-What about this \`"aws/s3-hosted-website#^0.1.0"\`? Well, it is just a reference to another resource. By importing it, you are inheriting all its attributes and methods. That is how you got the \`"domainName"\` attribute or the \`deploy\` command. Since resources embrace the principles of object-oriented programming, they are highly composable and can represent almost anything.
+What about this \`"aws/s3-hosted-website#^0.1.0"\` thing? Well, it is just a reference to another resource. By importing it, you are inheriting all its attributes and methods. That is how you got the \`"domainName"\` attribute or the \`deploy\` command. Since resources embrace the principles of object-oriented programming, they are highly composable and can represent almost anything.
 
 But where does the \`"aws/s3-hosted-website"\` resource come from? To make things easier, in addition to Run, we are developing a resource directory. Simply named [Resdir](${
   constants.RESDIR_WEBSITE_URL
@@ -44,23 +44,23 @@ But where does the \`"aws/s3-hosted-website"\` resource come from? To make thing
 `;
 
 const ASIDE = `
-##### Resdir, the resource directory
-
-It is easy to publish a resource to [Resdir](${
-  constants.RESDIR_WEBSITE_URL
-}) and share it with everyone (or with a selected group of people when your resource is private). Resource's names are always prefixed with a namespace (e.g., \`"aturing/nice-tool"\`) so that there is no conflict. When you create a Resdir account, you get a personal namespace, and it is also possible to create namespaces for organizations and communities.
-
----
-
 ##### Language agnostic
 
-For now, resource's methods must be implemented in JavaScript because the Run's resource runtime knows only about this language. But more runtimes will come in the future. That will open up exciting possibilities for creating resources based on different languages. For example, it will be possible to implement a resource in Ruby that inherits from one written in Go while including another one implemented in Python.
+For now, resource methods must be implemented in JavaScript, but more languages will be supported soon. That will open up exciting possibilities for creating resources based on different languages. For example, it will be possible to implement a resource in Ruby that inherits from one written in Go while including another one implemented in Python.
 
 ---
 
 ##### Remote invocations
 
-Another exciting feature of resources is that they can be invoked remotely. Using a tool like \`"aws/lambda-hosted-resource"\`, you can deploy a resource to AWS Lambda, and invoke it the same way you would invoke a local resource. It can even work in the browser. We see this possibility as a cheap way to create backends – the whole “Web API” part disappears.
+Another exciting feature of resources is that they can be [invoked remotely](/docs/introduction/remote-invocation). Using a tool like \`"aws/lambda-hosted-resource"\`, you can deploy a resource to AWS Lambda, and then invoke it like you would invoke a local resource. It is even working in the browser. We see this possibility as a fantastic way to create backends – the whole “Web API” issue disappears.
+
+---
+
+##### Namespaces
+
+It is easy to publish a resource to [Resdir](${
+  constants.RESDIR_WEBSITE_URL
+}) and share it with everyone (or with a selected group of people when your resource is private). Resource's names are always prefixed with a namespace (e.g., \`"aturing/nice-tool"\`) so that there is no conflict. When you register with Resdir, you automatically get a personal namespace, and it is also possible to create namespaces for organizations and communities.
 `;
 
 /* eslint-enable no-irregular-whitespace */
