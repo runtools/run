@@ -1678,7 +1678,7 @@ export class Resource {
       let child = parent.$findChild(key, {includeNativeChildren: true});
 
       if (!child) {
-        throw createClientError(`No attribute or method found with this key: ${formatCode(key)}`);
+        throw createClientError(`No attribute, subresource, or method found with this key: ${formatCode(key)}`);
       }
 
       child = await child.$resolveGetter({parent});
