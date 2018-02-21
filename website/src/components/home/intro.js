@@ -12,11 +12,11 @@ import Markdown from '../markdown';
 const BODY = `
 ### “Run” – the last tool you'll ever install
 
-Aren't you tired of installing, configuring or updating your developer tools? There is something fundamentally wrong with the way most of the tools work today: they control our data. We think that this should be the opposite: data should control tools. As a user, the real thing that we care about is our data (documents, configuration files, etc.). These data should just specify which tools to use, and then it should be the responsibility of the system to take care of installation or updates.
+Aren't you tired of installing, configuring or updating your developer tools? There is something fundamentally wrong with the way most of the tools work today: they come first (i.e., we install them), and then they own our data. We think that it should be the opposite: data should come first and specify which tools they use, then it would be the responsibility of the system to manage installation, updates, etc.
 
 #### Hello, “resources”
 
-In Run's world, a resource is a JSON (or YAML) document that allows you to specify both data (e.g., configuration) and tools. For example, here is how you would define a website hosted on AWS:
+In Run's world, a [resource](/docs/introduction/what-is-a-resource) is a JSON (or YAML) document that allows you to specify both data (i.e., configuration) and tools. For example, here is how you would define a website hosted on AWS:
 
 \`\`\`json
 {
@@ -26,21 +26,21 @@ In Run's world, a resource is a JSON (or YAML) document that allows you to speci
 }
 \`\`\`
 
-In the \`content\` directory next to your resource, put the files that compose your website, and then invoke Run as follows:
+In the \`content\` directory next to the resource, put all files composing your website, and then invoke:
 
 \`\`\`shell
 run deploy
 \`\`\`
 
-And voila! Your website is online. With a minimal effort, it is hosted on AWS using all the state-of-the-art techniques to ensure maximum speed and availability. When you use a tool for the first time, the resource runtime installs it for you, and if there are updates in the future, they are automatically installed as well.
+And voila! Your website is online. With a minimal effort, it is hosted on AWS using all the state-of-the-art techniques to ensure maximum speed and availability. When you use a tool for the first time, the resource runtime installs it for you, and if there are updates in the future, they are installed automatically.
 
-This example is oversimplified, but it shows a critical aspect of the resource concept. Data (\`"domainName"\`, \`"contentDirectory"\`) and tools (\`"aws/s3-hosted-website"\`) are encapsulated into something that is easy to use and share to other people (or to the future of you). Just get the resource file, and you are all set.
+This example is oversimplified, but it shows a critical aspect of the resource idea. Data (\`"www.example.com"\`, \`"./content"\`) and tools (\`"aws/s3-hosted-website"\`) are encapsulated into something that is easy to use and share. Just get the resource file, and you are all set.
 
-What about this \`"aws/s3-hosted-website#^0.1.0"\` string? Well, it is just a reference to another resource. By importing it, you are inheriting all its attributes and methods. This is how you get the \`"domainName"\` attribute or the \`deploy\` command. Embracing the principles of object-oriented programming, resources can represent almost anything (documents, configs, tools, APIs, libraries,...), and they are highly extendable and composable.
+What about this \`"aws/s3-hosted-website#^0.1.0"\`? Well, it is just a reference to another resource. By importing it, you are inheriting all its attributes and methods. That is how you got the \`"domainName"\` attribute or the \`deploy\` command. Since resources embrace the principles of object-oriented programming, they are highly composable and can represent almost anything.
 
 But where does the \`"aws/s3-hosted-website"\` resource come from? To make things easier, in addition to Run, we are developing a resource directory. Simply named [Resdir](${
   constants.RESDIR_WEBSITE_URL
-}), it will be a place of choice to store, share and discover resources. Although still in development, you can start using it. We are using it ourselves, and we are publishing our first resources, \`"aws/s3-hosted-website"\` is just one of them.
+}), it will be a place of choice to store, share and discover resources. Although still in development, you can start using it. We are using it ourselves, and we are publishing the [first resources](/docs/introduction/useful-resources), \`"aws/s3-hosted-website"\` is just one of them.
 `;
 
 const ASIDE = `
@@ -89,7 +89,7 @@ export class Intro extends React.Component {
         }}
       >
         <div className="intro-main" style={{flex: 1.9}}>
-          <Style scopeSelector=".intro-main" rules={{h3: {color: t.accentColor}}} />
+          <Style scopeSelector=".intro-main" rules={{h3: {color: t.primaryColor}}} />
           <Markdown>{BODY}</Markdown>
         </div>
 

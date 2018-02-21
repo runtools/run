@@ -1,6 +1,6 @@
 ### What is a resource?
 
-In Run's world, a resource is a JSON (or YAML) document that allows representing almost anything: tools, documents, configs, APIs, libraries,... Embracing the principles of object-oriented programming, a resource is composed of attributes and methods, and can inherit from other resources.
+In Run's world, a resource is a JSON (or YAML) document that allows representing almost anything: tools, configs, APIs,... Resources embrace the principles of object-oriented programming, they are composed of attributes and methods and can inherit from each other.
 
 For example, let's create a resource that has a talent for mathematics – it can make additions. First, create a `@resource.json` file with the following content:
 

@@ -25,14 +25,11 @@ export class Home extends React.Component {
 
     return (
       <div>
-        <FullHeight style={{backgroundColor: t.altBackgroundColor}}>
-          <Header />
+        <FullHeight style={{backgroundColor: t.heroBackgroundColor}}>
+          <Header linkStyle={s.heroLink} />
           <Hero style={{flexGrow: 1}} />
           <div style={{...s.minimumLineHeight, alignSelf: 'center', padding: '1.5rem 0'}}>
-            <Link
-              to="/#intro"
-              style={{color: t.mutedTextColor, ':hover': {textDecoration: 'none'}}}
-            >
+            <Link to="/#intro" style={{color: t.baseTextColor, ':hover': {textDecoration: 'none'}}}>
               ▼
             </Link>
           </div>

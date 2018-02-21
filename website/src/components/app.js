@@ -14,7 +14,7 @@ function theme() {
   // Use http://serennu.com/colour/colourcalculator.php to calculate variations
   return {
     primaryColor: '#f39c12', // Orange
-    accentColor: '#1abc9c', // Aqua
+    accentColor: '#3498db', // Blue
     backgroundColor: '#10171E',
     borderColor: '#444444',
     baseTextColor: '#CCCCCC',
@@ -34,10 +34,11 @@ function theme() {
     preBackgroundColor: t => t.codeBackgroundColor,
     modularScaleRatio: 1.25,
     // Custom variables
-    subheadingsColor: '#AAAAAA',
+    heroBackgroundColor: '#2980b9',
+    heroLinkColor: t => t.headingsColor,
     altBackgroundColor: '#2c3e50',
     altBorderColor: '#888888',
-    extraColor1: '#3498db', // Blue
+    extraColor1: '#1abc9c', // Aqua
     extraColor2: '#e74c3c', // Red
     extraColor3: '#9b59b6' // Purple
   };
@@ -46,10 +47,14 @@ function theme() {
 function styles(t, _s) {
   return {
     centeredPage: {maxWidth: '1280px', margin: '0 auto'},
-    subheading: {fontWeight: '300', color: t.mutedTextColor, letterSpacing: '0.03rem'},
+    subheading: {fontWeight: '300', color: t.baseTextColor, letterSpacing: '0.03rem'},
     primaryLink: {
       color: t.primaryColor,
       ':hover': {color: t.lightPrimaryColor, textDecoration: 'none'}
+    },
+    heroLink: {
+      color: t.headingsColor,
+      ':hover': {color: '#ffffff', textDecoration: 'none'}
     }
   };
 }

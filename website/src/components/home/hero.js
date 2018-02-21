@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {withRadiumStarter} from 'radium-starter';
 
-import Link from '../link';
 import Terminal from './terminal';
 
 const COMMAND_EXAMPLES = [
@@ -49,11 +48,8 @@ export class Hero extends React.Component {
       >
         <h1 style={{textAlign: 'center'}}>Make software development fun&nbsp;again! 🎉</h1>
         <h3 style={{...s.subheading, maxWidth: '800px', textAlign: 'center'}}>
-          Forget Grandpa{'\''}s Unix paradigms, use{' '}
-          <Link to="/#intro" style={s.primaryLink}>
-            Run
-          </Link>{' '}
-          to create and consume a brand new generation of tools.
+          Forget Grandpa{'\''}s shell paradigms, use Run to create and consume a brand new generation
+          of tools.
         </h3>
         <Terminal commands={COMMAND_EXAMPLES} style={{marginTop: '1.5rem'}} />
       </div>

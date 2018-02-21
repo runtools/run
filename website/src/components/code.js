@@ -44,7 +44,7 @@ export function highlightJSStyles(t) {
       color: t.extraColor2
     },
     '.hljs-literal': {
-      color: t.extraColor1
+      color: t.accentColor
     },
     '.hljs-string, .hljs-regexp, .hljs-addition, .hljs-attribute, .hljs-meta-string': {
       color: t.primaryColor

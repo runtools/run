@@ -8,12 +8,17 @@ import Link from './link';
 @withRadiumStarter
 export class Header extends React.Component {
   static propTypes = {
+    linkStyle: PropTypes.object,
     theme: PropTypes.object.isRequired,
     styles: PropTypes.object.isRequired
   };
 
   render() {
-    const {theme: t, styles: s} = this.props;
+    let {linkStyle, theme: t, styles: s} = this.props;
+
+    if (!linkStyle) {
+      linkStyle = s.primaryLink;
+    }
 
     const menuStyle = {...s.unstyledList, ...s.noMargins};
     const menuItemStyle = {...s.inlineBlock, marginLeft: '1.3rem'};
@@ -32,21 +37,17 @@ export class Header extends React.Component {
           <Logo width={85} style={{marginBottom: '6px'}} />
         </Link>
         <div style={{marginLeft: '0.6rem'}}>
-          <small style={{color: t.mutedTextColor, letterSpacing: '0.04rem'}}>alpha</small>
+          <small style={{color: t.baseTextColor, letterSpacing: '0.04rem'}}>alpha</small>
         </div>
         <div style={{flexGrow: 1}} />
         <ul style={menuStyle}>
           <li style={menuItemStyle}>
-            <Link key="header-docs" to="/docs" style={s.primaryLink}>
+            <Link key="header-docs" to="/docs" style={linkStyle}>
               Docs
             </Link>
           </li>
           <li style={menuItemStyle}>
-            <a
-              key="header-support"
-              href="https://github.com/runtools/run/issues"
-              style={s.primaryLink}
-            >
+            <a key="header-support" href="https://github.com/runtools/run/issues" style={linkStyle}>
               Support
             </a>
           </li>

@@ -103,7 +103,7 @@ export class Terminal extends React.Component {
               [`@media (max-width: ${t.smallBreakpoint})`]: {fontSize: '11px'}
             }}
           >
-            <span style={{color: t.accentColor}}>{'> '}</span>
+            <span style={{color: t.primaryColor}}>{'> '}</span>
             {this.state.typing}
             <div
               style={[
