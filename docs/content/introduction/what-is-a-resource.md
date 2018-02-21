@@ -34,7 +34,7 @@ module.exports = () => ({
 });
 ```
 
-This is how you implement a resource in JavaScript. For such a simple method, it may seem a little cumbersome to have to write a resource definition so verbose, but as you'll see later, this extra work will allow you to achieve great things.
+That is how you implement a resource in JavaScript. For such a simple method, it may seem a little cumbersome to have to write a resource definition so verbose, but as you'll see later, this extra work will allow you to achieve great things.
 
 First of all, it is possible to invoke the resource directly from the shell:
 

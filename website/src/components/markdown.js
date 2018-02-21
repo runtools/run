@@ -5,6 +5,7 @@ import remarkReactRenderer from 'remark-react';
 import githubSanitization from 'hast-util-sanitize/lib/github.json';
 import cloneDeep from 'lodash/cloneDeep';
 
+import Link from './link';
 import Code from './code';
 
 // GitHub sanitization schema excludes className, but we want it for highlighting!
@@ -21,6 +22,13 @@ export class Markdown extends React.Component {
       .use(remarkReactRenderer, {
         sanitize: sanitization,
         remarkReactComponents: {
+          a: ({href, children}) => {
+            if (href.match(/^https?:\/\//i) || href.startsWith('mailto:')) {
+              // External Link
+              return <a href={href}>{children}</a>;
+            }
+            return <Link to={href}>{children}</Link>;
+          },
           code: ({className, children}) => {
             let language;
             if (className && className.startsWith('language-')) {
