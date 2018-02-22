@@ -1,6 +1,6 @@
 ### What is a resource?
 
-In Run's world, a resource is a JSON (or YAML) document that allows representing almost anything: tools, configs, APIs,... Resources embrace the principles of object-oriented programming, they are composed of attributes and methods and can inherit from each other.
+In Run's world, a resource is a JSON (or YAML) document that allows representing almost anything: tools, configs, APIs, etc. Resources embrace the principles of object-oriented programming; they are composed of attributes and methods and can inherit from each other.
 
 For example, let's create a resource that has a talent for mathematics – it can make additions. First, create a `@resource.json` file with the following content:
 
@@ -24,7 +24,7 @@ For example, let's create a resource that has a talent for mathematics – it ca
 }
 ```
 
-You can see that there is a `sum` method with two inputs and one output, this is the interface of the resource. Now, to perform an actual operation, you need an implementation. So let's create the `index.js` file as follows:
+You can see that there is a `sum` method with two inputs and one output; this is the interface of the resource. Now, to perform an actual operation, you need an implementation. So let's create the `index.js` file as follows:
 
 ```js
 module.exports = () => ({
@@ -42,7 +42,7 @@ First of all, it is possible to invoke the resource directly from the shell:
 run sum --a=1 --b=2
 ```
 
-Nothing happens on the screen, and this is normal, the operation has been executed, but for the result to be displayed, you must add the `--@print` [CLI option](/docs/reference/run-cli):
+Nothing happens on the screen, and this is normal; the operation has been executed, but for the result to be displayed, you must add the `--@print` [CLI option](/docs/reference/run-cli):
 
 ```shell
 run sum --a=1 --b=2 --@print

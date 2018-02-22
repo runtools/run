@@ -37,10 +37,10 @@ Then, invoke Run:
 run
 ```
 
-You should see a description of the resource you just created, that is the online help. When you invoke Run without any arguments, you get a handy help showing what the current resource is capable of. In the present case, there is only one method exposed: `hello`. So let's invoke it:
+You should see a description of the resource you just created, that is, the online help. When you invoke Run without any arguments, you get a handy help showing what the current resource is capable of. In the present case, there is only one method exposed: `hello`. So let's invoke it:
 
 ```shell
 run hello
 ```
 
-And voila! You wrote your first resource. 🎉
+Voila! You wrote your first resource. 🎉

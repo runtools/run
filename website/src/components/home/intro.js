@@ -12,7 +12,7 @@ import Markdown from '../markdown';
 const BODY = `
 ### “Run” – the last tool you'll ever install
 
-Aren't you tired of installing, configuring or updating your developer tools? There is something fundamentally wrong with the way most of the tools work today: they come first (i.e., we install them), and then they own our data. We think that it should be the opposite: data should come first and specify which tools they use, then it would be the responsibility of the system to manage installation, updates, etc.
+Aren't you tired of installing, configuring, or updating your developer tools? There is something fundamentally wrong with the way most tools work today: they come first (i.e., we install them), and then they own our data. We think that it should be the opposite: data should come first and specify which tools they use, then it would be the responsibility of the system to manage installation, updates, etc.
 
 #### Hello, “resources”
 
@@ -26,13 +26,13 @@ In Run's world, a [resource](/docs/introduction/what-is-a-resource) is a JSON (o
 }
 \`\`\`
 
-In the \`content\` directory next to the resource, put all files composing your website, and then invoke:
+In the \`content\` directory next to the resource, put all files comprising your website, and then invoke:
 
 \`\`\`shell
 run deploy
 \`\`\`
 
-And voila! Your website is online. With a minimal effort, it is hosted on AWS using all the state-of-the-art techniques to ensure maximum speed and availability. When you use a tool for the first time, the resource runtime installs it for you, and if there are updates in the future, they are installed automatically.
+Voila! Your website is online. With a minimal effort, it is hosted on AWS using all the state-of-the-art techniques to ensure maximum speed and availability. When you use a tool for the first time, the resource runtime installs it for you, and if there are updates in the future, they are installed automatically.
 
 This example is simple, but it shows a critical aspect of the resources. Data (\`"www.example.com"\`, \`"./content"\`) and tools (\`"aws/s3-hosted-website"\`) are encapsulated into something that is easy to use and share. Just grab the resource file, and you are all set.
 
@@ -40,7 +40,7 @@ What about this \`"aws/s3-hosted-website#^0.1.0"\` thing? Well, it is just a ref
 
 But where does the \`"aws/s3-hosted-website"\` resource come from? To make things easier, in addition to Run, we are developing a resource directory. Simply named [Resdir](${
   constants.RESDIR_WEBSITE_URL
-}), it will be a place of choice to store, share and discover resources. Although still in development, you can start using it. We are using it ourselves, and we are publishing the [first resources](/docs/introduction/useful-resources), \`"aws/s3-hosted-website"\` is just one of them.
+}), it will be a place of choice to store, share, and discover resources. Although still in development, you can start using it. We are using it ourselves, and we are publishing the [first resources](/docs/introduction/useful-resources); \`"aws/s3-hosted-website"\` is just one of them.
 `;
 
 const ASIDE = `
@@ -52,7 +52,7 @@ For now, resource methods must be implemented in JavaScript, but more languages 
 
 ##### Remote invocations
 
-Another exciting feature of resources is that they can be [invoked remotely](/docs/introduction/remote-invocation). Using a tool like \`"aws/lambda-hosted-resource"\`, you can deploy a resource to AWS Lambda, and then invoke it like you would invoke a local resource. It is even working in the browser. We see this possibility as a fantastic way to create backends – the whole “Web API” issue disappears.
+Another exciting feature of resources is that they can be [invoked remotely](/docs/introduction/remote-invocation). Using a tool like \`"aws/lambda-hosted-resource"\`, you can deploy a resource to AWS Lambda and then invoke it like you would invoke a local resource. It is even working in the browser. We see this possibility as a fantastic way to create backends – the whole “Web API” issue disappears.
 
 ---
 

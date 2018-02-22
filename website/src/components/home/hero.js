@@ -48,7 +48,7 @@ export class Hero extends React.Component {
       >
         <h1 style={{textAlign: 'center'}}>Make software development fun&nbsp;again! 🎉</h1>
         <h3 style={{...s.subheading, maxWidth: '800px', textAlign: 'center'}}>
-          Forget Grandpa{'\''}s shell paradigms, use Run to create and consume a brand new generation
+          Forget Grandpa{'\''}s shell paradigms; use Run to create and consume a brand new generation
           of tools.
         </h3>
         <Terminal commands={COMMAND_EXAMPLES} style={{marginTop: '1.5rem'}} />
