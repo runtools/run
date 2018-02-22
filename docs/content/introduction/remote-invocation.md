@@ -1,8 +1,8 @@
 ### Remote invocation
 
-When you `@load` (or `@import`) a resource, it doesn't matter in which language it is implemented or in which environment it is executed. It can run locally in a different runtime or remotely on a different machine, and for the consumer of the resource, it is entirely transparent.
+When you `@load` (or `@import`) a resource, it doesn't matter which language it is implemented in or which environment it is executed in. It can run locally in a different runtime or remotely on a different machine, and for the consumer of the resource, it is entirely transparent.
 
-That dramatically simplifies the development of client-server projects, since, in most of the cases, you no longer need to develop REST APIs, RPC or whatever. The resource runtime fully manages the remote invocation.
+That dramatically simplifies the development of client-server projects since, in most of the cases, you no longer need to develop REST APIs, RPC, or anything else. The resource runtime fully manages the remote invocation.
 
 Let's go back to the calculator resource and host it on [AWS Lambda](https://aws.amazon.com/lambda/):
 
@@ -32,7 +32,7 @@ Let's go back to the calculator resource and host it on [AWS Lambda](https://aws
 }
 ```
 
-All you had to do was to import `"aws/lambda-hosted-resource"`, specify a domain name and move the `add` method inside the `@export` section. The implementation (`index.js`) doesn't change.
+All you have to do is to import `"aws/lambda-hosted-resource"`, specify a domain name, and move the `add` method inside the `@export` section. The implementation (`index.js`) doesn't change.
 
 Then, you can deploy your resource:
 
@@ -48,4 +48,4 @@ run https://calculator.mydomain.com add 1 2 --@print
 
 That's it. You have created a full client-server architecture with just one command.
 
-Once a resource has been deployed, you can load it from another resource (`{"@load": "https://calculator.mydomain.com"}`), or even from a [browser](https://github.com/runtools/run/tree/master/examples/web-app)! 🤯
+Once a resource has been deployed, you can load it from another resource (`{"@load": "https://calculator.mydomain.com"}`) or even from a [browser](https://github.com/runtools/run/tree/master/examples/web-app)! 🤯
