@@ -12,7 +12,7 @@ The easiest way to access to the default registry is to use the built-in command
 run @registry
 ```
 
-This should display the in-line help. To sign up, just do:
+That should display the in-line help. To sign up, just do:
 
 ```shell
 run @registry signUp
@@ -40,7 +40,7 @@ Now that your resource is inheriting from `"resdir/resource"`, you can check the
 run
 ```
 
-You can see all the available attributes, and among them, there are two that are mandatory – `id` and `version`. So let's add them:
+You can see all the available attributes, and among them, there are two that are mandatory: `id` and `version`. So let's add them:
 
 ```json
 {

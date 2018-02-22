@@ -69,7 +69,7 @@ When you use `@load`, you inherit all the properties from the source, but someti
 
 That is useful when you need to use some tools in order to produce other tools or libraries. Some package managers (e.g., npm) solve this case by using some "development dependencies." Thanks to resources, there is a much more elegant way.
 
-For example, here is a tool to launch a rocket:
+For example, here is a tool to launch a fictional rocket:
 
 ```json
 {
@@ -97,7 +97,7 @@ For example, here is a tool to launch a rocket:
 }
 ```
 
-Here, the `builder` and `tests` subresources are only useful during the development phase, and they are not what we want to expose to the consumer of the resource. To expose only the `launchRocket` method, we put it in the `@export` section.
+Here, the `builder` and `tests` subresources are only useful during the development phase, and they are not what we want to expose to the consumer of the resource. To expose just the `launchRocket` method, we put it in the `@export` section.
 
 Now, by importing the tool:
 
