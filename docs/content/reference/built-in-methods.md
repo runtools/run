@@ -20,6 +20,6 @@ For example:
 run @help @create
 ```
 
-Should display:
+It should display:
 
 ![@create methods help screen](${DOCS_BASE_URL}/images/@create-method-help.png)

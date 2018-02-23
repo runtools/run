@@ -1,6 +1,6 @@
 ### Run CLI
 
-Using the Run's command line interface is quite straightforward, just invoke `run` followed by an [expression](/docs/reference/expressions).
+Using Run's command line interface is easy, just invoke `run` followed by an [expression](/docs/reference/expressions).
 
 Examples:
 
@@ -24,7 +24,7 @@ For now, the Run CLI has only one option.
 
 The `--@print` option is a convenient way to print the output of an expression.
 
-It is possible to achieve the same result using the @print resource built-in method. But in some cases, it is more convenient to use the `--@print` option.
+It is possible to achieve the same thing using the `@print` built-in method, but in some cases, it is more convenient to use the `--@print` option.
 
 For example, to print the output of a method, it might be possible to do:
 

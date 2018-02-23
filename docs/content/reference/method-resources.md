@@ -1,6 +1,6 @@
 ### Method resources
 
-A method resource is a particular type of resource that can be invoked to perform some actions defined either by an [expression](/docs/reference/expressions) (using `@before`, `@run` or `@after`) or by an implementation (using `@implementation`).
+A method resource is a particular type of resource that can be invoked to perform some actions defined either by an [expression](/docs/reference/expressions) (using `@before`, `@run` or `@after`) or an implementation (using `@implementation`).
 
 For example, here is a method using an expression:
 
@@ -35,13 +35,13 @@ module.exports = () => ({
 });
 ```
 
-To write an implementation, you can only use JavaScript for now, but more languages will come soon.
+Only JavaScript implementations are supported for now, but more languages will come soon.
 
 #### Method resource attributes
 
 ##### @input
 
-The `@input` attribute allows to define the input (i.e., the parameters) of a method. An input can be anything – a simple value such as a `"string"` or a resource composed of several attributes.
+The `@input` attribute allows to define the input (i.e., the parameters) of a method. An input can be anything: a simple value or a resource composed of several attributes.
 
 Example:
 
@@ -72,7 +72,7 @@ Example:
 }
 ```
 
-By combining some attributes such as `@aliases`, `@position` or `@default`, you can refine the definition of your parameters:
+By combining some attributes such as `@aliases`, `@position`, or `@default`, you can refine method parameters:
 
 ```json
 {
@@ -92,7 +92,7 @@ By combining some attributes such as `@aliases`, `@position` or `@default`, you 
 
 ##### @output
 
-The `@output` attribute allows to define the output of a method. An output can be anything – a simple value such as a `"string"` or a resource composed of several attributes.
+The `@output` attribute allows to define the output of a method. An output can be anything: a simple value or a resource composed of several attributes.
 
 Example:
 
@@ -107,7 +107,7 @@ Example:
 }
 ```
 
-And here is a more complicated output:
+Here is a richer output:
 
 ```json
 {
@@ -186,9 +186,9 @@ Example:
 
 ##### @listen
 
-The `@listen` attribute allows to specify one or more [events](/docs/reference/events) to be listened to by the current method. When an event is emitted (by `@emit` or `@broadcast`), the listening methods are automatically invoked.
+The `@listen` attribute allows to specify one or more [events](/docs/reference/events) to be listened to. When an event is emitted (using `@emit` or `@broadcast`), all methods listening to this event are executed.
 
-For example, with a resource like this:
+For example, with a resource such as:
 
 ```json
 {

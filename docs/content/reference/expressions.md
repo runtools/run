@@ -1,6 +1,6 @@
 ### Expressions
 
-An expression is a convenient way to explore resources and to invoke some methods. When you use [Run CLI](/docs/reference/run-cli), you are evaluating some expressions.
+An expression is a convenient way to access resource attributes and invoke some methods. When you use [Run CLI](/docs/reference/run-cli), you are evaluating expressions.
 
 For example, with the following resource:
 
@@ -39,7 +39,7 @@ run database username @print # Prints the database's username
 run deploy api.domain.com --optimize  # Invokes the deploy method
 ```
 
-Expressions can also be used in methods using the `@before`, `@run` and `@after` attributes:
+Expressions can also appear in methods using the `@before`, `@run`, and `@after` attributes:
 
 ```json
 {
@@ -50,11 +50,11 @@ Expressions can also be used in methods using the `@before`, `@run` and `@after`
 }
 ```
 
-If you're a bit familiar with the command line, you should be able to intuit how to write expressions. The syntax is not intended to be as powerful as a shell such as [Bash](https://www.gnu.org/software/bash/), the idea is to support the bare minimum to provide the user with a simple and productive way to control his resources. For more advanced operations, we think it is better to use a full-featured programming language, and write an actual resource `@implementation`.
+If you're a bit familiar with the command line, you should be able to intuit how to write expressions. The syntax is not intended to be as powerful as a shell such as [Bash](https://www.gnu.org/software/bash/); the idea is to support the bare minimum to provide the user with a simple and productive way to control resources. For more advanced operations, we think it is better to use a full-featured programming language, and write an actual resource `@implementation`.
 
 #### Subexpressions
 
-An expression can use parentheses to include subexpressions. That is useful for chaining multiple method invocations.
+An expression can use parentheses to include subexpressions. It is useful for chaining multiple method invocations.
 
 Example:
 

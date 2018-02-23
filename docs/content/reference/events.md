@@ -1,6 +1,6 @@
 ### Events
 
-It is possible to emit events to a resource to trigger the execution of specific methods.
+It is possible to emit an event to trigger the execution of methods listening to this event.
 
 For example, with a resource such as:
 
@@ -13,13 +13,13 @@ For example, with a resource such as:
 }
 ```
 
-Since the `build` method is listening to the event `"deploy"`, it is possible to trigger its execution by doing:
+Since the `build` method is listening to the `"deploy"` event, it is possible to trigger its execution by doing:
 
 ```shell
 run @emit deploy
 ```
 
-Quite often, you need to emit an event to a resource while including all its child resources. In this case, the `@broadcast` command is helpful. For example, with the following resource:
+Quite often, you need to emit an event to a resource while including all its subresources. In this case, the `@broadcast` command is quite helpful. For example, with the following resource:
 
 ```json
 {

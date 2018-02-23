@@ -7,12 +7,12 @@ To create a value resource, use the `@type` attribute:
 ```js
 {
   "name": {
-    "@type": "string" // name is an undefined "string" value
+    "@type": "string" // name is an undefined "string" value resource
   }
 }
 ```
 
-When an actual value (or default value) is specified, you don't need to indicate a type. It can be inferred from the value:
+When an actual value (or a default value) is specified, you don't need to indicate the type. It can be inferred from the value:
 
 ```js
 {
@@ -22,7 +22,7 @@ When an actual value (or default value) is specified, you don't need to indicate
 }
 ```
 
-For now, the supported types are: `"boolean"`, `"number"`, `"string"`, `"array"`, `"object"` and `"binary"`. More types are expected to come in a near future (e.g., `"date"`).
+For now, the supported types are: `"boolean"`, `"number"`, `"string"`, `"array"`, `"object"` and `"binary"`. More types will come in the future (e.g., `"date"`).
 
 #### Value resource attributes
 
@@ -40,7 +40,7 @@ Example:
 }
 ```
 
-Most of the time, you don't use the `@value` attribute explicitly. It is much easier to specify the actual value directly:
+Most of the time, you don't use the `@value` attribute explicitly. It is much easier to specify an actual value directly:
 
 ```js
 {
@@ -50,7 +50,7 @@ Most of the time, you don't use the `@value` attribute explicitly. It is much ea
 
 ##### @default
 
-Just like `@value`, the `@default` attribute gives a value to a value resource, with the bonus that this value will appear in the auto-generated help.
+Just like `@value`, the `@default` attribute gives a value to a value resource, with the bonus that it will be displayed in the auto-generated help.
 
 Example:
 
