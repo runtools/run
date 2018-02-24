@@ -37,7 +37,7 @@ const RUN_LOCAL_RESOURCES = process.env.RUN_LOCAL_RESOURCES;
 const RESDIR_REGISTRY_CLIENT = process.env.RESDIR_REGISTRY_CLIENT || 'resdir/registry-client';
 const RESDIR_REGISTRY_SERVER = process.env.RESDIR_REGISTRY_SERVER || 'https://registry.resdir.com';
 const RESDIR_UPLOAD_SERVER_S3_BUCKET_NAME =
-  process.env.RESDIR_UPLOAD_SERVER_S3_BUCKET_NAME || 'resdir-registry-v1';
+  process.env.RESDIR_UPLOAD_SERVER_S3_BUCKET_NAME || 'resdir-registry-prod-v1';
 const RESDIR_UPLOAD_SERVER_S3_KEY_PREFIX =
   process.env.RESDIR_UPLOAD_SERVER_S3_KEY_PREFIX || 'resources/uploads/';
 
