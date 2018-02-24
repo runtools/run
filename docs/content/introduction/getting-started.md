@@ -2,7 +2,7 @@
 
 #### Installation
 
-Install Run using [npm](https://www.npmjs.com/):
+Install Run using [npm](https://www.npmjs.com/) ([Node.js](https://nodejs.org/) v6 or later) on macOS or Linux (Windows will come soon):
 
 ```shell
 npm install run-cli -g
