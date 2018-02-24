@@ -5,7 +5,7 @@ import {withRadiumStarter} from 'radium-starter';
 import Header from '../header';
 import Hero from './hero';
 import Intro from './intro';
-import Demo from './demo';
+// import Demo from './demo';
 import Action from './action';
 import Footer from '../footer';
 import Link from '../link';
@@ -36,8 +36,8 @@ export class Home extends React.Component {
         </FullHeight>
         <div style={s.centeredPage}>
           <Intro />
-          <hr style={{marginTop: 0, marginBottom: 0}} />
-          <Demo />
+          {/* <hr style={{marginTop: 0, marginBottom: 0}} />
+          <Demo /> */}
           <hr style={{marginTop: 0, marginBottom: 0}} />
           <Action />
         </div>
