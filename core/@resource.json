@@ -1,7 +1,7 @@
 {
   "@import": "1place/npm-package#^0.1.0",
   "name": "run-core",
-  "version": "0.11.44",
+  "version": "0.11.45",
   "description": "The first resource runtime",
   "author": "Manuel Vila <hi@mvila.me>",
   "license": "MIT",

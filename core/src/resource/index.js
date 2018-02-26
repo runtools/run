@@ -23,7 +23,7 @@ import {parseResourceSpecifier, stringifyResourceSpecifier} from '@resdir/resour
 import {validateResourceName} from '@resdir/resource-name';
 import {validateResourceDescription} from '@resdir/resource-description';
 import ResourceFetcher from '@resdir/resource-fetcher';
-import {shiftPositionalArguments, isParsedExpression} from '@resdir/expression';
+import {shiftPositionalArguments, isParsedExpression, matchExpression} from '@resdir/expression';
 import {createClientError} from '@resdir/error';
 import decache from 'decache';
 
@@ -1673,6 +1673,19 @@ export class Resource {
 
       if (parent === undefined) {
         throw createClientError(`Cannot get ${formatCode(key)} on an undefined parent`);
+      }
+
+      if (parent._$isRemote) {
+        // TODO: Make a *real* implementation
+        expression = matchExpression(expression).remainder; // Get rid of the PARSED_EXPRESSION_TAG
+        if (!isEmpty(expression)) {
+          throw createClientError('Sorry, remote method arguments are not yet implemented.');
+        }
+        let result = await parent[key]();
+        if (result !== undefined) {
+          result = await Resource.$create(result);
+        }
+        return result;
       }
 
       let child = parent.$findChild(key, {includeNativeChildren: true});

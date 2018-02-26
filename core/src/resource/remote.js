@@ -28,6 +28,10 @@ export class RemoteResource {
             return undefined;
           }
 
+          if (name === '_$isRemote') {
+            return true;
+          }
+
           if (!target[name]) {
             target[name] = async (input, environment) => {
               const {output} = await invoke({

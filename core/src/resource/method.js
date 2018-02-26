@@ -348,7 +348,7 @@ export class MethodResource extends Resource {
       return undefined;
     }
 
-    if (output instanceof Resource) {
+    if (output !== undefined && (output instanceof Resource || output._$isRemote)) {
       // TODO: Check output compatibility
       return output;
     }
