@@ -68,7 +68,7 @@ class Player extends React.Component {
   render() {
     return (
       <ReactPlayer
-        url="https://www.youtube.com/watch?v=qgNbuNve4bw"
+        url="https://www.youtube.com/watch?v=xo5vHd-WJWc"
         width={this.props.width}
         height={this.props.height}
         volume={1}
