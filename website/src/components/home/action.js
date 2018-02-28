@@ -33,8 +33,8 @@ export class Action extends React.Component {
             maxWidth: '970px'
           }}
         >
-          Feeling excited about Run and the potential of resources?<br />Don't wait, be a pioneer,
-          create your first resource.
+          Feeling excited about Run and the potential of resources?<br />Don't wait. Create your
+          first resource.
         </h3>
         <Button onClick={() => history.push('/docs')} rsAccent rsLarge>
           Getting started
