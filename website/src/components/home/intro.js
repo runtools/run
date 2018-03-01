@@ -44,15 +44,15 @@ But where does the \`"aws/s3-hosted-website"\` resource come from? To make thing
 `;
 
 const ASIDE = `
-##### Language agnostic
+##### Remote invocations
 
-For now, resource methods must be implemented in JavaScript, but more languages will be supported soon. That will open up exciting possibilities for creating resources based on different languages. For example, it will be possible to implement a resource in Ruby that inherits from one written in Go while including another one implemented in Python.
+An exciting feature of resources is that they can be [invoked remotely](/docs/introduction/remote-invocation). Using a tool like \`"aws/lambda-hosted-resource"\`, you can deploy a resource to AWS Lambda and then invoke it like you would invoke a local resource. It is even working in the browser. We see this possibility as a fantastic way to create backends – the whole “Web API” issue disappears.
 
 ---
 
-##### Remote invocations
+##### Language agnostic
 
-Another exciting feature of resources is that they can be [invoked remotely](/docs/introduction/remote-invocation). Using a tool like \`"aws/lambda-hosted-resource"\`, you can deploy a resource to AWS Lambda and then invoke it like you would invoke a local resource. It is even working in the browser. We see this possibility as a fantastic way to create backends – the whole “Web API” issue disappears.
+Resources are designed to be language agnostic, but for now, JavaScript is the only supported language. More languages will come in the future, and it will open up exciting possibilities for creating resources mixing different languages. For example, it will be possible to implement a resource in Ruby that inherits from one written in Go while including another one implemented in Python.
 
 ---
 

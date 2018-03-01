@@ -48,7 +48,7 @@ export class Hero extends React.Component {
       >
         <h1 style={{textAlign: 'center'}}>Development tooling: ✅ Fixed</h1>
         <h3 style={{...s.subheading, maxWidth: '840px', textAlign: 'center'}}>
-          Create and use a new generation of tools that are highly configurable, easily composable,
+          Create and use a new generation of tools that are easily configurable, highly composable,
           and automatically installed.
         </h3>
         <Terminal commands={COMMAND_EXAMPLES} style={{marginTop: '1.5rem'}} />
