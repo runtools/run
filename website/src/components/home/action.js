@@ -37,7 +37,7 @@ export class Action extends React.Component {
           first resource.
         </h3>
         <Button onClick={() => history.push('/docs')} rsAccent rsLarge>
-          Getting started
+          Get started
         </Button>
       </div>
     );
