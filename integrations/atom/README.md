@@ -1,4 +1,4 @@
-# Resdir Atom integration
+# Run Atom integration
 
 ```javascript
 // TODO: documentation!

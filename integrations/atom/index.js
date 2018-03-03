@@ -8,7 +8,7 @@ import {execFile} from 'child_process';
 import {CompositeDisposable} from 'atom';
 // import {Resource} from 'run-core';
 
-const STAGE = 'test'; // 'dev', 'test', or 'prod'
+const STAGE = 'prod'; // 'dev', 'test', or 'prod'
 
 export default {
   activate() {
@@ -28,7 +28,7 @@ export default {
   },
 
   async handleDidSave(event) {
-    this.signalProvider.add(`Resdir integration 'handleDidSave'`);
+    this.signalProvider.add(`Run integration 'handleDidSave'`);
 
     try {
       const file = event.path;
@@ -46,7 +46,7 @@ export default {
       }
     } catch (err) {
       console.error(err);
-      const message = `resdir: An error occurred while broadcasting '@fileModified' event`;
+      const message = `run: An error occurred while broadcasting '@fileModified' event`;
       atom.notifications.addError(message, {detail: err.message, dismissable: true});
     }
 
@@ -67,12 +67,11 @@ export default {
   // }
 
   broadcastFileModifiedEvent(directory, file) {
-    console.log(directory);
     return new Promise((resolve, reject) => {
       let command = 'run';
       let env;
       if (STAGE === 'dev') {
-        command = '/Users/mvila/Projects/run/cli/dist/cjs/bin/index.js';
+        command = '/Users/mvila/Projects/run/cli/dist/node/cjs/bin/index.js';
       } else if (STAGE === 'test') {
         env = {
           ...process.env,

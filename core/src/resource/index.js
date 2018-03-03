@@ -1845,7 +1845,7 @@ export class Resource {
   }
 
   async '@version'(_input, environment) {
-    const pkg = require('../../../package.json');
+    const pkg = require('../../../../package.json');
     print(
       `${formatCode(pkg.name, {addBackticks: false})}${formatPunctuation(':')} ${pkg.version}`,
       environment

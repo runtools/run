@@ -22,7 +22,7 @@ import {runExpression, runREPL} from '../';
 
   if (expression.includes('@version')) {
     // TODO: move this in run-core
-    const pkg = require('../../../package.json');
+    const pkg = require('../../../../package.json');
     print(`${formatCode(pkg.name, {addBackticks: false})}${formatPunctuation(':')} ${pkg.version}`);
   }
 

@@ -58,13 +58,12 @@
   "transpiler": {
     "@import": "js/transpiler#^0.1.15",
     "targets": {
-      "chrome": "50",
+      "chrome": "41",
       "safari": "10",
       "firefox": "50",
       "edge": "14"
     },
     "format": "esm",
-    "transformClasses": true,
     "transformJSX": true
   },
   "bundler": {

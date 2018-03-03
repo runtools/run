@@ -1,8 +1,8 @@
 {
-  "name": "resdir",
+  "name": "run",
   "version": "0.1.0",
-  "description": "Resdir integration",
-  "repository": "https://github.com/resdir/resdir.git",
+  "description": "Run integration",
+  "repository": "https://github.com/runtools/run.git",
   "license": "MIT",
   "engines": {
     "atom": ">=1.0.0 <2.0.0"

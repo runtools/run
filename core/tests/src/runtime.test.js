@@ -1,4 +1,4 @@
-import Runtime from '../../../dist/cjs/runtime';
+import Runtime from '../../../dist/node/cjs/runtime';
 
 describe('Runtime', () => {
   test('instantiation', () => {
