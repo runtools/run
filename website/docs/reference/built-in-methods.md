@@ -10,7 +10,7 @@ run @@help
 
 It should display something like this:
 
-![Built-in methods help screen](${DOCS_BASE_URL}/images/built-in-methods-help.png)
+![Built-in methods help screen](/docs/images/built-in-methods-help.png)
 
 To get help on a particular method, invoke `@help` followed by the method name.
 
@@ -22,4 +22,4 @@ run @help @create
 
 It should display:
 
-![@create methods help screen](${DOCS_BASE_URL}/images/@create-method-help.png)
+![@create methods help screen](/docs/images/@create-method-help.png)

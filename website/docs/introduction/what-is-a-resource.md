@@ -94,7 +94,7 @@ run @help sum
 
 A gorgeous help should appear on the screen:
 
-![Math example help screen](${DOCS_BASE_URL}/images/math-example-help.png)
+![Math example help screen](/docs/images/math-example-help.png)
 
 And finally, it is possible to execute the command in a much more appealing way:
 

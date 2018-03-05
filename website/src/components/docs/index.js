@@ -4,7 +4,7 @@ import {withRadiumStarter} from 'radium-starter';
 import {withRouter} from 'react-router';
 import {getJSON, get} from '@resdir/http-client';
 
-import {constants, resolveConstants} from '../../constants';
+import {resolveConstants} from '../../constants';
 import Layout from '../layout';
 import {withErrorBoundary, catchErrors} from '../error-boundary';
 import Link from '../link';
@@ -14,7 +14,8 @@ import Spinner from '../spinner';
 import {NavRoot, NavSection, NavItem} from './nav';
 import Markdown from '../markdown';
 
-const DOCS_INDEX_PATH = 'index.json';
+const BASE_URL = '/docs';
+const INDEX_PATH = 'index.json';
 const CHAPTER_FILE_EXTENSION = '.md';
 
 @withRouter
@@ -56,7 +57,7 @@ export class Docs extends React.Component {
   }
 
   async _loadContents() {
-    const url = constants.DOCS_BASE_URL + '/' + DOCS_INDEX_PATH;
+    const url = BASE_URL + '/' + INDEX_PATH;
     let {body: contents} = await getJSON(url);
     if (typeof contents === 'string') {
       contents = JSON.parse(contents);
@@ -82,10 +83,10 @@ export class Docs extends React.Component {
 
   @catchErrors
   async loadChapter(url) {
-    const {chapter, nextChapter} = this._findChapter(url);
+    const {chapter, nextChapter} = this._findChapter(url) || {};
     if (chapter && !chapter.text) {
       this.setState({chapter: undefined, nextChapter: undefined, isLoadingChapter: true});
-      let {body: text} = await get(constants.DOCS_BASE_URL + '/' + chapter.path);
+      let {body: text} = await get(BASE_URL + '/' + chapter.path);
       text = resolveConstants(text);
       chapter.text = text;
     }

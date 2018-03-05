@@ -25,11 +25,12 @@
         "source": "./dist/bundle.test.js",
         "destination": "./bundle.js",
         "replacements": {
-          "${DOCS_BASE_URL}": "https://raw.githubusercontent.com/runtools/run/master/docs/content",
+          "${STAGE}": "test",
           "${RESDIR_WEBSITE_URL}": "https://test.resdir.com"
         }
       },
-      "./images"
+      "./images",
+      "./docs"
     ]
   },
   "freezer": {

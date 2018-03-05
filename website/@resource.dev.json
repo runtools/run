@@ -22,11 +22,12 @@
         "source": "./dist/bundle.dev.js",
         "destination": "./bundle.js",
         "replacements": {
-          "${DOCS_BASE_URL}": "http://docs.dev.run.tools",
+          "${STAGE}": "development",
           "${RESDIR_WEBSITE_URL}": "http://dev.resdir.com"
         }
       },
-      "./images"
+      "./images",
+      "./docs"
     ]
   },
   "freezer": {

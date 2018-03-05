@@ -46,7 +46,8 @@
       "files": [
         "./index.html",
         "./src/**",
-        "./images/**"
+        "./images/**",
+        "./docs/**"
       ],
       "onFileModified": {
         "@type": "method",

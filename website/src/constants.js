@@ -1,7 +1,8 @@
 /* eslint-disable no-template-curly-in-string */
 
 export const constants = {
-  DOCS_BASE_URL: '${DOCS_BASE_URL}',
+  VERSION: '0.1.0',
+  STAGE: '${STAGE}',
   RESDIR_WEBSITE_URL: '${RESDIR_WEBSITE_URL}',
   GOOGLE_ANALYTICS_TRACKING_ID: '${GOOGLE_ANALYTICS_TRACKING_ID}'
 };

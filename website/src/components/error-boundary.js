@@ -20,8 +20,9 @@ export function withErrorBoundary(WrappedComponent) {
     }
 
     render() {
-      if (this.state.caughtError) {
-        return <Sorry message="I'm afraid something went wrong." />;
+      const {caughtError} = this.state;
+      if (caughtError) {
+        return <Sorry message="I'm afraid something went wrong." info={caughtError.message} />;
       }
       return <WrappedComponent {...this.props} />;
     }
