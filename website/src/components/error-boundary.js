@@ -1,3 +1,5 @@
+/* global Raven */
+
 import React from 'react';
 
 import Sorry from './sorry';
@@ -14,6 +16,7 @@ export function withErrorBoundary(WrappedComponent) {
 
     componentDidCatch(error, _info) {
       this.setState({caughtError: error});
+      Raven.captureException(error);
     }
 
     render() {
