@@ -3,6 +3,7 @@
 import React from 'react';
 
 import Sorry from './sorry';
+import constants from '../constants';
 
 export function withErrorBoundary(WrappedComponent) {
   return class ErrorBoundary extends React.Component {
@@ -16,13 +17,22 @@ export function withErrorBoundary(WrappedComponent) {
 
     componentDidCatch(error, _info) {
       this.setState({caughtError: error});
-      Raven.captureException(error);
+      if (constants.STAGE === 'production') {
+        Raven.captureException(error);
+      }
     }
 
     render() {
       const {caughtError} = this.state;
       if (caughtError) {
-        return <Sorry message="I'm afraid something went wrong." info={caughtError.message} />;
+        const info = (
+          <span>
+            {caughtError.message}
+            <br />
+            <small>{window.navigator.userAgent}</small>
+          </span>
+        );
+        return <Sorry message="I'm afraid something went wrong." info={info} />;
       }
       return <WrappedComponent {...this.props} />;
     }

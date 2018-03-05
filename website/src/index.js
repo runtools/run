@@ -8,8 +8,8 @@ import App from './components/app';
 
 const SENTRY_DSN = 'https://6a53d9cf58314fd695c815443c482b2a@sentry.io/298103';
 
-Raven.config(SENTRY_DSN, {release: constants.VERSION, environment: constants.STAGE}).install();
+if (constants.STAGE === 'production') {
+  Raven.config(SENTRY_DSN, {release: constants.VERSION, environment: constants.STAGE}).install();
+}
 
-Raven.context(() => {
-  ReactDOM.render(<App />, document.getElementById('app'));
-});
+ReactDOM.render(<App />, document.getElementById('app'));
