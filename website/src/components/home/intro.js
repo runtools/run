@@ -34,7 +34,7 @@ run deploy
 
 Voila! Your website is online. With a minimal effort, it is hosted on AWS using all the state-of-the-art techniques to ensure maximum speed and availability. When you use a tool for the first time, the resource runtime installs it for you, and if there are updates in the future, they are installed automatically.
 
-This example is simple, but it shows a critical aspect of the resources. Data (\`"www.example.com"\`, \`"./content"\`) and tools (\`"aws/s3-hosted-website"\`) are encapsulated into something that is easy to use and share. Just grab the resource file, and you are all set.
+This example is simple, but it shows a critical aspect of the resources. Data (\`"www.example.com"\`, \`"./content"\`) and tools (\`"aws/s3-hosted-website"\`) are grouped into something that is easy to use and share. Just grab the resource file, and you are all set.
 
 What about this \`"aws/s3-hosted-website#^0.1.0"\` thing? Well, it is just a reference to another resource. By importing it, you are inheriting all its attributes and methods. That is how you got the \`"domainName"\` attribute or the \`deploy\` command. Since resources embrace the principles of object-oriented programming, they are highly composable and can represent almost anything.
 

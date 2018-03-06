@@ -2,7 +2,7 @@
 
 When we work on a project, we usually use several tools such as (in the case of a web project), a dependency manager, a linter, a transpiler, a bundler, a deployment tool, etc. So we need a way to install, configure and compose all these tools. Unfortunately, operating systems are not very good at this. It is difficult to install several versions of the same tool, and the interface of the executables is very rudimentary. Whether it's configuration (heterogeneous set of config files) or invocation (argv), it is not quite user-friendly.
 
-A resource is based on object-oriented principles and allows to encapsulate in the same coherent unit the configuration part (attributes) and the invocation part (methods) of a tool. On this foundation, it is possible to configure and compose a set of tools in a simple and elegant way. Adding the fact that Run installs (and updates) tools automatically, it is possible to create development environments that are easily transportable and shareable.
+A resource is based on object-oriented principles and allows to group in the same coherent unit the configuration part (attributes) and the invocation part (methods) of a tool. On this foundation, it is possible to configure and compose a set of tools in a simple and elegant way. Adding the fact that Run installs (and updates) tools automatically, it is possible to create development environments that are easily transportable and shareable.
 
 A resource can be stored in a JSON or YAML document, and be loaded directly by Run, or be referenced from another resource to be embedded or inherited.
 
