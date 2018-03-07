@@ -1,7 +1,7 @@
 {
   "@import": "1place/npm-package#^0.1.0",
   "name": "run-cli",
-  "version": "0.11.9",
+  "version": "0.11.10",
   "description": "One tool to run them all",
   "author": "Manuel Vila <hi@mvila.me>",
   "license": "MIT",
@@ -14,7 +14,7 @@
     "json5": "^0.5.1",
     "node-version": "^1.0.0",
     "@resdir/console": "^0.1.0",
-    "run-core": "^0.11.0",
+    "run-core": "^0.11.49",
     "source-map-support": "^0.4.15",
     "update-notifier": "^2.1.0"
   },
