@@ -44,6 +44,7 @@ const RESDIR_UPLOAD_SERVER_S3_KEY_PREFIX =
 const RESOURCE_FILE_NAME = '@resource';
 const RESOURCE_FILE_FORMATS = ['json', 'json5', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
+const PRIVATE_RESOURCE_FILE_NAME = '@resource.private';
 const DEV_RESOURCE_FILE_NAME = '@resource.dev';
 const PRIVATE_DEV_RESOURCE_FILE_NAME = '@resource.dev.private';
 
@@ -2083,6 +2084,10 @@ function searchResourceFile(directoryOrFile, {searchInParentDirectories = false}
       return file;
     }
     file = join(directory, DEV_RESOURCE_FILE_NAME + '.' + format);
+    if (existsSync(file)) {
+      return file;
+    }
+    file = join(directory, PRIVATE_RESOURCE_FILE_NAME + '.' + format);
     if (existsSync(file)) {
       return file;
     }
