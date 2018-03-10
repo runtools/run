@@ -12,13 +12,31 @@
   "dependencies": {
     "dotenv": "^4.0.0",
     "json5": "^0.5.1",
-    "node-version": "^1.0.0",
     "@resdir/console": "^0.1.0",
     "run-core": "^0.11.49",
-    "source-map-support": "^0.4.15",
-    "update-notifier": "^2.1.0"
+    "source-map-support": "^0.4.15"
   },
   "@unpublishable": {
+    "macOSPacker": {
+      "@import": "js/packer#^0.1.0",
+      "entry": "./dist/node/cjs/bin/index.js",
+      "output": "./builds/run-macos",
+      "nodeVersion": "latest",
+      "platform": "macos",
+      "architecture": "x64",
+      "isPublic": true,
+      "reinstallDependencies": true
+    },
+    "linuxPacker": {
+      "@import": "js/packer#^0.1.0",
+      "entry": "./dist/node/cjs/bin/index.js",
+      "output": "./builds/run-linux",
+      "nodeVersion": "latest",
+      "platform": "linux",
+      "architecture": "x64",
+      "isPublic": true,
+      "reinstallDependencies": true
+    },
     "tests": {
       "@import": "1place/jest#^0.1.0",
       "@directory": "./tests"
