@@ -1,6 +1,6 @@
 ### Useful resources
 
-The development of resources has just started, but there are already a few that you might find interesting to experiment. They are all published on [Resdir](${RESDIR_WEBSITE_URL}), so you can import them easily:
+The development of resources has just started, but there are already a few that you might find interesting to experiment with. They are all published on [Resdir](${RESDIR_WEBSITE_URL}), so you can import them easily:
 
 ```js
 {
