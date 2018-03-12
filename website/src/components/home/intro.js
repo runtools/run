@@ -12,7 +12,7 @@ import Markdown from '../markdown';
 const BODY = `
 ### “Run” – the resource runtime
 
-We use more and more command-line tools. Many of them are really good, but they could be even better if they were based on more modern foundations than our Unix-based systems and their good old shells. It's not about replacing the command line; it's about building something on top of it to enable a new generation of tools that are both more customizable and easy to use.
+Although we have beautiful graphical user interfaces, it seems that we are using more and more command-line tools. Many of them are really good, but they could be even better if they were based on more modern foundations than our Unix-like systems and their good old shells. It's not about replacing the command line; it's about building something on top of it to enable tools that are more customizable and easy to use.
 
 #### Hello, “resources”
 
@@ -34,7 +34,7 @@ To deploy the website, just invoke:
 run deploy
 \`\`\`
 
-Voila! Your website is online. When you use a tool for the first time, Run installs it automatically in a global cache, and since tool references and configuration are grouped, your project is super easy to transport and share. Just grab the resource file, and you are all set.
+Voila! Your website is online. When you use a tool for the first time, Run installs it automatically in a global cache, and since tool references and configuration are grouped together, your project is super easy to transport and share. Just grab the resource file, and you are all set.
 
 What about this \`"aws/s3-hosted-website#^0.1.0"\` thing? It's a reference to a resource implementing a tool stored in [Resdir](${
   constants.RESDIR_WEBSITE_URL
@@ -42,9 +42,9 @@ What about this \`"aws/s3-hosted-website#^0.1.0"\` thing? It's a reference to a 
 `;
 
 const ASIDE = `
-##### Remote invocations
+##### Remote invocation
 
-An exciting feature of resources is that they can be [invoked remotely](/docs/introduction/remote-invocation). Using a tool like \`"aws/lambda-hosted-resource"\`, you can deploy a resource to AWS Lambda and then invoke it like you would invoke a local resource. It is even working in the browser. We see this possibility as a fantastic way to create backends – the whole “Web API” issue disappears.
+An exciting feature of resources is that they can be [invoked remotely](/docs/introduction/remote-invocation). Using a tool like \`"aws/lambda-hosted-resource"\`, you can deploy a resource to AWS Lambda and then invoke it like you would invoke a local resource. It is even working in the browser. We see this possibility as a fantastic way to create backends – the whole “Web API” problem disappears.
 
 ---
 
@@ -86,7 +86,7 @@ export class Intro extends React.Component {
           }
         }}
       >
-        <div className="intro-main" style={{flex: 1.7}}>
+        <div className="intro-main" style={{flex: 1.8}}>
           <Style scopeSelector=".intro-main" rules={{h3: {color: t.primaryColor}}} />
           <Markdown>{BODY}</Markdown>
         </div>
