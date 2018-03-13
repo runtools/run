@@ -4,7 +4,7 @@ This is [Run](https://run.tools)'s monorepo.
 
 ## What is Run?
 
-When we work on a project, we usually use several tools such as (in the case of a web project), a dependency manager, a transpiler, a bundler, a deployment tool, etc. So we need a way to install, configure and compose all these tools. Unfortunately, our good old Unix-based systems are not very good at this; it is difficult to install several versions of the same tool, and the interface of the executables is too rudimentary. Configuring (with an heterogeneous set of config files) and running (through `argv`) such tools is not quite user-friendly.
+When we work on a project, we usually use several tools such as (in the case of a modern web project), a dependency manager, a transpiler, a bundler, a deployment tool, etc. So we need a way to install, configure and compose all these tools. Unfortunately, our good old Unix-based systems are not very good at this; it is difficult to install several versions of the same tool, and the interface of the executables is too rudimentary. Configuring (with an heterogeneous set of config files) and running (through `argv`) such tools is not quite user-friendly.
 
 Run tries to solve this problem by introducing the concept of resource. A resource is based on object-oriented principles and allows to group in the same coherent unit the configuration part (attributes) and the invocation part (methods) of a tool. On this foundation, it is possible to create a new generation of tools that are more customizable and easy to use. Adding the fact that Run installs (and updates) tools automatically, we get development environments that are easily transportable and shareable.
 

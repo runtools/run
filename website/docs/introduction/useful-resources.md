@@ -1,11 +1,19 @@
 ### Useful resources
 
-The development of resources has just started, but there are already a few that you might find interesting to experiment with. They are all published on [Resdir](${RESDIR_WEBSITE_URL}), so you can import them easily:
+The development of resources has just started, but there are already a few that you might find interesting to experiment with.
+
+They are all published on [Resdir](${RESDIR_WEBSITE_URL}), so you can import them easily:
 
 ```js
 {
   "@import": "namespace/name#^0.1.0"
 }
+```
+
+Once a tool is imported, invoke Run without any arguments to display the help:
+
+```shell
+run
 ```
 
 #### Base resources

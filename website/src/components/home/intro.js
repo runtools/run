@@ -34,7 +34,7 @@ To deploy the website, just invoke:
 run deploy
 \`\`\`
 
-Voila! Your website is online. When you use a tool for the first time, Run installs it automatically in a global cache, and since tool references and configuration are grouped together, your project is super easy to transport and share. Just grab the resource file, and you are all set.
+Voila! Your website is online. When you use a tool for the first time, Run installs it automatically in a global cache, and since tool references and configuration are grouped together, your project is super easy to transport and share. Just grab the resource file and you are all set.
 
 What about this \`"aws/s3-hosted-website#^0.1.0"\` thing? It's a reference to a resource implementing a tool stored in [Resdir](${
   constants.RESDIR_WEBSITE_URL

@@ -14,7 +14,7 @@ A resource adds an object-oriented interface to the tools, making them easier to
 
 If you create a tool, you can wrap it into a resource to improve its usability and save a lot of development time. First, since Run installs tools automatically, the installation problem disappears. Then, given that users configure tools using resources, you don't need to manage configuration files. Finally, you no longer need to implement a command line interface; Run provides it for you.
 
-If you are an end-developer, and you are working on an application, website, backend, etc., you can use a resource to reference the tools your project needs, and specify their configuration. Then, since your development environment is defined in a single file, your project is super easy to transport and share. Just grab the resource, and you are all set. Also, since your resource consumes tools that are themselves resources, everything becomes extremely easy to configure, compose, and use.
+If you are an end-developer, and you are working on an application, website, backend, etc., you can use a resource to reference the tools your project needs and specify their configuration. Then, since your development environment is defined in a single file, your project is super easy to transport and share. Just grab the resource and you are all set. Also, since your resource consumes tools that are themselves resources, everything becomes extremely easy to configure, compose, and use.
 
 #### What does it look like?
 
