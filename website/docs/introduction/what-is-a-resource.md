@@ -2,9 +2,9 @@
 
 #### The problem
 
-Typically, when we work on a project, we use several tools such as (in the case of a modern web project), a dependency manager, a transpiler, a bundler, some deployment tools, etc. So we need a way to install, configure and compose all these tools. Unfortunately, our operating systems are not very good at this.
+Typically, when we work on a project, we use several tools such as (in the case of a modern web project), a dependency manager, a transpiler, a bundler, etc. So we need a way to install, configure and compose all these tools. Unfortunately, our good old command line is not very good at this.
 
-To configure our tools, we use configuration files based on many different formats. We communicate with tools through an array of strings (`argv`). To compose several tools, there is, well, [Bash](https://www.gnu.org/software/bash/)... Finally, since the OS can't easily handle multiple versions of the same tool, managing our development environment is painful when we have to deal with many projects, or when we work in a team.
+To configure our tools, we use configuration files based on many different formats. We communicate with tools through an array of strings (`argv`). To compose several tools, there is, well, [Bash](https://www.gnu.org/software/bash/)... Finally, since typical shells can't handle several versions of the same tool, managing our development environment is painful when we have to deal with many projects.
 
 Seriously, we cannot say that it's user-friendly.
 
