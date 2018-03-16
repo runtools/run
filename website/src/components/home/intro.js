@@ -12,7 +12,7 @@ import Markdown from '../markdown';
 const BODY = `
 ### “Run” – the resource runtime
 
-Although we have beautiful graphical user interfaces, it seems that we are using more and more command-line tools. Many of them are really good, but they could be even better if they were based on more modern foundations than our Unix-like systems and their good old shells. It's not about replacing the command line; it's about building something on top of it to enable tools that are more customizable and easy to use.
+Although we have beautiful graphical user interfaces, it seems that we are using more and more command-line tools. Many of them are really good, but they could be even better if they were based on more modern foundations than our Unix-like systems and their good old shells. It's not about replacing the command line; it's about building something on top of it to enable tools that are [more customizable and easy to use](https://medium.freecodecamp.org/lets-fix-the-good-old-command-line-b6eaa1f9c040).
 
 #### Hello, “resources”
 

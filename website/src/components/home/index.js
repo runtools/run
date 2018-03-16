@@ -6,6 +6,7 @@ import Header from '../header';
 import Hero from './hero';
 import Intro from './intro';
 import Demo from './demo';
+import Banner from './banner';
 import Action from './action';
 import Footer from '../footer';
 import Link from '../link';
@@ -26,17 +27,7 @@ export class Home extends React.Component {
     return (
       <div>
         <FullHeight style={{backgroundColor: t.heroBackgroundColor}}>
-          <div style={{padding: '.5rem', background: t.altBackgroundColor, textAlign: 'center'}}>
-            Ooh, my! Run is{' '}
-            <a
-              href="https://www.producthunt.com/posts/run-3"
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              featured on Product Hunt
-            </a>{' '}
-            today! 🎉
-          </div>
+          {false && <Banner />}
           <Header linkStyle={s.heroLink} />
           <Hero style={{flexGrow: 1}} />
           <div style={{...s.minimumLineHeight, alignSelf: 'center', padding: '1.5rem 0'}}>
