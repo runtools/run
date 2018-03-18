@@ -10,21 +10,15 @@ Run solves these problems by introducing the concept of [resource](https://run.t
 
 ## Installation
 
-Install Run using [npm](https://www.npmjs.com/) ([Node.js](https://nodejs.org/) v6 or later) on macOS or Linux (Windows will come soon):
+To install (or update) Run on macOS or Linux (Windows support will come later), invoke the following command in the terminal:
 
 ```shell
-npm install run-cli -g
+curl https://install.run.tools | bash
 ```
 
-Ensure that it is correctly installed:
+Then, open a new terminal session to make the `run` command available.
 
-```shell
-run @version
-```
-
-You should see the current version of `run-cli` and `run-core`.
-
-## Hello, “resources”
+## Hello, World!
 
 Let's get started by writing a simple "Hello, World!" [resource](https://run.tools/docs/introduction/what-is-a-resource). First, create a file named `@resource.json` with the following content:
 

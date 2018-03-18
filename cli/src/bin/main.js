@@ -1,8 +1,22 @@
-import {print, printErrorAndExit, formatCode, formatPunctuation} from '@resdir/console';
+import {
+  print,
+  printErrorAndExit,
+  formatBold,
+  formatDim,
+  formatCode,
+  formatDanger
+} from '@resdir/console';
+import {get} from '@resdir/http-client';
+import LocalCache from '@resdir/local-cache';
+import {compareVersions} from '@resdir/version';
 
 import {runExpression, runREPL} from '../';
 
-(async () => {
+const INSTALL_WEBSITE_URL = 'https://install.run.tools';
+const INSTALL_COMMAND = `curl ${INSTALL_WEBSITE_URL} | bash`;
+const LATEST_VERSION_CACHE_TIME = 3 * 24 * 60 * 60 * 1000; // 3 days
+
+async function start() {
   let expression = process.argv.slice(2);
 
   let printOutput;
@@ -22,8 +36,8 @@ import {runExpression, runREPL} from '../';
 
   if (expression.includes('@version')) {
     // TODO: move this in run-core
-    const pkg = require('../../../../package.json');
-    print(`${formatCode(pkg.name, {addBackticks: false})}${formatPunctuation(':')} ${pkg.version}`);
+    print(await getCurrentVersion());
+    return;
   }
 
   if (expression.includes('@repl')) {
@@ -38,4 +52,41 @@ import {runExpression, runREPL} from '../';
   } else if (output && !output.$getIsMethodOutput()) {
     await output['@help']();
   }
+}
+
+async function checkVersion() {
+  const currentVersion = await getCurrentVersion();
+
+  const latestVersion = await getLatestVersion();
+  if (!latestVersion) {
+    return;
+  }
+
+  if (compareVersions(currentVersion, '<', latestVersion)) {
+    print(`${formatBold(`Run CLI update available ${formatDim(`(${currentVersion} → ${latestVersion})`)}`)}, invoke ${formatCode(INSTALL_COMMAND)} to update.`);
+  }
+}
+
+async function getCurrentVersion() {
+  const pkg = require('../../../../package.json');
+  return pkg.version;
+}
+
+async function getLatestVersion() {
+  try {
+    const cache = new LocalCache({time: LATEST_VERSION_CACHE_TIME});
+    const {body} = await get(`${INSTALL_WEBSITE_URL}/releases/latest.txt`, {
+      cache,
+      timeout: 5000
+    });
+    return body.trim();
+  } catch (err) {
+    print(`${formatDanger('An error occurred while checking the latest version')} ${formatDim(`(${err.message})`)}`);
+    return undefined;
+  }
+}
+
+(async () => {
+  await checkVersion();
+  await start();
 })().catch(printErrorAndExit);
