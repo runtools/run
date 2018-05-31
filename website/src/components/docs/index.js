@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {withRadiumStarter} from 'radium-starter';
-import {withRouter} from 'react-router';
+import RadiumStarter from 'radium-starter';
+import {withRouter} from 'react-router-dom';
 import {getJSON, get} from '@resdir/http-client';
 
 import {resolveConstants} from '../../constants';
@@ -20,13 +20,10 @@ const CHAPTER_FILE_EXTENSION = '.md';
 
 @withRouter
 @withErrorBoundary
-@withRadiumStarter
 export class Docs extends React.Component {
   static propTypes = {
     match: PropTypes.object.isRequired,
-    location: PropTypes.object.isRequired,
-    theme: PropTypes.object.isRequired,
-    styles: PropTypes.object.isRequired
+    location: PropTypes.object.isRequired
   };
 
   state = {
@@ -106,52 +103,56 @@ export class Docs extends React.Component {
   }
 
   render() {
-    const {theme: t, styles: s} = this.props;
-
-    if (this.state.isLoadingContents) {
-      return <Loading />;
-    }
-
-    if (!this.state.isLoadingChapter && !this.state.chapter) {
-      return <NotFound />;
-    }
-
     return (
-      <Layout style={{alignItems: 'center'}}>
-        <div
-          style={{
-            ...s.centeredPage,
-            display: 'flex',
-            justifyContent: 'center',
-            padding: '2rem 1.5rem 3rem 1.5rem',
-            [`@media (max-width: ${t.mediumBreakpointMinusOne})`]: {
-              flexDirection: 'column'
-            }
-          }}
-        >
-          <Contents
-            content={this.state.contents}
-            style={{
-              width: '18rem',
-              [`@media (max-width: ${t.mediumBreakpointMinusOne})`]: {
-                width: '100%',
-                marginTop: '1.5rem'
-              }
-            }}
-          />
-          <Chapter
-            content={this.state.chapter}
-            nextContent={this.state.nextChapter}
-            style={{
-              width: '42rem',
-              [`@media (max-width: ${t.mediumBreakpointMinusOne})`]: {
-                order: -1,
-                width: '100%'
-              }
-            }}
-          />
-        </div>
-      </Layout>
+      <RadiumStarter>
+        {(t, s) => {
+          if (this.state.isLoadingContents) {
+            return <Loading />;
+          }
+
+          if (!this.state.isLoadingChapter && !this.state.chapter) {
+            return <NotFound />;
+          }
+
+          return (
+            <Layout style={{alignItems: 'center'}}>
+              <div
+                style={{
+                  ...s.centeredPage,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  padding: '2rem 1.5rem 3rem 1.5rem',
+                  [`@media (max-width: ${t.mediumBreakpointMinusOne})`]: {
+                    flexDirection: 'column'
+                  }
+                }}
+              >
+                <Contents
+                  content={this.state.contents}
+                  style={{
+                    width: '18rem',
+                    [`@media (max-width: ${t.mediumBreakpointMinusOne})`]: {
+                      width: '100%',
+                      marginTop: '1.5rem'
+                    }
+                  }}
+                />
+                <Chapter
+                  content={this.state.chapter}
+                  nextContent={this.state.nextChapter}
+                  style={{
+                    width: '42rem',
+                    [`@media (max-width: ${t.mediumBreakpointMinusOne})`]: {
+                      order: -1,
+                      width: '100%'
+                    }
+                  }}
+                />
+              </div>
+            </Layout>
+          );
+        }}
+      </RadiumStarter>
     );
   }
 }
@@ -195,48 +196,52 @@ export class Contents extends React.Component {
   }
 }
 
-@withRadiumStarter
 export class Chapter extends React.Component {
   static propTypes = {
     style: PropTypes.object,
     content: PropTypes.object,
-    nextContent: PropTypes.object,
-    theme: PropTypes.object.isRequired
+    nextContent: PropTypes.object
   };
 
   render() {
-    const {style, content, nextContent, theme: t} = this.props;
-
-    if (!content) {
-      return (
-        <div
-          style={{
-            height: '100vh',
-            marginTop: '-100px',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            ...style
-          }}
-        >
-          <Spinner size={50} />
-        </div>
-      );
-    }
-
     return (
-      <div style={style}>
-        <Markdown>{content.text}</Markdown>
-        {nextContent ? (
-          <div>
-            <hr style={{marginTop: '1.75rem', marginBottom: '1.75rem'}} />
-            <div>
-              <span style={{color: t.mutedTextColor}}>Next:</span>{' '}
-              <Link to={nextContent.url}>{nextContent.title} →</Link>
+      <RadiumStarter>
+        {t => {
+          const {style, content, nextContent} = this.props;
+
+          if (!content) {
+            return (
+              <div
+                style={{
+                  height: '100vh',
+                  marginTop: '-100px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  ...style
+                }}
+              >
+                <Spinner size={50} />
+              </div>
+            );
+          }
+
+          return (
+            <div style={style}>
+              <Markdown>{content.text}</Markdown>
+              {nextContent ? (
+                <div>
+                  <hr style={{marginTop: '1.75rem', marginBottom: '1.75rem'}} />
+                  <div>
+                    <span style={{color: t.mutedTextColor}}>Next:</span>{' '}
+                    <Link to={nextContent.url}>{nextContent.title} →</Link>
+                  </div>
+                </div>
+              ) : null}
             </div>
-          </div>
-        ) : null}
-      </div>
+          );
+        }}
+      </RadiumStarter>
     );
   }
 }

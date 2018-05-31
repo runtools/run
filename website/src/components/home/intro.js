@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Radium from 'radium';
 const {Style} = Radium;
-import {withRadiumStarter} from 'radium-starter';
+import RadiumStarter from 'radium-starter';
 
 import constants from '../../constants';
 import Markdown from '../markdown';
@@ -63,46 +63,50 @@ It is easy to publish a resource to [Resdir](${
 
 /* eslint-enable no-irregular-whitespace */
 
-@withRadiumStarter
 export class Intro extends React.Component {
   static propTypes = {
-    style: PropTypes.object,
-    theme: PropTypes.object.isRequired
+    style: PropTypes.object
   };
 
   render() {
-    const {style, theme: t} = this.props;
-
     return (
-      <div
-        id="intro"
-        style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          padding: '4.5rem 1.5rem',
-          ...style,
-          [`@media (max-width: ${t.mediumBreakpointMinusOne})`]: {
-            flexDirection: 'column'
-          }
-        }}
-      >
-        <div className="intro-main" style={{flex: 1.8}}>
-          <Style scopeSelector=".intro-main" rules={{h3: {color: t.primaryColor}}} />
-          <Markdown>{BODY}</Markdown>
-        </div>
+      <RadiumStarter>
+        {t => {
+          const {style} = this.props;
 
-        <div
-          style={{
-            flex: 1,
-            marginLeft: '3rem',
-            [`@media (max-width: ${t.mediumBreakpointMinusOne})`]: {
-              marginLeft: 0
-            }
-          }}
-        >
-          <Markdown>{ASIDE}</Markdown>
-        </div>
-      </div>
+          return (
+            <div
+              id="intro"
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                padding: '4.5rem 1.5rem',
+                ...style,
+                [`@media (max-width: ${t.mediumBreakpointMinusOne})`]: {
+                  flexDirection: 'column'
+                }
+              }}
+            >
+              <div className="intro-main" style={{flex: 1.8}}>
+                <Style scopeSelector=".intro-main" rules={{h3: {color: t.primaryColor}}} />
+                <Markdown>{BODY}</Markdown>
+              </div>
+
+              <div
+                style={{
+                  flex: 1,
+                  marginLeft: '3rem',
+                  [`@media (max-width: ${t.mediumBreakpointMinusOne})`]: {
+                    marginLeft: 0
+                  }
+                }}
+              >
+                <Markdown>{ASIDE}</Markdown>
+              </div>
+            </div>
+          );
+        }}
+      </RadiumStarter>
     );
   }
 }
