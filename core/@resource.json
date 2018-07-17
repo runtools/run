@@ -1,7 +1,7 @@
 {
   "@import": "1place/npm-package#^0.1.0",
   "name": "run-core",
-  "version": "0.11.51",
+  "version": "0.11.52",
   "description": "The first resource runtime",
   "author": "Manuel Vila <hi@mvila.me>",
   "license": "MIT",
@@ -9,7 +9,7 @@
   "dependencies": {
     "decache": "^4.3.0",
     "deep-freeze": "^0.0.1",
-    "fs-extra": "^5.0.0",
+    "fs-extra": "^6.0.1",
     "is-directory": "^0.3.1",
     "lodash": "^4.17.4",
     "@resdir/console": "^0.1.0",

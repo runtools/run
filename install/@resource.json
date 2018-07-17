@@ -2,7 +2,9 @@
   "@import": ["1place/js-resource#^0.1.0", "aws/s3-hosted-website#^0.1.0"],
   "@implementation": "./dist/cjs",
   "dependencies": {
-    "fs-extra": "^5.0.0"
+    "fs-extra": "^6.0.1",
+    "@resdir/console": "^0.1.40",
+    "tar": "^4.4.0"
   },
   "domainName": "install.run.tools",
   "contentDirectory": "./content",
