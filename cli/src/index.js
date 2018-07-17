@@ -1,11 +1,12 @@
 import {Resource} from 'run-core';
 import {session, print, printError, formatDim} from '@resdir/console';
 
-export async function runExpression(expression = '', {directory} = {}) {
+export async function runExpression(expression = '', {directory, stage} = {}) {
   let userResource;
 
   if (directory) {
     userResource = await Resource.$load(directory, {
+      stage,
       searchInParentDirectories: true,
       throwIfNotFound: false
     });
@@ -26,7 +27,7 @@ export async function runExpression(expression = '', {directory} = {}) {
   });
 }
 
-export function runREPL({directory} = {}) {
+export function runREPL({directory, stage} = {}) {
   return new Promise(resolve => {
     const readline = require('readline');
 
@@ -39,7 +40,7 @@ export function runREPL({directory} = {}) {
     rl.prompt();
 
     rl.on('line', line => {
-      runLine(line, {directory}).then(() => rl.prompt());
+      runLine(line, {directory, stage}).then(() => rl.prompt());
     });
 
     rl.on('close', () => {
@@ -49,13 +50,13 @@ export function runREPL({directory} = {}) {
   });
 }
 
-async function runLine(line, {directory}) {
+async function runLine(line, {directory, stage}) {
   line = line.trim();
   if (!line) {
     return;
   }
   try {
-    const output = await runExpression(line, {directory});
+    const output = await runExpression(line, {directory, stage});
     output.$print();
   } catch (err) {
     printError(err);

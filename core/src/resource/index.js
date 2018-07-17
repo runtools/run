@@ -41,11 +41,9 @@ const RESDIR_UPLOAD_SERVER_S3_KEY_PREFIX =
   process.env.RESDIR_UPLOAD_SERVER_S3_KEY_PREFIX || 'resources/uploads/';
 
 const RESOURCE_FILE_NAME = '@resource';
+const PRIVATE_RESOURCE_SUFFIX = '.private';
 const RESOURCE_FILE_FORMATS = ['json', 'json5', 'yaml', 'yml'];
 const DEFAULT_RESOURCE_FILE_FORMAT = 'json';
-const PRIVATE_RESOURCE_FILE_NAME = '@resource.private';
-const DEV_RESOURCE_FILE_NAME = '@resource.dev';
-const PRIVATE_DEV_RESOURCE_FILE_NAME = '@resource.dev.private';
 
 const BOOTSTRAPPING_RESOURCES = [
   'js/resource',
@@ -590,7 +588,9 @@ export class Resource {
         }
       } else {
         builders.push(() => {
-          throw createClientError(`Resource implementation file not found (file: ${formatPath(implementationFile)})`);
+          throw createClientError(
+            `Resource implementation file not found (file: ${formatPath(implementationFile)})`
+          );
         });
       }
     }
@@ -602,7 +602,11 @@ export class Resource {
       try {
         implementation = await builder(Resource);
         if (!isPlainObject(implementation)) {
-          throw createClientError(`A resource implementation builder must return a plain object (file: ${formatPath(builder.file)})`);
+          throw createClientError(
+            `A resource implementation builder must return a plain object (file: ${formatPath(
+              builder.file
+            )})`
+          );
         }
       } catch (err) {
         implementation = {_$buildError: err};
@@ -693,7 +697,14 @@ export class Resource {
 
   static async $load(
     specifier,
-    {directory, isImporting, searchInParentDirectories, disableCache, throwIfNotFound = true} = {}
+    {
+      directory,
+      stage,
+      isImporting,
+      searchInParentDirectories,
+      disableCache,
+      throwIfNotFound = true
+    } = {}
   ) {
     let result;
 
@@ -706,11 +717,19 @@ export class Resource {
         if (location.match(/^https?:\/\//i)) {
           // TODO: Make it right
           if (!isImporting) {
-            throw createClientError(`Remote resource '@load' is not implemented yet, only '@import' is supported (location: ${formatURL(location)})`);
+            throw createClientError(
+              `Remote resource '@load' is not implemented yet, only '@import' is supported (location: ${formatURL(
+                location
+              )})`
+            );
           }
           return await RemoteResource.$import(location);
         }
-        result = await this._$fetchFromLocation(location, {directory, searchInParentDirectories});
+        result = await this._$fetchFromLocation(location, {
+          directory,
+          stage,
+          searchInParentDirectories
+        });
       } else {
         result = await this._$fetchFromLocalResources(specifier);
         if (!result) {
@@ -721,7 +740,11 @@ export class Resource {
 
     if (!result) {
       if (throwIfNotFound) {
-        throw createClientError(`Resource not found (specifier: ${formatString(specifier)}, directory: ${formatPath(directory)})`);
+        throw createClientError(
+          `Resource not found (specifier: ${formatString(specifier)}, directory: ${formatPath(
+            directory
+          )})`
+        );
       }
       return undefined;
     }
@@ -742,7 +765,11 @@ export class Resource {
       exporterDefinition = definition;
       definition = getProperty(definition, '@export');
       if (definition === undefined) {
-        throw createClientError(`Can't import a resource without an ${formatCode('@export')} property (specifier: ${formatString(specifier)}, directory: ${formatPath(directory)})`);
+        throw createClientError(
+          `Can't import a resource without an ${formatCode(
+            '@export'
+          )} property (specifier: ${formatString(specifier)}, directory: ${formatPath(directory)})`
+        );
       }
     }
 
@@ -758,7 +785,7 @@ export class Resource {
     return resource;
   }
 
-  static async _$fetchFromLocation(location, {directory, searchInParentDirectories} = {}) {
+  static async _$fetchFromLocation(location, {directory, stage, searchInParentDirectories} = {}) {
     let file = location;
     if (file.startsWith('.')) {
       if (!directory) {
@@ -766,7 +793,7 @@ export class Resource {
       }
       file = resolve(directory, file);
     }
-    file = searchResourceFile(file, {searchInParentDirectories});
+    file = searchResourceFile(file, {stage, searchInParentDirectories});
     if (!file) {
       return undefined;
     }
@@ -1248,7 +1275,9 @@ export class Resource {
         aliases = [aliases];
       }
       if (!Array.isArray(aliases)) {
-        throw createClientError(`${formatCode('@aliases')} attribute must be a string or an array of string`);
+        throw createClientError(
+          `${formatCode('@aliases')} attribute must be a string or an array of string`
+        );
       }
       for (const alias of aliases) {
         this.$addAlias(alias);
@@ -1585,7 +1614,11 @@ export class Resource {
       set(value) {
         const promise = child.$autoBox(value);
         if (promise) {
-          throw createClientError(`Can't change ${formatCode(key)} synchronously with an attribute setter. Please use the $setChild() asynchronous method.`);
+          throw createClientError(
+            `Can't change ${formatCode(
+              key
+            )} synchronously with an attribute setter. Please use the $setChild() asynchronous method.`
+          );
         }
       },
       configurable: true
@@ -1691,7 +1724,9 @@ export class Resource {
       let child = parent.$findChild(key, {includeNativeChildren: true});
 
       if (!child) {
-        throw createClientError(`No attribute, subresource, or method found with this key: ${formatCode(key)}`);
+        throw createClientError(
+          `No attribute, subresource, or method found with this key: ${formatCode(key)}`
+        );
       }
 
       child = await child.$resolveGetter({parent});
@@ -2055,7 +2090,7 @@ function findSubclass(A, B) {
   throw new Error(`Can't mix a ${A.name} with a ${B.name}`);
 }
 
-function searchResourceFile(directoryOrFile, {searchInParentDirectories = false} = {}) {
+function searchResourceFile(directoryOrFile, {stage, searchInParentDirectories = false} = {}) {
   let directory;
 
   if (isDirectory.sync(directoryOrFile)) {
@@ -2073,29 +2108,28 @@ function searchResourceFile(directoryOrFile, {searchInParentDirectories = false}
     return undefined;
   }
 
+  let filenames = [RESOURCE_FILE_NAME + PRIVATE_RESOURCE_SUFFIX, RESOURCE_FILE_NAME];
+  if (stage) {
+    filenames = [
+      RESOURCE_FILE_NAME + '.' + stage + PRIVATE_RESOURCE_SUFFIX,
+      RESOURCE_FILE_NAME + '.' + stage,
+      ...filenames
+    ];
+  }
+
   for (const format of RESOURCE_FILE_FORMATS) {
-    let file = join(directory, PRIVATE_DEV_RESOURCE_FILE_NAME + '.' + format);
-    if (existsSync(file)) {
-      return file;
-    }
-    file = join(directory, DEV_RESOURCE_FILE_NAME + '.' + format);
-    if (existsSync(file)) {
-      return file;
-    }
-    file = join(directory, PRIVATE_RESOURCE_FILE_NAME + '.' + format);
-    if (existsSync(file)) {
-      return file;
-    }
-    file = join(directory, RESOURCE_FILE_NAME + '.' + format);
-    if (existsSync(file)) {
-      return file;
+    for (const filename of filenames) {
+      const file = join(directory, filename + '.' + format);
+      if (existsSync(file)) {
+        return file;
+      }
     }
   }
 
   if (searchInParentDirectories) {
     const parentDirectory = join(directory, '..');
     if (parentDirectory !== directory) {
-      return searchResourceFile(parentDirectory, {searchInParentDirectories});
+      return searchResourceFile(parentDirectory, {stage, searchInParentDirectories});
     }
   }
 
@@ -2139,7 +2173,9 @@ function requireImplementation(file, {disableCache} = {}) {
     }
 
     if (typeof implementation !== 'function') {
-      throw createClientError(`A resource implementation file must export a function (file: ${formatPath(file)})`);
+      throw createClientError(
+        `A resource implementation file must export a function (file: ${formatPath(file)})`
+      );
     }
   } catch (err) {
     implementation = () => {

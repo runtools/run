@@ -13,9 +13,11 @@ const STAGE = 'prod'; // 'dev', 'test', or 'prod'
 export default {
   activate() {
     this.subscriptions = new CompositeDisposable();
-    this.subscriptions.add(atom.workspace.observeTextEditors(textEditor => {
-      this.subscriptions.add(textEditor.onDidSave(this.handleDidSave.bind(this)));
-    }));
+    this.subscriptions.add(
+      atom.workspace.observeTextEditors(textEditor => {
+        this.subscriptions.add(textEditor.onDidSave(this.handleDidSave.bind(this)));
+      })
+    );
   },
 
   consumeSignal(registry) {
@@ -80,7 +82,14 @@ export default {
           RESDIR_UPLOAD_SERVER_S3_BUCKET_NAME: 'resdir-registry-test-v1'
         };
       }
-      const args = ['@broadcast', '--event=@fileModified', '--', `--file=${file}`, '--@quiet'];
+      const args = [
+        '@broadcast',
+        '--event=@fileModified',
+        '--@stage=dev',
+        '--',
+        `--file=${file}`,
+        '--@quiet'
+      ];
       const options = {cwd: directory, env, timeout: 60 * 1000};
       execFile(command, args, options, (err, stdout, stderr) => {
         if (stdout) {

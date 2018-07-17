@@ -40,20 +40,6 @@
         "(@import tool/notifier#^0.1.0) notify 'Build completed'"
       ],
       "@listen": "@build"
-    },
-    "fileWatcher": {
-      "@import": "tool/file-watcher#^0.1.0",
-      "files": [
-        "./index.html",
-        "./src/**",
-        "./images/**",
-        "./docs/**"
-      ],
-      "onFileModified": {
-        "@type": "method",
-        "@run": "@parent run",
-        "@listen": "fileModified"
-      }
     }
   },
   "transpiler": {

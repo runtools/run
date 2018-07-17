@@ -4,6 +4,22 @@
   "testServer": {
     "port": 9016
   },
+  "builder": {
+    "fileWatcher": {
+      "@import": "tool/file-watcher#^0.1.0",
+      "files": [
+        "./index.html",
+        "./src/**",
+        "./images/**",
+        "./docs/**"
+      ],
+      "onFileModified": {
+        "@type": "method",
+        "@run": "@parent run",
+        "@listen": "fileModified"
+      }
+    }
+  },
   "bundler": {
     "output": "./dist/bundle.dev.js"
   },

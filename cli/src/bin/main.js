@@ -19,8 +19,24 @@ const LATEST_VERSION_CACHE_TIME = 3 * 24 * 60 * 60 * 1000; // 3 days
 async function start() {
   let expression = process.argv.slice(2);
 
+  let index;
+
+  let stage;
+  index = expression.findIndex(item => item.startsWith('--@stage='));
+  if (index !== -1) {
+    stage = expression[index].slice('--@stage='.length);
+    expression.splice(index, 1);
+  }
+  for (const shortcut of ['--@dev', '--@test', '--@prod', '--@alpha', '--@beta']) {
+    index = expression.indexOf(shortcut);
+    if (index !== -1) {
+      stage = shortcut.slice(3);
+      expression.splice(index, 1);
+    }
+  }
+
   let printOutput;
-  let index = expression.indexOf('--@print');
+  index = expression.indexOf('--@print');
   if (index === -1) {
     index = expression.indexOf('--@p');
   }
@@ -42,11 +58,11 @@ async function start() {
 
   if (expression.includes('@repl')) {
     // TODO: move this in resource/helper
-    await runREPL({directory});
+    await runREPL({directory, stage});
     return;
   }
 
-  const output = await runExpression(expression, {directory});
+  const output = await runExpression(expression, {directory, stage});
   if (printOutput) {
     output.$print();
   } else if (output && !output.$getIsMethodOutput()) {
@@ -63,7 +79,11 @@ async function checkVersion() {
   }
 
   if (compareVersions(currentVersion, '<', latestVersion)) {
-    print(`${formatBold(`Run CLI update available ${formatDim(`(${currentVersion} → ${latestVersion})`)}`)}, invoke ${formatCode(INSTALL_COMMAND)} to update.`);
+    print(
+      `${formatBold(
+        `Run CLI update available ${formatDim(`(${currentVersion} → ${latestVersion})`)}`
+      )}, invoke ${formatCode(INSTALL_COMMAND)} to update.`
+    );
   }
 }
 
@@ -81,7 +101,11 @@ async function getLatestVersion() {
     });
     return body.trim();
   } catch (err) {
-    print(`${formatDanger('An error occurred while checking the latest version')} ${formatDim(`(${err.message})`)}`);
+    print(
+      `${formatDanger('An error occurred while checking the latest version')} ${formatDim(
+        `(${err.message})`
+      )}`
+    );
     return undefined;
   }
 }
