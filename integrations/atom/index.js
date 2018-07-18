@@ -83,6 +83,7 @@ export default {
         };
       }
       const args = [
+        '.',
         '@broadcast',
         '--event=@fileModified',
         '--@stage=dev',

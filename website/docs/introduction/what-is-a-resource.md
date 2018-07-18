@@ -20,9 +20,9 @@ If you are an end-developer, and you are working on an application, website, bac
 
 Basically, a resource is a JSON or YAML document allowing you to specify the following:
 
-* The tools that the resource consumes (by inheriting or composing them),
-* A set of attributes (to configure the tools),
-* A set of methods (to add custom behaviors).
+• The tools that the resource consumes (by inheriting or composing them),  
+• A set of attributes (to configure the tools),  
+• A set of methods (to add custom behaviors).
 
 For example, let's create a resource that has a talent for mathematics – it can make additions. First, create a `@resource.json` file with the following content:
 
@@ -61,13 +61,13 @@ That is how you implement a resource in JavaScript. For such a simple method, it
 First of all, it is possible to invoke the resource directly from the shell:
 
 ```shell
-run sum --a=1 --b=2
+run . sum --a=1 --b=2
 ```
 
 Nothing happens on the screen, and this is normal; the operation has been executed, but for the result to be displayed, you must add the `--@print` [CLI option](/docs/reference/run-cli):
 
 ```shell
-run sum --a=1 --b=2 --@print
+run . sum --a=1 --b=2 --@print
 ```
 
 And here's the result:
@@ -107,7 +107,7 @@ Wonderful but let's try to improve the user's experience a little bit by adding 
 Now, by invoking:
 
 ```shell
-run @help sum
+run . @help sum
 ```
 
 A gorgeous help should appear on the screen:
@@ -117,7 +117,7 @@ A gorgeous help should appear on the screen:
 And finally, it is possible to execute the command in a much more appealing way:
 
 ```shell
-run sum 1 2 --@print
+run . sum 1 2 --@print
 ```
 
 Too easy? I agree, let's go a little further by composing some resources together.

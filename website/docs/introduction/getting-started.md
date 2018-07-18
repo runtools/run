@@ -26,13 +26,13 @@ Let's get started by writing a simple "Hello, World!" resource. First, create a 
 Then, invoke Run:
 
 ```shell
-run
+run .
 ```
 
-You should see a description of the resource you just created, that is, the online help. When you invoke Run without any arguments, you get a handy help showing what the current resource is capable of. In the present case, there is only one thing exposed: the `hello` method. Let's invoke it:
+You should see a description of the resource you just created, that is, the online help. The dot (`.`) is a shortcut for the resource presents in the current directory. When you invoke Run without any commands, you get a handy help showing what the specified resource is capable of. In the present case, there is only one thing exposed: the `hello` method. Let's invoke it:
 
 ```shell
-run hello
+run . hello
 ```
 
 Voila! You wrote your first resource. 🎉

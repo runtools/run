@@ -37,7 +37,7 @@ All you have to do is to import `"aws/lambda-hosted-resource"`, specify a domain
 Then, you can deploy your resource:
 
 ```shell
-run deploy
+run . deploy
 ```
 
 And invoke it:

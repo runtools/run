@@ -18,11 +18,20 @@ import {
 import {load, save} from '@resdir/file-manager';
 import {validateResourceKey} from '@resdir/resource-key';
 import {parseResourceIdentifier} from '@resdir/resource-identifier';
-import {parseResourceSpecifier, stringifyResourceSpecifier} from '@resdir/resource-specifier';
+import {
+  parseResourceSpecifier,
+  stringifyResourceSpecifier,
+  isResourceSpecifier
+} from '@resdir/resource-specifier';
 import {validateResourceName} from '@resdir/resource-name';
 import {validateResourceDescription} from '@resdir/resource-description';
 import ResourceFetcher from '@resdir/resource-fetcher';
-import {shiftPositionalArguments, isParsedExpression, matchExpression} from '@resdir/expression';
+import {
+  shiftPositionalArguments,
+  isParsedExpression,
+  matchExpression,
+  takeArgument
+} from '@resdir/expression';
 import {createClientError} from '@resdir/error';
 import decache from 'decache';
 
@@ -1693,11 +1702,14 @@ export class Resource {
         return await Resource.$invoke(output, expression);
       }
 
-      if (argument.startsWith('.') || argument.includes('/') || isAbsolute(argument)) {
-        // The argument looks like a resource specifier
+      if (isResourceSpecifier(argument)) {
         const specifier = argument;
+        const stage = takeStage(expression);
+        const isImporting = takeArgument(expression, '@import');
         const resource = await Resource.$load(specifier, {
-          directory: parent.$getCurrentDirectory({throwIfUndefined: false}) // ???
+          directory: parent.$getCurrentDirectory({throwIfUndefined: false}), // ???
+          stage,
+          isImporting
         });
         return await Resource.$invoke(resource, expression);
       }
@@ -2234,6 +2246,16 @@ function getResourceClass(type, {throwIfInvalid = true} = {}) {
         throw createClientError(`Type ${formatString(type)} is invalid`);
       }
   }
+}
+
+function takeStage(expression) {
+  let stage = takeArgument(expression, '@stage');
+  for (const shortcut of ['@dev', '@test', '@prod', '@alpha', '@beta']) {
+    if (takeArgument(expression, shortcut)) {
+      stage = shortcut.slice(1);
+    }
+  }
+  return stage;
 }
 
 export default Resource;

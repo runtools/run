@@ -100,8 +100,8 @@ export class Terminal extends React.Component {
                 <span
                   style={{
                     fontFamily: t.monospaceFontFamily,
-                    fontSize: '19px',
-                    [`@media (max-width: ${t.smallBreakpoint})`]: {fontSize: '11px'}
+                    fontSize: '18px',
+                    [`@media (max-width: ${t.smallBreakpoint})`]: {fontSize: '10px'}
                   }}
                 >
                   <span style={{color: t.primaryColor}}>{'> '}</span>

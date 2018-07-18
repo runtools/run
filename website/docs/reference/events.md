@@ -16,7 +16,7 @@ For example, with a resource such as:
 Since the `build` method is listening to the `"deploy"` event, it is possible to trigger its execution by doing:
 
 ```shell
-run @emit deploy
+run . @emit deploy
 ```
 
 Quite often, you need to emit an event to a resource while including all its subresources. In this case, the `@broadcast` command is quite helpful. For example, with the following resource:
@@ -41,5 +41,5 @@ Quite often, you need to emit an event to a resource while including all its sub
 You can invoke the `deploy` method for both the frontend and the backend just by doing:
 
 ```shell
-run @broadcast deployAll
+run . @broadcast deployAll
 ```

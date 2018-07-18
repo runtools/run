@@ -5,22 +5,18 @@ import RadiumStarter from 'radium-starter';
 import Terminal from './terminal';
 
 const COMMAND_EXAMPLES = [
-  'run deps add lodash',
-  'run deps install',
-  'run publish --patch',
-  'run frontend deploy',
-  'run @build',
-  'run @test',
-  'run deploy',
+  'run ./backend deps add lodash',
+  'run . deps install',
+  'run . publish --patch',
+  'run ./website deploy',
+  'run ./backend @build',
+  'run ./frontend @test',
   'run @create js/resource',
   'run @create js/npm-package',
   'run @create aws/s3-hosted-website',
-  'run @add js/transpiler',
-  'run @add aws/lambda-hosted-resource',
-  'run @add aws/dynamodb-table',
-  'run @add web/builder',
-  'run @add web/server',
-  'run @add method completeTask',
+  'run . @add js/transpiler',
+  'run . @add aws/lambda-hosted-resource',
+  'run . @add aws/dynamodb-table',
   'run @registry organization create'
 ];
 

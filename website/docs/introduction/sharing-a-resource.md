@@ -34,10 +34,10 @@ First, you must `@import` Resdir's base resource:
 
 In the resource specifier `"resdir/resource#^0.1.0"`, there are a resource identifier (`"resdir/resource"`) and a version range (`"^0.1.0"`). Don't worry too much about the version range for the moment; just remember that it is good practice to always specify it. This ensures that your resource will keep working if there are breaking changes in the resources you rely on.
 
-Now that your resource is inheriting from `"resdir/resource"`, you can check the in-line help to discover what possibilities are available to you. To do so, just invoke Run without any arguments:
+Now that your resource is inheriting from `"resdir/resource"`, you can check the in-line help to discover what possibilities are available to you. To do so, just invoke Run without any commands:
 
 ```shell
-run
+run .
 ```
 
 You can see all of the available attributes, and among them, there are two that are mandatory: `id` and `version`. So let's add them:
@@ -67,7 +67,7 @@ Finally, complete your resource by writing the actual "implementation":
 Your resource is ready to be published. So let's go:
 
 ```shell
-run publish
+run . publish
 ```
 
 Voila! Your resource is now stored in the resource registry. To consume it, just reference it by its identifier. You can `@load` or `@import` it from another resource, or simply invoke it from the CLI:

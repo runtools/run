@@ -83,9 +83,9 @@ Because `bob.json` inherits from `person.json`, it gets both the attributes `nam
 
 There are several ways to specify the resource you want to load:
 
-* You can use a path to a local file (e.g., `"./person.js"`). That can be an absolute or a relative path. In the case of a relative path, be careful to always start with `"./"` (the current directory) or `"../"` (the parent directory).
-* You can use a specifier to load a resource stored in a registry (e.g., `"my-namespace/person#^1.0.0"`). A resource specifier is composed of an identifier (`"my-namespace/person"`) and a version range (`"^1.0.0"`). The version range is optional but strongly recommended. We use (almost) the same specifications as [npm's version range](https://docs.npmjs.com/files/package.json#dependencies), so until further documentation is available, please refer to it.
-* You can specify the URL of a remote resource (e.g., `"https://person.api.my-domain.com"`). In this case, any method call will trigger a remote invocation.
+- You can use a path to a local file (e.g., `"./person.js"`). That can be an absolute or a relative path. In the case of a relative path, be careful to always start with `"./"` (the current directory) or `"../"` (the parent directory).
+- You can use a specifier to load a resource stored in a registry (e.g., `"my-namespace/person#^1.0.0"`). A resource specifier is composed of an identifier (`"my-namespace/person"`) and a version range (`"^1.0.0"`). The version range is optional but strongly recommended. We use (almost) the same specifications as [npm's version range](https://docs.npmjs.com/files/package.json#dependencies), so until further documentation is available, please refer to it.
+- You can specify the URL of a remote resource (e.g., `"https://person.api.my-domain.com"`). In this case, any method call will trigger a remote invocation.
 
 Finally, if you want to load more than one resource, just use an array:
 
@@ -340,13 +340,13 @@ Example:
 Now instead of doing this:
 
 ```bash
-run add --a=7 --b=3
+run . add --a=7 --b=3
 ```
 
 The user can just do:
 
 ```bash
-run add 7 3
+run . add 7 3
 ```
 
 ##### @isOptional
@@ -402,7 +402,7 @@ For example, the following method:
 Can be invoked with several `files`:
 
 ```bash
-run transpile main.js database.js
+run . transpile main.js database.js
 ```
 
 ##### @isHidden

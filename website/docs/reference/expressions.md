@@ -28,15 +28,15 @@ For example, with the following resource:
 You can invoke expressions such as:
 
 ```bash
-run database # Returns the database subresource
+run . database # Returns the database subresource
 ```
 
 ```bash
-run database username @print # Prints the database's username
+run . database username @print # Prints the database's username
 ```
 
 ```bash
-run deploy api.domain.com --optimize  # Invokes the deploy method
+run . deploy api.domain.com --optimize  # Invokes the deploy method
 ```
 
 Expressions can also appear in methods using the `@before`, `@run`, and `@after` attributes:
@@ -70,5 +70,5 @@ Example:
 It is also possible to use parentheses in the command line, but make sure to escape them with a `\`:
 
 ```shell
-run \(getUser 123\) @print
+run . \(getUser 123\) @print
 ```

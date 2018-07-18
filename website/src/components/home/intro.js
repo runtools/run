@@ -31,7 +31,7 @@ For example, to build a website hosted on AWS, you can start with something like
 To deploy the website, just invoke:
 
 \`\`\`shell
-run deploy
+run . deploy
 \`\`\`
 
 Voila! Your website is online. When you use a tool for the first time, Run installs it automatically in a global cache, and since tool references and configuration are grouped together, your project is super easy to transport and share. Just grab the resource file and you are all set.

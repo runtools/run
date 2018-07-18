@@ -61,7 +61,17 @@ For the production environment, you invoke:
 run ./@resource.prod.json deploy
 ```
 
-You got it. `@load` is an easy way to share code with multiple resources.
+Alternatively, you can use the `--@stage` option to make things easier:
+
+```shell
+run . deploy --@stage=prod
+```
+
+Or, even shorter:
+
+```shell
+run . deploy --@prod
+```
 
 #### Importing resources
 

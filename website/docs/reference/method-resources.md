@@ -214,5 +214,5 @@ For example, with a resource such as:
 You can deploy both the frontend and the backend in one command:
 
 ```shell
-run deploy
+run . deploy
 ```

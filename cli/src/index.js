@@ -1,21 +1,8 @@
 import {Resource} from 'run-core';
 import {session, print, printError, formatDim} from '@resdir/console';
 
-export async function runExpression(expression = '', {directory, stage} = {}) {
-  let userResource;
-
-  if (directory) {
-    userResource = await Resource.$load(directory, {
-      stage,
-      searchInParentDirectories: true,
-      throwIfNotFound: false
-    });
-  }
-
-  let resource = userResource;
-  if (!resource) {
-    resource = await Resource.$create(undefined, {directory});
-  }
+export async function runExpression(expression = '', {directory} = {}) {
+  const resource = await Resource.$create(undefined, {directory});
 
   const method = await Resource.$create(
     {'@type': 'method', '@run': expression, '@output': {'@isOpen': true}},
@@ -27,7 +14,7 @@ export async function runExpression(expression = '', {directory, stage} = {}) {
   });
 }
 
-export function runREPL({directory, stage} = {}) {
+export function runREPL({directory} = {}) {
   return new Promise(resolve => {
     const readline = require('readline');
 
@@ -40,7 +27,7 @@ export function runREPL({directory, stage} = {}) {
     rl.prompt();
 
     rl.on('line', line => {
-      runLine(line, {directory, stage}).then(() => rl.prompt());
+      runLine(line, {directory}).then(() => rl.prompt());
     });
 
     rl.on('close', () => {
@@ -50,13 +37,13 @@ export function runREPL({directory, stage} = {}) {
   });
 }
 
-async function runLine(line, {directory, stage}) {
+async function runLine(line, {directory}) {
   line = line.trim();
   if (!line) {
     return;
   }
   try {
-    const output = await runExpression(line, {directory, stage});
+    const output = await runExpression(line, {directory});
     output.$print();
   } catch (err) {
     printError(err);

@@ -19,24 +19,8 @@ const LATEST_VERSION_CACHE_TIME = 3 * 24 * 60 * 60 * 1000; // 3 days
 async function start() {
   let expression = process.argv.slice(2);
 
-  let index;
-
-  let stage;
-  index = expression.findIndex(item => item.startsWith('--@stage='));
-  if (index !== -1) {
-    stage = expression[index].slice('--@stage='.length);
-    expression.splice(index, 1);
-  }
-  for (const shortcut of ['--@dev', '--@test', '--@prod', '--@alpha', '--@beta']) {
-    index = expression.indexOf(shortcut);
-    if (index !== -1) {
-      stage = shortcut.slice(3);
-      expression.splice(index, 1);
-    }
-  }
-
   let printOutput;
-  index = expression.indexOf('--@print');
+  let index = expression.indexOf('--@print');
   if (index === -1) {
     index = expression.indexOf('--@p');
   }
@@ -58,11 +42,11 @@ async function start() {
 
   if (expression.includes('@repl')) {
     // TODO: move this in resource/helper
-    await runREPL({directory, stage});
+    await runREPL({directory});
     return;
   }
 
-  const output = await runExpression(expression, {directory, stage});
+  const output = await runExpression(expression, {directory});
   if (printOutput) {
     output.$print();
   } else if (output && !output.$getIsMethodOutput()) {
