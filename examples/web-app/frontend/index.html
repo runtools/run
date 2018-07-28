@@ -6,7 +6,7 @@
       (async () => {
         const backend = await Resource.$import('https://api.example.resdir.com');
         document.body.innerText = await backend.hello();
-      })();
+      })().catch(err => console.error(err));
     </script>
   </body>
 </html>

@@ -1,7 +1,7 @@
 {
   "@import": "1place/npm-package#^0.1.0",
   "name": "run-core",
-  "version": "0.11.56",
+  "version": "0.11.59",
   "description": "The first resource runtime",
   "author": "Manuel Vila <hi@mvila.me>",
   "license": "MIT",
@@ -40,15 +40,30 @@
       "@import": "1place/jest#^0.1.0",
       "@directory": "./tests"
     },
+    "builder": {
+      "run": {
+        "@type": "method",
+        "@run": [
+          "@parent bundler run",
+          "@parent ieizer run"
+        ],
+        "@listen": "@build"
+      }
+    },
     "bundler": {
       "@import": "js/bundler#^0.1.0",
       "entry": "./dist/browser/esm/browser.js",
       "output": "./dist/browser/run-core.js",
       "target": "browser",
       "format": "iife",
-      "name": "Resource",
-      "run": {
-        "@listen": "@built"
+      "name": "Resource"
+    },
+    "ieizer": {
+      "@import": "js/transpiler#^0.1.0",
+      "source": "./dist/browser/run-core.js",
+      "destination": "./dist/browser/run-core.ie.js",
+      "targets": {
+        "ie": "11"
       }
     }
   }

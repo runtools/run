@@ -2,6 +2,7 @@ import {buildJSONRPCRequest, validateJSONRPCResponse} from '@resdir/json-rpc';
 import postJSON from '@resdir/http-post-json';
 import {createClientError, createRemoteError} from '@resdir/error';
 
+const GET_METHODS_METHOD_VERSION = 1;
 const INVOKE_METHOD_VERSION = 1;
 
 export class RemoteResource {
@@ -20,38 +21,66 @@ export class RemoteResource {
 
     const endpoint = specifier;
 
-    const resource = new Proxy(
-      {},
-      {
-        get(target, name) {
-          if (name === 'then') {
-            return undefined;
-          }
+    if (typeof Proxy === 'function' && typeof Proxy.revocable === 'function') {
+      return createResourceProxy(endpoint);
+    }
 
-          if (name === '_$isRemote') {
-            return true;
-          }
-
-          if (!target[name]) {
-            target[name] = async (input, environment) => {
-              const {output} = await invoke({
-                endpoint,
-                method: 'invoke',
-                params: {name, input, environment, version: INVOKE_METHOD_VERSION}
-              });
-              return output;
-            };
-          }
-          return target[name];
-        }
-      }
-    );
-
-    return Promise.resolve(resource);
+    return createResource(endpoint);
   }
 }
 
-async function invoke({endpoint, method, params, timeout}) {
+async function createResource(endpoint) {
+  const methods = await callRemoteResource({
+    endpoint,
+    method: 'getMethods',
+    params: {version: GET_METHODS_METHOD_VERSION}
+  });
+
+  const resource = {};
+
+  for (const name of methods) {
+    resource[name] = createMethod(endpoint, name);
+  }
+
+  return resource;
+}
+
+function createResourceProxy(endpoint) {
+  const resource = new Proxy(
+    {},
+    {
+      get(target, name) {
+        if (name === 'then') {
+          return undefined;
+        }
+
+        if (name === '_$isRemote') {
+          return true;
+        }
+
+        if (!target[name]) {
+          target[name] = createMethod(endpoint, name);
+        }
+        return target[name];
+      }
+    }
+  );
+
+  return Promise.resolve(resource);
+}
+
+function createMethod(endpoint, name) {
+  return async function (input, environment) {
+    const {output} = await callRemoteResource({
+      endpoint,
+      method: 'invoke',
+      params: {name, input, environment, version: INVOKE_METHOD_VERSION}
+    });
+    return output;
+  };
+}
+
+async function callRemoteResource({endpoint, method, params, timeout}) {
   const id = Math.floor(Math.random() * (Number.MAX_SAFE_INTEGER - 1)) + 1;
 
   const request = buildJSONRPCRequest(id, method, params);
