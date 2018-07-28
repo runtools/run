@@ -1,5 +1,6 @@
 import Resource from './resource';
+import RemoteResource from './resource/remote';
 
-export {Resource};
+export {Resource, RemoteResource};
 
 export default Resource;
