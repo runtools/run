@@ -234,6 +234,7 @@ export class Resource {
           '@type': 'string',
           '@description': 'Resource specifier',
           '@examples': ['tool/notifier', 'tool/console#^1.2.0'],
+          '@isOptional': true,
           '@position': 0
         }
       },
@@ -1855,7 +1856,11 @@ export class Resource {
 
   async '@import'({specifier}) {
     if (!specifier) {
-      throw createClientError('\'specifier\' input attribute is missing');
+      const resource = this.$getExport();
+      if (!resource) {
+        throw createClientError(`The current resource dosen't export anything`);
+      }
+      return resource;
     }
     return await this.constructor.$import(specifier, {directory: process.cwd()});
   }

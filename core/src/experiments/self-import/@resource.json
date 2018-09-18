@@ -1,0 +1,12 @@
+{
+  "hello": {
+    "@type": "method",
+    "@run": "(@import) hello"
+  },
+  "@export": {
+    "hello": {
+      "@type": "method",
+      "@run": "@console print Hello"
+    }
+  }
+}
