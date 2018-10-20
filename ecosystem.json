@@ -1,0 +1,11 @@
+{
+  "apps": [
+    {
+      "name": "run/website",
+      "cwd": "./website",
+      "script": ".",
+      "args": "server start --@dev",
+      "interpreter": "run"
+    }
+  ]
+}

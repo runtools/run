@@ -39,7 +39,7 @@
         "destination": "./bundle.js",
         "replacements": {
           "${STAGE}": "development",
-          "${RESDIR_WEBSITE_URL}": "http://dev.resdir.com"
+          "${RESDIR_WEBSITE_URL}": "http://localhost:9012"
         }
       },
       "./images",
