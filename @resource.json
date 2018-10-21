@@ -1,13 +1,4 @@
 {
-  "dependencies": {
-    "@import": "js/npm-dependencies#^0.1.0",
-    "@value": {
-      "babel-eslint": "^10.0.1",
-      "eslint": "^5.2.0",
-      "eslint-config-xo": "^0.25.0",
-      "eslint-plugin-react": "^7.10.0"
-    }
-  },
   "test": {
     "@type": "method",
     "@run": [
@@ -15,5 +6,19 @@
       "./cli @test"
     ],
     "@listen": "@test"
+  },
+  "lint": {
+    "@type": "method",
+    "@run": "(@import shell/bash) run \"./node_modules/.bin/eslint .\"",
+    "@listen": "@lint"
+  },
+  "dependencies": {
+    "@import": "js/npm-dependencies#^0.1.0",
+    "@value": {
+      "babel-eslint": "^10.0.1",
+      "eslint": "^5.7.0",
+      "eslint-config-xo": "^0.25.0",
+      "eslint-plugin-react": "^7.11.1"
+    }
   }
 }
