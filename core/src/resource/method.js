@@ -204,7 +204,11 @@ export class MethodResource extends Resource {
 
     return async function (input, environment, ...rest) {
       if (rest.length !== 0) {
-        throw createClientError(`A resource method must be invoked with a maximum of two arguments (${formatCode('input')} and ${formatCode('environment')})`);
+        throw createClientError(
+          `A resource method must be invoked with a maximum of two arguments (${formatCode(
+            'input'
+          )} and ${formatCode('environment')})`
+        );
       }
 
       const {
@@ -214,7 +218,9 @@ export class MethodResource extends Resource {
 
       const implementation = methodResource._$getImplementation(this);
       if (!implementation) {
-        throw createClientError(`Can't find implementation for ${formatCode(methodResource.$getKey())}`);
+        throw createClientError(
+          `Can't find implementation for ${formatCode(methodResource.$getKey())}`
+        );
       }
 
       if (!(this._$hasBeenInitialized || this._$isInitializing)) {
@@ -283,7 +289,9 @@ export class MethodResource extends Resource {
         normalizedInput = await normalizedInput.$extend(input, {parse: inputIsParsedExpression});
       } catch (err) {
         if (err.code === 'RUN_CORE_CHILD_CREATION_DENIED') {
-          throw createClientError(`Cannot match input attribute (key: ${formatCode(err.childKey)})`);
+          throw createClientError(
+            `Cannot match input attribute (key: ${formatCode(err.childKey)})`
+          );
         }
         throw err;
       }

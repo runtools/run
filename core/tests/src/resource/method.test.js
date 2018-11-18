@@ -204,77 +204,97 @@ describe('MethodResource', () => {
       '@type': 'method'
     });
 
-    expect((await Resource.$create({
+    expect(
+      (await Resource.$create({
+        '@type': 'method',
+        '@input': {
+          name: {'@type': 'string', '@position': 0},
+          age: {'@type': 'number', '@isOptional': true}
+        }
+      })).$serialize()
+    ).toEqual({
       '@type': 'method',
       '@input': {
         name: {'@type': 'string', '@position': 0},
         age: {'@type': 'number', '@isOptional': true}
       }
-    })).$serialize()).toEqual({
-      '@type': 'method',
-      '@input': {
-        name: {'@type': 'string', '@position': 0},
-        age: {'@type': 'number', '@isOptional': true}
-      }
     });
 
-    expect((await Resource.$create({
-      '@type': 'method',
-      '@input': {tags: {'@type': 'array', '@position': 0, '@isVariadic': true}}
-    })).$serialize()).toEqual({
+    expect(
+      (await Resource.$create({
+        '@type': 'method',
+        '@input': {tags: {'@type': 'array', '@position': 0, '@isVariadic': true}}
+      })).$serialize()
+    ).toEqual({
       '@type': 'method',
       '@input': {tags: {'@type': 'array', '@position': 0, '@isVariadic': true}}
     });
 
-    expect((await Resource.$create({
-      '@type': 'method',
-      '@input': {subInput: {'@type': 'object', '@isSubInput': true}}
-    })).$serialize()).toEqual({
+    expect(
+      (await Resource.$create({
+        '@type': 'method',
+        '@input': {subInput: {'@type': 'object', '@isSubInput': true}}
+      })).$serialize()
+    ).toEqual({
       '@type': 'method',
       '@input': {subInput: {'@type': 'object', '@isSubInput': true}}
     });
 
-    expect((await Resource.$create({
+    expect(
+      (await Resource.$create({
+        '@type': 'method',
+        '@output': {
+          result: {'@type': 'string', '@isOptional': true},
+          error: {'@type': 'number'}
+        }
+      })).$serialize()
+    ).toEqual({
       '@type': 'method',
       '@output': {
         result: {'@type': 'string', '@isOptional': true},
         error: {'@type': 'number'}
       }
-    })).$serialize()).toEqual({
-      '@type': 'method',
-      '@output': {
-        result: {'@type': 'string', '@isOptional': true},
-        error: {'@type': 'number'}
-      }
     });
 
-    expect((await Resource.$create({
-      '@type': 'method',
-      '@run': 'frontend deploy --@verbose'
-    })).$serialize()).toEqual({'@type': 'method', '@run': 'frontend deploy --@verbose'});
+    expect(
+      (await Resource.$create({
+        '@type': 'method',
+        '@run': 'frontend deploy --@verbose'
+      })).$serialize()
+    ).toEqual({'@type': 'method', '@run': 'frontend deploy --@verbose'});
 
-    expect((await Resource.$create({'@type': 'method', '@run': ['build', 'deploy']})).$serialize()).toEqual({
+    expect(
+      (await Resource.$create({'@type': 'method', '@run': ['build', 'deploy']})).$serialize()
+    ).toEqual({
       '@type': 'method',
       '@run': ['build', 'deploy']
     });
 
-    expect((await Resource.$create({
-      '@type': 'method',
-      '@before': '@console print Deploying...'
-    })).$serialize()).toEqual({'@type': 'method', '@before': '@console print Deploying...'});
+    expect(
+      (await Resource.$create({
+        '@type': 'method',
+        '@before': '@console print Deploying...'
+      })).$serialize()
+    ).toEqual({'@type': 'method', '@before': '@console print Deploying...'});
 
-    expect((await Resource.$create({
-      '@type': 'method',
-      '@after': '@console print Depoyment completed'
-    })).$serialize()).toEqual({'@type': 'method', '@after': '@console print Depoyment completed'});
+    expect(
+      (await Resource.$create({
+        '@type': 'method',
+        '@after': '@console print Depoyment completed'
+      })).$serialize()
+    ).toEqual({'@type': 'method', '@after': '@console print Depoyment completed'});
 
     expect((await Resource.$create({'@type': 'method', '@listen': 'build'})).$serialize()).toEqual({
       '@type': 'method',
       '@listen': 'build'
     });
-    expect((await Resource.$create({'@type': 'method', '@listen': ['build', 'install']})).$serialize()).toEqual({'@type': 'method', '@listen': ['build', 'install']});
+    expect(
+      (await Resource.$create({'@type': 'method', '@listen': ['build', 'install']})).$serialize()
+    ).toEqual({'@type': 'method', '@listen': ['build', 'install']});
 
-    expect((await Resource.$create({'@type': 'method', '@unlisten': 'build'})).$serialize()).toEqual({
+    expect(
+      (await Resource.$create({'@type': 'method', '@unlisten': 'build'})).$serialize()
+    ).toEqual({
       '@type': 'method',
       '@unlisten': 'build'
     });

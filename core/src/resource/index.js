@@ -149,12 +149,12 @@ export class Resource {
     },
     '@print': {
       '@type': 'method',
-      '@description': 'Print resource\'s content',
+      '@description': "Print resource's content",
       '@aliases': ['@p']
     },
     '@inspect': {
       '@type': 'method',
-      '@description': 'Inspect resource\'s definition',
+      '@description': "Inspect resource's definition",
       '@aliases': ['@i']
     },
     '@repl': {
@@ -163,7 +163,7 @@ export class Resource {
     },
     '@install': {
       '@type': 'method',
-      '@description': 'Broadcast an \'@install\' event',
+      '@description': "Broadcast an '@install' event",
       '@input': {
         eventInput: {
           '@type': 'object',
@@ -175,7 +175,7 @@ export class Resource {
     },
     '@lint': {
       '@type': 'method',
-      '@description': 'Broadcast a \'@lint\' event',
+      '@description': "Broadcast a '@lint' event",
       '@input': {
         eventInput: {
           '@type': 'object',
@@ -187,7 +187,7 @@ export class Resource {
     },
     '@test': {
       '@type': 'method',
-      '@description': 'Broadcast a \'@test\' event',
+      '@description': "Broadcast a '@test' event",
       '@input': {
         eventInput: {
           '@type': 'object',
@@ -199,7 +199,7 @@ export class Resource {
     },
     '@build': {
       '@type': 'method',
-      '@description': 'Broadcast a \'@build\' event',
+      '@description': "Broadcast a '@build' event",
       '@input': {
         eventInput: {
           '@type': 'object',
@@ -295,11 +295,11 @@ export class Resource {
     },
     '@version': {
       '@type': 'method',
-      '@description': 'Display Run\'s version'
+      '@description': "Display Run's version"
     },
     '@help': {
       '@type': 'method',
-      '@description': 'Show resource\'s help',
+      '@description': "Show resource's help",
       '@examples': ['@help', '@help frontend deploy', '@help @add'],
       '@aliases': ['@h'],
       '@input': {
@@ -799,7 +799,7 @@ export class Resource {
     let file = location;
     if (file.startsWith('.')) {
       if (!directory) {
-        throw new Error('\'directory\' argument is missing');
+        throw new Error("'directory' argument is missing");
       }
       file = resolve(directory, file);
     }
@@ -949,7 +949,7 @@ export class Resource {
     await this.$emit('@save');
 
     if (!this.$isRoot()) {
-      throw new Error('Can\'t save a child resource');
+      throw new Error("Can't save a child resource");
     }
 
     let file = this.$getResourceFile();
@@ -959,7 +959,7 @@ export class Resource {
         directory = this.$getCurrentDirectory({throwIfUndefined: false});
       }
       if (!directory) {
-        throw new Error('Can\'t determine the path of the resource file');
+        throw new Error("Can't determine the path of the resource file");
       }
       file = join(directory, RESOURCE_FILE_NAME + '.' + DEFAULT_RESOURCE_FILE_FORMAT);
       this.$setResourceFile(file);
@@ -1124,7 +1124,7 @@ export class Resource {
 
     if (!currentDirectory) {
       if (throwIfUndefined) {
-        throw new Error('Can\'t determine the current directory');
+        throw new Error("Can't determine the current directory");
       }
       return undefined;
     }
@@ -1158,7 +1158,7 @@ export class Resource {
 
   $setIsMethodInput(isMethodInput) {
     if (isMethodInput !== undefined && typeof isMethodInput !== 'boolean') {
-      throw createClientError('\'isMethodInput\' argument must be a boolean');
+      throw createClientError("'isMethodInput' argument must be a boolean");
     }
     this._$isMethodInput = isMethodInput;
   }
@@ -1169,7 +1169,7 @@ export class Resource {
 
   $setIsMethodOutput(isMethodOutput) {
     if (isMethodOutput !== undefined && typeof isMethodOutput !== 'boolean') {
-      throw createClientError('\'isMethodOutput\' argument must be a boolean');
+      throw createClientError("'isMethodOutput' argument must be a boolean");
     }
     this._$isMethodOutput = isMethodOutput;
   }
@@ -1661,12 +1661,12 @@ export class Resource {
 
     const parent = this.$getParent();
     if (!parent) {
-      throw new Error('Can\'t set a child without a parent');
+      throw new Error("Can't set a child without a parent");
     }
 
     const key = this.$getKey();
     if (!key) {
-      throw new Error('Can\'t set a child without a key');
+      throw new Error("Can't set a child without a key");
     }
 
     return parent.$setChild(key, value);
@@ -1787,11 +1787,11 @@ export class Resource {
 
   async $emit(event, eventInput = {}) {
     if (typeof event !== 'string') {
-      throw new TypeError('\'event\' argument must be a string');
+      throw new TypeError("'event' argument must be a string");
     }
 
     if (!isPlainObject(eventInput)) {
-      throw new TypeError('\'eventInput\' argument must be a plain object');
+      throw new TypeError("'eventInput' argument must be a plain object");
     }
 
     for (const listener of this._$getAllListenersForEvent(event)) {
@@ -1849,7 +1849,7 @@ export class Resource {
 
   async '@load'({specifier}) {
     if (!specifier) {
-      throw createClientError('\'specifier\' input attribute is missing');
+      throw createClientError("'specifier' input attribute is missing");
     }
     return await this.constructor.$load(specifier, {directory: process.cwd()});
   }
@@ -2081,11 +2081,11 @@ export class Resource {
 
 function _$forEachItems(items, fn) {
   if (!Array.isArray(items)) {
-    throw new TypeError('\'items\' argument must be an array');
+    throw new TypeError("'items' argument must be an array");
   }
 
   if (typeof fn !== 'function') {
-    throw new TypeError('\'fn\' argument must be a function');
+    throw new TypeError("'fn' argument must be a function");
   }
 
   for (let i = 0; i < items.length; i++) {

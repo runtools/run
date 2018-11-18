@@ -8,7 +8,9 @@ describe('ArrayResource', () => {
     expect((await Resource.$create({'@value': []})).$value).toEqual([]);
     expect((await Resource.$create({'@value': [1, 'hi']})).$value).toEqual([1, 'hi']);
     expect((await Resource.$create([true])).$value).toEqual([true]);
-    await expect(Resource.$create({'@type': 'array', '@value': 'hello'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@type': 'array', '@value': 'hello'})).rejects.toBeInstanceOf(
+      Error
+    );
   });
 
   test('default', async () => {
@@ -18,7 +20,9 @@ describe('ArrayResource', () => {
     expect((await Resource.$create({'@default': []})).$value).toEqual([]);
     expect((await Resource.$create({'@value': [1], '@default': []})).$default).toEqual([]);
     expect((await Resource.$create({'@value': [1], '@default': []})).$value).toEqual([1]);
-    await expect(Resource.$create({'@type': 'array', '@default': 'hello'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@type': 'array', '@default': 'hello'})).rejects.toBeInstanceOf(
+      Error
+    );
   });
 
   test('parsing', async () => {

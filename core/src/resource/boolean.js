@@ -29,7 +29,9 @@ export class BooleanResource extends ValueResource {
     if (str === '0' || str === 'false' || str === 'no' || str === 'off') {
       return false;
     }
-    throw createClientError(`Cannot convert a string to a boolean: ${formatString(originalString)}`);
+    throw createClientError(
+      `Cannot convert a string to a boolean: ${formatString(originalString)}`
+    );
   }
 }
 

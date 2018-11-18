@@ -8,7 +8,9 @@ describe('StringResource', () => {
     expect((await Resource.$create({'@value': ''})).$value).toBe('');
     expect((await Resource.$create({'@value': 'green'})).$value).toBe('green');
     expect((await Resource.$create('blue')).$value).toBe('blue');
-    await expect(Resource.$create({'@type': 'string', '@value': 123})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@type': 'string', '@value': 123})).rejects.toBeInstanceOf(
+      Error
+    );
   });
 
   test('default', async () => {
@@ -16,9 +18,13 @@ describe('StringResource', () => {
     expect((await Resource.$create({'@type': 'string'})).$value).toBeUndefined();
     expect((await Resource.$create({'@default': 'black'})).$default).toBe('black');
     expect((await Resource.$create({'@default': 'black'})).$value).toBe('black');
-    expect((await Resource.$create({'@value': 'green', '@default': 'black'})).$default).toBe('black');
+    expect((await Resource.$create({'@value': 'green', '@default': 'black'})).$default).toBe(
+      'black'
+    );
     expect((await Resource.$create({'@value': 'green', '@default': 'black'})).$value).toBe('green');
-    await expect(Resource.$create({'@type': 'string', '@default': 123})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@type': 'string', '@default': 123})).rejects.toBeInstanceOf(
+      Error
+    );
   });
 
   test('serialization', async () => {

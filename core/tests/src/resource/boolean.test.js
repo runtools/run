@@ -17,7 +17,9 @@ describe('BooleanResource', () => {
     expect((await Resource.$create({'@default': false})).$value).toBe(false);
     expect((await Resource.$create({'@value': true, '@default': false})).$default).toBe(false);
     expect((await Resource.$create({'@value': true, '@default': false})).$value).toBe(true);
-    await expect(Resource.$create({'@type': 'boolean', '@default': 'yes'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@type': 'boolean', '@default': 'yes'})).rejects.toBeInstanceOf(
+      Error
+    );
   });
 
   test('parsing', async () => {

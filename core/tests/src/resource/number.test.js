@@ -8,7 +8,9 @@ describe('NumberResource', () => {
     expect((await Resource.$create({'@value': 1})).$value).toBe(1);
     expect((await Resource.$create({'@value': 123.45})).$value).toBe(123.45);
     expect((await Resource.$create(-789)).$value).toBe(-789);
-    await expect(Resource.$create({'@type': 'number', '@value': 'hello'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@type': 'number', '@value': 'hello'})).rejects.toBeInstanceOf(
+      Error
+    );
   });
 
   test('default', async () => {
@@ -18,7 +20,9 @@ describe('NumberResource', () => {
     expect((await Resource.$create({'@default': 0})).$value).toBe(0);
     expect((await Resource.$create({'@value': 1, '@default': 0})).$default).toBe(0);
     expect((await Resource.$create({'@value': 1, '@default': 0})).$value).toBe(1);
-    await expect(Resource.$create({'@type': 'number', '@default': 'hi'})).rejects.toBeInstanceOf(Error);
+    await expect(Resource.$create({'@type': 'number', '@default': 'hi'})).rejects.toBeInstanceOf(
+      Error
+    );
   });
 
   test('parsing', async () => {

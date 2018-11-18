@@ -10,7 +10,9 @@ describe('Resource', () => {
 
   test('@comment', async () => {
     expect((await Resource.$create()).$comment).toBeUndefined();
-    expect((await Resource.$create({'@comment': 'This is a comment'})).$comment).toBe('This is a comment');
+    expect((await Resource.$create({'@comment': 'This is a comment'})).$comment).toBe(
+      'This is a comment'
+    );
   });
 
   test('@aliases', async () => {
@@ -37,7 +39,9 @@ describe('Resource', () => {
 
   test('@description', async () => {
     expect((await Resource.$create()).$description).toBeUndefined();
-    expect((await Resource.$create({'@description': 'This is a resource'})).$description).toBe('This is a resource');
+    expect((await Resource.$create({'@description': 'This is a resource'})).$description).toBe(
+      'This is a resource'
+    );
   });
 
   test('@examples', async () => {
@@ -52,15 +56,19 @@ describe('Resource', () => {
 
   test('@runtime', async () => {
     expect((await Resource.$create()).$runtime).toBeUndefined();
-    expect((await Resource.$create({'@runtime': 'node#>=6.10.0'})).$runtime.toJSON()).toBe('node#>=6.10.0');
+    expect((await Resource.$create({'@runtime': 'node#>=6.10.0'})).$runtime.toJSON()).toBe(
+      'node#>=6.10.0'
+    );
   });
 
   test('@implementation', async () => {
     expect((await Resource.$create()).$implementation).toBeUndefined();
-    expect((await Resource.$create(
-      {'@implementation': '../fixtures/person/index.js'},
-      {directory: __dirname}
-    )).$implementation).toBe('../fixtures/person/index.js');
+    expect(
+      (await Resource.$create(
+        {'@implementation': '../fixtures/person/index.js'},
+        {directory: __dirname}
+      )).$implementation
+    ).toBe('../fixtures/person/index.js');
   });
 
   test('@isHidden', async () => {
@@ -87,7 +95,9 @@ describe('Resource', () => {
     await expect(Resource.$create({'invalid-key': 'value'})).rejects.toBeInstanceOf(Error);
     await expect(Resource.$create({'@invalidKey': 'value'})).rejects.toBeInstanceOf(Error);
 
-    expect((await Resource.$create({'@nativeKey': 'value'}, {isNative: true})).$getType()).toBe('resource');
+    expect((await Resource.$create({'@nativeKey': 'value'}, {isNative: true})).$getType()).toBe(
+      'resource'
+    );
   });
 
   test('properties defined from literals', async () => {
@@ -257,12 +267,16 @@ describe('Resource', () => {
     );
     expect(Company.$getChild('name').$getType()).toBe('string');
     expect(Company.$getChild('boss').$getType()).toBe('resource');
-    expect(Company.$getChild('boss')
-      .$getChild('name')
-      .$getType()).toBe('string');
-    expect(Company.$getChild('boss')
-      .$getChild('age')
-      .$getType()).toBe('number');
+    expect(
+      Company.$getChild('boss')
+        .$getChild('name')
+        .$getType()
+    ).toBe('string');
+    expect(
+      Company.$getChild('boss')
+        .$getChild('age')
+        .$getType()
+    ).toBe('number');
   });
 
   test('multiple inheritance', async () => {

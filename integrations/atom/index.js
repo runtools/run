@@ -30,7 +30,7 @@ export default {
   },
 
   async handleDidSave(event) {
-    this.signalProvider.add('Run integration \'handleDidSave\'');
+    this.signalProvider.add("Run integration 'handleDidSave'");
 
     try {
       const file = event.path;
@@ -48,7 +48,7 @@ export default {
       }
     } catch (err) {
       console.error(err);
-      const message = 'run: An error occurred while broadcasting \'@fileModified\' event';
+      const message = "run: An error occurred while broadcasting '@fileModified' event";
       atom.notifications.addError(message, {detail: err.message, dismissable: true});
     }
 
