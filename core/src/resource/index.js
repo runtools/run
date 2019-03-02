@@ -513,6 +513,20 @@ export class Resource {
       directory = resolve(directory, directoryAttribute);
     }
 
+    const includeAttribute = getProperty(normalizedDefinition, '@include');
+    if (includeAttribute) {
+      if (Object.keys(normalizedDefinition).length > 1) {
+        throw createClientError(
+          `${formatCode('@include')} attribute cannot be mixed with other properties`
+        );
+      }
+      const includedResource = await Resource.$load(includeAttribute, {directory, disableCache});
+      includedResource.$include = includeAttribute;
+      includedResource.$setKey(key);
+      includedResource.$setParent(parent);
+      return includedResource;
+    }
+
     let type = getProperty(normalizedDefinition, '@type');
     if (type !== undefined) {
       type = this.$normalizeType(type);
@@ -1241,6 +1255,17 @@ export class Resource {
     return importAttribute;
   }
 
+  get $include() {
+    return this._$include;
+  }
+
+  set $include(include) {
+    if (include !== undefined && typeof include !== 'string') {
+      throw createClientError(`${formatCode('@include')} attribute must be a string`);
+    }
+    this._$include = include;
+  }
+
   get $directory() {
     return this._$directory;
   }
@@ -1924,8 +1949,14 @@ export class Resource {
     return definition;
   }
 
+  /* eslint-disable complexity */
   $serialize(options) {
     let definition = {};
+
+    if (this._$include !== undefined) {
+      definition['@include'] = this._$include;
+      return definition;
+    }
 
     if (this._$comment !== undefined) {
       definition['@comment'] = this._$comment;
@@ -2009,6 +2040,7 @@ export class Resource {
 
     return definition;
   }
+  /* eslint-enable complexity */
 
   _$serializeImportAttribute(definition, _options) {
     const importAttribute = this._$importAttribute;

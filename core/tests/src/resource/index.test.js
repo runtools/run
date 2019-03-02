@@ -1,3 +1,5 @@
+import {join} from 'path';
+
 import Resource from '../../../..';
 
 describe('Resource', () => {
@@ -294,6 +296,22 @@ describe('Resource', () => {
     expect(personWithMixin.mixinProperty).toBe('mixin-property-value');
   });
 
+  test('included resources', async () => {
+    const nesting = await Resource.$load('../fixtures/nesting', {directory: __dirname});
+
+    expect(nesting.value).toBe('aaa');
+    expect(nesting.level1.value).toBe('bbb');
+    expect(nesting.level1.level2.value).toBe('ccc');
+
+    expect(nesting.$getCurrentDirectory()).toBe(join(__dirname, '../fixtures/nesting'));
+    expect(nesting.level1.$getCurrentDirectory()).toBe(
+      join(__dirname, '../fixtures/nesting/level1')
+    );
+    expect(nesting.level1.level2.$getCurrentDirectory()).toBe(
+      join(__dirname, '../fixtures/nesting/level1/level2')
+    );
+  });
+
   test('serialization', async () => {
     async function testSerialization(definition, options, expected) {
       if (arguments.length < 3) {
@@ -329,6 +347,11 @@ describe('Resource', () => {
       {'@import': ['../fixtures/person', '../fixtures/mixin']},
       {directory: __dirname},
       {'@import': ['../fixtures/person', '../fixtures/mixin']}
+    );
+    await testSerialization(
+      {root: {'@include': '../fixtures/nesting'}},
+      {directory: __dirname},
+      {root: {'@include': '../fixtures/nesting'}}
     );
     await testSerialization({
       '@import': {'@export': {name: 'anonymous'}}

@@ -1,0 +1,6 @@
+{
+  "value": "bbb",
+  "level2": {
+    "@include": "./level2"
+  }
+}
