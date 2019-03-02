@@ -1,7 +1,7 @@
 {
   "@import": "1place/npm-package#^0.1.0",
   "name": "run-cli",
-  "version": "0.11.16",
+  "version": "0.11.17",
   "description": "The resource runtime",
   "author": "Manuel Vila <hi@mvila.me>",
   "license": "MIT",
@@ -17,7 +17,7 @@
     "@resdir/local-cache": "^0.1.6",
     "@resdir/resource-specifier": "^0.1.16",
     "@resdir/version": "^0.1.16",
-    "run-core": "^0.11.61",
+    "run-core": "^0.11.62",
     "source-map-support": "^0.5.6"
   },
   "@unpublishable": {
@@ -33,7 +33,7 @@
       "@import": "js/packer#^0.1.0",
       "entry": "./dist/node/cjs/bin/index.js",
       "output": "./builds/macos/run",
-      "nodeVersion": "node8",
+      "nodeVersion": "node10",
       "platform": "macos",
       "architecture": "x64",
       "isPublic": true,
@@ -43,7 +43,7 @@
       "@import": "js/packer#^0.1.0",
       "entry": "./dist/node/cjs/bin/index.js",
       "output": "./builds/linux/run",
-      "nodeVersion": "node8",
+      "nodeVersion": "node10",
       "platform": "linux",
       "architecture": "x64",
       "isPublic": true,
