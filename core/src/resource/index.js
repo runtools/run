@@ -197,6 +197,18 @@ export class Resource {
         }
       }
     },
+    '@start': {
+      '@type': 'method',
+      '@description': "Broadcast a '@start' event",
+      '@input': {
+        eventInput: {
+          '@type': 'object',
+          '@description': 'Input sent to event listeners',
+          '@isOptional': true,
+          '@isSubInput': true
+        }
+      }
+    },
     '@build': {
       '@type': 'method',
       '@description': "Broadcast a '@build' event",
@@ -1865,6 +1877,11 @@ export class Resource {
   async '@test'({eventInput} = {}) {
     await this.$broadcast('@test', eventInput);
     await this.$broadcast('@tested', undefined);
+  }
+
+  async '@start'({eventInput} = {}) {
+    await this.$broadcast('@start', eventInput);
+    await this.$broadcast('@started', undefined);
   }
 
   async '@build'({eventInput} = {}) {
