@@ -173,6 +173,18 @@ export class Resource {
         }
       }
     },
+    '@link': {
+      '@type': 'method',
+      '@description': "Broadcast a '@link' event",
+      '@input': {
+        eventInput: {
+          '@type': 'object',
+          '@description': 'Input sent to event listeners',
+          '@isOptional': true,
+          '@isSubInput': true
+        }
+      }
+    },
     '@lint': {
       '@type': 'method',
       '@description': "Broadcast a '@lint' event",
@@ -1121,9 +1133,9 @@ export class Resource {
   }
 
   $getImplementationFile({considerBases} = {}) {
-    return considerBases ?
-      this._$getInheritedValue('_$implementationFile') :
-      this._$implementationFile;
+    return considerBases
+      ? this._$getInheritedValue('_$implementationFile')
+      : this._$implementationFile;
   }
 
   $setImplementationFile(file) {
@@ -1867,6 +1879,11 @@ export class Resource {
   async '@install'({eventInput} = {}) {
     await this.$broadcast('@install', eventInput);
     await this.$broadcast('@installed', undefined);
+  }
+
+  async '@link'({eventInput} = {}) {
+    await this.$broadcast('@link', eventInput);
+    await this.$broadcast('@linked', undefined);
   }
 
   async '@lint'({eventInput} = {}) {
