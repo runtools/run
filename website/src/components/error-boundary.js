@@ -41,7 +41,7 @@ export function withErrorBoundary(WrappedComponent) {
 
 export function catchErrors(target, name, descriptor) {
   const original = descriptor.value;
-  descriptor.value = async function (...args) {
+  descriptor.value = async function(...args) {
     try {
       return await original.apply(this, args);
     } catch (err) {

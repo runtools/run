@@ -48,11 +48,11 @@ function styles(t, _s) {
     centeredPage: {maxWidth: '1280px', margin: '0 auto'},
     subheading: {fontWeight: '300', color: t.baseTextColor, letterSpacing: '0.03rem'},
     primaryLink: {
-      color: t.primaryColor,
+      'color': t.primaryColor,
       ':hover': {color: t.lightPrimaryColor, textDecoration: 'none'}
     },
     heroLink: {
-      color: t.headingsColor,
+      'color': t.headingsColor,
       ':hover': {color: '#ffffff', textDecoration: 'none'}
     }
   };
@@ -60,16 +60,16 @@ function styles(t, _s) {
 
 function globalStyles(t) {
   return {
-    hr: {
+    'hr': {
       marginTop: '1.5rem',
       marginBottom: '1.5rem'
     },
-    code: {
+    'code': {
       padding: '.2rem .2rem',
       borderRadius: 0,
       fontSize: '.85rem'
     },
-    pre: {
+    'pre': {
       display: 'table',
       tableLayout: 'fixed',
       width: '100%',
@@ -85,7 +85,7 @@ function globalStyles(t) {
     '.json-key .hljs-string': {
       color: '#d19a66' // hljs-attr
     },
-    mediaQueries: {
+    'mediaQueries': {
       [`(max-width: ${t.smallBreakpoint})`]: {
         h1: {fontSize: t.h3FontSize, lineHeight: t.smallLineHeight},
         h2: {fontSize: t.h4FontSize},

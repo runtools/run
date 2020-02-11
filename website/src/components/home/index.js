@@ -27,7 +27,7 @@ export class Home extends React.Component {
                 <div style={{...s.minimumLineHeight, alignSelf: 'center', padding: '1.5rem 0'}}>
                   <Link
                     to="/#intro"
-                    style={{color: t.baseTextColor, ':hover': {textDecoration: 'none'}}}
+                    style={{'color': t.baseTextColor, ':hover': {textDecoration: 'none'}}}
                   >
                     ▼
                   </Link>

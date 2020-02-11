@@ -65,9 +65,9 @@ const RESOURCE_HELPER = 'resource/helper';
 const TOOL_CONSOLE = 'tool/console';
 
 export class Resource {
-  static $RESOURCE_TYPE = 'resource';
+  static '$RESOURCE_TYPE' = 'resource';
 
-  static $RESOURCE_NATIVE_CHILDREN = {
+  static '$RESOURCE_NATIVE_CHILDREN' = {
     '@parent': {
       '@description': 'Get the parent of the resource',
       '@getter': {
@@ -359,7 +359,7 @@ export class Resource {
     }
   };
 
-  async $construct(
+  async '$construct'(
     definition,
     {
       bases = [],
@@ -498,7 +498,7 @@ export class Resource {
 
   /* eslint-disable complexity */
 
-  static async $create(
+  static async '$create'(
     definition,
     {
       base,
@@ -692,7 +692,7 @@ export class Resource {
 
   /* eslint-enable complexity */
 
-  static async _$initializeResourceNativeChildren() {
+  static async '_$initializeResourceNativeChildren'() {
     if (Object.prototype.hasOwnProperty.call(this, '$RESOURCE_NATIVE_CHILDREN')) {
       if (Object.prototype.hasOwnProperty.call(this, '_$resourceNativeChildren')) {
         return;
@@ -711,7 +711,7 @@ export class Resource {
     await parent._$initializeResourceNativeChildren();
   }
 
-  static _$getNativeChildren() {
+  static '_$getNativeChildren'() {
     if (Object.prototype.hasOwnProperty.call(this, '_$nativeChildren')) {
       return this._$nativeChildren;
     }
@@ -726,7 +726,7 @@ export class Resource {
     return this._$nativeChildren;
   }
 
-  _$getBuilders() {
+  '_$getBuilders'() {
     const builders = [];
     let resource = this;
     while (true) {
@@ -743,7 +743,7 @@ export class Resource {
     return builders;
   }
 
-  static async $load(
+  static async '$load'(
     specifier,
     {
       directory,
@@ -833,7 +833,7 @@ export class Resource {
     return resource;
   }
 
-  static async _$fetchFromLocation(location, {directory, stage, searchInParentDirectories} = {}) {
+  static async '_$fetchFromLocation'(location, {directory, stage, searchInParentDirectories} = {}) {
     let file = location;
     if (file.startsWith('.')) {
       if (!directory) {
@@ -849,7 +849,7 @@ export class Resource {
     return {definition, file};
   }
 
-  static async _$fetchFromLocalResources(specifier) {
+  static async '_$fetchFromLocalResources'(specifier) {
     // Useful for development: resources are loaded directly from local source code
 
     const {identifier, versionRange} = parseResourceSpecifier(specifier);
@@ -875,28 +875,28 @@ export class Resource {
     return {definition, file};
   }
 
-  static $getClientId() {
+  static '$getClientId'() {
     return RUN_CLIENT_ID;
   }
 
-  $getClientId() {
+  '$getClientId'() {
     return this.constructor.$getClientId();
   }
 
-  static $getClientDirectory() {
+  static '$getClientDirectory'() {
     return RUN_CLIENT_DIRECTORY;
   }
 
-  $getClientDirectory() {
+  '$getClientDirectory'() {
     return this.constructor.$getClientDirectory();
   }
 
-  static async $getRegistryClient() {
+  static async '$getRegistryClient'() {
     if (!this._$registryClient) {
       this._$registryClient = await this.$create({
         '@import': RESDIR_REGISTRY_CLIENT,
-        registryServer: RESDIR_REGISTRY_SERVER,
-        uploadServer: {
+        'registryServer': RESDIR_REGISTRY_SERVER,
+        'uploadServer': {
           type: 'AWS_S3',
           config: {
             bucketName: RESDIR_UPLOAD_SERVER_S3_BUCKET_NAME,
@@ -908,14 +908,14 @@ export class Resource {
     return this._$registryClient;
   }
 
-  static async $getRegistryServer() {
+  static async '$getRegistryServer'() {
     if (!this._$registryServer) {
       this._$registryServer = await this.$import(RESDIR_REGISTRY_SERVER);
     }
     return this._$registryServer;
   }
 
-  static async $getResourceFetcher() {
+  static async '$getResourceFetcher'() {
     if (!this._$resourceFetcher) {
       this._$resourceFetcher = new ResourceFetcher({
         registryServer: await this.$getRegistryServer(),
@@ -925,7 +925,7 @@ export class Resource {
     return this._$resourceFetcher;
   }
 
-  static async _$fetchFromRegistry(specifier) {
+  static async '_$fetchFromRegistry'(specifier) {
     let result;
     const {identifier} = parseResourceSpecifier(specifier);
     if (BOOTSTRAPPING_RESOURCES.includes(identifier)) {
@@ -967,23 +967,23 @@ export class Resource {
     return {definition, file};
   }
 
-  static async $import(specifier, {directory, disableCache} = {}) {
+  static async '$import'(specifier, {directory, disableCache} = {}) {
     return await this.$load(specifier, {directory, isImporting: true, disableCache});
   }
 
-  async $extend(definition, options) {
+  async '$extend'(definition, options) {
     return await this.constructor.$create(definition, {...options, base: this});
   }
 
-  $isDescendantOf(resource) {
+  '$isDescendantOf'(resource) {
     return resource instanceof Resource && Boolean(this.$findBase(base => base === resource));
   }
 
-  $isAncestorOf(resource) {
+  '$isAncestorOf'(resource) {
     return resource instanceof Resource && Boolean(resource.$findBase(base => base === this));
   }
 
-  async $save({directory, ensureDirectory} = {}) {
+  async '$save'({directory, ensureDirectory} = {}) {
     await this.$emit('@save');
 
     if (!this.$isRoot()) {
@@ -1017,14 +1017,14 @@ export class Resource {
     await this.$emit('@saved');
   }
 
-  async _$inherit(base) {
+  async '_$inherit'(base) {
     this._$bases.push(base);
     await base.$forEachChildAsync(async child => {
       await this.$setChild(child.$getKey());
     });
   }
 
-  $forSelfAndEachBase(fn, {skipSelf, deepSearch} = {}) {
+  '$forSelfAndEachBase'(fn, {skipSelf, deepSearch} = {}) {
     const resources = [this];
     let isSelf = true;
     while (resources.length) {
@@ -1042,11 +1042,11 @@ export class Resource {
     }
   }
 
-  $forEachBase(fn, {deepSearch} = {}) {
+  '$forEachBase'(fn, {deepSearch} = {}) {
     this.$forSelfAndEachBase(fn, {skipSelf: true, deepSearch});
   }
 
-  $findBase(fn) {
+  '$findBase'(fn) {
     let result;
     this.$forEachBase(
       base => {
@@ -1060,7 +1060,7 @@ export class Resource {
     return result;
   }
 
-  _$getInheritedValue(key, options) {
+  '_$getInheritedValue'(key, options) {
     let result;
     this.$forSelfAndEachBase(
       resource => {
@@ -1074,42 +1074,42 @@ export class Resource {
     return result;
   }
 
-  $getIsNative() {
+  '$getIsNative'() {
     return this._$isNative;
   }
 
-  $setIsNative(isNative) {
+  '$setIsNative'(isNative) {
     this._$isNative = isNative;
   }
 
-  $getParent() {
+  '$getParent'() {
     return this._$parent;
   }
 
-  $setParent(parent) {
+  '$setParent'(parent) {
     this._$parent = parent;
   }
 
-  $getCreator() {
+  '$getCreator'() {
     return this._$getInheritedValue('_$creator');
   }
 
-  $setCreator(creator) {
+  '$setCreator'(creator) {
     this._$creator = creator;
   }
 
-  $getKey() {
+  '$getKey'() {
     return this._$key;
   }
 
-  $setKey(key) {
+  '$setKey'(key) {
     if (!this.$getIsNative()) {
       validateResourceKey(key);
     }
     this._$key = key;
   }
 
-  $getRoot() {
+  '$getRoot'() {
     let resource = this;
     while (true) {
       const parent = resource.$getParent();
@@ -1120,37 +1120,37 @@ export class Resource {
     }
   }
 
-  $isRoot() {
+  '$isRoot'() {
     return !this.$getParent();
   }
 
-  $getResourceFile() {
+  '$getResourceFile'() {
     return this._$resourceFile;
   }
 
-  $setResourceFile(file) {
+  '$setResourceFile'(file) {
     this._$resourceFile = file;
   }
 
-  $getImplementationFile({considerBases} = {}) {
+  '$getImplementationFile'({considerBases} = {}) {
     return considerBases
       ? this._$getInheritedValue('_$implementationFile')
       : this._$implementationFile;
   }
 
-  $setImplementationFile(file) {
+  '$setImplementationFile'(file) {
     this._$implementationFile = file;
   }
 
-  $getResourceSpecifier() {
+  '$getResourceSpecifier'() {
     return this._$resourceSpecifier;
   }
 
-  $setResourceSpecifier(specifier) {
+  '$setResourceSpecifier'(specifier) {
     this._$resourceSpecifier = specifier;
   }
 
-  $getCurrentDirectory({throwIfUndefined = true} = {}) {
+  '$getCurrentDirectory'({throwIfUndefined = true} = {}) {
     let currentDirectory = this._$currentDirectory;
 
     if (!currentDirectory) {
@@ -1170,107 +1170,107 @@ export class Resource {
     return currentDirectory;
   }
 
-  $setCurrentDirectory(directory) {
+  '$setCurrentDirectory'(directory) {
     this._$currentDirectory = directory;
   }
 
-  $getIsUnpublishable() {
+  '$getIsUnpublishable'() {
     return this._$isUnpublishable;
   }
 
-  $setIsUnpublishable(isUnpublishable) {
+  '$setIsUnpublishable'(isUnpublishable) {
     this._$isUnpublishable = isUnpublishable;
   }
 
-  $getExporterDefinition() {
+  '$getExporterDefinition'() {
     return this._$getInheritedValue('_$exporterDefinition');
   }
 
-  $setExporterDefinition(exporterDefinition) {
+  '$setExporterDefinition'(exporterDefinition) {
     this._$exporterDefinition = exporterDefinition;
   }
 
-  $getIsMethodInput() {
+  '$getIsMethodInput'() {
     return this._$getInheritedValue('_$isMethodInput');
   }
 
-  $setIsMethodInput(isMethodInput) {
+  '$setIsMethodInput'(isMethodInput) {
     if (isMethodInput !== undefined && typeof isMethodInput !== 'boolean') {
       throw createClientError("'isMethodInput' argument must be a boolean");
     }
     this._$isMethodInput = isMethodInput;
   }
 
-  $getIsMethodOutput() {
+  '$getIsMethodOutput'() {
     return this._$getInheritedValue('_$isMethodOutput');
   }
 
-  $setIsMethodOutput(isMethodOutput) {
+  '$setIsMethodOutput'(isMethodOutput) {
     if (isMethodOutput !== undefined && typeof isMethodOutput !== 'boolean') {
       throw createClientError("'isMethodOutput' argument must be a boolean");
     }
     this._$isMethodOutput = isMethodOutput;
   }
 
-  get $comment() {
+  get '$comment'() {
     return this._$comment;
   }
 
-  set $comment(comment) {
+  set '$comment'(comment) {
     if (comment !== undefined && typeof comment !== 'string') {
       throw createClientError(`${formatCode('@comment')} attribute must be a string`);
     }
     this._$comment = comment;
   }
 
-  get $type() {
+  get '$type'() {
     return this._$type;
   }
 
-  set $type(type) {
+  set '$type'(type) {
     if (type !== undefined) {
       type = this.constructor.$normalizeType(type);
     }
     this._$type = type;
   }
 
-  static $normalizeType(type) {
+  static '$normalizeType'(type) {
     if (typeof type !== 'string') {
       throw createClientError(`${formatCode('@type')} attribute must be a string`);
     }
     return type;
   }
 
-  get $loadAttribute() {
+  get '$loadAttribute'() {
     return this._$loadAttribute;
   }
 
-  set $loadAttribute(loadAttribute) {
+  set '$loadAttribute'(loadAttribute) {
     if (loadAttribute !== undefined) {
       loadAttribute = this.constructor.$normalizeLoadAttribute(loadAttribute);
     }
     this._$loadAttribute = loadAttribute;
   }
 
-  static $normalizeLoadAttribute(loadAttribute) {
+  static '$normalizeLoadAttribute'(loadAttribute) {
     if (typeof loadAttribute !== 'string' && !isPlainObject(loadAttribute)) {
       throw createClientError(`Invalid ${formatCode('@load')} attribute value`);
     }
     return loadAttribute;
   }
 
-  get $importAttribute() {
+  get '$importAttribute'() {
     return this._$importAttribute;
   }
 
-  set $importAttribute(importAttribute) {
+  set '$importAttribute'(importAttribute) {
     if (importAttribute !== undefined) {
       importAttribute = Resource.$normalizeImportAttribute(importAttribute);
     }
     this._$importAttribute = importAttribute;
   }
 
-  static $normalizeImportAttribute(importAttribute) {
+  static '$normalizeImportAttribute'(importAttribute) {
     if (typeof importAttribute === 'string' || isPlainObject(importAttribute)) {
       importAttribute = [importAttribute];
     } else if (!Array.isArray(importAttribute)) {
@@ -1279,55 +1279,55 @@ export class Resource {
     return importAttribute;
   }
 
-  get $include() {
+  get '$include'() {
     return this._$include;
   }
 
-  set $include(include) {
+  set '$include'(include) {
     if (include !== undefined && typeof include !== 'string') {
       throw createClientError(`${formatCode('@include')} attribute must be a string`);
     }
     this._$include = include;
   }
 
-  get $directory() {
+  get '$directory'() {
     return this._$directory;
   }
 
-  set $directory(directory) {
+  set '$directory'(directory) {
     if (directory !== undefined && typeof directory !== 'string') {
       throw createClientError(`${formatCode('@directory')} attribute must be a string`);
     }
     this._$directory = directory;
   }
 
-  get $name() {
+  get '$name'() {
     return this._$getInheritedValue('_$name');
   }
 
-  set $name(name) {
+  set '$name'(name) {
     if (name !== undefined) {
       validateResourceName(name);
     }
     this._$name = name;
   }
 
-  get $description() {
+  get '$description'() {
     return this._$getInheritedValue('_$description');
   }
 
-  set $description(description) {
+  set '$description'(description) {
     if (description !== undefined) {
       validateResourceDescription(description);
     }
     this._$description = description;
   }
 
-  get $aliases() {
+  get '$aliases'() {
     return this._$getInheritedValue('_$aliases');
   }
 
-  set $aliases(aliases) {
+  set '$aliases'(aliases) {
     this._$aliases = undefined;
     if (aliases !== undefined) {
       if (typeof aliases === 'string') {
@@ -1344,7 +1344,7 @@ export class Resource {
     }
   }
 
-  $addAlias(alias) {
+  '$addAlias'(alias) {
     if (!this.$getIsNative()) {
       validateResourceKey(alias);
     }
@@ -1356,71 +1356,71 @@ export class Resource {
     }
   }
 
-  $hasAlias(alias) {
+  '$hasAlias'(alias) {
     const aliases = this.$aliases;
     return Boolean(aliases && aliases.includes(alias));
   }
 
-  get $position() {
+  get '$position'() {
     return this._$getInheritedValue('_$position');
   }
 
-  set $position(position) {
+  set '$position'(position) {
     if (position !== undefined && typeof position !== 'number') {
       throw createClientError(`${formatCode('@position')} attribute must be a number`);
     }
     this._$position = position;
   }
 
-  get $isOptional() {
+  get '$isOptional'() {
     return this._$getInheritedValue('_$isOptional');
   }
 
-  set $isOptional(isOptional) {
+  set '$isOptional'(isOptional) {
     if (isOptional !== undefined && typeof isOptional !== 'boolean') {
       throw createClientError(`${formatCode('@isOptional')} attribute must be a boolean`);
     }
     this._$isOptional = isOptional;
   }
 
-  get $isVariadic() {
+  get '$isVariadic'() {
     return this._$getInheritedValue('_$isVariadic');
   }
 
-  set $isVariadic(isVariadic) {
+  set '$isVariadic'(isVariadic) {
     if (isVariadic !== undefined && typeof isVariadic !== 'boolean') {
       throw createClientError(`${formatCode('@isVariadic')} attribute must be a boolean`);
     }
     this._$isVariadic = isVariadic;
   }
 
-  get $isSubInput() {
+  get '$isSubInput'() {
     return this._$getInheritedValue('_$isSubInput');
   }
 
-  set $isSubInput(isSubInput) {
+  set '$isSubInput'(isSubInput) {
     if (isSubInput !== undefined && typeof isSubInput !== 'boolean') {
       throw createClientError(`${formatCode('@isSubInput')} attribute must be a boolean`);
     }
     this._$isSubInput = isSubInput;
   }
 
-  get $examples() {
+  get '$examples'() {
     return this._$getInheritedValue('_$examples');
   }
 
-  set $examples(examples) {
+  set '$examples'(examples) {
     if (examples !== undefined && !Array.isArray(examples)) {
       examples = [examples];
     }
     this._$examples = examples;
   }
 
-  $getGetter() {
+  '$getGetter'() {
     return this._$getInheritedValue('_$getter');
   }
 
-  async $setGetter(getter, {key, directory, isNative, disableCache}) {
+  async '$setGetter'(getter, {key, directory, isNative, disableCache}) {
     if (getter === undefined) {
       this._$getter = undefined;
       return;
@@ -1433,7 +1433,7 @@ export class Resource {
     });
   }
 
-  async $resolveGetter({parent} = {}) {
+  async '$resolveGetter'({parent} = {}) {
     const getter = this.$getGetter();
     if (!getter) {
       return this;
@@ -1441,58 +1441,58 @@ export class Resource {
     return await getter.$call(parent);
   }
 
-  get $runtime() {
+  get '$runtime'() {
     return this._$getInheritedValue('_$runtime');
   }
 
-  set $runtime(runtime) {
+  set '$runtime'(runtime) {
     if (runtime !== undefined && typeof runtime !== 'string') {
       throw createClientError(`${formatCode('@runtime')} attribute must be a string`);
     }
     this._$runtime = runtime !== undefined ? new Runtime(runtime) : undefined;
   }
 
-  get $implementation() {
+  get '$implementation'() {
     return this._$implementationAttribute;
   }
 
-  set $implementation(implementation) {
+  set '$implementation'(implementation) {
     if (implementation !== undefined && typeof implementation !== 'string') {
       throw createClientError(`${formatCode('@implementation')} attribute must be a string`);
     }
     this._$implementationAttribute = implementation;
   }
 
-  get $isOpen() {
+  get '$isOpen'() {
     const isOpen = this._$getInheritedValue('_$isOpen');
     return isOpen !== undefined ? isOpen : this.$getIsOpenByDefault();
   }
 
-  set $isOpen(isOpen) {
+  set '$isOpen'(isOpen) {
     if (isOpen !== undefined && typeof isOpen !== 'boolean') {
       throw createClientError(`${formatCode('@isOpen')} attribute must be a boolean`);
     }
     this._$isOpen = isOpen;
   }
 
-  $getIsOpenByDefault() {
+  '$getIsOpenByDefault'() {
     return !(this.$getIsMethodInput() || this.$getIsMethodOutput());
   }
 
-  get $isHidden() {
+  get '$isHidden'() {
     return this._$getInheritedValue('_$isHidden');
   }
 
-  set $isHidden(isHidden) {
+  set '$isHidden'(isHidden) {
     if (isHidden !== undefined && typeof isHidden !== 'boolean') {
       throw createClientError(`${formatCode('@isHidden')} attribute must be a boolean`);
     }
     this._$isHidden = isHidden;
   }
 
-  $defaultAutoBoxing = false;
+  '$defaultAutoBoxing' = false;
 
-  get $autoBoxing() {
+  get '$autoBoxing'() {
     let autoBoxing = this._$getInheritedValue('_$autoBoxing');
     if (autoBoxing === undefined) {
       autoBoxing = this.$defaultAutoBoxing;
@@ -1500,16 +1500,16 @@ export class Resource {
     return autoBoxing;
   }
 
-  set $autoBoxing(autoBoxing) {
+  set '$autoBoxing'(autoBoxing) {
     if (autoBoxing !== undefined && typeof autoBoxing !== 'boolean') {
       throw createClientError(`${formatCode('@autoBoxing')} attribute must be a boolean`);
     }
     this._$autoBoxing = autoBoxing;
   }
 
-  $defaultAutoUnboxing = false;
+  '$defaultAutoUnboxing' = false;
 
-  get $autoUnboxing() {
+  get '$autoUnboxing'() {
     let autoUnboxing = this._$getInheritedValue('_$autoUnboxing');
     if (autoUnboxing === undefined) {
       autoUnboxing = this.$defaultAutoUnboxing;
@@ -1517,30 +1517,30 @@ export class Resource {
     return autoUnboxing;
   }
 
-  set $autoUnboxing(autoUnboxing) {
+  set '$autoUnboxing'(autoUnboxing) {
     if (autoUnboxing !== undefined && typeof autoUnboxing !== 'boolean') {
       throw createClientError(`${formatCode('@autoUnboxing')} attribute must be a boolean`);
     }
     this._$autoUnboxing = autoUnboxing;
   }
 
-  $getExport({considerBases} = {}) {
+  '$getExport'({considerBases} = {}) {
     return considerBases ? this._$getInheritedValue('_$export') : this._$export;
   }
 
-  $setExport(resource) {
+  '$setExport'(resource) {
     this._$export = resource;
   }
 
-  $getType() {
+  '$getType'() {
     return this.constructor.$RESOURCE_TYPE;
   }
 
-  static $isTypeIdentifier(identifier) {
+  static '$isTypeIdentifier'(identifier) {
     return Boolean(getResourceClass(identifier, {throwIfInvalid: false}));
   }
 
-  $forEachChild(fn, {includeResourceChildren = true, includeNativeChildren} = {}) {
+  '$forEachChild'(fn, {includeResourceChildren = true, includeNativeChildren} = {}) {
     if (includeResourceChildren) {
       const children = this._$children;
       if (children) {
@@ -1560,7 +1560,7 @@ export class Resource {
     }
   }
 
-  async $forEachChildAsync(fn, {includeNativeChildren} = {}) {
+  async '$forEachChildAsync'(fn, {includeNativeChildren} = {}) {
     for (const child of this.$getChildren({includeNativeChildren})) {
       const result = await fn(child);
       if (result === false) {
@@ -1569,13 +1569,13 @@ export class Resource {
     }
   }
 
-  $getChildren({includeNativeChildren} = {}) {
+  '$getChildren'({includeNativeChildren} = {}) {
     const children = [];
     this.$forEachChild(child => children.push(child), {includeNativeChildren});
     return children;
   }
 
-  $hasChildren({includeHiddenChildren = true} = {}) {
+  '$hasChildren'({includeHiddenChildren = true} = {}) {
     let result = false;
     this.$forEachChild(child => {
       if (!includeHiddenChildren && child.$isHidden) {
@@ -1587,7 +1587,7 @@ export class Resource {
     return result;
   }
 
-  $getChild(key) {
+  '$getChild'(key) {
     let result;
     this.$forEachChild(child => {
       if (child.$getKey() === key) {
@@ -1598,7 +1598,7 @@ export class Resource {
     return result;
   }
 
-  $findChild(key, {includeNativeChildren} = {}) {
+  '$findChild'(key, {includeNativeChildren} = {}) {
     let result;
     this.$forEachChild(
       child => {
@@ -1612,7 +1612,7 @@ export class Resource {
     return result;
   }
 
-  $getChildFromBases(key) {
+  '$getChildFromBases'(key) {
     let result;
     this.$forEachBase(base => {
       result = base.$getChild(key);
@@ -1623,7 +1623,7 @@ export class Resource {
     return result;
   }
 
-  async $setChild(key, value, {parse, isUnpublishable, isNative, disableCache} = {}) {
+  async '$setChild'(key, value, {parse, isUnpublishable, isNative, disableCache} = {}) {
     const removedChildIndex = this.$removeChild(key);
 
     let child;
@@ -1686,7 +1686,7 @@ export class Resource {
     return child;
   }
 
-  $removeChild(key) {
+  '$removeChild'(key) {
     let result;
     this.$forEachChild((child, index) => {
       if (child.$getKey() === key) {
@@ -1698,7 +1698,7 @@ export class Resource {
     return result;
   }
 
-  $autoBox(value) {
+  '$autoBox'(value) {
     if (this.$autoBoxing) {
       const boxer = this.$box;
       if (!boxer) {
@@ -1721,7 +1721,7 @@ export class Resource {
     return parent.$setChild(key, value);
   }
 
-  $autoUnbox() {
+  '$autoUnbox'() {
     if (this.$autoUnboxing) {
       const unboxer = this.$unbox;
       if (!unboxer) {
@@ -1733,7 +1733,7 @@ export class Resource {
     return this;
   }
 
-  static async $invoke(parent, expression) {
+  static async '$invoke'(parent, expression) {
     return await catchContext(parent, async () => {
       expression = {...expression};
 
@@ -1801,19 +1801,19 @@ export class Resource {
     });
   }
 
-  $print() {
+  '$print'() {
     print(this.$format());
   }
 
-  $format() {
+  '$format'() {
     return formatValue(this.$serialize());
   }
 
-  $inspect() {
+  '$inspect'() {
     print(formatValue(this.$serialize()));
   }
 
-  _$getAllListeners() {
+  '_$getAllListeners'() {
     if (!Object.prototype.hasOwnProperty.call(this, '_$listeners')) {
       this._$listeners = {};
       this.$forEachChild(child => {
@@ -1830,11 +1830,11 @@ export class Resource {
     return this._$listeners;
   }
 
-  _$getAllListenersForEvent(event) {
+  '_$getAllListenersForEvent'(event) {
     return this._$getAllListeners()[event] || [];
   }
 
-  async $emit(event, eventInput = {}) {
+  async '$emit'(event, eventInput = {}) {
     if (typeof event !== 'string') {
       throw new TypeError("'event' argument must be a string");
     }
@@ -1849,7 +1849,7 @@ export class Resource {
     }
   }
 
-  async $broadcast(event, eventInput) {
+  async '$broadcast'(event, eventInput) {
     await this.$emit(event, eventInput);
     await this.$forEachChildAsync(async child => {
       await child.$broadcast(event, eventInput);
@@ -1969,14 +1969,14 @@ export class Resource {
     return await this['@help']({keys, showBuiltIn: true}, environment);
   }
 
-  static async _$getResourceHelper() {
+  static async '_$getResourceHelper'() {
     if (!this._$resourceHelper) {
       this._$resourceHelper = await Resource.$import(RESOURCE_HELPER);
     }
     return this._$resourceHelper;
   }
 
-  static $normalize(definition, _options) {
+  static '$normalize'(definition, _options) {
     if (definition !== undefined && !isPlainObject(definition)) {
       throw createClientError('Invalid resource definition');
     }
@@ -1984,7 +1984,7 @@ export class Resource {
   }
 
   /* eslint-disable complexity */
-  $serialize(options) {
+  '$serialize'(options) {
     let definition = {};
 
     if (this._$include !== undefined) {
@@ -2076,7 +2076,7 @@ export class Resource {
   }
   /* eslint-enable complexity */
 
-  _$serializeImportAttribute(definition, _options) {
+  '_$serializeImportAttribute'(definition, _options) {
     const importAttribute = this._$importAttribute;
     if (importAttribute !== undefined) {
       if (importAttribute.length === 1) {
@@ -2087,28 +2087,28 @@ export class Resource {
     }
   }
 
-  _$serializeAliases(definition, _options) {
+  '_$serializeAliases'(definition, _options) {
     const aliases = this._$aliases;
     if (aliases && aliases.length > 0) {
       definition['@aliases'] = aliases;
     }
   }
 
-  _$serializeExamples(definition, _options) {
+  '_$serializeExamples'(definition, _options) {
     const examples = this._$examples;
     if (examples && examples.length > 0) {
       definition['@examples'] = examples;
     }
   }
 
-  _$serializeGetter(definition, _options) {
+  '_$serializeGetter'(definition, _options) {
     const getter = this._$getter;
     if (getter) {
       definition['@getter'] = getter.$serialize();
     }
   }
 
-  _$serializeChildren(definition, options) {
+  '_$serializeChildren'(definition, options) {
     const publishing = options && options.publishing;
 
     const unpublishableDefinition = {};
@@ -2134,7 +2134,7 @@ export class Resource {
     }
   }
 
-  _$serializeExport(definition, options) {
+  '_$serializeExport'(definition, options) {
     const exportResource = this._$export;
     if (exportResource) {
       const exportDefinition = exportResource.$serialize(options);

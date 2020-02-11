@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 const implementation = {
   meth() {
     super.meth();

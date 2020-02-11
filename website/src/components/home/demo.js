@@ -51,9 +51,7 @@ export class Demo extends React.Component {
                   render={() => <Player width="940px" height="587px" />}
                 />
                 <Media
-                  query={`(min-width: ${t.smallBreakpointPlusOne}) and (max-width: ${
-                    t.mediumBreakpoint
-                  })`}
+                  query={`(min-width: ${t.smallBreakpointPlusOne}) and (max-width: ${t.mediumBreakpoint})`}
                   render={() => <Player width="620px" height="387px" />}
                 />
                 <Media

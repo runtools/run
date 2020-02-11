@@ -70,7 +70,7 @@ function createResourceProxy(endpoint) {
 }
 
 function createMethod(endpoint, name) {
-  return async function (input, environment) {
+  return async function(input, environment) {
     const {output} = await callRemoteResource({
       endpoint,
       method: 'invoke',

@@ -66,10 +66,12 @@ describe('Resource', () => {
   test('@implementation', async () => {
     expect((await Resource.$create()).$implementation).toBeUndefined();
     expect(
-      (await Resource.$create(
-        {'@implementation': '../fixtures/person/index.js'},
-        {directory: __dirname}
-      )).$implementation
+      (
+        await Resource.$create(
+          {'@implementation': '../fixtures/person/index.js'},
+          {directory: __dirname}
+        )
+      ).$implementation
     ).toBe('../fixtures/person/index.js');
   });
 
@@ -169,7 +171,7 @@ describe('Resource', () => {
 
   test('inherited properties with a value', async () => {
     const definition = {'@export': {name: 'anonymous'}};
-    const person = await Resource.$create({'@import': definition, name: 'Manu'});
+    const person = await Resource.$create({'@import': definition, 'name': 'Manu'});
     const parent = person.$findBase(() => true);
     expect(parent.name).toBe('anonymous');
     expect(person.name).toBe('Manu');
@@ -197,7 +199,7 @@ describe('Resource', () => {
     };
     const person = await Resource.$create({
       '@import': definition,
-      address: {city: 'Tokyo'}
+      'address': {city: 'Tokyo'}
     });
     const parent = person.$findBase(() => true);
     expect(parent.address.city).toBe('unknown');
@@ -257,8 +259,8 @@ describe('Resource', () => {
     person.age = 44;
     expect(person.$serialize()).toEqual({
       '@import': '../fixtures/person',
-      name: 'Manu',
-      age: 44
+      'name': 'Manu',
+      'age': 44
     });
   });
 
@@ -285,8 +287,8 @@ describe('Resource', () => {
     const personWithMixin = await Resource.$create(
       {
         '@import': ['../fixtures/person', '../fixtures/mixin'],
-        name: 'Manu',
-        mixinProperty: 'mixin-property-value'
+        'name': 'Manu',
+        'mixinProperty': 'mixin-property-value'
       },
       {directory: __dirname}
     );
@@ -358,7 +360,7 @@ describe('Resource', () => {
     });
     await testSerialization({
       '@import': {'@export': {name: 'anonymous'}},
-      name: 'Manu'
+      'name': 'Manu'
     });
     await testSerialization(
       {'@implementation': '../fixtures/person/index.js', '@runtime': 'node#>=6.10.0'},

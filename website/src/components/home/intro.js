@@ -7,8 +7,6 @@ import RadiumStarter from 'radium-starter';
 import constants from '../../constants';
 import Markdown from '../markdown';
 
-/* eslint-disable no-irregular-whitespace */
-
 const BODY = `
 ### “Run” – the resource runtime
 
@@ -36,9 +34,7 @@ run . deploy
 
 Voila! Your website is online. When you use a tool for the first time, Run installs it automatically in a global cache, and since tool references and configuration are grouped together, your project is super easy to transport and share. Just grab the resource file and you are all set.
 
-What about this \`"aws/s3-hosted-website#^0.1.0"\` thing? It's a reference to a resource implementing a tool stored in [Resdir](${
-  constants.RESDIR_WEBSITE_URL
-}), the first resource directory. Although still in development, you can start using Resdir through Run's CLI. The publication of resources is just beginning, but there are already [a few tools](/docs/introduction/useful-resources) that you might find interesting to experiment with.
+What about this \`"aws/s3-hosted-website#^0.1.0"\` thing? It's a reference to a resource implementing a tool stored in [Resdir](${constants.RESDIR_WEBSITE_URL}), the first resource directory. Although still in development, you can start using Resdir through Run's CLI. The publication of resources is just beginning, but there are already [a few tools](/docs/introduction/useful-resources) that you might find interesting to experiment with.
 `;
 
 const ASIDE = `
@@ -56,9 +52,7 @@ Resources are designed to be language agnostic. We start with JavaScript because
 
 ##### Namespaces
 
-It is easy to publish a resource to [Resdir](${
-  constants.RESDIR_WEBSITE_URL
-}) and share it with everyone. Resource's names are always prefixed with a namespace (e.g., \`"aturing/nice-tool"\`) so that there is no conflict. When you register with Resdir, you automatically get a personal namespace, and it is also possible to create namespaces for organizations and communities.
+It is easy to publish a resource to [Resdir](${constants.RESDIR_WEBSITE_URL}) and share it with everyone. Resource's names are always prefixed with a namespace (e.g., \`"aturing/nice-tool"\`) so that there is no conflict. When you register with Resdir, you automatically get a personal namespace, and it is also possible to create namespaces for organizations and communities.
 `;
 
 /* eslint-enable no-irregular-whitespace */

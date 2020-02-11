@@ -40,9 +40,7 @@ async function handleDidSaveTextDocument({fileName: file}) {
           await broadcastFileModifiedEvent(directory, file);
         } catch (err) {
           console.error(err);
-          const message = `run: An error occurred while broadcasting '@fileModified' event. ${
-            err.message
-          }`;
+          const message = `run: An error occurred while broadcasting '@fileModified' event. ${err.message}`;
           window.showErrorMessage(message);
         }
       }

@@ -11,7 +11,7 @@ import Boolean from './boolean';
 const RUN_CLIENT_ID = 'RUN_CLI';
 
 export class EnvironmentResource extends Resource {
-  static $RESOURCE_NATIVE_CHILDREN = {
+  static '$RESOURCE_NATIVE_CHILDREN' = {
     '@clientId': {
       '@type': 'string'
     },
@@ -29,7 +29,7 @@ export class EnvironmentResource extends Resource {
     }
   };
 
-  async $construct(definition, options) {
+  async '$construct'(definition, options) {
     definition = {...definition};
 
     const clientId = takeProperty(definition, '@clientId');
@@ -56,11 +56,11 @@ export class EnvironmentResource extends Resource {
     });
   }
 
-  $getClientId() {
+  '$getClientId'() {
     return this._$clientId || RUN_CLIENT_ID;
   }
 
-  $setClientId(clientId) {
+  '$setClientId'(clientId) {
     this._$clientId = clientId;
   }
 
@@ -68,11 +68,11 @@ export class EnvironmentResource extends Resource {
     return this.$getClientId();
   }
 
-  $getVerbose() {
+  '$getVerbose'() {
     return this._$getInheritedValue('_$verbose');
   }
 
-  $setVerbose(verbose, options) {
+  '$setVerbose'(verbose, options) {
     this._$verbose = normalizeBoolean(verbose, options);
   }
 
@@ -80,11 +80,11 @@ export class EnvironmentResource extends Resource {
     return this.$getVerbose();
   }
 
-  $getQuiet() {
+  '$getQuiet'() {
     return this._$getInheritedValue('_$quiet');
   }
 
-  $setQuiet(quiet, options) {
+  '$setQuiet'(quiet, options) {
     this._$quiet = normalizeBoolean(quiet, options);
   }
 
@@ -92,11 +92,11 @@ export class EnvironmentResource extends Resource {
     return this.$getQuiet();
   }
 
-  $getDebug() {
+  '$getDebug'() {
     return this._$getInheritedValue('_$debug');
   }
 
-  $setDebug(debug, options) {
+  '$setDebug'(debug, options) {
     this._$debug = normalizeBoolean(debug, options);
   }
 
@@ -104,7 +104,7 @@ export class EnvironmentResource extends Resource {
     return this.$getDebug();
   }
 
-  $serialize(options) {
+  '$serialize'(options) {
     let definition = super.$serialize(options);
 
     if (definition === undefined) {
@@ -134,7 +134,7 @@ export class EnvironmentResource extends Resource {
     return definition;
   }
 
-  toJSON() {
+  'toJSON'() {
     const result = {};
 
     result['@clientId'] = this.$getClientId();

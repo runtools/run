@@ -10,10 +10,12 @@ describe('ObjectResource', () => {
       name: 'Manu'
     });
     expect(
-      (await Resource.$create({
-        '@type': 'object',
-        '@value': {'@load': 'abc', '@xyz': 123}
-      })).$value
+      (
+        await Resource.$create({
+          '@type': 'object',
+          '@value': {'@load': 'abc', '@xyz': 123}
+        })
+      ).$value
     ).toEqual({
       '@load': 'abc',
       '@xyz': 123

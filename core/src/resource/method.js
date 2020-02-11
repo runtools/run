@@ -202,7 +202,7 @@ export class MethodResource extends Resource {
   $getFunction({autoUnbox} = {}) {
     const methodResource = this;
 
-    return async function (input, environment, ...rest) {
+    return async function(input, environment, ...rest) {
       if (rest.length !== 0) {
         throw createClientError(
           `A resource method must be invoked with a maximum of two arguments (${formatCode(
@@ -395,7 +395,7 @@ export class MethodResource extends Resource {
     const expression = this.$runExpression;
     if (expression) {
       const methodResource = this;
-      return function (input) {
+      return function(input) {
         return methodResource._$run(expression, input, {parent: this});
       };
     }

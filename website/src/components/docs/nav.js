@@ -63,9 +63,9 @@ export class NavItem extends React.Component {
       <RadiumStarter>
         {t => {
           const {title, url, isActive} = this.props;
-          const style = isActive ?
-            {color: t.headingsColor, fontWeight: t.headingsFontWeight} :
-            {color: t.primaryTextColor};
+          const style = isActive
+            ? {color: t.headingsColor, fontWeight: t.headingsFontWeight}
+            : {color: t.primaryTextColor};
           return (
             <li>
               <Link to={url} style={style}>

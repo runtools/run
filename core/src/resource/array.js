@@ -5,16 +5,16 @@ import {createClientError} from '@resdir/error';
 import ValueResource from './value';
 
 export class ArrayResource extends ValueResource {
-  static $RESOURCE_TYPE = 'array';
+  static '$RESOURCE_TYPE' = 'array';
 
-  static $RESOURCE_NATIVE_CHILDREN = {
+  static '$RESOURCE_NATIVE_CHILDREN' = {
     '@countItems': {
       '@type': 'method',
       '@description': 'Return the number of items in the array'
     }
   };
 
-  static $normalizeValue(value) {
+  static '$normalizeValue'(value) {
     if (!Array.isArray(value)) {
       throw createClientError('Invalid value type');
     }
@@ -23,14 +23,14 @@ export class ArrayResource extends ValueResource {
     return value;
   }
 
-  static $normalize(definition, options) {
+  static '$normalize'(definition, options) {
     if (Array.isArray(definition)) {
       definition = {'@value': definition};
     }
     return super.$normalize(definition, options);
   }
 
-  static $parseValue(str) {
+  static '$parseValue'(str) {
     return str ? [str] : [];
   }
 
