@@ -1,7 +1,7 @@
 {
   "@import": "1place/npm-package#^0.1.0",
   "name": "run-core",
-  "version": "0.11.64",
+  "version": "0.11.65",
   "description": "The first resource runtime",
   "author": "Manuel Vila <hi@mvila.me>",
   "license": "MIT",
@@ -12,7 +12,7 @@
     "fs-extra": "^6.0.1",
     "is-directory": "^0.3.1",
     "lodash": "^4.17.4",
-    "@resdir/console": "^0.1.0",
+    "@resdir/console": "^0.1.45",
     "@resdir/error": "^0.1.0",
     "@resdir/expression": "^0.1.0",
     "@resdir/file-manager": "^0.1.0",

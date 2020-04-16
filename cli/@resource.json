@@ -1,7 +1,7 @@
 {
   "@import": "1place/npm-package#^0.1.0",
   "name": "run-cli",
-  "version": "0.11.20",
+  "version": "0.11.21",
   "description": "The resource runtime",
   "author": "Manuel Vila <hi@mvila.me>",
   "license": "MIT",
@@ -11,13 +11,13 @@
   },
   "dependencies": {
     "dotenv": "^6.0.0",
-    "@resdir/console": "^0.1.0",
+    "@resdir/console": "^0.1.45",
     "@resdir/expression": "^0.1.10",
     "@resdir/http-client": "^0.2.23",
     "@resdir/local-cache": "^0.1.6",
     "@resdir/resource-specifier": "^0.1.16",
     "@resdir/version": "^0.1.16",
-    "run-core": "^0.11.64",
+    "run-core": "^0.11.65",
     "source-map-support": "^0.5.6"
   },
   "@unpublishable": {

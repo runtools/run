@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "fs-extra": "^6.0.1",
+    "@resdir/console": "^0.1.40",
+    "tar": "^4.4.0"
+  },
+  "@managed": {
+    "warning": "This file contains properties managed by a Resource. You should not modify them directly or use a command such as `npm install <name>`.",
+    "properties": [
+      "dependencies",
+      "peerDependencies",
+      "optionalDependencies",
+      "devDependencies"
+    ]
+  }
+}
