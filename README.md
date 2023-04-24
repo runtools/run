@@ -1,5 +1,9 @@
 # Run
 
+> **Caution:** This project has been abandoned and is no longer maintained.
+
+---
+
 This is [Run](https://run.tools)'s monorepo.
 
 ## What is Run?
